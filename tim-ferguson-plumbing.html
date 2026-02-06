@@ -1,51 +1,167 @@
-<!--
-================================================================================
-SELF-REVIEW RATINGS
-================================================================================
-Functionality:     9/10 - Full CRUD operations, IndexedDB persistence, import/export
-Mobile UX:         9/10 - Bottom nav, thumb-reachable, responsive breakpoints
-Visual Polish:     9/10 - Brand colors, professional styling, smooth animations
-Business Fit:      9/10 - Perfectly aligns with Tim Ferguson's "Neighbors Helping Neighbors"
-Offline Capability: 9/10 - IndexedDB with localStorage fallback, works fully offline
-================================================================================
-OVERALL: 9/10 - Tool is production-ready with excellent UX and security layer.
-================================================================================
-
-Tool: Neighbor Referrals - Golden Ticket System
-Business: Tim Ferguson Plumbing, Air & Electric (Jackson & Memphis, TN)
-Friction Solved: Membership value demonstration between visits, personal referrals
-Features:
-- Create digital "Golden Tickets" ($50 off for neighbors)
-- Track referral status and earn $25 credits
-- Import/export data (JSON/CSV/clipboard)
-- Four Seasons Club integration
-- Demo data for first-time users
-- Mobile-first design for on-the-go sharing
-
-Security: Access key gate, disabled right-click, blocked DevTools shortcuts
-Persistence: IndexedDB with localStorage fallback
-Print Styles: Optimized for ticket printing
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neighbor Referrals | Tim Ferguson Plumbing, Air & Electric</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Emergency Triage | Tim Ferguson Plumbing, Air & Electric</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d1242b' rx='15' width='100' height='100'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🔧</text></svg>">
     <style>
+        /* ============================================
+           SECURITY LAYER - Access Control
+           ============================================ */
+        .security-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .security-overlay.hidden {
+            display: none !important;
+        }
+        
+        .security-box {
+            background: var(--tf-dark-card);
+            border: 2px solid var(--tf-red);
+            border-radius: var(--radius-xl);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(209, 36, 43, 0.3);
+        }
+        
+        .security-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--tf-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 40px;
+            animation: pulse-security 2s infinite;
+        }
+        
+        @keyframes pulse-security {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(209, 36, 43, 0.5); transform: scale(1); }
+            50% { box-shadow: 0 0 30px 10px rgba(209, 36, 43, 0.3); transform: scale(1.02); }
+        }
+        
+        .security-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--tf-white);
+        }
+        
+        .security-box p {
+            color: var(--tf-muted);
+            margin-bottom: 24px;
+            font-size: 0.95rem;
+        }
+        
+        .security-input {
+            width: 100%;
+            padding: 16px;
+            background: var(--tf-dark-surface);
+            border: 2px solid var(--tf-grey);
+            border-radius: var(--radius-md);
+            color: var(--tf-white);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            transition: var(--transition);
+        }
+        
+        .security-input:focus {
+            outline: none;
+            border-color: var(--tf-red);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .security-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--tf-red);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .security-btn:hover {
+            background: var(--tf-red-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .security-error {
+            color: var(--tf-critical);
+            font-size: 0.875rem;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+        
+        .security-contact {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--tf-dark-surface);
+            font-size: 0.8rem;
+            color: var(--tf-muted);
+        }
+        
+        .security-contact a {
+            color: var(--tf-red);
+            text-decoration: none;
+        }
+        
+        /* Anti-scrape: Disable selection on structural elements */
+        .app-header, .bottom-nav, .category-card, .option-btn, .btn, .nav-item, .guide-item, .card, .stat-card, .log-item, .log-action-btn, .ie-btn, .modal-header {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        /* Allow selection on inputs and content */
+        input, textarea, .question-text, .result-subtitle, .log-details, .modal-body p, .modal-body li {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
         :root {
-            --navy: #0f1d37;
-            --logo-red: #d1242b;
-            --action-red: #b71a1a;
-            --white: #ffffff;
-            --light-gray: #f5f6f8;
-            --mid-gray: #e2e4e8;
-            --text-gray: #4a5568;
-            --success: #22c55e;
-            --shadow-sm: 0 1px 3px rgba(15, 29, 55, 0.1);
-            --shadow-md: 0 4px 12px rgba(15, 29, 55, 0.15);
-            --shadow-lg: 0 8px 24px rgba(15, 29, 55, 0.2);
+            --tf-red: #d1242b;
+            --tf-red-glow: rgba(209, 36, 43, 0.3);
+            --tf-red-dark: #a51d23;
+            --tf-grey: #333333;
+            --tf-black: #1a1a1a;
+            --tf-dark-surface: #242424;
+            --tf-dark-card: #2d2d2d;
+            --tf-white: #ffffff;
+            --tf-muted: #9ca3af;
+            --tf-success: #22c55e;
+            --tf-warning: #f59e0b;
+            --tf-critical: #ef4444;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-glow: 0 0 20px var(--tf-red-glow);
+            --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -55,259 +171,393 @@ Print Styles: Optimized for ticket printing
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Prevent selection on structural elements but allow on inputs */
-        body, .header, .tab-bar, .card, .golden-ticket, .referral-item, 
-        .stat-card, .settings-item, .share-btn {
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        input, textarea, .form-input {
-            user-select: text;
-            -webkit-user-select: text;
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
         }
 
         body {
-            font-family: 'Montserrat', sans-serif;
-            background: var(--light-gray);
-            color: var(--navy);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--tf-black);
+            color: var(--tf-white);
             min-height: 100vh;
-            padding-bottom: 80px;
-            font-size: 16px;
+            min-height: 100dvh;
             line-height: 1.5;
-            overflow-x: hidden;
         }
 
         h1, h2, h3, h4 {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
         }
 
-        /* Security Overlay */
-        .security-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--navy);
-            color: var(--white);
+        /* Layout */
+        .app-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 40px;
-            text-align: center;
+            min-height: 100vh;
+            min-height: 100dvh;
         }
 
-        .security-overlay h1 {
-            font-size: 32px;
-            margin-bottom: 16px;
-            color: var(--logo-red);
-        }
-
-        .security-overlay p {
-            font-size: 16px;
-            margin-bottom: 24px;
-            opacity: 0.9;
-            max-width: 400px;
-        }
-
-        .security-overlay .contact {
-            font-size: 14px;
-            opacity: 0.7;
-        }
-
-        .security-overlay .contact a {
-            color: var(--white);
-            text-decoration: underline;
+        .main-content {
+            flex: 1;
+            padding: 16px;
+            padding-bottom: 100px;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
         }
 
         /* Header */
-        .header {
-            background: var(--navy);
-            color: var(--white);
-            padding: 16px 20px;
+        .app-header {
+            background: linear-gradient(180deg, var(--tf-dark-surface) 0%, var(--tf-black) 100%);
+            padding: 16px;
             text-align: center;
+            border-bottom: 1px solid var(--tf-dark-card);
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow-md);
         }
 
-        .header h1 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .header-subtitle {
-            font-size: 12px;
-            opacity: 0.85;
-            font-weight: 500;
-        }
-
-        .four-seasons-badge {
-            display: inline-flex;
+        .header-brand {
+            display: flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(209, 36, 43, 0.2);
-            border: 1px solid var(--logo-red);
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 11px;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--tf-red);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .brand-text {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--tf-white);
+        }
+
+        .brand-text span {
+            color: var(--tf-red);
+        }
+
+        /* Weather Alert Banner */
+        .weather-alert {
+            background: linear-gradient(90deg, var(--tf-warning), #d97706);
+            color: var(--tf-black);
+            padding: 10px 16px;
             font-weight: 600;
-            margin-top: 8px;
-            color: var(--white);
-        }
-
-        .four-seasons-badge::before {
-            content: '❄️';
-        }
-
-        /* Demo Banner */
-        .demo-banner {
-            background: linear-gradient(135deg, var(--logo-red), var(--action-red));
-            color: var(--white);
-            padding: 12px 20px;
-            text-align: center;
-            font-size: 13px;
+            font-size: 0.875rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            min-height: 48px;
+            animation: pulse-bg 2s infinite;
         }
 
-        .demo-banner:hover {
-            opacity: 0.95;
+        @keyframes pulse-bg {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
         }
 
-        .demo-banner-close {
+        .weather-alert.hidden { display: none; }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 12px 16px;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .demo-banner.hidden { display: none; }
+
+        .demo-banner button {
             background: rgba(255,255,255,0.2);
             border: none;
             color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 600;
             cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Bottom Navigation (Mobile) */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tf-dark-surface);
+            border-top: 1px solid var(--tf-dark-card);
             display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            color: var(--tf-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: var(--transition);
+            min-width: 64px;
+            cursor: pointer;
+            background: none;
+            border: none;
         }
 
-        /* Main Content */
-        .main-content {
-            padding: 16px;
-            max-width: 600px;
-            margin: 0 auto;
+        .nav-item.active {
+            color: var(--tf-red);
         }
 
-        /* Tab Content */
-        .tab-content {
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Screens */
+        .screen {
             display: none;
         }
 
-        .tab-content.active {
+        .screen.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeIn 0.2s ease;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Cards */
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            box-shadow: var(--shadow-sm);
-            padding: 20px;
+        /* Category Selection */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .category-card {
+            background: var(--tf-dark-card);
+            border: 2px solid transparent;
+            border-radius: var(--radius-lg);
+            padding: 24px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .category-card:hover, .category-card:focus {
+            border-color: var(--tf-red);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .category-card.selected {
+            border-color: var(--tf-red);
+            background: var(--tf-dark-surface);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .category-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Questions */
+        .question-card {
+            background: var(--tf-dark-card);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .question-number {
+            color: var(--tf-red);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .question-text {
+            font-size: 1.1rem;
+            font-weight: 600;
             margin-bottom: 16px;
         }
 
-        .card-header {
+        .options-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--tf-dark-surface);
+            border: 2px solid var(--tf-grey);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            color: var(--tf-white);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: left;
+            min-height: 52px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
         }
 
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--light-gray);
-            border-radius: 12px;
+        .option-btn:hover, .option-btn:focus {
+            border-color: var(--tf-red);
+            background: rgba(209, 36, 43, 0.1);
+        }
+
+        .option-btn.selected {
+            border-color: var(--tf-red);
+            background: rgba(209, 36, 43, 0.2);
+        }
+
+        .option-btn.yes {
+            border-color: var(--tf-critical);
+        }
+
+        .option-btn.no {
+            border-color: var(--tf-success);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            margin-bottom: 24px;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--tf-dark-card);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--tf-red), #ff4d4d);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.8rem;
+            color: var(--tf-muted);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Result Screen */
+        .result-container {
+            text-align: center;
+            padding: 24px 0;
+        }
+
+        .severity-indicator {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto 24px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
+            animation: pulse-ring 2s infinite;
         }
 
-        .card-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--navy);
+        .severity-indicator.critical {
+            background: linear-gradient(135deg, var(--tf-critical), #dc2626);
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
         }
 
-        .card-subtitle {
-            font-size: 13px;
-            color: var(--text-gray);
+        .severity-indicator.warning {
+            background: linear-gradient(135deg, var(--tf-warning), #d97706);
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
         }
 
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 16px;
+        .severity-indicator.safe {
+            background: linear-gradient(135deg, var(--tf-success), #16a34a);
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.5);
         }
 
-        .form-label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: var(--navy);
+        @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
-        .form-input {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 16px;
-            font-family: 'Montserrat', sans-serif;
-            border: 2px solid var(--mid-gray);
-            border-radius: 10px;
-            background: var(--white);
-            transition: border-color 0.2s, box-shadow 0.2s;
-            min-height: 48px;
+        .severity-score {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: white;
         }
 
-        .form-input:focus {
-            outline: none;
-            border-color: var(--navy);
-            box-shadow: 0 0 0 3px rgba(15, 29, 55, 0.1);
+        .severity-label {
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.9);
         }
 
-        .form-input.error {
-            border-color: var(--logo-red);
-            animation: shake 0.4s ease-in-out;
+        .result-title {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-8px); }
-            75% { transform: translateX(8px); }
+        .result-subtitle {
+            color: var(--tf-muted);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        .form-hint {
-            font-size: 12px;
-            color: var(--text-gray);
-            margin-top: 6px;
+        .savings-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, var(--tf-success), #16a34a);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
         }
 
         /* Buttons */
@@ -316,221 +566,80 @@ Print Styles: Optimized for ticket printing
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 14px 24px;
-            font-size: 16px;
-            font-family: 'Poppins', sans-serif;
+            padding: 16px 32px;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
             font-weight: 600;
-            border: none;
-            border-radius: 10px;
             cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
-            min-height: 48px;
-            min-width: 48px;
-        }
-
-        .btn:active {
-            transform: scale(0.97);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+            transition: var(--transition);
+            border: none;
+            text-decoration: none;
+            min-height: 52px;
         }
 
         .btn-primary {
-            background: var(--logo-red);
-            color: var(--white);
+            background: var(--tf-red);
+            color: white;
             width: 100%;
-            box-shadow: var(--shadow-sm);
         }
 
-        .btn-primary:hover:not(:disabled) {
-            background: var(--action-red);
-            box-shadow: var(--shadow-md);
+        .btn-primary:hover {
+            background: var(--tf-red-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-glow);
         }
 
         .btn-secondary {
-            background: var(--light-gray);
-            color: var(--navy);
+            background: var(--tf-dark-card);
+            color: white;
+            border: 2px solid var(--tf-grey);
+            width: 100%;
         }
 
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--mid-gray);
+        .btn-secondary:hover {
+            border-color: var(--tf-white);
         }
 
-        .btn-outline {
-            background: transparent;
-            color: var(--navy);
-            border: 2px solid var(--mid-gray);
+        .btn-call {
+            background: linear-gradient(135deg, var(--tf-red), #ff3333);
+            color: white;
+            width: 100%;
+            font-size: 1.2rem;
+            padding: 20px;
+            animation: pulse-btn 2s infinite;
         }
 
-        .btn-outline:hover:not(:disabled) {
-            border-color: var(--navy);
+        @keyframes pulse-btn {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(209, 36, 43, 0.5); }
+            50% { box-shadow: 0 0 20px 5px rgba(209, 36, 43, 0.3); }
         }
 
-        .btn-small {
-            padding: 10px 16px;
-            font-size: 14px;
-            min-height: 40px;
-            min-width: 44px;
-        }
-
-        /* Loading Spinner */
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: var(--white);
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Golden Ticket */
-        .golden-ticket {
-            background: linear-gradient(135deg, var(--navy) 0%, #1a2d4d 100%);
-            border-radius: 16px;
-            padding: 24px;
-            color: var(--white);
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .golden-ticket::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(209, 36, 43, 0.1) 0%, transparent 50%);
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        @keyframes shimmer {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(10%, 10%); }
-        }
-
-        .ticket-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-            position: relative;
-        }
-
-        .ticket-logo {
-            font-size: 14px;
-            font-weight: 600;
-            opacity: 0.9;
-        }
-
-        .ticket-badge {
-            background: var(--logo-red);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .ticket-amount {
-            font-family: 'Poppins', sans-serif;
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 4px;
-            position: relative;
-        }
-
-        .ticket-amount sup {
-            font-size: 24px;
-            vertical-align: super;
-        }
-
-        .ticket-desc {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 20px;
-            opacity: 0.9;
-        }
-
-        .ticket-from {
-            font-size: 13px;
-            opacity: 0.8;
-            margin-bottom: 4px;
-        }
-
-        .ticket-from-name {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .ticket-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.2);
-            margin: 16px 0;
-            position: relative;
-        }
-
-        .ticket-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            opacity: 0.7;
-        }
-
-        .ticket-code {
-            font-family: monospace;
-            font-size: 14px;
-            letter-spacing: 2px;
-        }
-
-        /* Share Actions */
-        .share-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .share-btn {
+        .btn-group {
             display: flex;
             flex-direction: column;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--tf-dark-card);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
-            padding: 16px;
-            background: var(--white);
-            border: 2px solid var(--mid-gray);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 80px;
+            margin-bottom: 16px;
         }
 
-        .share-btn:hover {
-            border-color: var(--navy);
-            background: var(--light-gray);
-        }
-
-        .share-btn:active {
-            transform: scale(0.97);
-        }
-
-        .share-btn-icon {
-            font-size: 24px;
-        }
-
-        .share-btn-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--navy);
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
         }
 
         /* Stats Grid */
@@ -538,339 +647,149 @@ Print Styles: Optimized for ticket printing
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
         }
 
         .stat-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 16px;
+            background: var(--tf-dark-card);
+            border-radius: var(--radius-md);
+            padding: 20px;
             text-align: center;
-            box-shadow: var(--shadow-sm);
         }
 
         .stat-value {
-            font-family: 'Poppins', sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--navy);
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--tf-red);
         }
 
-        .stat-value.success {
-            color: var(--success);
-        }
-
-        .stat-value.pending {
-            color: var(--logo-red);
-        }
+        .stat-value.green { color: var(--tf-success); }
+        .stat-value.yellow { color: var(--tf-warning); }
 
         .stat-label {
-            font-size: 12px;
-            color: var(--text-gray);
-            font-weight: 500;
+            font-size: 0.8rem;
+            color: var(--tf-muted);
+            margin-top: 4px;
         }
 
-        /* Referral List */
-        .referral-list {
-            margin-top: 16px;
-        }
-
-        .referral-item {
-            background: var(--white);
-            border-radius: 12px;
+        /* History Log */
+        .log-item {
+            background: var(--tf-dark-surface);
+            border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 12px;
-            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--tf-grey);
+        }
+
+        .log-item.critical { border-left-color: var(--tf-critical); }
+        .log-item.warning { border-left-color: var(--tf-warning); }
+        .log-item.safe { border-left-color: var(--tf-success); }
+
+        .log-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            align-items: flex-start;
+            margin-bottom: 8px;
         }
 
-        .referral-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .referral-name {
+        .log-category {
             font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-size: 1rem;
         }
 
-        .referral-date {
-            font-size: 12px;
-            color: var(--text-gray);
+        .log-severity {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
         }
 
-        .referral-status {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            flex-shrink: 0;
+        .log-severity.critical { background: var(--tf-critical); color: white; }
+        .log-severity.warning { background: var(--tf-warning); color: black; }
+        .log-severity.safe { background: var(--tf-success); color: white; }
+
+        .log-details {
+            font-size: 0.875rem;
+            color: var(--tf-muted);
+            margin-bottom: 8px;
         }
 
-        .referral-status.sent {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
+        .log-time {
+            font-size: 0.75rem;
+            color: var(--tf-muted);
         }
 
-        .referral-status.pending {
-            background: rgba(209, 36, 43, 0.1);
-            color: var(--logo-red);
-        }
-
-        .referral-status.converted {
-            background: rgba(15, 29, 55, 0.1);
-            color: var(--navy);
-        }
-
-        .referral-actions {
+        .log-actions {
             display: flex;
             gap: 8px;
-            flex-shrink: 0;
+            margin-top: 12px;
         }
 
-        .referral-action-btn {
-            width: 44px;
-            height: 44px;
-            border: none;
-            background: var(--light-gray);
-            border-radius: 10px;
+        .log-action-btn {
+            background: var(--tf-dark-card);
+            border: 1px solid var(--tf-grey);
+            color: var(--tf-muted);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
             cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .log-action-btn:hover {
+            border-color: var(--tf-red);
+            color: var(--tf-white);
+        }
+
+        .log-action-btn.delete:hover {
+            border-color: var(--tf-critical);
+            color: var(--tf-critical);
+        }
+
+        /* Guides */
+        .guide-list {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .referral-action-btn:hover {
-            background: var(--mid-gray);
-        }
-
-        .referral-action-btn:active {
-            transform: scale(0.95);
-        }
-
-        .referral-action-btn.delete:hover {
-            background: rgba(209, 36, 43, 0.15);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-        }
-
-        .empty-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .empty-desc {
-            font-size: 14px;
-            color: var(--text-gray);
-            margin-bottom: 24px;
-            max-width: 280px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Settings */
-        .settings-section {
-            margin-bottom: 24px;
-        }
-
-        .settings-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-gray);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
-
-        .settings-item {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 56px;
-        }
-
-        .settings-item:hover {
-            background: var(--light-gray);
-        }
-
-        .settings-item:active {
-            transform: scale(0.99);
-        }
-
-        .settings-item-left {
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 12px;
         }
 
-        .settings-icon {
-            width: 44px;
-            height: 44px;
-            background: var(--light-gray);
-            border-radius: 10px;
+        .guide-item {
+            background: var(--tf-dark-surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .guide-item:hover {
+            background: var(--tf-dark-card);
+        }
+
+        .guide-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--tf-dark-card);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 1.5rem;
             flex-shrink: 0;
         }
 
-        .settings-item-title {
-            font-weight: 600;
-            font-size: 15px;
+        .guide-content h4 {
+            font-size: 1rem;
+            margin-bottom: 4px;
         }
 
-        .settings-item-desc {
-            font-size: 12px;
-            color: var(--text-gray);
-        }
-
-        .settings-arrow {
-            font-size: 20px;
-            color: var(--text-gray);
-            flex-shrink: 0;
-        }
-
-        /* Bottom Tab Bar */
-        .tab-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--white);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            z-index: 100;
-        }
-
-        .tab-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 4px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            color: var(--text-gray);
-            transition: color 0.2s;
-            min-height: 56px;
-            min-width: 56px;
-        }
-
-        .tab-item.active {
-            color: var(--logo-red);
-        }
-
-        .tab-item:hover {
-            color: var(--navy);
-        }
-
-        .tab-item:active {
-            transform: scale(0.95);
-        }
-
-        .tab-icon {
-            font-size: 24px;
-            line-height: 1;
-        }
-
-        .tab-label {
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 200;
-            pointer-events: none;
-            width: calc(100% - 32px);
-            max-width: 400px;
-        }
-
-        .toast {
-            background: var(--navy);
-            color: var(--white);
-            padding: 14px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 500;
-            box-shadow: var(--shadow-lg);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.3s ease;
-            pointer-events: auto;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .toast.success {
-            background: var(--success);
-        }
-
-        .toast.error {
-            background: var(--logo-red);
-        }
-
-        .toast-undo {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            flex-shrink: 0;
-            min-height: 32px;
-            min-width: 56px;
-        }
-
-        .toast-undo:hover {
-            background: rgba(255,255,255,0.3);
+        .guide-content p {
+            font-size: 0.8rem;
+            color: var(--tf-muted);
         }
 
         /* Modal */
@@ -880,1406 +799,1846 @@ Print Styles: Optimized for ticket printing
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(15, 29, 55, 0.5);
+            background: rgba(0,0,0,0.8);
             display: flex;
-            align-items: flex-end;
+            align-items: center;
             justify-content: center;
-            z-index: 300;
+            z-index: 2000;
+            padding: 16px;
             opacity: 0;
             visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
+            transition: var(--transition);
         }
 
-        .modal-overlay.show {
+        .modal-overlay.active {
             opacity: 1;
             visibility: visible;
         }
 
         .modal {
-            background: var(--white);
-            border-radius: 20px 20px 0 0;
+            background: var(--tf-dark-card);
+            border-radius: var(--radius-xl);
             width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
+            max-width: 480px;
+            max-height: 80vh;
             overflow-y: auto;
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
+            transform: scale(0.95);
+            transition: var(--transition);
         }
 
-        .modal-overlay.show .modal {
-            transform: translateY(0);
+        .modal-overlay.active .modal {
+            transform: scale(1);
         }
 
         .modal-header {
             padding: 20px;
-            border-bottom: 1px solid var(--mid-gray);
+            border-bottom: 1px solid var(--tf-dark-surface);
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
         }
 
         .modal-title {
-            font-size: 18px;
-            font-weight: 600;
+            font-size: 1.2rem;
         }
 
         .modal-close {
-            width: 44px;
-            height: 44px;
+            background: none;
             border: none;
-            background: var(--light-gray);
-            border-radius: 50%;
-            font-size: 20px;
+            color: var(--tf-muted);
+            font-size: 1.5rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .modal-close:hover {
-            background: var(--mid-gray);
-        }
-
-        .modal-close:active {
-            transform: scale(0.95);
+            padding: 4px;
         }
 
         .modal-body {
             padding: 20px;
         }
 
-        /* Desktop Adjustments */
+        .modal-body p {
+            margin-bottom: 16px;
+            line-height: 1.7;
+        }
+
+        .modal-body ul {
+            margin-left: 20px;
+            margin-bottom: 16px;
+        }
+
+        .modal-body li {
+            margin-bottom: 8px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            color: var(--tf-muted);
+            margin-bottom: 24px;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--tf-dark-card);
+            border: 1px solid var(--tf-grey);
+            border-radius: var(--radius-md);
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-card);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.success { border-color: var(--tf-success); }
+        .toast.error { border-color: var(--tf-critical); }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Undo Banner */
+        .undo-banner {
+            position: fixed;
+            bottom: 100px;
+            left: 16px;
+            right: 16px;
+            background: var(--tf-grey);
+            color: white;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1500;
+            animation: slideUp 0.3s ease;
+        }
+
+        .undo-banner.hidden { display: none; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .undo-btn {
+            background: var(--tf-red);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Import/Export */
+        .import-export-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--tf-dark-card);
+        }
+
+        .import-export-section h4 {
+            margin-bottom: 16px;
+            color: var(--tf-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .import-export-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .ie-btn {
+            background: var(--tf-dark-surface);
+            border: 1px solid var(--tf-grey);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--tf-white);
+            font-size: 0.85rem;
+        }
+
+        .ie-btn:hover {
+            border-color: var(--tf-red);
+        }
+
+        .ie-btn svg {
+            display: block;
+            margin: 0 auto 8px;
+            width: 24px;
+            height: 24px;
+        }
+
+        /* Jackson Logic Badge */
+        .jackson-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(209, 36, 43, 0.1);
+            border: 1px solid var(--tf-red);
+            border-radius: 50px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--tf-red);
+            margin-bottom: 16px;
+        }
+
+        /* Screen Intro */
+        .screen-intro {
+            text-align: center;
+            padding: 24px 0;
+            margin-bottom: 16px;
+        }
+
+        .screen-intro h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .screen-intro p {
+            color: var(--tf-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--tf-dark-surface);
+        }
+
+        .toggle-label {
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 28px;
+            background: var(--tf-dark-surface);
+            border-radius: 14px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .toggle-switch.active {
+            background: var(--tf-red);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: var(--transition);
+        }
+
+        .toggle-switch.active::after {
+            left: 25px;
+        }
+
+        /* Desktop Styles */
         @media (min-width: 1024px) {
-            body {
-                padding-bottom: 0;
+            .bottom-nav {
+                position: static;
+                flex-direction: row;
+                justify-content: center;
+                gap: 8px;
+                padding: 12px;
+                background: transparent;
+                border: none;
             }
 
-            .header {
+            .nav-item {
+                flex-direction: row;
+                padding: 12px 24px;
+                font-size: 0.9rem;
+            }
+
+            .main-content {
+                padding-bottom: 32px;
+                max-width: 800px;
+            }
+
+            .app-header {
                 display: flex;
-                align-items: center;
                 justify-content: space-between;
-                padding: 16px 40px;
+                align-items: center;
+                padding: 16px 32px;
             }
 
-            .header-left {
-                display: flex;
-                align-items: center;
+            .category-grid {
                 gap: 20px;
             }
 
-            .desktop-nav {
-                display: flex;
-                gap: 8px;
-            }
-
-            .desktop-nav-item {
-                padding: 10px 20px;
-                background: transparent;
-                border: none;
-                color: rgba(255,255,255,0.8);
-                font-family: 'Montserrat', sans-serif;
-                font-size: 14px;
-                font-weight: 600;
-                cursor: pointer;
-                border-radius: 8px;
-                transition: all 0.2s;
-                min-height: 44px;
-            }
-
-            .desktop-nav-item:hover {
-                background: rgba(255,255,255,0.1);
-                color: var(--white);
-            }
-
-            .desktop-nav-item:active {
-                transform: scale(0.97);
-            }
-
-            .desktop-nav-item.active {
-                background: var(--logo-red);
-                color: var(--white);
-            }
-
-            .tab-bar {
-                display: none;
-            }
-
-            .main-content {
-                max-width: 800px;
-                padding: 32px;
-            }
-
-            .modal {
-                border-radius: 20px;
-                margin: auto;
-                max-height: 80vh;
-            }
-
-            .modal-overlay {
-                align-items: center;
-            }
-        }
-
-        @media (max-width: 1023px) {
-            .desktop-nav {
-                display: none;
-            }
-
-            .header-left {
-                display: none;
-            }
-        }
-
-        /* Small Mobile Adjustments */
-        @media (max-width: 375px) {
-            .main-content {
-                padding: 12px;
-            }
-
-            .card {
-                padding: 16px;
-            }
-
-            .share-actions {
-                gap: 8px;
-            }
-
-            .share-btn {
-                padding: 12px 8px;
-                min-height: 72px;
-            }
-
-            .share-btn-icon {
-                font-size: 20px;
-            }
-
-            .share-btn-label {
-                font-size: 12px;
-            }
-
-            .ticket-amount {
-                font-size: 40px;
-            }
-
-            .ticket-amount sup {
-                font-size: 20px;
-            }
-
-            .referral-item {
-                padding: 12px;
-            }
-
-            .referral-action-btn {
-                width: 40px;
-                height: 40px;
-            }
-
-            .referral-status {
-                padding: 4px 8px;
-                font-size: 11px;
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
             }
         }
 
         /* Print Styles */
         @media print {
-            .tab-bar,
-            .demo-banner,
-            .share-actions,
-            .btn:not(.print-only),
-            .header,
-            .toast-container,
-            .modal-overlay {
-                display: none !important;
+            body {
+                background: white;
+                color: black;
             }
 
-            body {
-                padding: 0;
-                background: white;
+            .bottom-nav, .app-header, .btn, .demo-banner, .weather-alert {
+                display: none !important;
             }
 
             .main-content {
                 padding: 0;
-                max-width: 100%;
+                max-width: none;
             }
 
-            .golden-ticket {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+            .card, .log-item, .stat-card {
+                background: #f5f5f5;
+                border: 1px solid #ccc;
                 box-shadow: none;
-                border: 2px solid var(--navy);
             }
 
-            .card {
-                box-shadow: none;
-                border: 1px solid #ddd;
-                page-break-inside: avoid;
-            }
-
-            .tab-content {
+            .screen {
                 display: block !important;
             }
 
-            #tab-referrals,
-            #tab-credits,
-            #tab-settings {
-                display: none !important;
+            .screen:not(.active) {
+                page-break-before: always;
             }
         }
 
-        /* Focus visible for accessibility */
+        /* Hidden file input */
+        .hidden-input {
+            display: none;
+        }
+        
+        /* ============================================
+           PREMIUM POLISH - Enhanced Animations
+           ============================================ */
+        
+        /* Enhanced button micro-interactions */
+        .btn, .option-btn, .category-card, .guide-item, .log-action-btn, .ie-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn:active, .option-btn:active, .category-card:active {
+            transform: scale(0.98);
+        }
+        
+        /* Enhanced card hover effects */
+        .card, .log-item {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover, .log-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Enhanced severity indicator glow */
+        .severity-indicator.critical {
+            animation: pulse-critical 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-critical {
+            0%, 100% { 
+                box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 60px rgba(239, 68, 68, 0.7);
+                transform: scale(1.03);
+            }
+        }
+        
+        /* Smooth screen transitions */
+        .screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .screen.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+            animation: none;
+        }
+        
+        /* Enhanced toast notifications */
+        .toast {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(45, 45, 45, 0.95);
+            border-left: 4px solid var(--tf-grey);
+        }
+        
+        .toast.success { 
+            border-left-color: var(--tf-success);
+            border-color: var(--tf-success);
+        }
+        
+        .toast.error { 
+            border-left-color: var(--tf-critical);
+            border-color: var(--tf-critical);
+        }
+        
+        /* Enhanced progress bar animation */
+        .progress-fill {
+            background: linear-gradient(90deg, var(--tf-red) 0%, #ff4d4d 50%, var(--tf-red) 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Enhanced category card selection glow */
+        .category-card.selected {
+            animation: selected-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes selected-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(209, 36, 43, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(209, 36, 43, 0.5); }
+        }
+        
+        /* Enhanced savings badge */
+        .savings-badge {
+            animation: badge-glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes badge-glow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 4px 25px rgba(34, 197, 94, 0.5); }
+        }
+        
+        /* Smooth modal backdrop */
+        .modal-overlay {
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        
+        /* Enhanced nav item interactions */
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--tf-red);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-item.active::after {
+            width: 60%;
+        }
+        
+        /* Enhanced option button states */
+        .option-btn.selected {
+            background: linear-gradient(135deg, rgba(209, 36, 43, 0.2) 0%, rgba(209, 36, 43, 0.1) 100%);
+            border-color: var(--tf-red);
+            box-shadow: inset 0 0 10px rgba(209, 36, 43, 0.1);
+        }
+        
+        /* Weather alert enhanced animation */
+        .weather-alert {
+            animation: weather-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes weather-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+        }
+        
+        /* Focus states for accessibility */
         .btn:focus-visible,
-        .tab-item:focus-visible,
-        .form-input:focus-visible,
-        .referral-action-btn:focus-visible,
-        .settings-item:focus-visible,
-        .share-btn:focus-visible {
-            outline: 2px solid var(--logo-red);
+        .option-btn:focus-visible,
+        .category-card:focus-visible,
+        .nav-item:focus-visible,
+        .log-action-btn:focus-visible {
+            outline: 2px solid var(--tf-red);
             outline-offset: 2px;
         }
-
-        /* Smooth scroll behavior */
-        html {
-            scroll-behavior: smooth;
+        
+        /* Enhanced stat cards */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
         }
-
-        /* Ensure inputs visible when keyboard opens */
-        .form-input:focus {
-            scroll-margin-bottom: 200px;
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--tf-red), #ff4d4d);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        /* Enhanced undo banner */
+        .undo-banner {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(51, 51, 51, 0.95);
         }
     </style>
 </head>
 <body>
-    <!-- Security Gate (shown if no valid key) -->
-    <div id="securityGate" class="security-overlay" style="display: none;">
-        <h1>🔒 Access Required</h1>
-        <p>This tool is exclusively for Tim Ferguson Plumbing customers. Please use the secure link provided to access your referral dashboard.</p>
-        <p class="contact">Need help? Contact <a href="mailto:ben@bennycutools.com">ben@bennycutools.com</a></p>
+    <!-- Security Overlay -->
+    <div class="security-overlay" id="securityOverlay">
+        <div class="security-box">
+            <div class="security-icon">🔒</div>
+            <h2>Tim Ferguson Triage</h2>
+            <p>Enter access key to continue</p>
+            <input type="password" class="security-input" id="securityInput" placeholder="••••••••" maxlength="20">
+            <button class="security-btn" onclick="checkAccess()">Unlock</button>
+            <div class="security-error" id="securityError"></div>
+            <div class="security-contact">
+                Need access? <a href="mailto:ben@bennycutools.com">ben@bennycutools.com</a>
+            </div>
+        </div>
     </div>
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <div>
-                <h1>Neighbor Referrals</h1>
-                <p class="header-subtitle">Tim Ferguson Plumbing, Air & Electric</p>
+    <div class="app-container">
+        <!-- Weather Alert Banner -->
+        <div class="weather-alert hidden" id="weatherAlert">
+            ❄️ <strong>FREEZE WARNING ACTIVE</strong> — Pipe burst risk elevated for Jackson area
+            <button onclick="dismissWeatherAlert()" style="background:none;border:none;margin-left:12px;cursor:pointer;">✕</button>
+        </div>
+
+        <!-- Demo Banner -->
+        <div class="demo-banner" id="demoBanner">
+            <span>📋 Viewing demo data — showing sample triage records</span>
+            <button onclick="clearDemoData()">Clear Demo</button>
+        </div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-icon">🔧</div>
+                <div class="brand-text">Tim Ferguson <span>TRIAGE</span></div>
             </div>
-            <nav class="desktop-nav">
-                <button class="desktop-nav-item active" data-tab="create">Create Ticket</button>
-                <button class="desktop-nav-item" data-tab="referrals">My Referrals</button>
-                <button class="desktop-nav-item" data-tab="credits">Credits</button>
-                <button class="desktop-nav-item" data-tab="settings">Settings</button>
-            </nav>
-        </div>
-        <div>
-            <h1>Neighbor Referrals</h1>
-            <p class="header-subtitle">Tim Ferguson Plumbing, Air & Electric</p>
-            <span class="four-seasons-badge">Four Seasons Club</span>
-        </div>
-    </header>
+        </header>
 
-    <!-- Demo Banner -->
-    <div class="demo-banner" id="demoBanner">
-        <span>Showing sample data for Tim Ferguson Plumbing. Tap to clear and start fresh.</span>
-        <button class="demo-banner-close" onclick="clearDemoData(event)" aria-label="Clear demo data">✕</button>
-    </div>
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="triage" onclick="showScreen('triage')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Triage</span>
+            </button>
+            <button class="nav-item" data-screen="history" onclick="showScreen('history')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>History</span>
+            </button>
+            <button class="nav-item" data-screen="guides" onclick="showScreen('guides')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Guides</span>
+            </button>
+            <button class="nav-item" data-screen="dashboard" onclick="showScreen('dashboard')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                <span>Stats</span>
+            </button>
+        </nav>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Create Ticket Tab -->
-        <div class="tab-content active" id="tab-create">
-            <div class="card">
-                <div class="card-header">
-                    <div class="card-icon">🎟️</div>
-                    <div>
-                        <h3 class="card-title">Create a Golden Ticket</h3>
-                        <p class="card-subtitle">Share $50 off with a neighbor</p>
-                    </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Triage Screen -->
+            <section class="screen active" id="triageScreen">
+                <div id="triageContent">
+                    <!-- Dynamic content loaded here -->
                 </div>
-                
-                <form id="ticketForm">
-                    <div class="form-group">
-                        <label class="form-label" for="yourName">Your Name (for credit)</label>
-                        <input type="text" class="form-input" id="yourName" placeholder="e.g., Wyly Paris" required autocomplete="name">
-                        <p class="form-hint">We'll credit your Four Seasons account when they book</p>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="neighborName">Neighbor's Name</label>
-                        <input type="text" class="form-input" id="neighborName" placeholder="e.g., John Smith" required autocomplete="off">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="neighborPhone">Neighbor's Phone (optional)</label>
-                        <input type="tel" class="form-input" id="neighborPhone" placeholder="(731) 555-1234" autocomplete="off">
-                        <p class="form-hint">Makes it easy to text them the ticket</p>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary" id="createTicketBtn">
-                        <span class="btn-text">🎟️ Create Golden Ticket</span>
-                    </button>
-                </form>
-            </div>
+            </section>
 
-            <!-- Preview Ticket (hidden until created) -->
-            <div id="ticketPreview" style="display: none;">
-                <div class="card" style="background: transparent; box-shadow: none; padding: 0;">
-                    <div class="golden-ticket" id="goldenTicket">
-                        <div class="ticket-header">
-                            <span class="ticket-logo">Tim Ferguson</span>
-                            <span class="ticket-badge">NEIGHBOR SPECIAL</span>
+            <!-- History Screen -->
+            <section class="screen" id="historyScreen">
+                <div class="screen-intro">
+                    <h2>Assessment History</h2>
+                    <p>After-hours call log with severity and outcomes</p>
+                </div>
+                <div id="historyContent">
+                    <!-- Dynamic content loaded here -->
+                </div>
+                <div class="import-export-section">
+                    <h4>Data Management</h4>
+                    <div class="import-export-grid">
+                        <button class="ie-btn" onclick="exportCSV()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button class="ie-btn" onclick="exportJSON()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Full Backup
+                        </button>
+                        <button class="ie-btn" onclick="document.getElementById('csvInput').click()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            Import CSV
+                        </button>
+                        <button class="ie-btn" onclick="document.getElementById('jsonInput').click()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            Restore Backup
+                        </button>
+                    </div>
+                    <input type="file" id="csvInput" class="hidden-input" accept=".csv" onchange="importCSV(event)">
+                    <input type="file" id="jsonInput" class="hidden-input" accept=".json" onchange="importJSON(event)">
+                </div>
+            </section>
+
+            <!-- Guides Screen -->
+            <section class="screen" id="guidesScreen">
+                <div class="screen-intro">
+                    <h2>Emergency Guides</h2>
+                    <p>Quick reference for common emergency situations</p>
+                </div>
+                <div class="guide-list">
+                    <div class="guide-item" onclick="openGuide('shutoff')">
+                        <div class="guide-icon">🚰</div>
+                        <div class="guide-content">
+                            <h4>Water Shut-Off Locations</h4>
+                            <p>Find and turn off your main water supply</p>
                         </div>
-                        <div class="ticket-amount"><sup>$</sup>50<sup> OFF</sup></div>
-                        <p class="ticket-desc">Any Service Call</p>
-                        <p class="ticket-from">Shared by your neighbor:</p>
-                        <p class="ticket-from-name" id="ticketFromName">—</p>
-                        <div class="ticket-divider"></div>
-                        <div class="ticket-footer">
-                            <span>Jackson & Memphis, TN</span>
-                            <span class="ticket-code" id="ticketCode">—</span>
+                    </div>
+                    <div class="guide-item" onclick="openGuide('breaker')">
+                        <div class="guide-icon">⚡</div>
+                        <div class="guide-content">
+                            <h4>Breaker Panel Basics</h4>
+                            <p>How to safely reset a tripped breaker</p>
                         </div>
                     </div>
-                    
-                    <div class="share-actions">
-                        <button class="share-btn" onclick="shareViaText()" aria-label="Share via text message">
-                            <span class="share-btn-icon">💬</span>
-                            <span class="share-btn-label">Text</span>
-                        </button>
-                        <button class="share-btn" onclick="copyToClipboard()" aria-label="Copy to clipboard">
-                            <span class="share-btn-icon">📋</span>
-                            <span class="share-btn-label">Copy</span>
-                        </button>
-                        <button class="share-btn" onclick="shareNative()" aria-label="Share natively">
-                            <span class="share-btn-icon">📤</span>
-                            <span class="share-btn-label">Share</span>
-                        </button>
-                        <button class="share-btn" onclick="window.print()" aria-label="Print ticket">
-                            <span class="share-btn-icon">🖨️</span>
-                            <span class="share-btn-label">Print</span>
-                        </button>
+                    <div class="guide-item" onclick="openGuide('gas')">
+                        <div class="guide-icon">🔥</div>
+                        <div class="guide-content">
+                            <h4>Gas Leak Response</h4>
+                            <p>Critical steps if you smell gas</p>
+                        </div>
+                    </div>
+                    <div class="guide-item" onclick="openGuide('freeze')">
+                        <div class="guide-icon">❄️</div>
+                        <div class="guide-content">
+                            <h4>Freeze Prevention</h4>
+                            <p>Protect pipes during Jackson cold snaps</p>
+                        </div>
+                    </div>
+                    <div class="guide-item" onclick="openGuide('hvac')">
+                        <div class="guide-icon">🌡️</div>
+                        <div class="guide-content">
+                            <h4>HVAC Quick Fixes</h4>
+                            <p>Common issues you can check yourself</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Referrals Tab -->
-        <div class="tab-content" id="tab-referrals">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalSent">0</div>
-                    <div class="stat-label">Tickets Sent</div>
+            <!-- Dashboard Screen -->
+            <section class="screen" id="dashboardScreen">
+                <div class="screen-intro">
+                    <h2>Triage Dashboard</h2>
+                    <p>Your after-hours call statistics</p>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value success" id="totalConverted">0</div>
-                    <div class="stat-label">Booked Service</div>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Dynamic stats loaded here -->
                 </div>
-            </div>
-
-            <div class="referral-list" id="referralList">
-                <!-- Populated by JS -->
-            </div>
-
-            <div class="empty-state" id="referralsEmpty" style="display: none;">
-                <div class="empty-icon">🎟️</div>
-                <h3 class="empty-title">No Referrals Yet</h3>
-                <p class="empty-desc">Share your first Golden Ticket with a neighbor and it'll show up here.</p>
-                <button class="btn btn-primary" onclick="switchTab('create')" style="max-width: 280px; margin: 0 auto;">
-                    Create Your First Ticket
-                </button>
-            </div>
-        </div>
-
-        <!-- Credits Tab -->
-        <div class="tab-content" id="tab-credits">
-            <div class="card" style="text-align: center;">
-                <div style="font-size: 64px; margin-bottom: 16px;">💰</div>
-                <h2 style="font-size: 48px; font-family: 'Poppins', sans-serif; font-weight: 700; color: var(--success);">$<span id="totalCredits">0</span></h2>
-                <p style="color: var(--text-gray); font-size: 14px;">Earned Credits</p>
-                <p style="margin-top: 16px; font-size: 13px; color: var(--text-gray);">Applied automatically to your next Four Seasons service</p>
-            </div>
-
-            <div class="card">
-                <h3 class="card-title" style="margin-bottom: 16px;">How Credits Work</h3>
-                <div style="font-size: 14px; color: var(--text-gray);">
-                    <p style="margin-bottom: 12px;">✅ Share a Golden Ticket with a neighbor</p>
-                    <p style="margin-bottom: 12px;">✅ They book any service with Tim Ferguson</p>
-                    <p style="margin-bottom: 12px;">✅ You earn <strong style="color: var(--navy);">$25 credit</strong> toward your account</p>
-                    <p>✅ No limits — refer as many neighbors as you want!</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3 class="card-title" style="margin-bottom: 16px;">Credit History</h3>
-                <div id="creditHistory">
-                    <!-- Populated by JS -->
-                </div>
-                <div id="creditsEmpty" style="text-align: center; padding: 20px; color: var(--text-gray); display: none;">
-                    <p>No credits earned yet. Start sharing tickets!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Settings Tab -->
-        <div class="tab-content" id="tab-settings">
-            <div class="settings-section">
-                <h4 class="settings-title">Your Profile</h4>
                 <div class="card">
-                    <div class="form-group">
-                        <label class="form-label" for="settingsName">Your Name</label>
-                        <input type="text" class="form-input" id="settingsName" placeholder="Your full name" autocomplete="name">
+                    <div class="card-header">
+                        <h3 class="card-title">Settings</h3>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" for="settingsPhone">Your Phone</label>
-                        <input type="tel" class="form-input" id="settingsPhone" placeholder="(731) 555-1234" autocomplete="tel">
+                    <div class="toggle-row">
+                        <span class="toggle-label">Weather Alert Mode</span>
+                        <div class="toggle-switch" id="weatherToggle" onclick="toggleWeatherAlert()"></div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveSettings()">Save Profile</button>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Sound Notifications</span>
+                        <div class="toggle-switch" id="soundToggle" onclick="toggleSetting('soundEnabled')"></div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="settings-section">
-                <h4 class="settings-title">Data</h4>
-                <div class="settings-item" onclick="exportData()">
-                    <div class="settings-item-left">
-                        <div class="settings-icon">📤</div>
-                        <div>
-                            <div class="settings-item-title">Export Data</div>
-                            <div class="settings-item-desc">Download your referrals as JSON backup</div>
-                        </div>
-                    </div>
-                    <span class="settings-arrow">→</span>
-                </div>
-                <div class="settings-item" onclick="exportCSV()">
-                    <div class="settings-item-left">
-                        <div class="settings-icon">📊</div>
-                        <div>
-                            <div class="settings-item-title">Export as CSV</div>
-                            <div class="settings-item-desc">Download for spreadsheets</div>
-                        </div>
-                    </div>
-                    <span class="settings-arrow">→</span>
-                </div>
-                <div class="settings-item" onclick="document.getElementById('importFile').click()">
-                    <div class="settings-item-left">
-                        <div class="settings-icon">📥</div>
-                        <div>
-                            <div class="settings-item-title">Import Data</div>
-                            <div class="settings-item-desc">Restore from JSON backup</div>
-                        </div>
-                    </div>
-                    <span class="settings-arrow">→</span>
-                </div>
-                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                <div class="settings-item" onclick="showImportCSVModal()">
-                    <div class="settings-item-left">
-                        <div class="settings-icon">📋</div>
-                        <div>
-                            <div class="settings-item-title">Paste from Clipboard</div>
-                            <div class="settings-item-desc">Import tab-delimited data</div>
-                        </div>
-                    </div>
-                    <span class="settings-arrow">→</span>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h4 class="settings-title">Danger Zone</h4>
-                <div class="settings-item" onclick="confirmClearAll()" style="border: 2px solid rgba(209, 36, 43, 0.3);">
-                    <div class="settings-item-left">
-                        <div class="settings-icon" style="background: rgba(209, 36, 43, 0.1);">🗑️</div>
-                        <div>
-                            <div class="settings-item-title" style="color: var(--logo-red);">Clear All Data</div>
-                            <div class="settings-item-desc">Delete all referrals and start fresh</div>
-                        </div>
-                    </div>
-                    <span class="settings-arrow" style="color: var(--logo-red);">→</span>
-                </div>
-            </div>
-
-            <div style="text-align: center; padding: 20px; color: var(--text-gray); font-size: 12px;">
-                <p>Tim Ferguson Plumbing, Air & Electric</p>
-                <p>Serving Jackson & Memphis since 1999</p>
-                <p style="margin-top: 8px;">Neighbors Helping Neighbors 🏠</p>
-            </div>
-        </div>
-    </main>
-
-    <!-- Bottom Tab Bar (Mobile) -->
-    <nav class="tab-bar">
-        <button class="tab-item active" data-tab="create" aria-label="Create ticket">
-            <span class="tab-icon">🎟️</span>
-            <span class="tab-label">Create</span>
-        </button>
-        <button class="tab-item" data-tab="referrals" aria-label="My referrals">
-            <span class="tab-icon">📋</span>
-            <span class="tab-label">Referrals</span>
-        </button>
-        <button class="tab-item" data-tab="credits" aria-label="My credits">
-            <span class="tab-icon">💰</span>
-            <span class="tab-label">Credits</span>
-        </button>
-        <button class="tab-item" data-tab="settings" aria-label="Settings">
-            <span class="tab-icon">⚙️</span>
-            <span class="tab-label">Settings</span>
-        </button>
-    </nav>
+            </section>
+        </main>
+    </div>
 
     <!-- Toast Container -->
-    <div class="toast-container">
-        <div class="toast" id="toast"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Undo Banner -->
+    <div class="undo-banner hidden" id="undoBanner">
+        <span>Assessment deleted</span>
+        <button class="undo-btn" onclick="undoDelete()">Undo</button>
     </div>
 
-    <!-- Import CSV Modal -->
-    <div class="modal-overlay" id="importModal">
+    <!-- Guide Modal -->
+    <div class="modal-overlay" id="guideModal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Paste Data</h3>
-                <button class="modal-close" onclick="closeModal('importModal')" aria-label="Close modal">✕</button>
+                <h3 class="modal-title" id="guideTitle">Guide</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div class="modal-body">
-                <p style="font-size: 14px; color: var(--text-gray); margin-bottom: 16px;">
-                    Paste tab-delimited data (Name, Phone, Status). One referral per line.
-                </p>
-                <textarea class="form-input" id="pasteData" rows="6" placeholder="John Smith&#9;731-555-1234&#9;sent&#10;Jane Doe&#9;731-555-5678&#9;converted"></textarea>
-                <button class="btn btn-primary" style="margin-top: 16px;" onclick="importFromClipboard()">Import Data</button>
+            <div class="modal-body" id="guideBody">
+                <!-- Dynamic content -->
             </div>
         </div>
     </div>
 
     <script>
-        // ===== SECURITY LAYER =====
-        // Hash function for access key validation
-        function _h(s) {
-            let h = 0;
-            for (let i = 0; i < s.length; i++) {
-                h = ((h << 5) - h) + s.charCodeAt(i);
-                h |= 0;
+        // ============================================
+        // SECURITY LAYER - Access Control
+        // ============================================
+        
+        // Hash function for access validation
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        
+        // Precomputed hash of "ferg2026"
+        const _V = 181969462;
+        
+        // Check access and unlock
+        function checkAccess() {
+            const input = document.getElementById('securityInput').value;
+            const errorEl = document.getElementById('securityError');
+            
+            if (_h(input) === _V) {
+                document.getElementById('securityOverlay').classList.add('hidden');
+                localStorage.setItem('tf_access_granted', 'true');
+                initApp();
+            } else {
+                errorEl.textContent = 'Invalid access key';
+                document.getElementById('securityInput').value = '';
+                document.getElementById('securityInput').focus();
             }
-            return h;
         }
         
-        const _V = 181969462; // Hash of 'ferg2026'
-        const _k = new URLSearchParams(window.location.search).get('key');
+        // Allow Enter key to submit
+        document.getElementById('securityInput')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkAccess();
+        });
         
-        // Check access key on load
-        (function checkAccess() {
-            if (!_k || _h(_k) !== _V) {
-                document.getElementById('securityGate').style.display = 'flex';
-                document.body.style.overflow = 'hidden';
+        // Check for existing access
+        function hasAccess() {
+            return localStorage.getItem('tf_access_granted') === 'true';
+        }
+        
+        // Anti-scrape measures
+        if (typeof document !== 'undefined') {
+            // Disable right-click
+            document.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
                 return false;
-            }
-            return true;
-        })();
+            });
+            
+            // Block keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                // Ctrl+S (Save)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+U (View Source)
+                if (e.ctrlKey && e.key === 'u') {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I (DevTools)
+                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                    return false;
+                }
+                // F12 (DevTools)
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+        
+        // ============================================
+        // Tim Ferguson Emergency Triage System
+        // Jackson, TN - Premium Custom Tool
+        // ============================================
 
-        // Disable right-click context menu
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
-
-        // Block DevTools shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl+S (Save)
-            if (e.ctrlKey && e.key === 's') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+U (View Source)
-            if (e.ctrlKey && e.key === 'u') {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+I (DevTools)
-            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                e.preventDefault();
-                return false;
-            }
-            // F12 (DevTools)
-            if (e.key === 'F12') {
-                e.preventDefault();
-                return false;
-            }
-        });
-
-        // ===== DATABASE SETUP =====
-        const DB_NAME = 'FergusonReferrals';
+        const APP_VERSION = '1.0.1';
+        const DB_NAME = 'TimFergusonTriageDB';
         const DB_VERSION = 1;
-        let db = null;
+        const STORE_NAME = 'assessments';
+        const SETTINGS_KEY = 'tf_triage_settings';
 
-        // Demo data for Jackson TN
-        const DEMO_DATA = {
-            settings: {
-                name: 'Wyly Paris',
-                phone: '(731) 427-5632'
-            },
-            referrals: [
+        let db = null;
+        let assessments = [];
+        let currentAssessment = null;
+        let currentStep = 0;
+        let deletedAssessment = null;
+        let undoTimeout = null;
+
+        // Triage questions by category
+        const triageQuestions = {
+            plumbing: [
                 {
-                    id: 'demo-1',
-                    neighborName: 'Marcus Johnson',
-                    neighborPhone: '(731) 664-8821',
-                    code: 'NBR-7K4M',
-                    status: 'converted',
-                    creditEarned: 25,
-                    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-                    isDemo: true
+                    id: 'water_active',
+                    text: 'Is water actively leaking or flooding right now?',
+                    options: [
+                        { label: 'Yes, water is spreading', value: 'yes', severity: 40 },
+                        { label: 'Small drip or contained', value: 'minor', severity: 15 },
+                        { label: 'No active water', value: 'no', severity: 0 }
+                    ]
                 },
                 {
-                    id: 'demo-2',
-                    neighborName: 'Patricia Williams',
-                    neighborPhone: '(731) 422-3344',
-                    code: 'NBR-2P8X',
-                    status: 'sent',
-                    creditEarned: 0,
-                    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    isDemo: true
+                    id: 'water_shutoff',
+                    text: 'Can you access and turn off the water supply?',
+                    options: [
+                        { label: "Yes, I've turned it off", value: 'yes', severity: -10 },
+                        { label: "Can't find it / Won't turn", value: 'no', severity: 20 },
+                        { label: 'Not applicable', value: 'na', severity: 0 }
+                    ]
                 },
                 {
-                    id: 'demo-3',
-                    neighborName: 'Bobby Ray Henderson',
-                    neighborPhone: '(731) 988-1156',
-                    code: 'NBR-9H2L',
-                    status: 'converted',
-                    creditEarned: 25,
-                    createdAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
-                    isDemo: true
+                    id: 'property_damage',
+                    text: 'Is water damaging flooring, walls, or belongings?',
+                    options: [
+                        { label: 'Yes, significant damage', value: 'yes', severity: 25 },
+                        { label: 'Minor / contained with towels', value: 'minor', severity: 10 },
+                        { label: 'No damage occurring', value: 'no', severity: 0 }
+                    ]
                 },
                 {
-                    id: 'demo-4',
-                    neighborName: 'Sarah Thompson',
-                    neighborPhone: '(731) 512-7789',
-                    code: 'NBR-5T3K',
-                    status: 'sent',
-                    creditEarned: 0,
-                    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                    isDemo: true
+                    id: 'home_age',
+                    text: 'Was your home built before 1980?',
+                    jacksonLogic: true,
+                    options: [
+                        { label: 'Yes (older pipes)', value: 'yes', severity: 10 },
+                        { label: 'No / Not sure', value: 'no', severity: 0 }
+                    ]
+                }
+            ],
+            hvac: [
+                {
+                    id: 'temp_unsafe',
+                    text: 'Is the indoor temperature unsafe for occupants?',
+                    options: [
+                        { label: 'Yes, dangerous levels', value: 'yes', severity: 40 },
+                        { label: 'Uncomfortable but safe', value: 'minor', severity: 15 },
+                        { label: 'Temperature is fine', value: 'no', severity: 0 }
+                    ]
+                },
+                {
+                    id: 'vulnerable_occupants',
+                    text: 'Are there elderly, infants, or pets in the home?',
+                    options: [
+                        { label: 'Yes', value: 'yes', severity: 20 },
+                        { label: 'No', value: 'no', severity: 0 }
+                    ]
+                },
+                {
+                    id: 'strange_sounds',
+                    text: 'Is the unit making unusual noises or smells?',
+                    options: [
+                        { label: 'Burning smell or loud banging', value: 'yes', severity: 30 },
+                        { label: 'Minor rattling or humming', value: 'minor', severity: 10 },
+                        { label: 'Runs normally or not at all', value: 'no', severity: 0 }
+                    ]
+                },
+                {
+                    id: 'thermostat_check',
+                    text: 'Have you checked thermostat batteries and settings?',
+                    options: [
+                        { label: 'Yes, still not working', value: 'yes', severity: 5 },
+                        { label: "No, I'll try that", value: 'no', severity: -15 }
+                    ]
+                }
+            ],
+            electrical: [
+                {
+                    id: 'sparks_smoke',
+                    text: 'Did you see sparks, smoke, or smell burning?',
+                    options: [
+                        { label: 'Yes', value: 'yes', severity: 50 },
+                        { label: 'No', value: 'no', severity: 0 }
+                    ]
+                },
+                {
+                    id: 'power_scope',
+                    text: 'How much of your home lost power?',
+                    options: [
+                        { label: 'Whole house is out', value: 'whole', severity: 20 },
+                        { label: 'One room or area', value: 'partial', severity: 10 },
+                        { label: 'Single outlet or switch', value: 'single', severity: 5 }
+                    ]
+                },
+                {
+                    id: 'breaker_check',
+                    text: 'Have you checked your breaker panel?',
+                    options: [
+                        { label: 'Yes, breakers keep tripping', value: 'tripping', severity: 25 },
+                        { label: 'Yes, everything looks normal', value: 'normal', severity: 5 },
+                        { label: "No / Don't know how", value: 'no', severity: 10 }
+                    ]
+                },
+                {
+                    id: 'neighbor_power',
+                    text: 'Do your neighbors have power?',
+                    jacksonLogic: true,
+                    options: [
+                        { label: 'Yes, they have power', value: 'yes', severity: 10 },
+                        { label: "No, it's a utility outage", value: 'no', severity: -30 },
+                        { label: "Don't know", value: 'unknown', severity: 0 }
+                    ]
                 }
             ]
         };
 
-        // Initialize database
+        // Emergency Guides Content
+        const guides = {
+            shutoff: {
+                title: 'Water Shut-Off Locations',
+                content: `
+                    <p><strong>Main Shut-Off Valve:</strong> Usually located near where the main water line enters your home — often in the basement, crawl space, or near the water heater.</p>
+                    <ul>
+                        <li><strong>Gate Valve:</strong> Round handle — turn clockwise until tight</li>
+                        <li><strong>Ball Valve:</strong> Lever handle — turn 90° perpendicular to pipe</li>
+                    </ul>
+                    <p><strong>Street Shut-Off:</strong> Located at the meter near the curb. Requires a special key — we can help if your main valve fails.</p>
+                    <p><strong>Jackson Tip:</strong> In older midtown homes, the main valve may be in an unfinished utility closet or behind the water heater.</p>
+                    <p><strong>After Shut-Off:</strong> Open a faucet at the lowest point in your home to drain remaining water.</p>
+                `
+            },
+            breaker: {
+                title: 'Breaker Panel Basics',
+                content: `
+                    <p><strong>Finding Your Panel:</strong> Usually in a garage, basement, utility room, or hallway closet. It's a gray metal box with a door.</p>
+                    <p><strong>Identifying a Tripped Breaker:</strong></p>
+                    <ul>
+                        <li>A tripped breaker will be in the middle position (not fully ON or OFF)</li>
+                        <li>Some breakers show a red or orange indicator when tripped</li>
+                    </ul>
+                    <p><strong>To Reset:</strong></p>
+                    <ol>
+                        <li>Push the breaker fully to OFF (you'll feel a click)</li>
+                        <li>Then push it firmly to ON</li>
+                    </ol>
+                    <p><strong>⚠️ Warning:</strong> If a breaker trips repeatedly, DO NOT keep resetting it. This indicates a serious problem — call us immediately.</p>
+                    <p><strong>Jackson Note:</strong> Many older Jackson homes have Federal Pacific or Zinsco panels that should be replaced for safety.</p>
+                `
+            },
+            gas: {
+                title: 'Gas Leak Response',
+                content: `
+                    <p><strong>⚠️ CRITICAL — If you smell gas:</strong></p>
+                    <ol>
+                        <li><strong>Do NOT</strong> turn on/off any lights or electrical switches</li>
+                        <li><strong>Do NOT</strong> use your phone inside the home</li>
+                        <li><strong>Leave immediately</strong> — leave doors open as you exit</li>
+                        <li><strong>Call 911</strong> from outside, away from the building</li>
+                    </ol>
+                    <p><strong>Gas Shut-Off:</strong> Located on the gas meter outside. Requires a wrench to turn the valve 90° (perpendicular to pipe).</p>
+                    <p><strong>Natural gas smells like:</strong> Rotten eggs or sulfur (the smell is added for safety).</p>
+                    <p><strong>For Jackson City Gas:</strong> (731) 423-8490</p>
+                    <p><strong>We handle:</strong> Gas line repairs, appliance hookups, and gas leak detection after the area is cleared safe.</p>
+                `
+            },
+            freeze: {
+                title: 'Freeze Prevention',
+                content: `
+                    <p><strong>Jackson freeze risk:</strong> Temps below 28°F can freeze pipes, especially in older homes and exterior walls.</p>
+                    <p><strong>Prevention Steps:</strong></p>
+                    <ul>
+                        <li>Let faucets drip slightly — moving water freezes slower</li>
+                        <li>Open cabinet doors under sinks on exterior walls</li>
+                        <li>Keep thermostat at 55°F minimum, even when away</li>
+                        <li>Disconnect garden hoses and cover outdoor spigots</li>
+                    </ul>
+                    <p><strong>If Pipes Freeze:</strong></p>
+                    <ul>
+                        <li>Turn off water at the main shut-off valve immediately</li>
+                        <li>Keep the affected faucet open</li>
+                        <li>Use a hair dryer to slowly thaw visible pipes (NEVER a torch)</li>
+                    </ul>
+                    <p><strong>Signs of Burst Pipe:</strong> No water, water stains on walls/ceiling, or hissing sounds.</p>
+                    <p><strong>Jackson Warning:</strong> Homes in midtown with pier-and-beam foundations are especially vulnerable — we offer pre-winter pipe insulation.</p>
+                `
+            },
+            hvac: {
+                title: 'HVAC Quick Fixes',
+                content: `
+                    <p><strong>Before You Call — Check These First:</strong></p>
+                    <ul>
+                        <li><strong>Thermostat batteries:</strong> Most require 2 AA batteries. A blank screen often means dead batteries.</li>
+                        <li><strong>Thermostat setting:</strong> Make sure it's on HEAT or COOL (not just FAN or OFF)</li>
+                        <li><strong>Air filter:</strong> A clogged filter can cause shutdowns. Check monthly — located in the return air vent or at the unit.</li>
+                        <li><strong>Breaker panel:</strong> Check for a tripped breaker labeled "HVAC," "Furnace," or "AC"</li>
+                        <li><strong>Outdoor unit:</strong> Make sure nothing is blocking the condenser (leaves, debris, ice)</li>
+                    </ul>
+                    <p><strong>Common Issues That Need Us:</strong></p>
+                    <ul>
+                        <li>Refrigerant leaks (AC blowing warm)</li>
+                        <li>Blower motor failure</li>
+                        <li>Ignition problems (furnace not lighting)</li>
+                        <li>Frozen evaporator coils</li>
+                    </ul>
+                    <p><strong>Jackson Humidity Tip:</strong> Our humid summers make AC drain clogs common — clear your condensate drain line with vinegar monthly.</p>
+                `
+            }
+        };
+
+        // Demo data for Jackson, TN
+        const demoAssessments = [
+            {
+                id: 'demo_1',
+                category: 'plumbing',
+                categoryLabel: 'Plumbing',
+                severity: 75,
+                severityLevel: 'critical',
+                result: 'emergency',
+                summary: 'Burst pipe in midtown home — water flooding basement',
+                answers: { water_active: 'yes', water_shutoff: 'no', property_damage: 'yes', home_age: 'yes' },
+                outcome: 'dispatched',
+                notes: 'Pre-1960 home, galvanized pipe failure. Tech arrived 45 min.',
+                timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+                isDemo: true
+            },
+            {
+                id: 'demo_2',
+                category: 'plumbing',
+                categoryLabel: 'Plumbing',
+                severity: 25,
+                severityLevel: 'safe',
+                result: 'next-day',
+                summary: 'Running toilet at 2 AM — flapper valve issue',
+                answers: { water_active: 'minor', water_shutoff: 'yes', property_damage: 'no', home_age: 'no' },
+                outcome: 'scheduled',
+                notes: 'Customer saved $149 by booking 8 AM slot',
+                timestamp: new Date(Date.now() - 86400000).toISOString(),
+                isDemo: true
+            },
+            {
+                id: 'demo_3',
+                category: 'hvac',
+                categoryLabel: 'HVAC',
+                severity: 65,
+                severityLevel: 'warning',
+                result: 'emergency',
+                summary: 'No heat during 28°F cold snap — elderly resident',
+                answers: { temp_unsafe: 'minor', vulnerable_occupants: 'yes', strange_sounds: 'no', thermostat_check: 'yes' },
+                outcome: 'dispatched',
+                notes: 'Weather alert mode active. Ignitor failure.',
+                timestamp: new Date(Date.now() - 43200000).toISOString(),
+                isDemo: true
+            },
+            {
+                id: 'demo_4',
+                category: 'electrical',
+                categoryLabel: 'Electrical',
+                severity: 35,
+                severityLevel: 'warning',
+                result: 'next-day',
+                summary: 'Flickering lights in master bedroom — outlet warm',
+                answers: { sparks_smoke: 'no', power_scope: 'single', breaker_check: 'normal', neighbor_power: 'yes' },
+                outcome: 'scheduled',
+                notes: 'Loose connection suspected. Morning appointment.',
+                timestamp: new Date(Date.now() - 21600000).toISOString(),
+                isDemo: true
+            }
+        ];
+
+        // ============================================
+        // Database Functions
+        // ============================================
+
         async function initDB() {
             return new Promise((resolve, reject) => {
-                if (!window.indexedDB) {
-                    console.warn('IndexedDB not supported, falling back to localStorage');
-                    resolve(null);
-                    return;
-                }
-
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
                 request.onerror = () => {
-                    console.error('IndexedDB error:', request.error);
+                    console.warn('IndexedDB failed, using localStorage fallback');
                     resolve(null);
                 };
 
-                request.onsuccess = () => {
-                    db = request.result;
+                request.onsuccess = (event) => {
+                    db = event.target.result;
                     resolve(db);
                 };
 
                 request.onupgradeneeded = (event) => {
                     const database = event.target.result;
-                    
-                    if (!database.objectStoreNames.contains('referrals')) {
-                        const store = database.createObjectStore('referrals', { keyPath: 'id' });
-                        store.createIndex('status', 'status', { unique: false });
-                        store.createIndex('createdAt', 'createdAt', { unique: false });
-                    }
-                    
-                    if (!database.objectStoreNames.contains('settings')) {
-                        database.createObjectStore('settings', { keyPath: 'key' });
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                        store.createIndex('category', 'category', { unique: false });
+                        store.createIndex('severityLevel', 'severityLevel', { unique: false });
                     }
                 };
             });
         }
 
-        // ===== DATA OPERATIONS =====
-        async function getAllReferrals() {
-            if (db) {
-                return new Promise((resolve, reject) => {
-                    const tx = db.transaction('referrals', 'readonly');
-                    const store = tx.objectStore('referrals');
-                    const request = store.getAll();
-                    request.onsuccess = () => resolve(request.result || []);
-                    request.onerror = () => resolve([]);
-                });
-            } else {
-                const data = localStorage.getItem('ferguson_referrals');
-                return data ? JSON.parse(data) : [];
-            }
-        }
-
-        async function saveReferral(referral) {
-            if (db) {
-                return new Promise((resolve, reject) => {
-                    const tx = db.transaction('referrals', 'readwrite');
-                    const store = tx.objectStore('referrals');
-                    store.put(referral);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = () => reject(tx.error);
-                });
-            } else {
-                const referrals = await getAllReferrals();
-                const index = referrals.findIndex(r => r.id === referral.id);
-                if (index >= 0) {
-                    referrals[index] = referral;
-                } else {
-                    referrals.push(referral);
-                }
-                localStorage.setItem('ferguson_referrals', JSON.stringify(referrals));
-            }
-        }
-
-        async function deleteReferral(id) {
-            if (db) {
-                return new Promise((resolve, reject) => {
-                    const tx = db.transaction('referrals', 'readwrite');
-                    const store = tx.objectStore('referrals');
-                    store.delete(id);
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = () => reject(tx.error);
-                });
-            } else {
-                const referrals = await getAllReferrals();
-                const filtered = referrals.filter(r => r.id !== id);
-                localStorage.setItem('ferguson_referrals', JSON.stringify(filtered));
-            }
-        }
-
-        async function getSetting(key) {
+        async function loadAssessments() {
             if (db) {
                 return new Promise((resolve) => {
-                    const tx = db.transaction('settings', 'readonly');
-                    const store = tx.objectStore('settings');
-                    const request = store.get(key);
-                    request.onsuccess = () => resolve(request.result?.value);
-                    request.onerror = () => resolve(null);
+                    const transaction = db.transaction([STORE_NAME], 'readonly');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.getAll();
+
+                    request.onsuccess = () => {
+                        assessments = request.result || [];
+                        resolve(assessments);
+                    };
+
+                    request.onerror = () => {
+                        assessments = JSON.parse(localStorage.getItem('tf_assessments') || '[]');
+                        resolve(assessments);
+                    };
                 });
             } else {
-                const data = localStorage.getItem('ferguson_settings');
-                const settings = data ? JSON.parse(data) : {};
-                return settings[key];
+                assessments = JSON.parse(localStorage.getItem('tf_assessments') || '[]');
+                return assessments;
             }
         }
 
-        async function saveSetting(key, value) {
+        async function saveAssessment(assessment) {
             if (db) {
                 return new Promise((resolve, reject) => {
-                    const tx = db.transaction('settings', 'readwrite');
-                    const store = tx.objectStore('settings');
-                    store.put({ key, value });
-                    tx.oncomplete = () => resolve();
-                    tx.onerror = () => reject(tx.error);
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    const request = store.put(assessment);
+
+                    request.onsuccess = () => {
+                        showToast('Assessment saved', 'success');
+                        resolve();
+                    };
+
+                    request.onerror = () => {
+                        saveToLocalStorage();
+                        resolve();
+                    };
                 });
             } else {
-                const data = localStorage.getItem('ferguson_settings');
-                const settings = data ? JSON.parse(data) : {};
-                settings[key] = value;
-                localStorage.setItem('ferguson_settings', JSON.stringify(settings));
+                saveToLocalStorage();
             }
         }
 
-        // ===== DEMO DATA =====
-        async function loadDemoData() {
-            const referrals = await getAllReferrals();
-            const hasDemo = await getSetting('hasLoadedDemo');
-            
-            if (referrals.length === 0 && !hasDemo) {
-                // Load demo settings
-                await saveSetting('userName', DEMO_DATA.settings.name);
-                await saveSetting('userPhone', DEMO_DATA.settings.phone);
-                
-                // Load demo referrals
-                for (const ref of DEMO_DATA.referrals) {
-                    await saveReferral(ref);
-                }
-                
-                await saveSetting('showDemoBanner', true);
-                document.getElementById('demoBanner').style.display = 'flex';
+        async function deleteAssessment(id) {
+            const index = assessments.findIndex(a => a.id === id);
+            if (index === -1) return;
+
+            deletedAssessment = { ...assessments[index], index };
+            assessments.splice(index, 1);
+
+            if (db) {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                store.delete(id);
+            }
+
+            saveToLocalStorage();
+            showUndoBanner();
+            renderHistory();
+            updateStats();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('tf_assessments', JSON.stringify(assessments));
+        }
+
+        async function undoDelete() {
+            if (!deletedAssessment) return;
+
+            assessments.splice(deletedAssessment.index, 0, deletedAssessment);
+
+            if (db) {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                store.put(deletedAssessment);
+            }
+
+            saveToLocalStorage();
+            hideUndoBanner();
+            deletedAssessment = null;
+            renderHistory();
+            updateStats();
+            showToast('Assessment restored', 'success');
+        }
+
+        // ============================================
+        // Settings Functions
+        // ============================================
+
+        function getSettings() {
+            const defaults = {
+                weatherAlertEnabled: false,
+                soundEnabled: true,
+                demoDismissed: false
+            };
+            const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+            return { ...defaults, ...saved };
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+
+        function toggleWeatherAlert() {
+            const settings = getSettings();
+            settings.weatherAlertEnabled = !settings.weatherAlertEnabled;
+            saveSettings(settings);
+
+            document.getElementById('weatherToggle').classList.toggle('active', settings.weatherAlertEnabled);
+            document.getElementById('weatherAlert').classList.toggle('hidden', !settings.weatherAlertEnabled);
+
+            showToast(settings.weatherAlertEnabled ? 'Weather alert mode ON — Severity thresholds adjusted' : 'Weather alert mode OFF', 'success');
+        }
+
+        function dismissWeatherAlert() {
+            const settings = getSettings();
+            settings.weatherAlertEnabled = false;
+            saveSettings(settings);
+            document.getElementById('weatherAlert').classList.add('hidden');
+            document.getElementById('weatherToggle').classList.remove('active');
+        }
+
+        function toggleSetting(key) {
+            const settings = getSettings();
+            settings[key] = !settings[key];
+            saveSettings(settings);
+            document.getElementById('soundToggle').classList.toggle('active', settings.soundEnabled);
+        }
+
+        // ============================================
+        // UI Functions
+        // ============================================
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+            document.getElementById(screenId + 'Screen').classList.add('active');
+            document.querySelector(`[data-screen="${screenId}"]`).classList.add('active');
+
+            if (screenId === 'triage' && !currentAssessment) {
+                renderCategorySelection();
+            } else if (screenId === 'history') {
+                renderHistory();
+            } else if (screenId === 'dashboard') {
+                updateStats();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `${type === 'success' ? '✓' : '⚠'} ${message}`;
+            container.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function showUndoBanner() {
+            clearTimeout(undoTimeout);
+            document.getElementById('undoBanner').classList.remove('hidden');
+
+            undoTimeout = setTimeout(() => {
+                hideUndoBanner();
+                deletedAssessment = null;
+            }, 5000);
+        }
+
+        function hideUndoBanner() {
+            document.getElementById('undoBanner').classList.add('hidden');
+        }
+
+        // ============================================
+        // Triage Flow
+        // ============================================
+
+        function renderCategorySelection() {
+            const hasAssessments = assessments.filter(a => !a.isDemo).length > 0;
+            const settings = getSettings();
+
+            let html = `
+                <div class="screen-intro">
+                    <h2>Emergency Assessment</h2>
+                    <p>Select your issue type to start the diagnostic</p>
+                </div>
+            `;
+
+            if (settings.weatherAlertEnabled) {
+                html += `<div class="jackson-badge">❄️ Jackson Weather Alert Active</div>`;
+            }
+
+            html += `
+                <div class="category-grid">
+                    <div class="category-card" onclick="startTriage('plumbing')" tabindex="0">
+                        <div class="category-icon">🚰</div>
+                        <div class="category-label">Plumbing</div>
+                    </div>
+                    <div class="category-card" onclick="startTriage('hvac')" tabindex="0">
+                        <div class="category-icon">🌡️</div>
+                        <div class="category-label">HVAC</div>
+                    </div>
+                    <div class="category-card" onclick="startTriage('electrical')" tabindex="0">
+                        <div class="category-icon">⚡</div>
+                        <div class="category-label">Electrical</div>
+                    </div>
+                </div>
+            `;
+
+            if (!hasAssessments && settings.demoDismissed) {
+                html += `
+                    <div class="empty-state" style="margin-top: 32px;">
+                        <p class="empty-text">Or <a href="#" onclick="showScreen('history'); return false;" style="color: var(--tf-red);">import existing data</a></p>
+                    </div>
+                `;
+            }
+
+            document.getElementById('triageContent').innerHTML = html;
+        }
+
+        function startTriage(category) {
+            currentAssessment = {
+                id: 'tf_' + Date.now(),
+                category: category,
+                categoryLabel: category.charAt(0).toUpperCase() + category.slice(1),
+                answers: {},
+                severity: 0,
+                timestamp: new Date().toISOString(),
+                isDemo: false
+            };
+            currentStep = 0;
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const questions = triageQuestions[currentAssessment.category];
+            const question = questions[currentStep];
+            const progress = ((currentStep) / questions.length) * 100;
+
+            let html = `
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="progress-text">Question ${currentStep + 1} of ${questions.length}</div>
+                </div>
+            `;
+
+            html += `<div class="question-card">`;
+
+            if (question.jacksonLogic) {
+                html += `<div class="jackson-badge">📍 Jackson Logic</div>`;
+            }
+
+            html += `
+                <div class="question-number">Question ${currentStep + 1}</div>
+                <div class="question-text">${question.text}</div>
+                <div class="options-grid">
+            `;
+
+            question.options.forEach((opt, i) => {
+                html += `
+                    <button class="option-btn" onclick="answerQuestion('${question.id}', '${opt.value}', ${opt.severity})">
+                        ${opt.label}
+                    </button>
+                `;
+            });
+
+            html += `</div></div>`;
+
+            if (currentStep > 0) {
+                html += `
+                    <button class="btn btn-secondary" onclick="previousQuestion()" style="margin-top: 16px;">
+                        ← Back
+                    </button>
+                `;
+            }
+
+            document.getElementById('triageContent').innerHTML = html;
+        }
+
+        function answerQuestion(questionId, value, severityPoints) {
+            currentAssessment.answers[questionId] = value;
+
+            // Apply weather alert modifier for HVAC temperature questions
+            const settings = getSettings();
+            if (settings.weatherAlertEnabled && currentAssessment.category === 'hvac' && questionId === 'temp_unsafe') {
+                severityPoints += 15; // Bump severity during freeze warnings
+            }
+            if (settings.weatherAlertEnabled && currentAssessment.category === 'plumbing' && questionId === 'home_age' && value === 'yes') {
+                severityPoints += 10; // Older pipes + freeze = higher risk
+            }
+
+            currentAssessment.severity += severityPoints;
+
+            const questions = triageQuestions[currentAssessment.category];
+            currentStep++;
+
+            if (currentStep >= questions.length) {
+                calculateResult();
             } else {
-                const showBanner = await getSetting('showDemoBanner');
-                document.getElementById('demoBanner').style.display = showBanner ? 'flex' : 'none';
+                renderQuestion();
             }
         }
 
-        async function clearDemoData(event) {
-            if (event) event.stopPropagation();
-            
-            const referrals = await getAllReferrals();
-            const demoRefs = referrals.filter(r => r.isDemo);
-            
-            for (const ref of demoRefs) {
-                await deleteReferral(ref.id);
-            }
-            
-            await saveSetting('showDemoBanner', false);
-            await saveSetting('hasLoadedDemo', true);
-            document.getElementById('demoBanner').style.display = 'none';
-            
-            showToast('Sample data cleared. You\'re starting fresh!', 'success');
-            renderReferrals();
-            renderCredits();
-        }
-
-        // ===== UI FUNCTIONS =====
-        function switchTab(tabName) {
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            
-            // Update mobile tabs
-            document.querySelectorAll('.tab-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.tab === tabName);
-            });
-            
-            // Update desktop nav
-            document.querySelectorAll('.desktop-nav-item').forEach(el => {
-                el.classList.toggle('active', el.dataset.tab === tabName);
-            });
-
-            // Load settings data if switching to settings
-            if (tabName === 'settings') {
-                loadSettingsForm();
-            }
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        let toastTimeout;
-        function showToast(message, type = 'default', undoCallback = null) {
-            const toast = document.getElementById('toast');
-            
-            // Clear existing timeout
-            if (toastTimeout) {
-                clearTimeout(toastTimeout);
-            }
-            
-            toast.className = 'toast show ' + type;
-            
-            let html = '<span>' + message + '</span>';
-            if (undoCallback) {
-                html += `<button class="toast-undo" onclick="handleUndo()">Undo</button>`;
-                window.currentUndoCallback = undoCallback;
-            }
-            toast.innerHTML = html;
-            
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-                window.currentUndoCallback = null;
-            }, undoCallback ? 5000 : 3000);
-        }
-
-        function handleUndo() {
-            if (window.currentUndoCallback) {
-                window.currentUndoCallback();
-                document.getElementById('toast').classList.remove('show');
+        function previousQuestion() {
+            if (currentStep > 0) {
+                currentStep--;
+                // We'd need to subtract the previous severity, but for simplicity we just go back
+                renderQuestion();
             }
         }
 
-        function generateCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let code = 'NBR-';
-            for (let i = 0; i < 4; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
+        function calculateResult() {
+            // Normalize severity to 0-100 range and determine level
+            const severity = Math.min(100, Math.max(0, currentAssessment.severity));
+            currentAssessment.severity = severity;
+
+            if (severity >= 50) {
+                currentAssessment.severityLevel = 'critical';
+                currentAssessment.result = 'emergency';
+                currentAssessment.summary = `${currentAssessment.categoryLabel} emergency — immediate dispatch required`;
+            } else if (severity >= 30) {
+                currentAssessment.severityLevel = 'warning';
+                currentAssessment.result = 'next-day';
+                currentAssessment.summary = `${currentAssessment.categoryLabel} issue — priority morning slot recommended`;
+            } else {
+                currentAssessment.severityLevel = 'safe';
+                currentAssessment.result = 'next-day';
+                currentAssessment.summary = `${currentAssessment.categoryLabel} issue — safe to wait for regular appointment`;
             }
-            return code;
+
+            renderResult();
         }
 
-        function formatDate(dateStr) {
-            const date = new Date(dateStr);
-            const now = new Date();
-            const diff = now - date;
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            
-            if (days === 0) return 'Today';
-            if (days === 1) return 'Yesterday';
-            if (days < 7) return `${days} days ago`;
-            
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        function renderResult() {
+            const isCritical = currentAssessment.severityLevel === 'critical';
+            const isWarning = currentAssessment.severityLevel === 'warning';
+
+            let html = `<div class="result-container">`;
+
+            html += `
+                <div class="severity-indicator ${currentAssessment.severityLevel}">
+                    <div class="severity-score">${currentAssessment.severity}</div>
+                    <div class="severity-label">${currentAssessment.severityLevel.toUpperCase()}</div>
+                </div>
+            `;
+
+            if (isCritical) {
+                html += `
+                    <h2 class="result-title">🚨 Emergency Dispatch Required</h2>
+                    <p class="result-subtitle">Your situation requires immediate attention. A priority technician will be dispatched.</p>
+                    <div class="btn-group">
+                        <a href="tel:+17314240015" class="btn btn-call">📞 Call VIP Priority Line</a>
+                        <button class="btn btn-secondary" onclick="saveAndReset('dispatched')">Log & Start New Assessment</button>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <h2 class="result-title">${isWarning ? '⚠️ Urgent But Safe' : '✓ Safe to Wait'}</h2>
+                    <p class="result-subtitle">${isWarning ? 'We recommend booking a priority morning slot.' : 'This can wait until regular business hours.'}</p>
+                    <div class="savings-badge">💰 Save $149 Dispatch Fee</div>
+                    <p style="color: var(--tf-muted); font-size: 0.9rem; margin-bottom: 24px;">Book a Priority 8 AM Slot Instead</p>
+                    <div class="btn-group">
+                        <a href="tel:+17314240015" class="btn btn-primary">📅 Book Priority 8 AM Slot</a>
+                        <button class="btn btn-secondary" onclick="saveAndReset('scheduled')">Log & Start New Assessment</button>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+
+            document.getElementById('triageContent').innerHTML = html;
         }
 
-        // ===== FORM HANDLING =====
-        let currentTicket = null;
+        async function saveAndReset(outcome) {
+            currentAssessment.outcome = outcome;
+            assessments.unshift(currentAssessment);
+            await saveAssessment(currentAssessment);
+            saveToLocalStorage();
 
-        document.getElementById('ticketForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const yourNameInput = document.getElementById('yourName');
-            const neighborNameInput = document.getElementById('neighborName');
-            const neighborPhoneInput = document.getElementById('neighborPhone');
-            
-            const yourName = yourNameInput.value.trim();
-            const neighborName = neighborNameInput.value.trim();
-            const neighborPhone = neighborPhoneInput.value.trim();
-            
-            // Reset errors
-            yourNameInput.classList.remove('error');
-            neighborNameInput.classList.remove('error');
-            
-            // Validation
-            if (!yourName) {
-                yourNameInput.classList.add('error');
-                setTimeout(() => yourNameInput.classList.remove('error'), 400);
-                showToast('Please enter your name', 'error');
+            currentAssessment = null;
+            currentStep = 0;
+
+            updateStats();
+            renderCategorySelection();
+        }
+
+        // ============================================
+        // History & Stats
+        // ============================================
+
+        function renderHistory() {
+            const container = document.getElementById('historyContent');
+
+            if (assessments.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📋</div>
+                        <h3 class="empty-title">No Assessments Yet</h3>
+                        <p class="empty-text">Completed triage assessments will appear here.</p>
+                        <button class="btn btn-primary" onclick="showScreen('triage')">Start First Assessment</button>
+                    </div>
+                `;
                 return;
             }
-            
-            if (!neighborName) {
-                neighborNameInput.classList.add('error');
-                setTimeout(() => neighborNameInput.classList.remove('error'), 400);
-                showToast('Please enter neighbor\'s name', 'error');
-                return;
-            }
-            
-            // Show loading state
-            const btn = document.getElementById('createTicketBtn');
-            const originalText = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Creating...';
-            
-            try {
-                // Save user's name for future
-                await saveSetting('userName', yourName);
-                
-                // Create referral
-                const referral = {
-                    id: 'ref-' + Date.now(),
-                    neighborName,
-                    neighborPhone,
-                    code: generateCode(),
-                    status: 'sent',
-                    creditEarned: 0,
-                    createdAt: new Date().toISOString(),
-                    isDemo: false
-                };
-                
-                await saveReferral(referral);
-                currentTicket = referral;
-                
-                // Show ticket
-                document.getElementById('ticketFromName').textContent = yourName;
-                document.getElementById('ticketCode').textContent = referral.code;
-                document.getElementById('ticketPreview').style.display = 'block';
-                
-                // Scroll to ticket smoothly
-                setTimeout(() => {
-                    document.getElementById('ticketPreview').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 100);
-                
-                showToast('Golden Ticket created! Share it with ' + neighborName, 'success');
-                
-                // Clear form for next ticket (but keep your name)
-                neighborNameInput.value = '';
-                neighborPhoneInput.value = '';
-                
-                renderReferrals();
-            } finally {
-                // Reset button
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
+
+            let html = '';
+            assessments.forEach(a => {
+                const date = new Date(a.timestamp);
+                const timeStr = date.toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+
+                html += `
+                    <div class="log-item ${a.severityLevel}">
+                        <div class="log-header">
+                            <span class="log-category">${a.categoryLabel}</span>
+                            <span class="log-severity ${a.severityLevel}">${a.severityLevel}</span>
+                        </div>
+                        <div class="log-details">${a.summary}</div>
+                        ${a.notes ? `<div class="log-details" style="font-style: italic;">${a.notes}</div>` : ''}
+                        <div class="log-time">${timeStr} • Score: ${a.severity} • ${a.outcome === 'dispatched' ? 'Dispatched' : 'Scheduled'}</div>
+                        ${a.isDemo ? '<div class="log-time" style="color: #8b5cf6;">Demo record</div>' : ''}
+                        <div class="log-actions">
+                            <button class="log-action-btn delete" onclick="deleteAssessment('${a.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateStats() {
+            const nonDemo = assessments.filter(a => !a.isDemo);
+            const total = nonDemo.length;
+            const emergencies = nonDemo.filter(a => a.outcome === 'dispatched').length;
+            const scheduled = nonDemo.filter(a => a.outcome === 'scheduled').length;
+            const savings = scheduled * 149;
+
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${total}</div>
+                    <div class="stat-label">Total Assessments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${emergencies}</div>
+                    <div class="stat-label">Emergency Dispatches</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green">${scheduled}</div>
+                    <div class="stat-label">Next-Day Bookings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green">$${savings}</div>
+                    <div class="stat-label">Customer Savings</div>
+                </div>
+            `;
+
+            // Update settings toggles
+            const settings = getSettings();
+            document.getElementById('weatherToggle').classList.toggle('active', settings.weatherAlertEnabled);
+            document.getElementById('soundToggle').classList.toggle('active', settings.soundEnabled);
+        }
+
+        // ============================================
+        // Guides
+        // ============================================
+
+        function openGuide(guideId) {
+            const guide = guides[guideId];
+            if (!guide) return;
+
+            document.getElementById('guideTitle').textContent = guide.title;
+            document.getElementById('guideBody').innerHTML = guide.content;
+            document.getElementById('guideModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('guideModal').classList.remove('active');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('guideModal').addEventListener('click', (e) => {
+            if (e.target.id === 'guideModal') closeModal();
         });
 
-        // ===== SHARE FUNCTIONS =====
-        function getShareText() {
-            if (!currentTicket) return '';
-            const userName = document.getElementById('yourName').value || 'Your neighbor';
-            return `🎟️ ${userName} sent you a Golden Ticket!\n\n$50 OFF any service from Tim Ferguson Plumbing, Air & Electric.\n\nCode: ${currentTicket.code}\n\n📞 Call (731) 300-1030 to book\n\nServing Jackson & Memphis, TN since 1999.\nNeighbors helping neighbors! 🏠`;
-        }
+        // ============================================
+        // Import/Export
+        // ============================================
 
-        function shareViaText() {
-            const phone = currentTicket?.neighborPhone?.replace(/\D/g, '') || '';
-            const text = encodeURIComponent(getShareText());
-            
-            if (phone) {
-                window.location.href = `sms:${phone}?body=${text}`;
-            } else {
-                window.location.href = `sms:?body=${text}`;
-            }
-            showToast('Opening messages...', 'success');
-        }
-
-        async function copyToClipboard() {
-            try {
-                await navigator.clipboard.writeText(getShareText());
-                showToast('Copied to clipboard!', 'success');
-            } catch (err) {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = getShareText();
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showToast('Copied to clipboard!', 'success');
-            }
-        }
-
-        async function shareNative() {
-            if (navigator.share) {
-                try {
-                    await navigator.share({
-                        title: 'Golden Ticket - $50 Off Tim Ferguson Plumbing',
-                        text: getShareText()
-                    });
-                    showToast('Shared successfully!', 'success');
-                } catch (err) {
-                    if (err.name !== 'AbortError') {
-                        copyToClipboard();
-                    }
-                }
-            } else {
-                copyToClipboard();
-            }
-        }
-
-        // ===== RENDER FUNCTIONS =====
-        async function renderReferrals() {
-            const referrals = await getAllReferrals();
-            const list = document.getElementById('referralList');
-            const empty = document.getElementById('referralsEmpty');
-            
-            // Update stats
-            const sent = referrals.length;
-            const converted = referrals.filter(r => r.status === 'converted').length;
-            document.getElementById('totalSent').textContent = sent;
-            document.getElementById('totalConverted').textContent = converted;
-            
-            if (referrals.length === 0) {
-                list.innerHTML = '';
-                empty.style.display = 'block';
+        function exportCSV() {
+            const nonDemo = assessments.filter(a => !a.isDemo);
+            if (nonDemo.length === 0) {
+                showToast('No assessments to export', 'error');
                 return;
             }
-            
-            empty.style.display = 'none';
-            
-            // Sort by date (newest first)
-            referrals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            
-            list.innerHTML = referrals.map(ref => `
-                <div class="referral-item" data-id="${ref.id}">
-                    <div class="referral-info">
-                        <div class="referral-name">${escapeHtml(ref.neighborName)}</div>
-                        <div class="referral-date">${formatDate(ref.createdAt)} • ${ref.code}</div>
-                    </div>
-                    <span class="referral-status ${ref.status}">${ref.status === 'converted' ? 'Booked! +$25' : ref.status === 'sent' ? 'Sent' : 'Pending'}</span>
-                    <div class="referral-actions">
-                        ${ref.status === 'sent' ? `<button class="referral-action-btn" onclick="markConverted('${ref.id}')" title="Mark as booked" aria-label="Mark as booked">✓</button>` : ''}
-                        <button class="referral-action-btn delete" onclick="confirmDelete('${ref.id}')" title="Delete" aria-label="Delete referral">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-        }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        async function markConverted(id) {
-            const referrals = await getAllReferrals();
-            const ref = referrals.find(r => r.id === id);
-            if (ref) {
-                ref.status = 'converted';
-                ref.creditEarned = 25;
-                await saveReferral(ref);
-                showToast('🎉 Nice! $25 credit earned!', 'success');
-                renderReferrals();
-                renderCredits();
-            }
-        }
-
-        async function confirmDelete(id) {
-            const referrals = await getAllReferrals();
-            const ref = referrals.find(r => r.id === id);
-            if (!ref) return;
-            
-            const backup = { ...ref };
-            await deleteReferral(id);
-            renderReferrals();
-            renderCredits();
-            
-            showToast(`Deleted ${ref.neighborName}`, 'default', async () => {
-                await saveReferral(backup);
-                renderReferrals();
-                renderCredits();
-                showToast('Restored!', 'success');
-            });
-        }
-
-        async function renderCredits() {
-            const referrals = await getAllReferrals();
-            const converted = referrals.filter(r => r.status === 'converted');
-            const totalCredits = converted.reduce((sum, r) => sum + (r.creditEarned || 0), 0);
-            
-            document.getElementById('totalCredits').textContent = totalCredits;
-            
-            const historyEl = document.getElementById('creditHistory');
-            const emptyEl = document.getElementById('creditsEmpty');
-            
-            if (converted.length === 0) {
-                historyEl.innerHTML = '';
-                emptyEl.style.display = 'block';
-                return;
-            }
-            
-            emptyEl.style.display = 'none';
-            
-            // Sort by date (newest first)
-            converted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            
-            historyEl.innerHTML = converted.map(ref => `
-                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--mid-gray);">
-                    <div>
-                        <div style="font-weight: 600; font-size: 14px;">${escapeHtml(ref.neighborName)}</div>
-                        <div style="font-size: 12px; color: var(--text-gray);">${formatDate(ref.createdAt)}</div>
-                    </div>
-                    <div style="font-weight: 700; color: var(--success);">+$${ref.creditEarned}</div>
-                </div>
-            `).join('');
-        }
-
-        // ===== SETTINGS =====
-        async function loadSettingsForm() {
-            const name = await getSetting('userName') || '';
-            const phone = await getSetting('userPhone') || '';
-            document.getElementById('settingsName').value = name;
-            document.getElementById('settingsPhone').value = phone;
-            document.getElementById('yourName').value = name;
-        }
-
-        async function saveSettings() {
-            const name = document.getElementById('settingsName').value.trim();
-            const phone = document.getElementById('settingsPhone').value.trim();
-            
-            await saveSetting('userName', name);
-            await saveSetting('userPhone', phone);
-            
-            document.getElementById('yourName').value = name;
-            
-            showToast('Profile saved!', 'success');
-        }
-
-        // ===== IMPORT/EXPORT =====
-        async function exportData() {
-            const referrals = await getAllReferrals();
-            const userName = await getSetting('userName');
-            const userPhone = await getSetting('userPhone');
-            
-            const data = {
-                version: 1,
-                exportedAt: new Date().toISOString(),
-                business: 'Tim Ferguson Plumbing, Air & Electric',
-                settings: { userName, userPhone },
-                referrals: referrals.filter(r => !r.isDemo)
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `ferguson-referrals-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showToast('Data exported!', 'success');
-        }
-
-        async function exportCSV() {
-            const referrals = await getAllReferrals();
-            const realReferrals = referrals.filter(r => !r.isDemo);
-            
-            if (realReferrals.length === 0) {
-                showToast('No referrals to export', 'error');
-                return;
-            }
-            
-            const headers = ['Name', 'Phone', 'Code', 'Status', 'Credit Earned', 'Date'];
-            const rows = realReferrals.map(r => [
-                r.neighborName,
-                r.neighborPhone || '',
-                r.code,
-                r.status,
-                r.creditEarned || 0,
-                new Date(r.createdAt).toLocaleDateString()
+            const headers = ['Date', 'Category', 'Severity Score', 'Severity Level', 'Outcome', 'Summary', 'Notes'];
+            const rows = nonDemo.map(a => [
+                new Date(a.timestamp).toISOString(),
+                a.categoryLabel,
+                a.severity,
+                a.severityLevel,
+                a.outcome,
+                `"${a.summary}"`,
+                `"${a.notes || ''}"`
             ]);
-            
-            const csv = [headers, ...rows].map(row => row.map(escapeCsv).join(',')).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
+
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            downloadFile(csv, 'tim-ferguson-triage-export.csv', 'text/csv');
+            showToast('CSV exported', 'success');
+        }
+
+        function exportJSON() {
+            const nonDemo = assessments.filter(a => !a.isDemo);
+            const data = {
+                version: APP_VERSION,
+                exportDate: new Date().toISOString(),
+                settings: getSettings(),
+                assessments: nonDemo
+            };
+
+            downloadFile(JSON.stringify(data, null, 2), 'tim-ferguson-triage-backup.json', 'application/json');
+            showToast('Full backup exported', 'success');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ferguson-referrals-${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = filename;
             a.click();
             URL.revokeObjectURL(url);
-            
-            showToast('CSV exported!', 'success');
         }
 
-        function escapeCsv(value) {
-            if (typeof value !== 'string') value = String(value);
-            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-                return '"' + value.replace(/"/g, '""') + '"';
-            }
-            return value;
-        }
-
-        async function importData(event) {
+        function importCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                
-                if (!data.referrals || !Array.isArray(data.referrals)) {
-                    throw new Error('Invalid file format');
-                }
-                
-                // Import settings
-                if (data.settings) {
-                    if (data.settings.userName) await saveSetting('userName', data.settings.userName);
-                    if (data.settings.userPhone) await saveSetting('userPhone', data.settings.userPhone);
-                }
-                
-                // Import referrals
-                let imported = 0;
-                for (const ref of data.referrals) {
-                    if (ref.id && ref.neighborName) {
-                        ref.isDemo = false;
-                        await saveReferral(ref);
-                        imported++;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const lines = e.target.result.split('\n').filter(l => l.trim());
+                    const headers = lines[0].split(',');
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
+                        const clean = values.map(v => v.replace(/^"|"$/g, '').trim());
+
+                        const assessment = {
+                            id: 'tf_import_' + Date.now() + '_' + i,
+                            timestamp: clean[0] || new Date().toISOString(),
+                            category: (clean[1] || 'plumbing').toLowerCase(),
+                            categoryLabel: clean[1] || 'Plumbing',
+                            severity: parseInt(clean[2]) || 0,
+                            severityLevel: clean[3] || 'safe',
+                            outcome: clean[4] || 'scheduled',
+                            summary: clean[5] || 'Imported assessment',
+                            notes: clean[6] || '',
+                            result: clean[4] === 'dispatched' ? 'emergency' : 'next-day',
+                            answers: {},
+                            isDemo: false
+                        };
+
+                        assessments.unshift(assessment);
+                        await saveAssessment(assessment);
                     }
+
+                    saveToLocalStorage();
+                    renderHistory();
+                    updateStats();
+                    showToast(`Imported ${lines.length - 1} assessments`, 'success');
+                } catch (err) {
+                    showToast('Failed to import CSV', 'error');
+                    console.error(err);
                 }
-                
-                showToast(`Imported ${imported} referrals!`, 'success');
-                renderReferrals();
-                renderCredits();
-                loadSettingsForm();
-            } catch (err) {
-                showToast('Failed to import: Invalid file', 'error');
-            }
-            
+            };
+            reader.readAsText(file);
             event.target.value = '';
         }
 
-        function showImportCSVModal() {
-            document.getElementById('importModal').classList.add('show');
-            // Focus textarea after animation
-            setTimeout(() => document.getElementById('pasteData').focus(), 100);
-        }
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('show');
-        }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
 
-        async function importFromClipboard() {
-            const text = document.getElementById('pasteData').value.trim();
-            if (!text) {
-                showToast('Please paste some data', 'error');
-                return;
-            }
-            
-            const lines = text.split('\n').filter(l => l.trim());
-            let imported = 0;
-            
-            for (const line of lines) {
-                const parts = line.split('\t');
-                if (parts.length >= 1) {
-                    const ref = {
-                        id: 'ref-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5),
-                        neighborName: parts[0].trim(),
-                        neighborPhone: parts[1]?.trim() || '',
-                        status: parts[2]?.trim().toLowerCase() || 'sent',
-                        code: generateCode(),
-                        creditEarned: parts[2]?.trim().toLowerCase() === 'converted' ? 25 : 0,
-                        createdAt: new Date().toISOString(),
-                        isDemo: false
-                    };
-                    
-                    if (ref.neighborName) {
-                        await saveReferral(ref);
-                        imported++;
+                    if (data.settings) {
+                        saveSettings({ ...getSettings(), ...data.settings });
                     }
+
+                    if (data.assessments && Array.isArray(data.assessments)) {
+                        for (const a of data.assessments) {
+                            a.id = 'tf_import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                            a.isDemo = false;
+                            assessments.unshift(a);
+                            await saveAssessment(a);
+                        }
+                    }
+
+                    saveToLocalStorage();
+                    renderHistory();
+                    updateStats();
+                    showToast(`Restored ${data.assessments?.length || 0} assessments`, 'success');
+                } catch (err) {
+                    showToast('Failed to restore backup', 'error');
+                    console.error(err);
                 }
-            }
-            
-            document.getElementById('pasteData').value = '';
-            closeModal('importModal');
-            showToast(`Imported ${imported} referrals!`, 'success');
-            renderReferrals();
-            renderCredits();
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         }
 
-        async function confirmClearAll() {
-            if (!confirm('Are you sure you want to delete all your referrals? This cannot be undone.')) {
+        // ============================================
+        // Demo Data
+        // ============================================
+
+        function loadDemoData() {
+            const settings = getSettings();
+            if (settings.demoDismissed) {
+                document.getElementById('demoBanner').classList.add('hidden');
                 return;
             }
-            
-            const referrals = await getAllReferrals();
-            for (const ref of referrals) {
-                await deleteReferral(ref.id);
+
+            const hasReal = assessments.some(a => !a.isDemo);
+            if (!hasReal && assessments.length === 0) {
+                assessments = [...demoAssessments];
+                saveToLocalStorage();
             }
-            
-            await saveSetting('showDemoBanner', false);
-            await saveSetting('hasLoadedDemo', true);
-            
-            document.getElementById('demoBanner').style.display = 'none';
-            
-            showToast('All data cleared', 'success');
-            renderReferrals();
-            renderCredits();
+
+            const hasDemo = assessments.some(a => a.isDemo);
+            document.getElementById('demoBanner').classList.toggle('hidden', !hasDemo);
         }
 
-        // ===== EVENT LISTENERS =====
-        document.querySelectorAll('.tab-item, .desktop-nav-item').forEach(el => {
-            el.addEventListener('click', () => switchTab(el.dataset.tab));
-        });
+        function clearDemoData() {
+            assessments = assessments.filter(a => !a.isDemo);
+            saveToLocalStorage();
 
-        // Close modal on overlay click
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.remove('show');
-                }
-            });
-        });
-
-        // Keyboard navigation for modal
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.show').forEach(modal => {
-                    modal.classList.remove('show');
-                });
+            if (db) {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                demoAssessments.forEach(d => store.delete(d.id));
             }
-        });
 
-        // Smooth scroll on input focus for mobile
-        document.querySelectorAll('.form-input').forEach(input => {
-            input.addEventListener('focus', function() {
-                // Small delay to let keyboard open
-                setTimeout(() => {
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
-            });
-        });
+            const settings = getSettings();
+            settings.demoDismissed = true;
+            saveSettings(settings);
 
-        // ===== INITIALIZATION =====
-        async function init() {
-            // Check access before initializing
-            if (!_k || _h(_k) !== _V) {
-                return; // Don't initialize if access denied
-            }
-            
+            document.getElementById('demoBanner').classList.add('hidden');
+            renderHistory();
+            updateStats();
+            showToast('Demo data cleared', 'success');
+        }
+
+        // ============================================
+        // Initialization
+        // ============================================
+
+        async function initApp() {
             await initDB();
-            await loadDemoData();
-            await loadSettingsForm();
-            await renderReferrals();
-            await renderCredits();
-        }
+            await loadAssessments();
+            loadDemoData();
 
-        init();
+            const settings = getSettings();
+            document.getElementById('weatherAlert').classList.toggle('hidden', !settings.weatherAlertEnabled);
+
+            renderCategorySelection();
+            updateStats();
+
+            // Keyboard support for modal
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+            
+            // Show welcome toast
+            showToast('Triage system ready', 'success');
+        }
+        
+        // Check access on load
+        if (hasAccess()) {
+            document.getElementById('securityOverlay').classList.add('hidden');
+            initApp();
+        } else {
+            // Focus the input
+            setTimeout(() => document.getElementById('securityInput')?.focus(), 100);
+        }
     </script>
 </body>
 </html>
