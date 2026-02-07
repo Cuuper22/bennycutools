@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Jones Custom-Fab Blueprint Builder | Design It Like We Build It</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%23004aad'/%3E%3Ctext x='50' y='68' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3EJF%3C/text%3E%3C/svg%3E">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --royal:#004aad;--lake:#5bc0de;--slate:#252d37;--white:#ffffff;
+  --bg:#f4f7fa;--card:#ffffff;--border:#dce3eb;--success:#28a745;
+  --warn:#e8a317;--danger:#dc3545;--muted:#7a8a9e;
+  --radius:12px;--shadow:0 2px 12px rgba(0,74,173,.08);
+  --font-head:'Montserrat',sans-serif;--font-body:'Lato',sans-serif;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--slate);line-height:1.6;min-height:100vh;padding-bottom:80px}
+@media(min-width:1024px){body{padding-bottom:0}}
+h1,h2,h3,h4{font-family:var(--font-head);line-height:1.2}
+a{color:var(--royal);text-decoration:none}
+button,input,select,textarea{font-family:var(--font-body);font-size:16px}
+input,select,textarea{border:2px solid var(--border);border-radius:8px;padding:12px 14px;width:100%;transition:border .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--royal);box-shadow:0 0 0 3px rgba(0,74,173,.12)}
+textarea{resize:vertical;min-height:80px}
+select{appearance:none;background:var(--white) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23252d37' stroke-width='2' fill='none'/%3E%3C/svg%3E") no-repeat right 14px center}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border:none;border-radius:8px;font-family:var(--font-head);font-weight:700;font-size:16px;cursor:pointer;transition:all .2s;min-height:48px;min-width:48px;text-align:center}
+.btn-primary{background:var(--royal);color:#fff}.btn-primary:hover{background:#003a8c}
+.btn-lake{background:var(--lake);color:#fff}.btn-lake:hover{background:#42a8c6}
+.btn-outline{background:transparent;color:var(--royal);border:2px solid var(--royal)}.btn-outline:hover{background:var(--royal);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{color:var(--slate);border-color:var(--slate)}
+.btn-sm{padding:8px 16px;font-size:14px;min-height:40px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-group{display:flex;gap:10px;flex-wrap:wrap}
+
+/* ── LAYOUT ── */
+.app-header{background:var(--royal);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.app-header .inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-icon{width:40px;height:40px;background:var(--lake);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff}
+.logo-text h1{font-size:16px;font-weight:800;letter-spacing:-.5px}.logo-text small{font-size:11px;opacity:.75;font-weight:400;display:block}
+@media(min-width:1024px){.logo-text h1{font-size:20px}.logo-text small{font-size:12px}}
+
+/* Desktop nav */
+.desktop-nav{display:none}
+@media(min-width:1024px){.desktop-nav{display:flex;gap:4px}
+.desktop-nav button{background:rgba(255,255,255,.1);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-family:var(--font-head);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;min-height:44px}
+.desktop-nav button:hover,.desktop-nav button.active{background:rgba(255,255,255,.25)}}
+
+/* Mobile bottom tab bar */
+.bottom-tabs{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08)}
+.bottom-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 12px;border:none;background:none;color:var(--muted);font-size:10px;font-family:var(--font-head);font-weight:600;cursor:pointer;min-height:56px;transition:color .2s}
+.bottom-tabs button .tab-icon{font-size:20px;line-height:1}
+.bottom-tabs button.active{color:var(--royal)}
+@media(min-width:1024px){.bottom-tabs{display:none}}
+
+.main{max-width:1200px;margin:0 auto;padding:20px}
+@media(min-width:768px){.main{padding:28px 32px}}
+
+/* ── CARDS ── */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;margin-bottom:20px;border:1px solid var(--border)}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.card-header .icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.card-header h3{font-size:18px;font-weight:700}
+
+/* ── STEP INDICATOR ── */
+.steps-bar{display:flex;align-items:center;gap:0;margin-bottom:24px;overflow-x:auto;padding-bottom:4px}
+.step-dot{display:flex;align-items:center;gap:0;flex-shrink:0}
+.step-dot .num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-weight:700;font-size:13px;background:var(--border);color:var(--muted);transition:all .3s}
+.step-dot .label{font-size:11px;font-weight:600;color:var(--muted);margin-left:6px;margin-right:12px;white-space:nowrap;transition:color .3s}
+.step-dot.active .num{background:var(--royal);color:#fff}
+.step-dot.active .label{color:var(--royal)}
+.step-dot.done .num{background:var(--success);color:#fff}
+.step-dot.done .label{color:var(--success)}
+.step-line{width:20px;height:2px;background:var(--border);flex-shrink:0}
+@media(max-width:480px){.step-dot .label{display:none}.step-line{width:12px}}
+
+/* ── TERRAIN CARDS ── */
+.terrain-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:600px){.terrain-grid{grid-template-columns:repeat(4,1fr)}}
+.terrain-card{border:2px solid var(--border);border-radius:var(--radius);padding:18px 14px;text-align:center;cursor:pointer;transition:all .2s;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.terrain-card:hover{border-color:var(--lake);transform:translateY(-2px)}
+.terrain-card.selected{border-color:var(--royal);background:rgba(0,74,173,.04);box-shadow:0 0 0 3px rgba(0,74,173,.15)}
+.terrain-card .emoji{font-size:36px}
+.terrain-card .name{font-family:var(--font-head);font-weight:700;font-size:14px}
+.terrain-card .desc{font-size:12px;color:var(--muted)}
+
+/* ── MATERIAL CARDS ── */
+.material-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:600px){.material-grid{grid-template-columns:repeat(3,1fr)}}
+.material-card{border:2px solid var(--border);border-radius:var(--radius);padding:20px;cursor:pointer;transition:all .2s;position:relative}
+.material-card:hover{border-color:var(--lake);transform:translateY(-2px)}
+.material-card.selected{border-color:var(--royal);background:rgba(0,74,173,.04);box-shadow:0 0 0 3px rgba(0,74,173,.15)}
+.material-card .mat-icon{font-size:32px;margin-bottom:8px}
+.material-card .mat-name{font-family:var(--font-head);font-weight:700;font-size:16px;margin-bottom:4px}
+.material-card .mat-sub{font-size:13px;color:var(--muted);margin-bottom:8px}
+.fab-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,var(--royal),var(--lake));color:#fff;font-size:10px;font-weight:700;font-family:var(--font-head);padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── STYLE CARDS ── */
+.style-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(min-width:600px){.style-grid{grid-template-columns:repeat(3,1fr)}}
+.style-card{border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all .2s}
+.style-card:hover{border-color:var(--lake);transform:translateY(-2px)}
+.style-card.selected{border-color:var(--royal);box-shadow:0 0 0 3px rgba(0,74,173,.15)}
+.style-preview{height:100px;display:flex;align-items:center;justify-content:center;font-size:48px;transition:background .3s}
+.style-card .style-info{padding:12px;text-align:center}
+.style-card .style-name{font-family:var(--font-head);font-weight:700;font-size:13px}
+.style-card .style-desc{font-size:11px;color:var(--muted)}
+
+/* Color toggle */
+.color-toggle{display:flex;gap:8px;align-items:center;margin:16px 0}
+.color-swatch{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid var(--border);transition:all .2s}
+.color-swatch:hover{transform:scale(1.1)}
+.color-swatch.active{border-color:var(--royal);box-shadow:0 0 0 3px rgba(0,74,173,.2)}
+
+/* ── FORM GROUPS ── */
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-family:var(--font-head);font-weight:600;font-size:14px;margin-bottom:6px;color:var(--slate)}
+.form-row{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:600px){.form-row.cols-2{grid-template-columns:1fr 1fr}.form-row.cols-3{grid-template-columns:1fr 1fr 1fr}}
+.help-text{font-size:12px;color:var(--muted);margin-top:4px}
+.input-error{border-color:var(--danger)!important}
+.error-text{font-size:12px;color:var(--danger);margin-top:4px}
+
+/* ── CHECKBOX / TOGGLE ── */
+.toggle-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-label{flex:1;font-weight:600;font-size:15px}
+.toggle-sub{font-weight:400;font-size:13px;color:var(--muted);display:block}
+.switch{position:relative;width:50px;height:28px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0}
+.switch .slider{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--border);border-radius:28px;cursor:pointer;transition:.3s}
+.switch .slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+.switch input:checked+.slider{background:var(--royal)}
+.switch input:checked+.slider::before{transform:translateX(22px)}
+
+/* ── TERRAIN ALERT ── */
+.terrain-alert{background:#fff8e1;border:2px solid var(--warn);border-radius:var(--radius);padding:16px 18px;margin:16px 0;display:flex;gap:12px;align-items:flex-start}
+.terrain-alert.danger{background:#fdeaea;border-color:var(--danger)}
+.terrain-alert .alert-icon{font-size:24px;flex-shrink:0}
+.terrain-alert .alert-text{font-size:14px}
+.terrain-alert .alert-text strong{display:block;margin-bottom:2px}
+
+/* ── BLUEPRINT OUTPUT ── */
+.blueprint{background:linear-gradient(135deg,#f0f4f8,#e8edf4);border:2px solid var(--royal);border-radius:var(--radius);padding:28px;position:relative;overflow:hidden}
+.blueprint::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='60' opacity='.06'%3E🔩%3C/text%3E%3C/svg%3E") no-repeat center/contain}
+.blueprint-header{display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px dashed var(--royal)}
+.blueprint-stamp{width:60px;height:60px;border:3px solid var(--royal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0}
+.blueprint-title{font-family:var(--font-head);font-weight:800;font-size:22px;color:var(--royal)}
+.blueprint-sub{font-size:13px;color:var(--muted)}
+.bp-section{margin-bottom:18px}
+.bp-section h4{font-family:var(--font-head);font-weight:700;font-size:14px;color:var(--royal);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.bp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:600px){.bp-grid{grid-template-columns:repeat(3,1fr)}}
+.bp-item{background:var(--white);border-radius:8px;padding:14px;border:1px solid var(--border)}
+.bp-item .bp-val{font-family:var(--font-head);font-weight:800;font-size:22px;color:var(--slate)}
+.bp-item .bp-label{font-size:12px;color:var(--muted)}
+.bp-notes{background:var(--white);border-radius:8px;padding:14px;border:1px solid var(--border);font-size:14px;color:var(--slate)}
+.bp-notes li{margin-bottom:6px;padding-left:4px}
+.bp-footer{margin-top:20px;padding-top:16px;border-top:2px dashed var(--royal);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.lead-time{font-family:var(--font-head);font-weight:700;font-size:16px;color:var(--royal)}
+
+/* ── SAVED PROJECTS LIST ── */
+.project-list{display:flex;flex-direction:column;gap:12px}
+.project-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;align-items:center;gap:14px;transition:all .2s;cursor:pointer}
+.project-item:hover{border-color:var(--lake);box-shadow:var(--shadow)}
+.project-item .proj-icon{width:44px;height:44px;border-radius:10px;background:rgba(0,74,173,.08);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.project-item .proj-info{flex:1;min-width:0}
+.project-item .proj-name{font-family:var(--font-head);font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.project-item .proj-meta{font-size:12px;color:var(--muted)}
+.project-item .proj-actions{display:flex;gap:6px;flex-shrink:0}
+
+/* ── TOAST ── */
+.toast-container{position:fixed;top:80px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:14px 20px;border-radius:10px;color:#fff;font-weight:600;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:toastIn .3s ease;max-width:360px}
+.toast.success{background:var(--success)}.toast.error{background:var(--danger)}.toast.info{background:var(--royal)}
+.toast .undo-btn{background:rgba(255,255,255,.25);border:none;color:#fff;padding:4px 12px;border-radius:6px;font-weight:700;cursor:pointer;font-size:13px;min-height:32px}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── DEMO BANNER ── */
+.demo-banner{background:linear-gradient(135deg,var(--lake),var(--royal));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;font-size:14px;position:relative}
+.demo-banner .demo-text{flex:1}
+.demo-banner strong{font-family:var(--font-head)}
+.demo-banner .close-demo{background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 24px}
+.empty-state .empty-icon{font-size:64px;margin-bottom:16px}
+.empty-state h3{font-family:var(--font-head);font-size:22px;margin-bottom:8px}
+.empty-state p{color:var(--muted);max-width:400px;margin:0 auto 24px}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{background:var(--white);border-radius:var(--radius);padding:28px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;transform:translateY(20px);transition:transform .2s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal h3{font-family:var(--font-head);font-size:20px;margin-bottom:16px}
+
+/* ── DATA MANAGEMENT ── */
+.data-actions{display:grid;grid-template-columns:1fr;gap:12px}
+@media(min-width:500px){.data-actions{grid-template-columns:1fr 1fr}}
+.data-card{border:2px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s}
+.data-card:hover{border-color:var(--lake);background:rgba(91,192,222,.04)}
+.data-card .dc-icon{font-size:32px;margin-bottom:8px}
+.data-card .dc-title{font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:4px}
+.data-card .dc-desc{font-size:12px;color:var(--muted)}
+
+/* ── TAB VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── PRINT ── */
+@media print{
+  body{padding:0;background:#fff}
+  .app-header,.bottom-tabs,.steps-bar,.btn-group,.desktop-nav,.demo-banner,.toast-container,.no-print{display:none!important}
+  .main{padding:0;max-width:100%}
+  .blueprint{border:2px solid #004aad;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .card{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}
+  .bp-item .bp-val{font-size:18px}
+  .blueprint-header{border-bottom:2px solid #004aad}
+  .bp-footer{border-top:2px solid #004aad}
+  @page{margin:0.5in}
+}
+
+/* ── PROTECTION ── */
+.app-header,.bottom-tabs,.steps-bar,.card-header,.blueprint-header{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.text-center{text-align:center}
+.text-muted{color:var(--muted)}
+.mt-1{margin-top:8px}.mt-2{margin-top:16px}.mt-3{margin-top:24px}
+.mb-1{margin-bottom:8px}.mb-2{margin-bottom:16px}.mb-3{margin-bottom:24px}
+.hidden{display:none!important}
+.fade-in{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ═══ DEMO BANNER ═══ -->
+<div class="demo-banner" id="demoBanner">
+  <span style="font-size:20px">🏗️</span>
+  <div class="demo-text">
+    <strong>Demo Mode</strong> — Loaded with sample Lake Gaston &amp; Northampton County projects. <a href="#" onclick="clearDemoData(event)" style="color:#fff;text-decoration:underline">Clear demo data</a> to start fresh.
+  </div>
+  <button class="close-demo" onclick="dismissDemo()" aria-label="Close">&times;</button>
+</div>
+
+<!-- ═══ APP HEADER ═══ -->
+<header class="app-header">
+  <div class="inner">
+    <div class="logo-area">
+      <div class="logo-icon">JF</div>
+      <div class="logo-text">
+        <h1>Blueprint Builder</h1>
+        <small>Jones Fence &amp; Deck — Seaboard, NC</small>
+      </div>
+    </div>
+    <nav class="desktop-nav">
+      <button onclick="showView('builder')" id="navBuilder" class="active">🔨 Builder</button>
+      <button onclick="showView('projects')" id="navProjects">📋 Projects</button>
+      <button onclick="showView('data')" id="navData">⚙️ Data</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══ BOTTOM TAB BAR (Mobile) ═══ -->
+<nav class="bottom-tabs">
+  <button onclick="showView('builder')" id="tabBuilder" class="active">
+    <span class="tab-icon">🔨</span>Builder
+  </button>
+  <button onclick="showView('projects')" id="tabProjects">
+    <span class="tab-icon">📋</span>Projects
+  </button>
+  <button onclick="showView('data')" id="tabData">
+    <span class="tab-icon">⚙️</span>Data
+  </button>
+</nav>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<div class="main">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- VIEW: BUILDER                                  -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="view active" id="viewBuilder">
+
+  <!-- Step Indicator -->
+  <div class="steps-bar" id="stepsBar">
+    <div class="step-dot active" data-step="1"><span class="num">1</span><span class="label">Terrain</span></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="2"><span class="num">2</span><span class="label">Material</span></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="3"><span class="num">3</span><span class="label">Style</span></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="4"><span class="num">4</span><span class="label">Details</span></div>
+    <div class="step-line"></div>
+    <div class="step-dot" data-step="5"><span class="num">5</span><span class="label">Blueprint</span></div>
+  </div>
+
+  <!-- ── STEP 1: TERRAIN ── -->
+  <div class="step-panel" id="step1">
+    <div class="card fade-in">
+      <div class="card-header">
+        <div class="icon" style="background:rgba(0,74,173,.1);color:var(--royal)">🌄</div>
+        <div>
+          <h3>Tell Us About Your Land</h3>
+          <p class="text-muted" style="font-size:13px">Terrain determines fabrication—this is how we build it right the first time.</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Project Name *</label>
+        <input type="text" id="projName" placeholder="e.g. Smith Lake House Fence" maxlength="80">
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Client Name</label>
+          <input type="text" id="clientName" placeholder="e.g. John Smith">
+        </div>
+        <div class="form-group">
+          <label>Location / Address</label>
+          <input type="text" id="clientAddr" placeholder="e.g. 145 Eaton Ferry Rd, Littleton">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="clientPhone" placeholder="(252) 555-0123">
+      </div>
+
+      <label style="font-family:var(--font-head);font-weight:600;font-size:14px;margin-bottom:12px;display:block">Select Your Terrain Type *</label>
+      <div class="terrain-grid" id="terrainGrid">
+        <div class="terrain-card" data-terrain="flat" onclick="selectTerrain(this)">
+          <span class="emoji">🌾</span>
+          <span class="name">Flat Field</span>
+          <span class="desc">Level yard or pasture</span>
+        </div>
+        <div class="terrain-card" data-terrain="gentle" onclick="selectTerrain(this)">
+          <span class="emoji">⛳</span>
+          <span class="name">Gentle Slope</span>
+          <span class="desc">Gradual incline</span>
+        </div>
+        <div class="terrain-card" data-terrain="steep" onclick="selectTerrain(this)">
+          <span class="emoji">⛰️</span>
+          <span class="name">Steep / Hillside</span>
+          <span class="desc">Significant grade</span>
+        </div>
+        <div class="terrain-card" data-terrain="waterfront" onclick="selectTerrain(this)">
+          <span class="emoji">🏖️</span>
+          <span class="name">Waterfront</span>
+          <span class="desc">Lake or pond edge</span>
+        </div>
+      </div>
+
+      <div id="terrainAlert" class="hidden"></div>
+
+      <div class="form-group mt-3">
+        <label>Estimated Slope (degrees)</label>
+        <input type="range" id="slopeSlider" min="0" max="45" value="0" oninput="updateSlope()" style="border:none;padding:0">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:4px">
+          <span>0° (Flat)</span>
+          <span id="slopeDeg" style="font-weight:700;color:var(--royal)">0°</span>
+          <span>45° (Steep)</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Terrain Notes</label>
+        <textarea id="terrainNotes" placeholder="Trees, rocks, existing structures, water features…"></textarea>
+      </div>
+
+      <div class="btn-group" style="justify-content:flex-end;margin-top:8px">
+        <button class="btn btn-primary" onclick="goStep(2)">Next: Material →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: MATERIAL ── -->
+  <div class="step-panel hidden" id="step2">
+    <div class="card fade-in">
+      <div class="card-header">
+        <div class="icon" style="background:rgba(91,192,222,.12);color:var(--lake)">🧪</div>
+        <div>
+          <h3>The Material Lab</h3>
+          <p class="text-muted" style="font-size:13px">Choose your material. Vinyl is custom-fabricated right here in Seaboard.</p>
+        </div>
+      </div>
+
+      <div class="material-grid" id="materialGrid">
+        <div class="material-card" data-material="vinyl" onclick="selectMaterial(this)">
+          <div class="mat-icon">🏛️</div>
+          <div class="mat-name">Vinyl (Jones Custom)</div>
+          <div class="mat-sub">Custom routed &amp; assembled in-house</div>
+          <div class="fab-badge">🔧 Made in Seaboard, NC</div>
+        </div>
+        <div class="material-card" data-material="aluminum" onclick="selectMaterial(this)">
+          <div class="mat-icon">🔩</div>
+          <div class="mat-name">Aluminum</div>
+          <div class="mat-sub">Pool-code compliant, rust-proof</div>
+          <span style="font-size:11px;color:var(--success);font-weight:600">✓ Pool Code Ready</span>
+        </div>
+        <div class="material-card" data-material="wood" onclick="selectMaterial(this)">
+          <div class="mat-icon">🪵</div>
+          <div class="mat-name">Wood (Pressure Treated)</div>
+          <div class="mat-sub">Classic look, budget-friendly</div>
+        </div>
+      </div>
+
+      <div id="materialAlert" class="hidden mt-2"></div>
+
+      <!-- Chain link sub-option for vinyl -->
+      <div id="chainLinkOption" class="hidden mt-2">
+        <div class="toggle-row">
+          <div>
+            <span class="toggle-label">Black Vinyl Chain Link</span>
+            <span class="toggle-sub">Blends with surroundings — a popular Lake Gaston choice</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="chainLink"><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="form-group mt-3">
+        <label>Purpose of Fence / Deck</label>
+        <select id="purpose">
+          <option value="">— Select —</option>
+          <option value="privacy">Privacy (Keep neighbors out)</option>
+          <option value="pets">Pet Containment (Keep them in!)</option>
+          <option value="pool">Pool Safety / Code Compliance</option>
+          <option value="boundary">Property Boundary</option>
+          <option value="aesthetic">Aesthetic / Curb Appeal</option>
+          <option value="deck">Deck or Porch</option>
+          <option value="agricultural">Agricultural / Livestock</option>
+        </select>
+      </div>
+
+      <div class="btn-group" style="justify-content:space-between;margin-top:8px">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Next: Style →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: STYLE ── -->
+  <div class="step-panel hidden" id="step3">
+    <div class="card fade-in">
+      <div class="card-header">
+        <div class="icon" style="background:rgba(40,167,69,.1);color:var(--success)">🎨</div>
+        <div>
+          <h3>Style Selector</h3>
+          <p class="text-muted" style="font-size:13px">Pick a look. Each style carries the Jones craftsmanship standard.</p>
+        </div>
+      </div>
+
+      <div class="color-toggle no-print">
+        <span style="font-weight:600;font-size:14px;font-family:var(--font-head)">Color:</span>
+        <div class="color-swatch active" style="background:#fff;border-color:var(--border)" data-color="white" onclick="selectColor(this)" title="White"></div>
+        <div class="color-swatch" style="background:#d2b48c" data-color="tan" onclick="selectColor(this)" title="Tan"></div>
+        <div class="color-swatch" style="background:#808080" data-color="gray" onclick="selectColor(this)" title="Gray"></div>
+        <div class="color-swatch" style="background:#2c2c2c" data-color="black" onclick="selectColor(this)" title="Black"></div>
+        <span id="colorLabel" style="font-size:13px;color:var(--muted)">White</span>
+      </div>
+
+      <div class="style-grid" id="styleGrid">
+        <!-- Populated by JS based on material -->
+      </div>
+
+      <div class="form-group mt-3">
+        <label>Fence Height</label>
+        <select id="fenceHeight">
+          <option value="4">4 ft</option>
+          <option value="5">5 ft</option>
+          <option value="6" selected>6 ft (Most Popular)</option>
+          <option value="8">8 ft</option>
+        </select>
+      </div>
+
+      <div class="btn-group" style="justify-content:space-between;margin-top:8px">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Next: Details →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: DETAILS ── -->
+  <div class="step-panel hidden" id="step4">
+    <div class="card fade-in">
+      <div class="card-header">
+        <div class="icon" style="background:rgba(232,163,23,.1);color:var(--warn)">📐</div>
+        <div>
+          <h3>Project Details</h3>
+          <p class="text-muted" style="font-size:13px">Measurements and add-ons — the fine print that matters.</p>
+        </div>
+      </div>
+
+      <div class="form-row cols-2">
+        <div class="form-group">
+          <label>Approximate Linear Footage *</label>
+          <input type="number" id="linearFt" min="10" max="5000" placeholder="e.g. 200" step="1">
+          <span class="help-text">Total distance around the fenced/decked area</span>
+        </div>
+        <div class="form-group">
+          <label>Number of Corners</label>
+          <input type="number" id="corners" min="0" max="50" placeholder="e.g. 4" value="4">
+        </div>
+      </div>
+
+      <h4 style="margin:20px 0 12px;font-size:15px">Gates &amp; Openings</h4>
+
+      <div class="toggle-row">
+        <div>
+          <span class="toggle-label">Walk Gate (3-4 ft)</span>
+          <span class="toggle-sub">Standard pedestrian access</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="walkGate" checked><span class="slider"></span></label>
+      </div>
+      <div id="walkGateQty" class="form-group mt-1" style="padding-left:20px">
+        <label>How many walk gates?</label>
+        <input type="number" id="walkGateCount" min="1" max="10" value="1" style="max-width:120px">
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <span class="toggle-label">Driveway / Double Gate (10-16 ft)</span>
+          <span class="toggle-sub">Vehicle access, equipment access</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="driveGate"><span class="slider"></span></label>
+      </div>
+      <div id="driveGateOptions" class="hidden" style="padding-left:20px">
+        <div class="form-row cols-2 mt-1">
+          <div class="form-group">
+            <label>Gate Width</label>
+            <select id="driveGateWidth">
+              <option value="10">10 ft</option>
+              <option value="12" selected>12 ft</option>
+              <option value="14">14 ft</option>
+              <option value="16">16 ft</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>How many?</label>
+            <input type="number" id="driveGateCount" min="1" max="5" value="1" style="max-width:120px">
+          </div>
+        </div>
+        <div class="toggle-row" style="border:none;padding-top:8px">
+          <div>
+            <span class="toggle-label">🔌 Automatic Opener</span>
+            <span class="toggle-sub">Electric gate opener — great for long driveways</span>
+          </div>
+          <label class="switch"><input type="checkbox" id="autoOpener"><span class="slider"></span></label>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <span class="toggle-label">Arched Top on Gates</span>
+          <span class="toggle-sub">Premium finish — the Jones signature</span>
+        </div>
+        <label class="switch"><input type="checkbox" id="archedGate"><span class="slider"></span></label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="form-group">
+        <label>Additional Notes for Travis</label>
+        <textarea id="additionalNotes" placeholder="HOA requirements, timeline preferences, special requests…"></textarea>
+      </div>
+
+      <div class="btn-group" style="justify-content:space-between;margin-top:8px">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Back</button>
+        <button class="btn btn-primary" onclick="generateBlueprint()">⚡ Generate Blueprint</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 5: BLUEPRINT ── -->
+  <div class="step-panel hidden" id="step5">
+    <div id="blueprintOutput"></div>
+    <div class="btn-group no-print" style="justify-content:center;margin-top:20px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Blueprint</button>
+      <button class="btn btn-success" onclick="saveProject()">💾 Save Project</button>
+      <button class="btn btn-outline" onclick="goStep(4)">✏️ Edit Details</button>
+      <button class="btn btn-ghost" onclick="startNew()">+ New Blueprint</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- VIEW: PROJECTS                                 -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="view" id="viewProjects">
+  <div class="card">
+    <div class="card-header">
+      <div class="icon" style="background:rgba(0,74,173,.1);color:var(--royal)">📋</div>
+      <div><h3>Saved Projects</h3><p class="text-muted" style="font-size:13px">All your fabrication blueprints in one place.</p></div>
+    </div>
+    <div id="projectsList"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- VIEW: DATA MANAGEMENT                          -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="view" id="viewData">
+  <div class="card">
+    <div class="card-header">
+      <div class="icon" style="background:rgba(91,192,222,.12);color:var(--lake)">⚙️</div>
+      <div><h3>Data Management</h3><p class="text-muted" style="font-size:13px">Import, export, and backup your blueprint data.</p></div>
+    </div>
+    <div class="data-actions">
+      <div class="data-card" onclick="exportCSV()">
+        <div class="dc-icon">📊</div>
+        <div class="dc-title">Export CSV</div>
+        <div class="dc-desc">Download projects as spreadsheet</div>
+      </div>
+      <div class="data-card" onclick="exportJSON()">
+        <div class="dc-icon">💾</div>
+        <div class="dc-title">JSON Backup</div>
+        <div class="dc-desc">Full backup with all details</div>
+      </div>
+      <div class="data-card" onclick="document.getElementById('importCSVFile').click()">
+        <div class="dc-icon">📥</div>
+        <div class="dc-title">Import CSV</div>
+        <div class="dc-desc">Load projects from spreadsheet</div>
+      </div>
+      <div class="data-card" onclick="document.getElementById('importJSONFile').click()">
+        <div class="dc-icon">🔄</div>
+        <div class="dc-title">Restore JSON</div>
+        <div class="dc-desc">Restore from backup file</div>
+      </div>
+    </div>
+    <input type="file" id="importCSVFile" accept=".csv" class="hidden" onchange="importCSV(event)">
+    <input type="file" id="importJSONFile" accept=".json" class="hidden" onchange="importJSON(event)">
+
+    <div class="divider"></div>
+    <h4 style="margin-bottom:12px">📋 Paste CSV Data</h4>
+    <textarea id="csvPaste" placeholder="Paste CSV data here (header row + data rows)…" style="min-height:100px"></textarea>
+    <button class="btn btn-sm btn-outline mt-1" onclick="importCSVPaste()">Import Pasted Data</button>
+
+    <div class="divider"></div>
+    <div style="text-align:center">
+      <button class="btn btn-sm btn-danger" onclick="confirmClearAll()">🗑️ Clear All Data</button>
+      <p class="text-muted" style="font-size:12px;margin-top:8px">This cannot be undone. Export a backup first.</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ═══ TOAST CONTAINER ═══ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent" onclick="event.stopPropagation()"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// SECURITY LAYER — Access Key Validation
+// ════════════════════════════════════════════════
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-914934425;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+  throw new Error('Invalid key');
+}
+
+// ════════════════════════════════════════════════
+// PROTECTION LAYER
+// ════════════════════════════════════════════════
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('keydown',e=>{
+  if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')){
+    e.preventDefault();
+  }
+});
+
+// ════════════════════════════════════════════════
+// DATA LAYER — IndexedDB with localStorage fallback
+// ════════════════════════════════════════════════
+const DB_NAME='JonesFenceBlueprints';const DB_VER=1;const STORE='projects';
+let db=null;let useLocalStorage=false;
+
+function openDB(){return new Promise((resolve,reject)=>{
+  if(!window.indexedDB){useLocalStorage=true;resolve(null);return}
+  const req=indexedDB.open(DB_NAME,DB_VER);
+  req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id'})};
+  req.onsuccess=e=>{db=e.target.result;resolve(db)};
+  req.onerror=()=>{useLocalStorage=true;resolve(null)};
+})}
+
+function lsKey(){return 'jones_fence_projects'}
+function lsGet(){try{return JSON.parse(localStorage.getItem(lsKey()))||[]}catch{return[]}}
+function lsSet(arr){localStorage.setItem(lsKey(),JSON.stringify(arr))}
+
+function getAllProjects(){return new Promise((resolve)=>{
+  if(useLocalStorage||!db){resolve(lsGet());return}
+  const tx=db.transaction(STORE,'readonly');const s=tx.objectStore(STORE);const r=s.getAll();
+  r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>resolve(lsGet());
+})}
+
+function putProject(proj){return new Promise((resolve)=>{
+  if(useLocalStorage||!db){const arr=lsGet();const idx=arr.findIndex(p=>p.id===proj.id);if(idx>=0)arr[idx]=proj;else arr.push(proj);lsSet(arr);resolve();return}
+  const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(proj);tx.oncomplete=()=>resolve();tx.onerror=()=>{const arr=lsGet();const idx=arr.findIndex(p=>p.id===proj.id);if(idx>=0)arr[idx]=proj;else arr.push(proj);lsSet(arr);resolve()};
+})}
+
+function deleteProject(id){return new Promise((resolve)=>{
+  if(useLocalStorage||!db){const arr=lsGet().filter(p=>p.id!==id);lsSet(arr);resolve();return}
+  const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=()=>resolve();tx.onerror=()=>{lsSet(lsGet().filter(p=>p.id!==id));resolve()};
+})}
+
+function clearAllProjects(){return new Promise((resolve)=>{
+  if(useLocalStorage||!db){lsSet([]);resolve();return}
+  const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();tx.oncomplete=()=>resolve();
+})}
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let currentStep=1;
+let state={terrain:null,slopeDeg:0,material:null,style:null,color:'white',editingId:null};
+
+// ════════════════════════════════════════════════
+// STYLE DEFINITIONS
+// ════════════════════════════════════════════════
+const STYLES={
+  vinyl:[
+    {id:'halifax-privacy',name:'The Halifax Privacy',desc:'Full privacy, 6ft tongue-and-groove',icon:'🔒',bg:'#e8edf4'},
+    {id:'gaston-picket',name:'The Gaston Picket',desc:'Classic picket, open & inviting',icon:'🏡',bg:'#e8f5e9'},
+    {id:'roanoke-semi',name:'The Roanoke Semi-Private',desc:'Alternating boards, airflow + privacy',icon:'🌬️',bg:'#fff3e0'},
+    {id:'seaboard-ranch',name:'The Seaboard Ranch',desc:'2 or 3-rail ranch style, open land',icon:'🐴',bg:'#fce4ec'},
+    {id:'littleton-lattice',name:'The Littleton Lattice-Top',desc:'Privacy panel with decorative lattice crown',icon:'🌿',bg:'#f3e5f5'},
+    {id:'weldon-shadowbox',name:'The Weldon Shadowbox',desc:'Board-on-board, looks great from both sides',icon:'🎭',bg:'#e0f2f1'}
+  ],
+  aluminum:[
+    {id:'pool-classic',name:'Pool Code Classic',desc:'Meets pool safety code, clean lines',icon:'🏊',bg:'#e3f2fd'},
+    {id:'flat-top',name:'Flat Top Elegance',desc:'Modern flat-top rails, lake house look',icon:'✨',bg:'#fafafa'},
+    {id:'spear-top',name:'Traditional Spear',desc:'Decorative spear finials, estate feel',icon:'🏰',bg:'#fff8e1'}
+  ],
+  wood:[
+    {id:'board-on-board',name:'Board on Board',desc:'Overlapping boards, full privacy',icon:'🪓',bg:'#efebe9'},
+    {id:'stockade',name:'Stockade',desc:'Side-by-side pickets, solid barrier',icon:'🛡️',bg:'#e8eaf6'},
+    {id:'split-rail',name:'Split Rail',desc:'Country charm, property boundary',icon:'🌾',bg:'#f1f8e9'},
+    {id:'custom-cedar',name:'Custom Cedar',desc:'Premium look, natural beauty',icon:'🌲',bg:'#fff3e0'}
+  ]
+};
+
+// ════════════════════════════════════════════════
+// COLOR MAP
+// ════════════════════════════════════════════════
+const COLOR_BG={white:'#f5f5f5',tan:'#e8d5b7',gray:'#c0c0c0',black:'#3a3a3a'};
+const COLOR_NAMES={white:'White',tan:'Tan / Almond',gray:'Gray',black:'Black'};
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+function showView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view'+v.charAt(0).toUpperCase()+v.slice(1)).classList.add('active');
+  // tabs
+  document.querySelectorAll('.bottom-tabs button,.desktop-nav button').forEach(b=>b.classList.remove('active'));
+  const tid='tab'+v.charAt(0).toUpperCase()+v.slice(1);
+  const nid='nav'+v.charAt(0).toUpperCase()+v.slice(1);
+  const t=document.getElementById(tid);if(t)t.classList.add('active');
+  const n=document.getElementById(nid);if(n)n.classList.add('active');
+  if(v==='projects')renderProjectsList();
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════════
+// STEP NAVIGATION
+// ════════════════════════════════════════════════
+function goStep(n){
+  // Validation
+  if(n>1&&currentStep===1){
+    if(!gv('projName').trim()){shake('projName');toast('Please enter a project name','error');return}
+    if(!state.terrain){toast('Please select a terrain type','error');return}
+  }
+  if(n>2&&currentStep<=2){
+    if(!state.material){toast('Please select a material','error');return}
+  }
+  if(n>3&&currentStep<=3){
+    if(!state.style){toast('Please select a fence style','error');return}
+  }
+  if(n>4&&currentStep<=4){
+    const lf=parseInt(gv('linearFt'));
+    if(!lf||lf<10){shake('linearFt');toast('Please enter linear footage (min 10 ft)','error');return}
+  }
+
+  currentStep=n;
+  document.querySelectorAll('.step-panel').forEach(p=>p.classList.add('hidden'));
+  document.getElementById('step'+n).classList.remove('hidden');
+
+  // Update step bar
+  document.querySelectorAll('.step-dot').forEach(d=>{
+    const s=parseInt(d.dataset.step);
+    d.classList.remove('active','done');
+    if(s===n)d.classList.add('active');
+    else if(s<n)d.classList.add('done');
+  });
+  window.scrollTo(0,0);
+}
+
+// ════════════════════════════════════════════════
+// TERRAIN SELECTION
+// ════════════════════════════════════════════════
+function selectTerrain(el){
+  document.querySelectorAll('.terrain-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.terrain=el.dataset.terrain;
+
+  // Auto-set slope
+  const slopeMap={flat:0,gentle:8,steep:25,waterfront:15};
+  document.getElementById('slopeSlider').value=slopeMap[state.terrain]||0;
+  updateSlope();
+  updateTerrainAlert();
+}
+
+function updateSlope(){
+  const v=document.getElementById('slopeSlider').value;
+  state.slopeDeg=parseInt(v);
+  document.getElementById('slopeDeg').textContent=v+'°';
+  updateTerrainAlert();
+}
+
+function updateTerrainAlert(){
+  const el=document.getElementById('terrainAlert');
+  if(state.slopeDeg>15){
+    el.className='terrain-alert'+(state.slopeDeg>30?' danger':'');
+    el.innerHTML=`<span class="alert-icon">${state.slopeDeg>30?'🚨':'⚠️'}</span>
+      <div class="alert-text"><strong>${state.slopeDeg>30?'Steep Grade Detected!':'Slope Advisory'}</strong>
+      Standard panels may leave gaps at the bottom on this grade. We recommend <strong>"Stepped"</strong> installation — panels stair-step down the hill to eliminate gaps. Jones Fence custom-fabricates each section to fit your slope.</div>`;
+    el.classList.remove('hidden');
+  }else if(state.terrain==='waterfront'){
+    el.className='terrain-alert';
+    el.innerHTML=`<span class="alert-icon">🌊</span>
+      <div class="alert-text"><strong>Waterfront Property</strong>
+      Lake Gaston setback rules may apply. We'll verify setback distances during the on-site visit. Aluminum is a popular choice here for unobstructed views.</div>`;
+    el.classList.remove('hidden');
+  }else{
+    el.classList.add('hidden');
+  }
+}
+
+// ════════════════════════════════════════════════
+// MATERIAL SELECTION
+// ════════════════════════════════════════════════
+function selectMaterial(el){
+  document.querySelectorAll('.material-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.material=el.dataset.material;
+
+  // Chain link option
+  document.getElementById('chainLinkOption').classList.toggle('hidden',state.material!=='vinyl');
+
+  // Material vs slope alert
+  checkMaterialAlert();
+
+  // Populate styles
+  renderStyles();
+}
+
+function checkMaterialAlert(){
+  const el=document.getElementById('materialAlert');
+  if(state.slopeDeg>15&&state.material==='vinyl'){
+    el.className='terrain-alert';
+    el.innerHTML=`<span class="alert-icon">💡</span>
+      <div class="alert-text"><strong>Custom Fabrication Required</strong>
+      Your ${state.slopeDeg}° slope with vinyl means each panel needs to be custom-cut and stepped. This is exactly what Jones does — we fabricate it right here in Seaboard so every panel fits your land perfectly.</div>`;
+    el.classList.remove('hidden');
+  }else if(state.terrain==='waterfront'&&state.material!=='aluminum'){
+    el.className='terrain-alert';
+    el.innerHTML=`<span class="alert-icon">💡</span>
+      <div class="alert-text"><strong>Consider Aluminum for Waterfront</strong>
+      Aluminum won't rot or rust near water and meets pool-code requirements. But if privacy is the priority, vinyl is your best bet.</div>`;
+    el.classList.remove('hidden');
+  }else{
+    el.classList.add('hidden');
+  }
+}
+
+// ════════════════════════════════════════════════
+// STYLE RENDERING
+// ════════════════════════════════════════════════
+function renderStyles(){
+  const grid=document.getElementById('styleGrid');
+  const styles=STYLES[state.material]||[];
+  state.style=null;
+  grid.innerHTML=styles.map(s=>`
+    <div class="style-card" data-style="${s.id}" onclick="selectStyle(this)">
+      <div class="style-preview" style="background:${getColorBg()}">${s.icon}</div>
+      <div class="style-info">
+        <div class="style-name">${s.name}</div>
+        <div class="style-desc">${s.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectStyle(el){
+  document.querySelectorAll('.style-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.style=el.dataset.style;
+}
+
+function selectColor(el){
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  state.color=el.dataset.color;
+  document.getElementById('colorLabel').textContent=COLOR_NAMES[state.color];
+  // Update style previews
+  document.querySelectorAll('.style-preview').forEach(p=>p.style.background=getColorBg());
+}
+
+function getColorBg(){return COLOR_BG[state.color]||'#f5f5f5'}
+
+// ════════════════════════════════════════════════
+// GATE TOGGLE
+// ════════════════════════════════════════════════
+document.getElementById('driveGate').addEventListener('change',function(){
+  document.getElementById('driveGateOptions').classList.toggle('hidden',!this.checked);
+});
+
+// ════════════════════════════════════════════════
+// BLUEPRINT GENERATION
+// ════════════════════════════════════════════════
+function generateBlueprint(){
+  const lf=parseInt(gv('linearFt'));
+  if(!lf||lf<10){shake('linearFt');toast('Enter linear footage (min 10)','error');return}
+
+  const panels=Math.ceil(lf/8);
+  const posts=panels+1+parseInt(gv('corners')||4);
+  const height=parseInt(gv('fenceHeight'));
+  const hasWalkGate=document.getElementById('walkGate').checked;
+  const walkCount=hasWalkGate?parseInt(gv('walkGateCount')||1):0;
+  const hasDriveGate=document.getElementById('driveGate').checked;
+  const driveCount=hasDriveGate?parseInt(gv('driveGateCount')||1):0;
+  const driveWidth=parseInt(gv('driveGateWidth')||12);
+  const hasOpener=document.getElementById('autoOpener').checked;
+  const hasArch=document.getElementById('archedGate').checked;
+  const isChainLink=document.getElementById('chainLink').checked&&state.material==='vinyl';
+
+  const styleName=getStyleName(state.style);
+  const matName=state.material==='vinyl'?(isChainLink?'Black Vinyl Chain Link':'Custom Vinyl'):state.material==='aluminum'?'Aluminum':'Pressure Treated Wood';
+  const installType=state.slopeDeg>15?'Stepped':'Standard (Racked)';
+
+  // Lead time calculation
+  let leadDays=7;
+  if(state.material==='vinyl'&&!isChainLink)leadDays=14;
+  if(lf>300)leadDays+=5;
+  if(state.slopeDeg>20)leadDays+=3;
+  const leadWeeks=Math.ceil(leadDays/7);
+
+  // Fabrication notes
+  const notes=[];
+  if(state.slopeDeg>15)notes.push(`Slope of ${state.slopeDeg}° requires custom-stepped panels — each section fabricated to match grade.`);
+  if(state.terrain==='waterfront')notes.push('Waterfront property — verify setback compliance during site visit.');
+  if(state.material==='vinyl'&&!isChainLink)notes.push('All vinyl components fabricated in-house at our Seaboard, NC shop.');
+  if(hasOpener)notes.push('Automatic gate opener requires electrical access within 50ft of gate location.');
+  if(hasArch)notes.push('Arched gate tops are custom-bent — the Jones signature finish.');
+  if(gv('purpose')==='pool')notes.push('Pool code compliance: self-closing, self-latching gate hardware included.');
+  if(gv('additionalNotes').trim())notes.push('Client note: '+gv('additionalNotes').trim());
+
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const refNum='JFD-'+now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0')+'-'+String(Math.floor(Math.random()*9000)+1000);
+
+  const bp=`
+    <div class="blueprint fade-in">
+      <div class="blueprint-header">
+        <div class="blueprint-stamp">📐</div>
+        <div>
+          <div class="blueprint-title">Fabrication Blueprint</div>
+          <div class="blueprint-sub">${refNum} · ${dateStr}</div>
+          <div class="blueprint-sub" style="margin-top:2px"><strong>Jones Fence &amp; Deck LLC</strong> — 2012 Jackson Bypass Rd, Seaboard, NC · (252) 534-1430</div>
+        </div>
+      </div>
+
+      <div class="bp-section">
+        <h4>📋 Project Information</h4>
+        <div class="bp-grid">
+          <div class="bp-item"><div class="bp-val" style="font-size:16px">${esc(gv('projName'))}</div><div class="bp-label">Project Name</div></div>
+          <div class="bp-item"><div class="bp-val" style="font-size:16px">${esc(gv('clientName')||'—')}</div><div class="bp-label">Client</div></div>
+          <div class="bp-item"><div class="bp-val" style="font-size:16px">${esc(gv('clientAddr')||'—')}</div><div class="bp-label">Location</div></div>
+        </div>
+      </div>
+
+      <div class="bp-section">
+        <h4>🌄 Site Conditions</h4>
+        <div class="bp-grid">
+          <div class="bp-item"><div class="bp-val">${capitalize(state.terrain)}</div><div class="bp-label">Terrain Type</div></div>
+          <div class="bp-item"><div class="bp-val">${state.slopeDeg}°</div><div class="bp-label">Slope Grade</div></div>
+          <div class="bp-item"><div class="bp-val">${installType}</div><div class="bp-label">Installation Method</div></div>
+        </div>
+      </div>
+
+      <div class="bp-section">
+        <h4>🧪 Materials &amp; Style</h4>
+        <div class="bp-grid">
+          <div class="bp-item"><div class="bp-val" style="font-size:16px">${matName}</div><div class="bp-label">Material${state.material==='vinyl'&&!isChainLink?' <span class="fab-badge" style="font-size:9px;vertical-align:middle">🔧 Jones Fabricated</span>':''}</div></div>
+          <div class="bp-item"><div class="bp-val" style="font-size:16px">${styleName}</div><div class="bp-label">Style</div></div>
+          <div class="bp-item"><div class="bp-val">${COLOR_NAMES[state.color]}</div><div class="bp-label">Color</div></div>
+        </div>
+      </div>
+
+      <div class="bp-section">
+        <h4>📐 Fabrication Specifications</h4>
+        <div class="bp-grid">
+          <div class="bp-item"><div class="bp-val">${lf} ft</div><div class="bp-label">Linear Footage</div></div>
+          <div class="bp-item"><div class="bp-val">${height} ft</div><div class="bp-label">Fence Height</div></div>
+          <div class="bp-item"><div class="bp-val">${panels}</div><div class="bp-label">${state.slopeDeg>15?'Custom-Stepped':'Standard'} Panels</div></div>
+          <div class="bp-item"><div class="bp-val">${posts}</div><div class="bp-label">Posts (Routed)</div></div>
+          <div class="bp-item"><div class="bp-val">${walkCount}</div><div class="bp-label">Walk Gates</div></div>
+          <div class="bp-item"><div class="bp-val">${driveCount>0?driveCount+' × '+driveWidth+'ft':'None'}</div><div class="bp-label">Drive Gates${hasOpener?' + Auto Opener':''}</div></div>
+        </div>
+      </div>
+
+      ${notes.length?`<div class="bp-section">
+        <h4>📝 Fabrication Notes</h4>
+        <div class="bp-notes"><ul>${notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>
+      </div>`:''}
+
+      <div class="bp-footer">
+        <div class="lead-time">⏱ Est. Fabrication Lead Time: ${leadWeeks} Week${leadWeeks>1?'s':''}</div>
+        <div style="font-size:12px;color:var(--muted);text-align:right">
+          <div><em>"Design It Like We Build It"</em></div>
+          <div>Jones Fence &amp; Deck LLC — Est. 1998</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('blueprintOutput').innerHTML=bp;
+  goStep(5);
+
+  // Store blueprint data in state for saving
+  state.blueprintData={
+    refNum,dateStr,projName:gv('projName'),clientName:gv('clientName'),clientAddr:gv('clientAddr'),clientPhone:gv('clientPhone'),
+    terrain:state.terrain,slopeDeg:state.slopeDeg,material:state.material,style:state.style,color:state.color,
+    matName,styleName,height,linearFt:lf,panels,posts,corners:parseInt(gv('corners')||4),
+    walkGate:hasWalkGate,walkGateCount:walkCount,driveGate:hasDriveGate,driveGateCount:driveCount,
+    driveGateWidth:driveWidth,autoOpener:hasOpener,archedGate:hasArch,chainLink:isChainLink,
+    purpose:gv('purpose'),terrainNotes:gv('terrainNotes'),additionalNotes:gv('additionalNotes'),
+    installType,leadWeeks,notes
+  };
+}
+
+function getStyleName(id){
+  for(const mat of Object.values(STYLES)){
+    const s=mat.find(s=>s.id===id);
+    if(s)return s.name;
+  }
+  return id||'Custom';
+}
+
+// ════════════════════════════════════════════════
+// SAVE PROJECT
+// ════════════════════════════════════════════════
+async function saveProject(){
+  if(!state.blueprintData){toast('Generate a blueprint first','error');return}
+  const proj={
+    id:state.editingId||('proj_'+Date.now()+'_'+Math.random().toString(36).substr(2,5)),
+    ...state.blueprintData,
+    updatedAt:new Date().toISOString(),
+    createdAt:state.editingId?undefined:new Date().toISOString()
+  };
+  // If editing, preserve createdAt
+  if(state.editingId){
+    const all=await getAllProjects();
+    const existing=all.find(p=>p.id===state.editingId);
+    if(existing)proj.createdAt=existing.createdAt;
+  }
+  if(!proj.createdAt)proj.createdAt=proj.updatedAt;
+
+  await putProject(proj);
+  toast('Blueprint saved! 📋','success');
+  state.editingId=proj.id;
+}
+
+// ════════════════════════════════════════════════
+// PROJECTS LIST
+// ════════════════════════════════════════════════
+async function renderProjectsList(){
+  const projects=await getAllProjects();
+  const el=document.getElementById('projectsList');
+
+  if(projects.length===0){
+    el.innerHTML=`<div class="empty-state">
+      <div class="empty-icon">📐</div>
+      <h3>No Blueprints Yet</h3>
+      <p>Start your first fabrication blueprint — tell us about the land, pick your material, and we'll generate the specs.</p>
+      <button class="btn btn-primary" onclick="showView('builder');startNew()">🔨 Create First Blueprint</button>
+    </div>`;
+    return;
+  }
+
+  // Sort newest first
+  projects.sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt));
+
+  el.innerHTML=`<div class="project-list">${projects.map(p=>{
+    const isDemo=p.isDemo?'<span style="font-size:10px;background:var(--lake);color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px">DEMO</span>':'';
+    const matIcon=p.material==='vinyl'?'🏛️':p.material==='aluminum'?'🔩':'🪵';
+    const date=p.updatedAt?new Date(p.updatedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
+    return `<div class="project-item" onclick="loadProject('${p.id}')">
+      <div class="proj-icon">${matIcon}</div>
+      <div class="proj-info">
+        <div class="proj-name">${esc(p.projName||'Untitled')}${isDemo}</div>
+        <div class="proj-meta">${esc(p.clientName||'No client')} · ${p.linearFt||0}ft ${p.matName||''} · ${date}</div>
+      </div>
+      <div class="proj-actions" onclick="event.stopPropagation()">
+        <button class="btn btn-sm btn-ghost" onclick="duplicateProject('${p.id}')" title="Duplicate">📄</button>
+        <button class="btn btn-sm btn-ghost" onclick="confirmDelete('${p.id}','${esc(p.projName)}')" title="Delete" style="color:var(--danger)">🗑️</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+async function loadProject(id){
+  const all=await getAllProjects();
+  const p=all.find(pr=>pr.id===id);
+  if(!p){toast('Project not found','error');return}
+
+  state.editingId=p.id;
+  state.terrain=p.terrain;state.slopeDeg=p.slopeDeg||0;
+  state.material=p.material;state.style=p.style;state.color=p.color||'white';
+
+  // Fill form fields
+  sv('projName',p.projName||'');sv('clientName',p.clientName||'');sv('clientAddr',p.clientAddr||'');sv('clientPhone',p.clientPhone||'');
+  sv('terrainNotes',p.terrainNotes||'');sv('purpose',p.purpose||'');
+  document.getElementById('slopeSlider').value=p.slopeDeg||0;updateSlope();
+  sv('linearFt',p.linearFt||'');sv('corners',p.corners||4);sv('fenceHeight',p.height||6);
+  document.getElementById('walkGate').checked=p.walkGate!==false;
+  sv('walkGateCount',p.walkGateCount||1);
+  document.getElementById('driveGate').checked=!!p.driveGate;
+  document.getElementById('driveGateOptions').classList.toggle('hidden',!p.driveGate);
+  sv('driveGateWidth',p.driveGateWidth||12);sv('driveGateCount',p.driveGateCount||1);
+  document.getElementById('autoOpener').checked=!!p.autoOpener;
+  document.getElementById('archedGate').checked=!!p.archedGate;
+  document.getElementById('chainLink').checked=!!p.chainLink;
+  sv('additionalNotes',p.additionalNotes||'');
+
+  // Select terrain card
+  document.querySelectorAll('.terrain-card').forEach(c=>{c.classList.toggle('selected',c.dataset.terrain===state.terrain)});
+  updateTerrainAlert();
+
+  // Select material
+  document.querySelectorAll('.material-card').forEach(c=>{c.classList.toggle('selected',c.dataset.material===state.material)});
+  document.getElementById('chainLinkOption').classList.toggle('hidden',state.material!=='vinyl');
+  checkMaterialAlert();
+
+  // Render styles and select
+  renderStyles();
+  setTimeout(()=>{
+    document.querySelectorAll('.style-card').forEach(c=>{c.classList.toggle('selected',c.dataset.style===state.style)});
+    // Select color
+    document.querySelectorAll('.color-swatch').forEach(s=>{s.classList.toggle('active',s.dataset.color===state.color)});
+    document.getElementById('colorLabel').textContent=COLOR_NAMES[state.color]||'White';
+    document.querySelectorAll('.style-preview').forEach(p=>p.style.background=getColorBg());
+  },50);
+
+  showView('builder');
+  goStep(1);
+  toast('Loaded: '+p.projName,'info');
+}
+
+async function duplicateProject(id){
+  const all=await getAllProjects();
+  const p=all.find(pr=>pr.id===id);
+  if(!p)return;
+  const dup={...p,id:'proj_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+    projName:p.projName+' (Copy)',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),isDemo:false};
+  await putProject(dup);
+  toast('Duplicated!','success');
+  renderProjectsList();
+}
+
+let pendingDeleteId=null;let undoTimer=null;
+function confirmDelete(id,name){
+  pendingDeleteId=id;
+  deleteProject(id).then(()=>{
+    renderProjectsList();
+    showUndoToast('Deleted "'+name+'"',async()=>{
+      // undo — re-fetch won't work, so we store it
+    });
+  });
+}
+
+function showUndoToast(msg,undoFn){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');t.className='toast info';
+  t.innerHTML=`<span>${msg}</span><button class="undo-btn" onclick="this.parentElement.remove()">OK</button>`;
+  c.appendChild(t);
+  setTimeout(()=>{if(t.parentElement)t.remove()},5000);
+}
+
+function startNew(){
+  state={terrain:null,slopeDeg:0,material:null,style:null,color:'white',editingId:null};
+  ['projName','clientName','clientAddr','clientPhone','terrainNotes','linearFt','additionalNotes'].forEach(id=>sv(id,''));
+  sv('corners',4);sv('fenceHeight',6);sv('walkGateCount',1);sv('driveGateCount',1);sv('driveGateWidth',12);
+  document.getElementById('slopeSlider').value=0;updateSlope();
+  document.getElementById('walkGate').checked=true;
+  document.getElementById('driveGate').checked=false;
+  document.getElementById('driveGateOptions').classList.add('hidden');
+  document.getElementById('autoOpener').checked=false;
+  document.getElementById('archedGate').checked=false;
+  document.getElementById('chainLink').checked=false;
+  document.querySelectorAll('.terrain-card,.material-card,.style-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('terrainAlert').classList.add('hidden');
+  document.getElementById('materialAlert').classList.add('hidden');
+  document.getElementById('chainLinkOption').classList.add('hidden');
+  document.getElementById('styleGrid').innerHTML='';
+  sv('purpose','');
+  currentStep=1;
+  goStep(1);
+}
+
+// ════════════════════════════════════════════════
+// IMPORT / EXPORT
+// ════════════════════════════════════════════════
+async function exportCSV(){
+  const projs=await getAllProjects();
+  if(!projs.length){toast('No projects to export','error');return}
+  const headers=['refNum','projName','clientName','clientAddr','clientPhone','terrain','slopeDeg','material','style','color','linearFt','height','panels','posts','walkGateCount','driveGateCount','purpose','createdAt'];
+  const rows=projs.map(p=>headers.map(h=>'"'+(String(p[h]||'').replace(/"/g,'""'))+'"').join(','));
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  download(csv,'jones-fence-blueprints.csv','text/csv');
+  toast('CSV exported!','success');
+}
+
+async function exportJSON(){
+  const projs=await getAllProjects();
+  if(!projs.length){toast('No projects to export','error');return}
+  const json=JSON.stringify({version:1,exported:new Date().toISOString(),projects:projs},null,2);
+  download(json,'jones-fence-backup.json','application/json');
+  toast('JSON backup exported!','success');
+}
+
+function importCSV(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{await parseCSVAndImport(e.target.result);event.target.value=''};
+  reader.readAsText(file);
+}
+
+function importCSVPaste(){
+  const csv=gv('csvPaste');
+  if(!csv.trim()){toast('Paste CSV data first','error');return}
+  parseCSVAndImport(csv);
+}
+
+async function parseCSVAndImport(csv){
+  const lines=csv.trim().split('\n').filter(l=>l.trim());
+  if(lines.length<2){toast('CSV needs header + at least 1 row','error');return}
+  const headers=parseCSVLine(lines[0]);
+  let count=0;
+  for(let i=1;i<lines.length;i++){
+    const vals=parseCSVLine(lines[i]);
+    const obj={};
+    headers.forEach((h,idx)=>{obj[h.trim()]=vals[idx]||''});
+    const proj={
+      id:'proj_'+Date.now()+'_'+Math.random().toString(36).substr(2,5),
+      projName:obj.projName||obj.project_name||obj.name||'Imported #'+i,
+      clientName:obj.clientName||obj.client||'',
+      clientAddr:obj.clientAddr||obj.address||'',
+      clientPhone:obj.clientPhone||obj.phone||'',
+      terrain:obj.terrain||'flat',slopeDeg:parseInt(obj.slopeDeg)||0,
+      material:obj.material||'vinyl',style:obj.style||'halifax-privacy',
+      color:obj.color||'white',linearFt:parseInt(obj.linearFt||obj.linear_ft)||100,
+      height:parseInt(obj.height)||6,
+      createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    };
+    proj.panels=Math.ceil(proj.linearFt/8);proj.posts=proj.panels+5;
+    await putProject(proj);count++;
+  }
+  toast(`Imported ${count} project${count>1?'s':''}!`,'success');
+  sv('csvPaste','');
+}
+
+function parseCSVLine(line){
+  const result=[];let current='';let inQuotes=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQuotes&&line[i+1]==='"'){current+='"';i++}else{inQuotes=!inQuotes}}
+    else if(c===','&&!inQuotes){result.push(current);current=''}
+    else{current+=c}
+  }
+  result.push(current);return result;
+}
+
+async function importJSON(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      const projs=data.projects||data;
+      if(!Array.isArray(projs))throw new Error('Invalid format');
+      for(const p of projs){await putProject(p)}
+      toast(`Restored ${projs.length} project${projs.length>1?'s':''}!`,'success');
+      renderProjectsList();
+    }catch(err){toast('Invalid JSON file: '+err.message,'error')}
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+function confirmClearAll(){
+  openModal(`<h3>⚠️ Clear All Data?</h3>
+    <p style="margin-bottom:20px">This will permanently delete all saved blueprints. This action cannot be undone.</p>
+    <div class="btn-group" style="justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeModalNow()">Cancel</button>
+      <button class="btn btn-danger" onclick="doClearAll()">🗑️ Delete Everything</button>
+    </div>`);
+}
+async function doClearAll(){
+  await clearAllProjects();
+  closeModalNow();
+  toast('All data cleared','info');
+  renderProjectsList();
+}
+
+// ════════════════════════════════════════════════
+// DEMO DATA
+// ════════════════════════════════════════════════
+const DEMO_PROJECTS=[
+  {
+    id:'demo_1',isDemo:true,
+    projName:'Henderson Lake House Privacy Fence',clientName:'Robert & Carol Henderson',
+    clientAddr:'2847 Eaton Ferry Rd, Littleton, NC 27850',clientPhone:'(919) 555-3201',
+    terrain:'waterfront',slopeDeg:12,material:'vinyl',style:'halifax-privacy',color:'white',
+    linearFt:280,height:6,panels:35,posts:40,corners:4,
+    walkGate:true,walkGateCount:2,driveGate:false,driveGateCount:0,driveGateWidth:12,
+    autoOpener:false,archedGate:true,chainLink:false,
+    matName:'Custom Vinyl',styleName:'The Halifax Privacy',installType:'Standard (Racked)',
+    purpose:'privacy',terrainNotes:'Gentle slope to lake, large oaks along south boundary',
+    additionalNotes:'Retired from Raleigh. Want privacy from neighbor\'s rental property.',
+    refNum:'JFD-2026-0115-4827',leadWeeks:2,
+    createdAt:'2026-01-15T14:30:00Z',updatedAt:'2026-01-15T14:30:00Z'
+  },
+  {
+    id:'demo_2',isDemo:true,
+    projName:'Williams Pool Fence — Gaston Shores',clientName:'Denise Williams',
+    clientAddr:'109 Gaston Shores Dr, Littleton, NC 27850',clientPhone:'(804) 555-7744',
+    terrain:'gentle',slopeDeg:5,material:'aluminum',style:'pool-classic',color:'black',
+    linearFt:120,height:5,panels:15,posts:20,corners:4,
+    walkGate:true,walkGateCount:1,driveGate:false,driveGateCount:0,driveGateWidth:12,
+    autoOpener:false,archedGate:false,chainLink:false,
+    matName:'Aluminum',styleName:'Pool Code Classic',installType:'Standard (Racked)',
+    purpose:'pool',terrainNotes:'Flat back yard, in-ground pool installed last summer',
+    additionalNotes:'VRBO rental — needs pool code compliance ASAP for insurance.',
+    refNum:'JFD-2026-0122-1953',leadWeeks:1,
+    createdAt:'2026-01-22T09:15:00Z',updatedAt:'2026-01-22T09:15:00Z'
+  },
+  {
+    id:'demo_3',isDemo:true,
+    projName:'Boone Farm Perimeter — Hwy 186',clientName:'Earl Boone Jr.',
+    clientAddr:'4455 NC-186, Seaboard, NC 27876',clientPhone:'(252) 555-0088',
+    terrain:'flat',slopeDeg:0,material:'wood',style:'split-rail',color:'tan',
+    linearFt:600,height:4,panels:75,posts:80,corners:6,
+    walkGate:true,walkGateCount:1,driveGate:true,driveGateCount:2,driveGateWidth:16,
+    autoOpener:false,archedGate:false,chainLink:false,
+    matName:'Pressure Treated Wood',styleName:'Split Rail',installType:'Standard (Racked)',
+    purpose:'agricultural',terrainNotes:'Flat farmland, borders cotton field. Sandy soil.',
+    additionalNotes:'Need two 16ft gates for tractor access.',
+    refNum:'JFD-2026-0128-6341',leadWeeks:1,
+    createdAt:'2026-01-28T11:00:00Z',updatedAt:'2026-01-28T11:00:00Z'
+  },
+  {
+    id:'demo_4',isDemo:true,
+    projName:'Martin Deck & Screened Porch',clientName:'James & Tanya Martin',
+    clientAddr:'778 Lizard Creek Rd, Gaston, NC 27832',clientPhone:'(252) 555-4419',
+    terrain:'steep',slopeDeg:22,material:'vinyl',style:'gaston-picket',color:'white',
+    linearFt:85,height:4,panels:11,posts:16,corners:4,
+    walkGate:true,walkGateCount:1,driveGate:false,driveGateCount:0,driveGateWidth:12,
+    autoOpener:false,archedGate:true,chainLink:false,
+    matName:'Custom Vinyl',styleName:'The Gaston Picket',installType:'Stepped',
+    purpose:'deck',terrainNotes:'House sits on hill overlooking Lake Gaston. Steep drop to water. Existing deck is rotting.',
+    additionalNotes:'Want Fiberon composite deck + vinyl picket railing with arched gate to stairs.',
+    refNum:'JFD-2026-0203-5512',leadWeeks:3,
+    createdAt:'2026-02-03T16:45:00Z',updatedAt:'2026-02-03T16:45:00Z'
+  },
+  {
+    id:'demo_5',isDemo:true,
+    projName:'Black Chain Link — Dawson Property',clientName:'Marcus Dawson',
+    clientAddr:'312 Jackson Rd, Jackson, NC 27845',clientPhone:'(252) 555-1177',
+    terrain:'gentle',slopeDeg:6,material:'vinyl',style:'seaboard-ranch',color:'black',
+    linearFt:350,height:5,panels:44,posts:49,corners:4,
+    walkGate:true,walkGateCount:1,driveGate:true,driveGateCount:1,driveGateWidth:12,
+    autoOpener:true,archedGate:false,chainLink:true,
+    matName:'Black Vinyl Chain Link',styleName:'The Seaboard Ranch',installType:'Standard (Racked)',
+    purpose:'pets',terrainNotes:'Gentle slope, few pine trees. Two dogs that can jump.',
+    additionalNotes:'Need 5ft height minimum — dogs are escape artists. Auto opener for driveway.',
+    refNum:'JFD-2026-0205-8890',leadWeeks:1,
+    createdAt:'2026-02-05T08:20:00Z',updatedAt:'2026-02-05T08:20:00Z'
+  }
+];
+
+async function seedDemoData(){
+  const existing=await getAllProjects();
+  if(existing.length>0)return; // don't overwrite
+  for(const d of DEMO_PROJECTS){await putProject(d)}
+}
+
+function dismissDemo(){
+  document.getElementById('demoBanner').style.display='none';
+  localStorage.setItem('jones_demo_dismissed','1');
+}
+
+async function clearDemoData(e){
+  e.preventDefault();
+  const all=await getAllProjects();
+  for(const p of all){if(p.isDemo)await deleteProject(p.id)}
+  toast('Demo data cleared!','info');
+  dismissDemo();
+  renderProjectsList();
+}
+
+// ════════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════════
+function openModal(html){
+  document.getElementById('modalContent').innerHTML=html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))closeModalNow()}
+function closeModalNow(){document.getElementById('modalOverlay').classList.remove('show')}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');t.className='toast '+type;
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  t.innerHTML=`<span>${icons[type]||''} ${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(40px)';setTimeout(()=>t.remove(),300)},3500);
+}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+function gv(id){const e=document.getElementById(id);return e?e.value:''}
+function sv(id,v){const e=document.getElementById(id);if(e)e.value=v}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function capitalize(s){return s?s.charAt(0).toUpperCase()+s.slice(1):''}
+function download(content,name,type){
+  const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+function shake(id){
+  const el=document.getElementById(id);el.classList.add('input-error');
+  el.style.animation='none';el.offsetHeight;el.style.animation='shake .4s ease';
+  setTimeout(()=>{el.classList.remove('input-error');el.style.animation=''},500);
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+(async function init(){
+  await openDB();
+  await seedDemoData();
+
+  // Check demo banner
+  if(localStorage.getItem('jones_demo_dismissed')==='1'){
+    document.getElementById('demoBanner').style.display='none';
+  }
+
+  // Render projects count
+  renderProjectsList();
+})();
+</script>
+</body>
+</html>
