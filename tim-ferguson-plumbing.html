@@ -1,2644 +1,1772 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Emergency Triage | Tim Ferguson Plumbing, Air & Electric</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23d1242b' rx='15' width='100' height='100'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>🔧</text></svg>">
-    <style>
-        /* ============================================
-           SECURITY LAYER - Access Control
-           ============================================ */
-        .security-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            z-index: 999999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .security-overlay.hidden {
-            display: none !important;
-        }
-        
-        .security-box {
-            background: var(--tf-dark-card);
-            border: 2px solid var(--tf-red);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            max-width: 400px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 0 60px rgba(209, 36, 43, 0.3);
-        }
-        
-        .security-icon {
-            width: 80px;
-            height: 80px;
-            background: var(--tf-red);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-            font-size: 40px;
-            animation: pulse-security 2s infinite;
-        }
-        
-        @keyframes pulse-security {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(209, 36, 43, 0.5); transform: scale(1); }
-            50% { box-shadow: 0 0 30px 10px rgba(209, 36, 43, 0.3); transform: scale(1.02); }
-        }
-        
-        .security-box h2 {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
-            color: var(--tf-white);
-        }
-        
-        .security-box p {
-            color: var(--tf-muted);
-            margin-bottom: 24px;
-            font-size: 0.95rem;
-        }
-        
-        .security-input {
-            width: 100%;
-            padding: 16px;
-            background: var(--tf-dark-surface);
-            border: 2px solid var(--tf-grey);
-            border-radius: var(--radius-md);
-            color: var(--tf-white);
-            font-size: 1.1rem;
-            text-align: center;
-            letter-spacing: 2px;
-            margin-bottom: 16px;
-            transition: var(--transition);
-        }
-        
-        .security-input:focus {
-            outline: none;
-            border-color: var(--tf-red);
-            box-shadow: var(--shadow-glow);
-        }
-        
-        .security-btn {
-            width: 100%;
-            padding: 16px;
-            background: var(--tf-red);
-            color: white;
-            border: none;
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        
-        .security-btn:hover {
-            background: var(--tf-red-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-glow);
-        }
-        
-        .security-error {
-            color: var(--tf-critical);
-            font-size: 0.875rem;
-            margin-top: 12px;
-            min-height: 20px;
-        }
-        
-        .security-contact {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--tf-dark-surface);
-            font-size: 0.8rem;
-            color: var(--tf-muted);
-        }
-        
-        .security-contact a {
-            color: var(--tf-red);
-            text-decoration: none;
-        }
-        
-        /* Anti-scrape: Disable selection on structural elements */
-        .app-header, .bottom-nav, .category-card, .option-btn, .btn, .nav-item, .guide-item, .card, .stat-card, .log-item, .log-action-btn, .ie-btn, .modal-header {
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        
-        /* Allow selection on inputs and content */
-        input, textarea, .question-text, .result-subtitle, .log-details, .modal-body p, .modal-body li {
-            user-select: text;
-            -webkit-user-select: text;
-        }
-
-        :root {
-            --tf-red: #d1242b;
-            --tf-red-glow: rgba(209, 36, 43, 0.3);
-            --tf-red-dark: #a51d23;
-            --tf-grey: #333333;
-            --tf-black: #1a1a1a;
-            --tf-dark-surface: #242424;
-            --tf-dark-card: #2d2d2d;
-            --tf-white: #ffffff;
-            --tf-muted: #9ca3af;
-            --tf-success: #22c55e;
-            --tf-warning: #f59e0b;
-            --tf-critical: #ef4444;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 24px;
-            --shadow-glow: 0 0 20px var(--tf-red-glow);
-            --shadow-card: 0 4px 20px rgba(0,0,0,0.4);
-            --transition: all 0.2s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html {
-            font-size: 16px;
-            scroll-behavior: smooth;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--tf-black);
-            color: var(--tf-white);
-            min-height: 100vh;
-            min-height: 100dvh;
-            line-height: 1.5;
-        }
-
-        h1, h2, h3, h4 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-
-        /* Layout */
-        .app-container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            min-height: 100dvh;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 16px;
-            padding-bottom: 100px;
-            max-width: 600px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        /* Header */
-        .app-header {
-            background: linear-gradient(180deg, var(--tf-dark-surface) 0%, var(--tf-black) 100%);
-            padding: 16px;
-            text-align: center;
-            border-bottom: 1px solid var(--tf-dark-card);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-brand {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .brand-icon {
-            width: 36px;
-            height: 36px;
-            background: var(--tf-red);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .brand-text {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--tf-white);
-        }
-
-        .brand-text span {
-            color: var(--tf-red);
-        }
-
-        /* Weather Alert Banner */
-        .weather-alert {
-            background: linear-gradient(90deg, var(--tf-warning), #d97706);
-            color: var(--tf-black);
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            animation: pulse-bg 2s infinite;
-        }
-
-        @keyframes pulse-bg {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.85; }
-        }
-
-        .weather-alert.hidden { display: none; }
-
-        /* Demo Banner */
-        .demo-banner {
-            background: linear-gradient(90deg, #6366f1, #8b5cf6);
-            color: white;
-            padding: 12px 16px;
-            font-size: 0.875rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-
-        .demo-banner.hidden { display: none; }
-
-        .demo-banner button {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        /* Bottom Navigation (Mobile) */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: var(--tf-dark-surface);
-            border-top: 1px solid var(--tf-dark-card);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            padding-bottom: max(8px, env(safe-area-inset-bottom));
-            z-index: 1000;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px 16px;
-            border-radius: var(--radius-md);
-            color: var(--tf-muted);
-            text-decoration: none;
-            font-size: 0.7rem;
-            font-weight: 500;
-            transition: var(--transition);
-            min-width: 64px;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
-        .nav-item.active {
-            color: var(--tf-red);
-        }
-
-        .nav-item svg {
-            width: 24px;
-            height: 24px;
-        }
-
-        /* Screens */
-        .screen {
-            display: none;
-        }
-
-        .screen.active {
-            display: block;
-            animation: fadeIn 0.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Category Selection */
-        .category-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .category-card {
-            background: var(--tf-dark-card);
-            border: 2px solid transparent;
-            border-radius: var(--radius-lg);
-            padding: 24px 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .category-card:hover, .category-card:focus {
-            border-color: var(--tf-red);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .category-card.selected {
-            border-color: var(--tf-red);
-            background: var(--tf-dark-surface);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .category-icon {
-            font-size: 2.5rem;
-            margin-bottom: 8px;
-        }
-
-        .category-label {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        /* Questions */
-        .question-card {
-            background: var(--tf-dark-card);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-card);
-        }
-
-        .question-number {
-            color: var(--tf-red);
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-
-        .question-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-        }
-
-        .options-grid {
-            display: grid;
-            gap: 10px;
-        }
-
-        .option-btn {
-            background: var(--tf-dark-surface);
-            border: 2px solid var(--tf-grey);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            color: var(--tf-white);
-            font-size: 1rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: left;
-            min-height: 52px;
-            display: flex;
-            align-items: center;
-        }
-
-        .option-btn:hover, .option-btn:focus {
-            border-color: var(--tf-red);
-            background: rgba(209, 36, 43, 0.1);
-        }
-
-        .option-btn.selected {
-            border-color: var(--tf-red);
-            background: rgba(209, 36, 43, 0.2);
-        }
-
-        .option-btn.yes {
-            border-color: var(--tf-critical);
-        }
-
-        .option-btn.no {
-            border-color: var(--tf-success);
-        }
-
-        /* Progress bar */
-        .progress-container {
-            margin-bottom: 24px;
-        }
-
-        .progress-bar {
-            height: 6px;
-            background: var(--tf-dark-card);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--tf-red), #ff4d4d);
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        .progress-text {
-            font-size: 0.8rem;
-            color: var(--tf-muted);
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        /* Result Screen */
-        .result-container {
-            text-align: center;
-            padding: 24px 0;
-        }
-
-        .severity-indicator {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            margin: 0 auto 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            animation: pulse-ring 2s infinite;
-        }
-
-        .severity-indicator.critical {
-            background: linear-gradient(135deg, var(--tf-critical), #dc2626);
-            box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
-        }
-
-        .severity-indicator.warning {
-            background: linear-gradient(135deg, var(--tf-warning), #d97706);
-            box-shadow: 0 0 40px rgba(245, 158, 11, 0.5);
-        }
-
-        .severity-indicator.safe {
-            background: linear-gradient(135deg, var(--tf-success), #16a34a);
-            box-shadow: 0 0 40px rgba(34, 197, 94, 0.5);
-        }
-
-        @keyframes pulse-ring {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .severity-score {
-            font-family: 'Outfit', sans-serif;
-            font-size: 3rem;
-            font-weight: 800;
-            color: white;
-        }
-
-        .severity-label {
-            font-weight: 700;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: rgba(255,255,255,0.9);
-        }
-
-        .result-title {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
-        }
-
-        .result-subtitle {
-            color: var(--tf-muted);
-            font-size: 1rem;
-            margin-bottom: 24px;
-            max-width: 320px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .savings-badge {
-            display: inline-block;
-            background: linear-gradient(90deg, var(--tf-success), #16a34a);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
-        }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 16px 32px;
-            border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            text-decoration: none;
-            min-height: 52px;
-        }
-
-        .btn-primary {
-            background: var(--tf-red);
-            color: white;
-            width: 100%;
-        }
-
-        .btn-primary:hover {
-            background: var(--tf-red-dark);
-            transform: translateY(-1px);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .btn-secondary {
-            background: var(--tf-dark-card);
-            color: white;
-            border: 2px solid var(--tf-grey);
-            width: 100%;
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--tf-white);
-        }
-
-        .btn-call {
-            background: linear-gradient(135deg, var(--tf-red), #ff3333);
-            color: white;
-            width: 100%;
-            font-size: 1.2rem;
-            padding: 20px;
-            animation: pulse-btn 2s infinite;
-        }
-
-        @keyframes pulse-btn {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(209, 36, 43, 0.5); }
-            50% { box-shadow: 0 0 20px 5px rgba(209, 36, 43, 0.3); }
-        }
-
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--tf-dark-card);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            margin-bottom: 16px;
-            box-shadow: var(--shadow-card);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .stat-card {
-            background: var(--tf-dark-card);
-            border-radius: var(--radius-md);
-            padding: 20px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--tf-red);
-        }
-
-        .stat-value.green { color: var(--tf-success); }
-        .stat-value.yellow { color: var(--tf-warning); }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--tf-muted);
-            margin-top: 4px;
-        }
-
-        /* History Log */
-        .log-item {
-            background: var(--tf-dark-surface);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
-            border-left: 4px solid var(--tf-grey);
-        }
-
-        .log-item.critical { border-left-color: var(--tf-critical); }
-        .log-item.warning { border-left-color: var(--tf-warning); }
-        .log-item.safe { border-left-color: var(--tf-success); }
-
-        .log-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-        }
-
-        .log-category {
-            font-weight: 600;
-            font-size: 1rem;
-        }
-
-        .log-severity {
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }
-
-        .log-severity.critical { background: var(--tf-critical); color: white; }
-        .log-severity.warning { background: var(--tf-warning); color: black; }
-        .log-severity.safe { background: var(--tf-success); color: white; }
-
-        .log-details {
-            font-size: 0.875rem;
-            color: var(--tf-muted);
-            margin-bottom: 8px;
-        }
-
-        .log-time {
-            font-size: 0.75rem;
-            color: var(--tf-muted);
-        }
-
-        .log-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .log-action-btn {
-            background: var(--tf-dark-card);
-            border: 1px solid var(--tf-grey);
-            color: var(--tf-muted);
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .log-action-btn:hover {
-            border-color: var(--tf-red);
-            color: var(--tf-white);
-        }
-
-        .log-action-btn.delete:hover {
-            border-color: var(--tf-critical);
-            color: var(--tf-critical);
-        }
-
-        /* Guides */
-        .guide-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .guide-item {
-            background: var(--tf-dark-surface);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .guide-item:hover {
-            background: var(--tf-dark-card);
-        }
-
-        .guide-icon {
-            width: 48px;
-            height: 48px;
-            background: var(--tf-dark-card);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .guide-content h4 {
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-
-        .guide-content p {
-            font-size: 0.8rem;
-            color: var(--tf-muted);
-        }
-
-        /* Modal */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 16px;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .modal {
-            background: var(--tf-dark-card);
-            border-radius: var(--radius-xl);
-            width: 100%;
-            max-width: 480px;
-            max-height: 80vh;
-            overflow-y: auto;
-            transform: scale(0.95);
-            transition: var(--transition);
-        }
-
-        .modal-overlay.active .modal {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--tf-dark-surface);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 1.2rem;
-        }
-
-        .modal-close {
-            background: none;
-            border: none;
-            color: var(--tf-muted);
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 4px;
-        }
-
-        .modal-body {
-            padding: 20px;
-        }
-
-        .modal-body p {
-            margin-bottom: 16px;
-            line-height: 1.7;
-        }
-
-        .modal-body ul {
-            margin-left: 20px;
-            margin-bottom: 16px;
-        }
-
-        .modal-body li {
-            margin-bottom: 8px;
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 48px 24px;
-        }
-
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .empty-title {
-            font-size: 1.3rem;
-            margin-bottom: 8px;
-        }
-
-        .empty-text {
-            color: var(--tf-muted);
-            margin-bottom: 24px;
-            max-width: 280px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Toast */
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 3000;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .toast {
-            background: var(--tf-dark-card);
-            border: 1px solid var(--tf-grey);
-            border-radius: var(--radius-md);
-            padding: 12px 20px;
-            font-size: 0.9rem;
-            box-shadow: var(--shadow-card);
-            animation: slideIn 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toast.success { border-color: var(--tf-success); }
-        .toast.error { border-color: var(--tf-critical); }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Undo Banner */
-        .undo-banner {
-            position: fixed;
-            bottom: 100px;
-            left: 16px;
-            right: 16px;
-            background: var(--tf-grey);
-            color: white;
-            padding: 12px 16px;
-            border-radius: var(--radius-md);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1500;
-            animation: slideUp 0.3s ease;
-        }
-
-        .undo-banner.hidden { display: none; }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .undo-btn {
-            background: var(--tf-red);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Import/Export */
-        .import-export-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 1px solid var(--tf-dark-card);
-        }
-
-        .import-export-section h4 {
-            margin-bottom: 16px;
-            color: var(--tf-muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .import-export-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .ie-btn {
-            background: var(--tf-dark-surface);
-            border: 1px solid var(--tf-grey);
-            border-radius: var(--radius-md);
-            padding: 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--tf-white);
-            font-size: 0.85rem;
-        }
-
-        .ie-btn:hover {
-            border-color: var(--tf-red);
-        }
-
-        .ie-btn svg {
-            display: block;
-            margin: 0 auto 8px;
-            width: 24px;
-            height: 24px;
-        }
-
-        /* Jackson Logic Badge */
-        .jackson-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(209, 36, 43, 0.1);
-            border: 1px solid var(--tf-red);
-            border-radius: 50px;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--tf-red);
-            margin-bottom: 16px;
-        }
-
-        /* Screen Intro */
-        .screen-intro {
-            text-align: center;
-            padding: 24px 0;
-            margin-bottom: 16px;
-        }
-
-        .screen-intro h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-        }
-
-        .screen-intro p {
-            color: var(--tf-muted);
-            font-size: 0.95rem;
-        }
-
-        /* Toggle Switch */
-        .toggle-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--tf-dark-surface);
-        }
-
-        .toggle-label {
-            font-weight: 500;
-        }
-
-        .toggle-switch {
-            width: 50px;
-            height: 28px;
-            background: var(--tf-dark-surface);
-            border-radius: 14px;
-            position: relative;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .toggle-switch.active {
-            background: var(--tf-red);
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 3px;
-            left: 3px;
-            transition: var(--transition);
-        }
-
-        .toggle-switch.active::after {
-            left: 25px;
-        }
-
-        /* Desktop Styles */
-        @media (min-width: 1024px) {
-            .bottom-nav {
-                position: static;
-                flex-direction: row;
-                justify-content: center;
-                gap: 8px;
-                padding: 12px;
-                background: transparent;
-                border: none;
-            }
-
-            .nav-item {
-                flex-direction: row;
-                padding: 12px 24px;
-                font-size: 0.9rem;
-            }
-
-            .main-content {
-                padding-bottom: 32px;
-                max-width: 800px;
-            }
-
-            .app-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 16px 32px;
-            }
-
-            .category-grid {
-                gap: 20px;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        /* Print Styles */
-        @media print {
-            body {
-                background: white;
-                color: black;
-            }
-
-            .bottom-nav, .app-header, .btn, .demo-banner, .weather-alert {
-                display: none !important;
-            }
-
-            .main-content {
-                padding: 0;
-                max-width: none;
-            }
-
-            .card, .log-item, .stat-card {
-                background: #f5f5f5;
-                border: 1px solid #ccc;
-                box-shadow: none;
-            }
-
-            .screen {
-                display: block !important;
-            }
-
-            .screen:not(.active) {
-                page-break-before: always;
-            }
-        }
-
-        /* Hidden file input */
-        .hidden-input {
-            display: none;
-        }
-        
-        /* ============================================
-           PREMIUM POLISH - Enhanced Animations
-           ============================================ */
-        
-        /* Enhanced button micro-interactions */
-        .btn, .option-btn, .category-card, .guide-item, .log-action-btn, .ie-btn {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .btn:active, .option-btn:active, .category-card:active {
-            transform: scale(0.98);
-        }
-        
-        /* Enhanced card hover effects */
-        .card, .log-item {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .card:hover, .log-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        /* Enhanced severity indicator glow */
-        .severity-indicator.critical {
-            animation: pulse-critical 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse-critical {
-            0%, 100% { 
-                box-shadow: 0 0 40px rgba(239, 68, 68, 0.5);
-                transform: scale(1);
-            }
-            50% { 
-                box-shadow: 0 0 60px rgba(239, 68, 68, 0.7);
-                transform: scale(1.03);
-            }
-        }
-        
-        /* Smooth screen transitions */
-        .screen {
-            display: none;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-        
-        .screen.active {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-            animation: none;
-        }
-        
-        /* Enhanced toast notifications */
-        .toast {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            background: rgba(45, 45, 45, 0.95);
-            border-left: 4px solid var(--tf-grey);
-        }
-        
-        .toast.success { 
-            border-left-color: var(--tf-success);
-            border-color: var(--tf-success);
-        }
-        
-        .toast.error { 
-            border-left-color: var(--tf-critical);
-            border-color: var(--tf-critical);
-        }
-        
-        /* Enhanced progress bar animation */
-        .progress-fill {
-            background: linear-gradient(90deg, var(--tf-red) 0%, #ff4d4d 50%, var(--tf-red) 100%);
-            background-size: 200% 100%;
-            animation: shimmer 2s linear infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
-        
-        /* Enhanced category card selection glow */
-        .category-card.selected {
-            animation: selected-pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes selected-pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(209, 36, 43, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(209, 36, 43, 0.5); }
-        }
-        
-        /* Enhanced savings badge */
-        .savings-badge {
-            animation: badge-glow 3s ease-in-out infinite;
-        }
-        
-        @keyframes badge-glow {
-            0%, 100% { box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); }
-            50% { box-shadow: 0 4px 25px rgba(34, 197, 94, 0.5); }
-        }
-        
-        /* Smooth modal backdrop */
-        .modal-overlay {
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
-        
-        /* Enhanced nav item interactions */
-        .nav-item {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .nav-item::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--tf-red);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-        
-        .nav-item.active::after {
-            width: 60%;
-        }
-        
-        /* Enhanced option button states */
-        .option-btn.selected {
-            background: linear-gradient(135deg, rgba(209, 36, 43, 0.2) 0%, rgba(209, 36, 43, 0.1) 100%);
-            border-color: var(--tf-red);
-            box-shadow: inset 0 0 10px rgba(209, 36, 43, 0.1);
-        }
-        
-        /* Weather alert enhanced animation */
-        .weather-alert {
-            animation: weather-pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes weather-pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.9; }
-        }
-        
-        /* Focus states for accessibility */
-        .btn:focus-visible,
-        .option-btn:focus-visible,
-        .category-card:focus-visible,
-        .nav-item:focus-visible,
-        .log-action-btn:focus-visible {
-            outline: 2px solid var(--tf-red);
-            outline-offset: 2px;
-        }
-        
-        /* Enhanced stat cards */
-        .stat-card {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--tf-red), #ff4d4d);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-        
-        /* Enhanced undo banner */
-        .undo-banner {
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            background: rgba(51, 51, 51, 0.95);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Jackson Permit Patrol — Tim Ferguson Plumbing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23d1242b'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🏛️%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS RESET & VARIABLES
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #d1242b;
+  --red-hover: #b91c22;
+  --red-glow: rgba(209, 36, 43, 0.25);
+  --red-subtle: rgba(209, 36, 43, 0.08);
+  --dark: #1a1a1a;
+  --dark-card: #242424;
+  --dark-elevated: #2c2c2c;
+  --dark-border: #3a3a3a;
+  --dark-input: #333333;
+  --white: #ffffff;
+  --white-90: rgba(255,255,255,0.9);
+  --white-70: rgba(255,255,255,0.7);
+  --white-50: rgba(255,255,255,0.5);
+  --white-30: rgba(255,255,255,0.3);
+  --white-10: rgba(255,255,255,0.1);
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.12);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.12);
+  --error: #ef4444;
+  --error-bg: rgba(239,68,68,0.12);
+  --info: #3b82f6;
+  --info-bg: rgba(59,130,246,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+  --tab-height: 64px;
+  --header-height: 56px;
+}
+
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--white);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable text selection for inputs and content users need to copy */
+input, textarea, .form-input, .form-textarea, .share-link-box .sl-url {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+h1, h2, h3, h4, h5 { font-family: var(--font-heading); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.1rem; }
+
+/* ═══════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════ */
+.app-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-height);
+  background: linear-gradient(135deg, var(--dark-card) 0%, #1e1e1e 100%);
+  border-bottom: 2px solid var(--red);
+  display: flex; align-items: center; padding: 0 16px;
+  box-shadow: 0 2px 16px rgba(209,36,43,0.15);
+}
+.app-header .logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.app-header .logo-icon {
+  width: 32px; height: 32px; background: var(--red); border-radius: var(--radius-xs);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  box-shadow: 0 0 12px var(--red-glow);
+}
+.app-header .logo-text {
+  font-family: var(--font-heading); font-weight: 700; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1;
+}
+.app-header .logo-text span { color: var(--red); display: block; font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.header-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-xs); border: 1px solid var(--dark-border);
+  background: var(--dark-elevated); color: var(--white-70); display: flex; align-items: center;
+  justify-content: center; cursor: pointer; transition: var(--transition); font-size: 16px;
+}
+.header-btn:hover { background: var(--dark-input); color: var(--white); border-color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   BOTTOM TAB BAR (Mobile)
+   ═══════════════════════════════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--tab-height);
+  background: linear-gradient(0deg, var(--dark-card) 0%, #222 100%);
+  border-top: 1px solid var(--dark-border);
+  display: flex; align-items: stretch; padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.4);
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer; color: var(--white-50); transition: var(--transition);
+  border: none; background: none; font-family: var(--font-body); position: relative;
+  -webkit-tap-highlight-color: transparent; min-height: 44px;
+}
+.tab-item::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 0; height: 2px; background: var(--red); border-radius: 0 0 2px 2px; transition: var(--transition);
+}
+.tab-item.active { color: var(--red); }
+.tab-item.active::before { width: 32px; }
+.tab-item .tab-icon { font-size: 20px; line-height: 1; }
+.tab-item .tab-label { font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ═══════════════════════════════════════════
+   DESKTOP NAV (≥1024px)
+   ═══════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .tab-bar { display: none; }
+  .app-header { padding: 0 32px; }
+  .desktop-nav { display: flex !important; gap: 4px; margin-left: 32px; }
+  .desktop-nav-item {
+    padding: 8px 16px; border-radius: var(--radius-xs); cursor: pointer;
+    font-family: var(--font-heading); font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--white-70); transition: var(--transition);
+    border: none; background: none; white-space: nowrap;
+  }
+  .desktop-nav-item:hover { color: var(--white); background: var(--white-10); }
+  .desktop-nav-item.active { color: var(--red); background: var(--red-subtle); }
+  .main-content { padding-bottom: 32px !important; max-width: 900px; margin: 0 auto; }
+}
+.desktop-nav { display: none; }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+   ═══════════════════════════════════════════ */
+.main-content {
+  padding: calc(var(--header-height) + 16px) 16px calc(var(--tab-height) + 16px);
+  min-height: 100dvh;
+}
+.view { display: none; animation: fadeIn 0.25s ease; }
+.view.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 var(--red-glow); } 50% { box-shadow: 0 0 16px 4px var(--red-glow); } }
+
+.shake { animation: shake 0.4s ease; }
+
+/* ═══════════════════════════════════════════
+   CARDS & PANELS
+   ═══════════════════════════════════════════ */
+.card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 16px; transition: var(--transition); position: relative; overflow: hidden;
+}
+.card:hover { border-color: var(--white-30); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+/* ═══════════════════════════════════════════
+   FORM ELEMENTS
+   ═══════════════════════════════════════════ */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-family: var(--font-heading); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--white-70);
+  margin-bottom: 6px; font-weight: 500;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px; background: var(--dark-input);
+  border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  color: var(--white); font-family: var(--font-body); font-size: 16px;
+  transition: var(--transition); outline: none; -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow);
+}
+.form-input.invalid, .form-select.invalid { border-color: var(--error); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select { cursor: pointer; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L2 5h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: var(--radius-sm); font-family: var(--font-heading);
+  font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  cursor: pointer; transition: var(--transition); border: none; min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary {
+  background: var(--red); color: var(--white); box-shadow: 0 2px 8px var(--red-glow);
+}
+.btn-primary:hover { background: var(--red-hover); transform: translateY(-1px); box-shadow: 0 4px 16px var(--red-glow); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--dark-elevated); color: var(--white-90); border: 1px solid var(--dark-border);
+}
+.btn-secondary:hover { border-color: var(--white-50); background: var(--dark-input); }
+.btn-outline {
+  background: transparent; color: var(--red); border: 1px solid var(--red);
+}
+.btn-outline:hover { background: var(--red-subtle); }
+.btn-sm { padding: 8px 14px; font-size: 0.75rem; min-height: 36px; }
+.btn-block { width: 100%; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════
+   STATUS PIPELINE (Domino's Tracker)
+   ═══════════════════════════════════════════ */
+.status-pipeline {
+  display: flex; align-items: center; margin: 16px 0; position: relative;
+}
+.status-stage {
+  flex: 1; text-align: center; position: relative; z-index: 1;
+}
+.status-dot {
+  width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 6px;
+  border: 3px solid var(--dark-border); background: var(--dark); transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+.status-stage.completed .status-dot { background: var(--success); border-color: var(--success); color: var(--white); }
+.status-stage.active .status-dot { background: var(--red); border-color: var(--red); animation: pulseGlow 2s infinite; color: var(--white); }
+.status-stage.failed .status-dot { background: var(--error); border-color: var(--error); color: var(--white); }
+.status-label {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--white-50); font-weight: 500; line-height: 1.2;
+}
+.status-stage.completed .status-label, .status-stage.active .status-label { color: var(--white-90); }
+.status-connector {
+  position: absolute; top: 14px; left: 0; right: 0; height: 3px;
+  background: var(--dark-border); z-index: 0;
+}
+.status-connector-fill {
+  height: 100%; background: var(--success); transition: width 0.6s ease; border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   PERMIT CARDS (List View)
+   ═══════════════════════════════════════════ */
+.permit-card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; cursor: pointer; transition: var(--transition);
+  animation: slideUp 0.3s ease backwards; position: relative; overflow: hidden;
+}
+.permit-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+}
+.permit-card[data-status="submitted"]::before { background: var(--info); }
+.permit-card[data-status="scheduled"]::before { background: var(--warning); }
+.permit-card[data-status="assigned"]::before { background: var(--red); }
+.permit-card[data-status="passed"]::before { background: var(--success); }
+.permit-card[data-status="failed"]::before { background: var(--error); }
+.permit-card:hover { border-color: var(--white-30); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.permit-card:active { transform: translateY(0); }
+.permit-card .pc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.permit-card .pc-job { font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; }
+.permit-card .pc-badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+}
+.badge-submitted { background: var(--info-bg); color: var(--info); }
+.badge-scheduled { background: var(--warning-bg); color: var(--warning); }
+.badge-assigned { background: var(--red-subtle); color: var(--red); }
+.badge-passed { background: var(--success-bg); color: var(--success); }
+.badge-failed { background: var(--error-bg); color: var(--error); }
+.permit-card .pc-address { font-size: 0.8rem; color: var(--white-70); margin-bottom: 4px; }
+.permit-card .pc-type { font-size: 0.7rem; color: var(--white-50); }
+.permit-card .pc-date { font-size: 0.65rem; color: var(--white-30); margin-top: 8px; }
+
+/* ═══════════════════════════════════════════
+   TIMELINE LOG
+   ═══════════════════════════════════════════ */
+.timeline { padding: 8px 0; }
+.timeline-item {
+  display: flex; gap: 12px; padding: 10px 0; position: relative;
+}
+.timeline-item::before {
+  content: ''; position: absolute; left: 15px; top: 36px; bottom: -10px;
+  width: 2px; background: var(--dark-border);
+}
+.timeline-item:last-child::before { display: none; }
+.timeline-dot {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  background: var(--dark-elevated); border: 2px solid var(--dark-border);
+}
+.timeline-dot.tl-submit { background: var(--info-bg); border-color: var(--info); }
+.timeline-dot.tl-schedule { background: var(--warning-bg); border-color: var(--warning); }
+.timeline-dot.tl-assign { background: var(--red-subtle); border-color: var(--red); }
+.timeline-dot.tl-pass { background: var(--success-bg); border-color: var(--success); }
+.timeline-dot.tl-fail { background: var(--error-bg); border-color: var(--error); }
+.timeline-dot.tl-note { background: var(--white-10); border-color: var(--white-30); }
+.timeline-body { flex: 1; }
+.timeline-body .tl-action { font-size: 0.85rem; font-weight: 500; }
+.timeline-body .tl-time { font-size: 0.7rem; color: var(--white-50); margin-top: 2px; }
+.timeline-body .tl-note-text { font-size: 0.8rem; color: var(--white-70); margin-top: 4px; font-style: italic; }
+
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 48px 24px; max-width: 400px; margin: 0 auto;
+}
+.empty-icon {
+  width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px;
+  background: var(--red-subtle); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; border: 2px solid var(--red); box-shadow: 0 0 24px var(--red-glow);
+}
+.empty-title { font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 12px; text-transform: uppercase; }
+.empty-desc { font-size: 0.85rem; color: var(--white-70); line-height: 1.5; margin-bottom: 24px; }
+.empty-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+/* ═══════════════════════════════════════════
+   DEMO BANNER
+   ═══════════════════════════════════════════ */
+.demo-banner {
+  background: linear-gradient(135deg, var(--warning-bg) 0%, rgba(245,158,11,0.05) 100%);
+  border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-sm);
+  padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center;
+  gap: 10px; font-size: 0.8rem; color: var(--warning); cursor: pointer;
+  transition: var(--transition);
+}
+.demo-banner:hover { background: rgba(245,158,11,0.15); }
+.demo-banner .demo-x { margin-left: auto; font-size: 18px; opacity: 0.7; }
+
+/* ═══════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════ */
+.toast-container {
+  position: fixed; bottom: calc(var(--tab-height) + 16px); left: 16px; right: 16px;
+  z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  align-items: center;
+}
+@media (min-width: 1024px) { .toast-container { bottom: 32px; left: auto; right: 32px; max-width: 400px; } }
+.toast {
+  pointer-events: all; background: var(--dark-elevated); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow); font-size: 0.85rem; animation: slideUp 0.3s ease;
+  width: 100%; max-width: 400px;
+}
+.toast-success { border-color: var(--success); }
+.toast-error { border-color: var(--error); }
+.toast-undo { border-color: var(--warning); }
+.toast .toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast .toast-msg { flex: 1; }
+.toast .toast-action {
+  font-family: var(--font-heading); font-size: 0.75rem; text-transform: uppercase;
+  color: var(--warning); cursor: pointer; font-weight: 600; letter-spacing: 0.04em;
+  padding: 4px 8px; border-radius: 4px; transition: var(--transition);
+}
+.toast .toast-action:hover { background: var(--warning-bg); }
+
+/* ═══════════════════════════════════════════
+   MODAL / SLIDE PANEL
+   ═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; }
+.modal-panel {
+  background: var(--dark-card); border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%; max-width: 600px; max-height: 90dvh; overflow-y: auto;
+  animation: slideUp 0.3s ease; padding: 0;
+}
+@media (min-width: 1024px) {
+  .modal-overlay { align-items: center; }
+  .modal-panel { border-radius: var(--radius); max-height: 80vh; }
+}
+.modal-handle { width: 40px; height: 4px; background: var(--white-30); border-radius: 2px; margin: 12px auto; }
+.modal-header {
+  padding: 0 20px 16px; border-bottom: 1px solid var(--dark-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h2 { font-size: 1.1rem; }
+.modal-close {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--dark-elevated);
+  border: 1px solid var(--dark-border); color: var(--white-70); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: var(--transition);
+}
+.modal-close:hover { color: var(--white); border-color: var(--red); }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid var(--dark-border); }
+
+/* ═══════════════════════════════════════════
+   DETAIL VIEW
+   ═══════════════════════════════════════════ */
+.detail-back {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--white-70);
+  font-size: 0.8rem; cursor: pointer; margin-bottom: 16px; padding: 4px 0;
+  transition: var(--transition); background: none; border: none; font-family: var(--font-body);
+}
+.detail-back:hover { color: var(--white); }
+.detail-section { margin-bottom: 20px; }
+.detail-section-title {
+  font-family: var(--font-heading); font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--red); margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--dark-border);
+}
+.detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+.detail-row .dr-label { color: var(--white-50); }
+.detail-row .dr-value { color: var(--white); font-weight: 500; text-align: right; }
+
+/* ═══════════════════════════════════════════
+   PROOF RECEIPT
+   ═══════════════════════════════════════════ */
+.receipt-card {
+  background: var(--white); color: #111; border-radius: var(--radius); padding: 24px;
+  margin: 16px 0; position: relative;
+}
+.receipt-card .rc-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 16px; margin-bottom: 16px; }
+.receipt-card .rc-header h3 { font-family: var(--font-heading); color: var(--red); font-size: 1rem; }
+.receipt-card .rc-header .rc-subtitle { font-size: 0.7rem; color: #666; margin-top: 4px; }
+.receipt-card .rc-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8rem; }
+.receipt-card .rc-row .rc-label { color: #666; }
+.receipt-card .rc-row .rc-val { font-weight: 600; }
+.receipt-card .rc-stamp {
+  text-align: center; margin-top: 16px; padding-top: 16px; border-top: 2px dashed #ccc;
+  font-size: 0.65rem; color: #999;
+}
+.receipt-card .rc-stamp .stamp-hash { font-family: monospace; font-size: 0.6rem; word-break: break-all; }
+
+/* ═══════════════════════════════════════════
+   FILTERS & SEARCH
+   ═══════════════════════════════════════════ */
+.filter-bar {
+  display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer;
+  white-space: nowrap; transition: var(--transition); border: 1px solid var(--dark-border);
+  background: var(--dark-elevated); color: var(--white-70);
+  font-family: var(--font-body);
+}
+.filter-chip:hover { border-color: var(--white-50); color: var(--white); }
+.filter-chip.active { background: var(--red); border-color: var(--red); color: var(--white); }
+.search-bar {
+  position: relative; margin-bottom: 12px;
+}
+.search-bar input {
+  width: 100%; padding: 10px 14px 10px 38px; background: var(--dark-card);
+  border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  color: var(--white); font-size: 14px; outline: none; font-family: var(--font-body);
+  transition: var(--transition);
+}
+.search-bar input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+.search-bar .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--white-50); font-size: 14px; pointer-events: none; }
+
+/* ═══════════════════════════════════════════
+   SETTINGS / DATA VIEW
+   ═══════════════════════════════════════════ */
+.settings-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--dark-border);
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-item .si-left { display: flex; align-items: center; gap: 12px; }
+.settings-item .si-icon { font-size: 20px; width: 36px; text-align: center; }
+.settings-item .si-label { font-size: 0.85rem; }
+.settings-item .si-desc { font-size: 0.7rem; color: var(--white-50); }
+.settings-item .si-action { color: var(--red); font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+
+/* ═══════════════════════════════════════════
+   PHOTO UPLOAD
+   ═══════════════════════════════════════════ */
+.photo-drop {
+  border: 2px dashed var(--dark-border); border-radius: var(--radius); padding: 24px;
+  text-align: center; cursor: pointer; transition: var(--transition); position: relative;
+  overflow: hidden;
+}
+.photo-drop:hover { border-color: var(--red); background: var(--red-subtle); }
+.photo-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photo-drop .pd-icon { font-size: 28px; margin-bottom: 8px; }
+.photo-drop .pd-text { font-size: 0.8rem; color: var(--white-70); }
+.photo-thumb {
+  width: 60px; height: 60px; border-radius: var(--radius-xs); object-fit: cover;
+  border: 1px solid var(--dark-border); cursor: pointer;
+}
+.photo-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ═══════════════════════════════════════════
+   STAT COUNTER (Dashboard)
+   ═══════════════════════════════════════════ */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  padding: 14px; text-align: center;
+}
+.stat-num { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; }
+.stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--white-50); margin-top: 2px; }
+.stat-card.stat-active .stat-num { color: var(--warning); }
+.stat-card.stat-passed .stat-num { color: var(--success); }
+.stat-card.stat-pending .stat-num { color: var(--info); }
+.stat-card.stat-failed .stat-num { color: var(--error); }
+
+/* ═══════════════════════════════════════════
+   STATUS LINK PAGE
+   ═══════════════════════════════════════════ */
+.share-link-box {
+  background: var(--dark-elevated); border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.share-link-box .sl-url {
+  flex: 1; font-size: 0.75rem; color: var(--white-70); word-break: break-all;
+  font-family: monospace;
+}
+.share-link-box .sl-copy {
+  padding: 6px 12px; background: var(--red); border: none; border-radius: var(--radius-xs);
+  color: var(--white); font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em;
+  transition: var(--transition); white-space: nowrap;
+}
+.share-link-box .sl-copy:hover { background: var(--red-hover); }
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════ */
+@media print {
+  * { color: #000 !important; background: #fff !important; box-shadow: none !important; border-color: #ccc !important; }
+  .app-header, .tab-bar, .desktop-nav, .toast-container, .demo-banner, .modal-overlay,
+  .btn, .filter-bar, .search-bar, .photo-drop, .header-actions, .detail-back { display: none !important; }
+  .main-content { padding: 0 !important; max-width: 100% !important; }
+  .view { display: block !important; }
+  .receipt-card { border: 2px solid #000; page-break-inside: avoid; }
+  .permit-card { border: 1px solid #ccc; page-break-inside: avoid; }
+  .status-pipeline { margin: 24px 0; }
+  body { font-size: 12pt; }
+}
+</style>
 </head>
 <body>
-    <!-- Security Overlay -->
-    <div class="security-overlay" id="securityOverlay">
-        <div class="security-box">
-            <div class="security-icon">🔒</div>
-            <h2>Tim Ferguson Triage</h2>
-            <p>Enter access key to continue</p>
-            <input type="password" class="security-input" id="securityInput" placeholder="••••••••" maxlength="20">
-            <button class="security-btn" onclick="checkAccess()">Unlock</button>
-            <div class="security-error" id="securityError"></div>
-            <div class="security-contact">
-                Need access? <a href="mailto:ben@bennycutools.com">ben@bennycutools.com</a>
-            </div>
+
+<!-- ═══════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-icon">🏛️</div>
+    <div class="logo-text">
+      Permit Patrol
+      <span>Tim Ferguson Plumbing</span>
+    </div>
+  </div>
+  <nav class="desktop-nav">
+    <button class="desktop-nav-item active" data-view="tracker" onclick="switchView('tracker')">+ New Permit</button>
+    <button class="desktop-nav-item" data-view="permits" onclick="switchView('permits')">All Permits</button>
+    <button class="desktop-nav-item" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</button>
+    <button class="desktop-nav-item" data-view="data" onclick="switchView('data')">Data</button>
+  </nav>
+  <div class="header-actions">
+    <button class="header-btn" onclick="openImportModal()" title="Import Data">📥</button>
+    <button class="header-btn" onclick="window.print()" title="Print">🖨️</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════════════ -->
+<main class="main-content">
+
+  <!-- ── DEMO BANNER ── -->
+  <div class="demo-banner" id="demoBanner" style="display:none" onclick="clearDemoData()">
+    <span>⚠️</span>
+    <span>Showing sample data for Tim Ferguson Plumbing. Tap to clear and start fresh.</span>
+    <span class="demo-x">✕</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 1: NEW PERMIT (Primary Workflow)
+       ═══════════════════════════════════════ -->
+  <div class="view active" id="view-tracker">
+    <h1 style="margin-bottom:4px;">🏛️ New Permit Entry</h1>
+    <p style="color:var(--white-50); font-size:0.8rem; margin-bottom:20px;">Track a permit from application to inspection pass.</p>
+
+    <form id="permitForm" onsubmit="return savePermit(event)">
+      <div class="card">
+        <h3 style="margin-bottom:16px; color:var(--red);">Job Details</h3>
+        <div class="form-group">
+          <label class="form-label" for="jobName">Job / Customer Name *</label>
+          <input type="text" class="form-input" id="jobName" placeholder="e.g., Smith Water Heater Replace" required>
         </div>
+        <div class="form-group">
+          <label class="form-label" for="jobAddress">Job Address *</label>
+          <input type="text" class="form-input" id="jobAddress" placeholder="e.g., 142 Campbell St, Jackson, TN" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="permitType">Permit Type *</label>
+            <select class="form-select" id="permitType" required>
+              <option value="">Select type...</option>
+              <option value="gas-line">Gas Line</option>
+              <option value="water-heater">Water Heater</option>
+              <option value="electrical-panel">Electrical Panel</option>
+              <option value="sewer-line">Sewer Line</option>
+              <option value="hvac-install">HVAC Install</option>
+              <option value="water-line">Water Line</option>
+              <option value="drain-repair">Drain Repair</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="filingEntity">Filing Entity</label>
+            <select class="form-select" id="filingEntity">
+              <option value="city-codes">City Building Codes Dept</option>
+              <option value="jea">Jackson Energy Authority</option>
+              <option value="county">Madison County</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="techName">Assigned Tech</label>
+          <input type="text" class="form-input" id="techName" placeholder="e.g., Stephen Eaton">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="jobNotes">Notes</label>
+          <textarea class="form-textarea" id="jobNotes" placeholder="Special instructions, customer contact info, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px; color:var(--red);">📎 Submission Proof</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Upload a photo of the permit application or submission receipt. This becomes your timestamped proof.</p>
+        <div class="photo-drop" id="photoDrop">
+          <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)">
+          <div class="pd-icon">📷</div>
+          <div class="pd-text">Tap to take photo or upload</div>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-bottom:16px;">
+        🚀 Submit & Track Permit
+      </button>
+    </form>
+
+    <!-- EMPTY STATE (shown when no permits exist) -->
+    <div class="empty-state" id="trackerEmpty" style="display:none;">
+      <div class="empty-icon">🏛️</div>
+      <h2 class="empty-title">Permit Patrol</h2>
+      <p class="empty-desc">
+        Track every permit from application to inspection pass. Upload submission receipts, 
+        generate shareable status links, and never get caught in "we didn't get it" limbo again.
+        Built for Tim Ferguson Plumbing, Air & Electric — Jackson, TN.
+      </p>
+      <div class="empty-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('jobName').focus()">+ Track New Permit</button>
+        <button class="btn btn-outline btn-sm" onclick="loadDemoData()">Load Demo Data</button>
+        <button class="btn btn-secondary btn-sm" onclick="openImportModal()">📥 Import Existing Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 2: ALL PERMITS LIST
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-permits">
+    <h1 style="margin-bottom:16px;">📋 All Permits</h1>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search jobs, addresses..." id="searchInput" oninput="renderPermitsList()">
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-chip" data-filter="submitted" onclick="setFilter('submitted')">Submitted</button>
+      <button class="filter-chip" data-filter="scheduled" onclick="setFilter('scheduled')">Scheduled</button>
+      <button class="filter-chip" data-filter="assigned" onclick="setFilter('assigned')">Assigned</button>
+      <button class="filter-chip" data-filter="passed" onclick="setFilter('passed')">Passed</button>
+      <button class="filter-chip" data-filter="failed" onclick="setFilter('failed')">Failed</button>
+    </div>
+    <div id="permitsList"></div>
+    <div class="empty-state" id="permitsEmpty" style="display:none;">
+      <div class="empty-icon">📋</div>
+      <h2 class="empty-title">No Permits Yet</h2>
+      <p class="empty-desc">Create your first permit entry to start tracking.</p>
+      <button class="btn btn-primary" onclick="switchView('tracker')">+ New Permit</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 3: PERMIT DETAIL
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-detail">
+    <button class="detail-back" onclick="switchView('permits')">← Back to All Permits</button>
+    <div id="detailContent"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 4: DASHBOARD
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-dashboard">
+    <h1 style="margin-bottom:16px;">📊 Dashboard</h1>
+    <div class="stat-grid" id="statsGrid"></div>
+    <div class="card">
+      <h3 style="margin-bottom:12px; color:var(--red);">Recent Activity</h3>
+      <div id="recentActivity"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 5: DATA MANAGEMENT
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-data">
+    <h1 style="margin-bottom:16px;">⚙️ Data & Settings</h1>
+    <div class="card">
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">📤</span>
+          <div>
+            <div class="si-label">Export CSV</div>
+            <div class="si-desc">Download permits as spreadsheet</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="exportCSV()">Export</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">💾</span>
+          <div>
+            <div class="si-label">Full Backup (JSON)</div>
+            <div class="si-desc">All data including photos & logs</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="exportJSON()">Backup</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">📥</span>
+          <div>
+            <div class="si-label">Import / Restore</div>
+            <div class="si-desc">CSV upload, paste, or JSON restore</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="openImportModal()">Import</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">🎲</span>
+          <div>
+            <div class="si-label">Load Demo Data</div>
+            <div class="si-desc">Sample permits from Jackson, TN</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="loadDemoData()">Load</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">🗑️</span>
+          <div>
+            <div class="si-label">Clear All Data</div>
+            <div class="si-desc">Remove all permits permanently</div>
+          </div>
+        </div>
+        <span class="si-action" style="color:var(--error);" onclick="confirmClearAll()">Clear</span>
+      </div>
+    </div>
+    <p style="text-align:center; font-size:0.7rem; color:var(--white-30); margin-top:24px;">
+      The Jackson Permit Patrol v1.0<br>
+      Built for Tim Ferguson Plumbing, Air & Electric — Jackson, TN<br>
+      All data stored locally on this device.
+    </p>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     BOTTOM TAB BAR
+     ═══════════════════════════════════════════ -->
+<nav class="tab-bar">
+  <button class="tab-item active" data-view="tracker" onclick="switchView('tracker')">
+    <span class="tab-icon">➕</span>
+    <span class="tab-label">New</span>
+  </button>
+  <button class="tab-item" data-view="permits" onclick="switchView('permits')">
+    <span class="tab-icon">📋</span>
+    <span class="tab-label">Permits</span>
+  </button>
+  <button class="tab-item" data-view="dashboard" onclick="switchView('dashboard')">
+    <span class="tab-icon">📊</span>
+    <span class="tab-label">Stats</span>
+  </button>
+  <button class="tab-item" data-view="data" onclick="switchView('data')">
+    <span class="tab-icon">⚙️</span>
+    <span class="tab-label">Data</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════
+     IMPORT MODAL
+     ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-panel">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>📥 Import Data</h2>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">CSV File Upload</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Upload a .csv file with columns: jobName, address, permitType, status, techName</p>
+        <input type="file" accept=".csv" id="csvFileInput" onchange="importCSVFile(event)" style="display:none;">
+        <button class="btn btn-secondary btn-block" onclick="document.getElementById('csvFileInput').click()">Choose CSV File</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">Paste Data</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Paste tab-delimited data (e.g., from a spreadsheet)</p>
+        <textarea class="form-textarea" id="pasteArea" placeholder="jobName&#9;address&#9;permitType&#9;status&#9;techName&#10;Smith Water Heater&#9;142 Campbell St&#9;water-heater&#9;submitted&#9;Stephen Eaton" style="min-height:120px; font-size:13px;"></textarea>
+        <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="importPastedData()">Import Pasted Data</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Restore JSON Backup</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Restore a full backup created by this tool.</p>
+        <input type="file" accept=".json" id="jsonFileInput" onchange="importJSONFile(event)" style="display:none;">
+        <button class="btn btn-secondary btn-block" onclick="document.getElementById('jsonFileInput').click()">Choose JSON Backup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     UPDATE STATUS MODAL
+     ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="statusModal">
+  <div class="modal-panel">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>🔄 Update Status</h2>
+      <button class="modal-close" onclick="closeStatusModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="statusPermitId">
+      <div class="form-group">
+        <label class="form-label">New Status</label>
+        <select class="form-select" id="newStatus">
+          <option value="submitted">Application Submitted</option>
+          <option value="scheduled">City Scheduled</option>
+          <option value="assigned">Inspector Assigned</option>
+          <option value="passed">✅ Passed</option>
+          <option value="failed">❌ Failed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optional)</label>
+        <textarea class="form-textarea" id="statusNote" placeholder="e.g., Inspector John scheduled for Tuesday 2pm"></textarea>
+      </div>
+      <div class="card" style="background: var(--dark-elevated);">
+        <h3 style="margin-bottom:10px; font-size:0.8rem;">📎 Add Photo Proof</h3>
+        <div class="photo-drop" id="statusPhotoDrop" style="padding:16px;">
+          <input type="file" accept="image/*" capture="environment" id="statusPhotoInput" onchange="handleStatusPhoto(event)">
+          <div class="pd-icon" style="font-size:20px;">📷</div>
+          <div class="pd-text" style="font-size:0.75rem;">Snap receipt or document</div>
+        </div>
+        <div class="photo-grid" id="statusPhotoGrid" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="submitStatusUpdate()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT ENGINE
+     ═══════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════
+// SECURITY LAYER - Access Key Gate
+// ═══════════════════════════════════════════
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=181969462;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+  throw new Error('Invalid key');
+}
+
+// Disable right-click
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Block dev tools shortcuts
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C')){e.preventDefault();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='U'){e.preventDefault();}
+  if(e.key==='F12'){e.preventDefault();}
+});
+
+// ═══════════════════════════════════════════
+// DATABASE LAYER (IndexedDB + localStorage fallback)
+// ═══════════════════════════════════════════
+const DB_NAME = 'PermitPatrolDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'permits';
+let db = null;
+let useLocalStorage = false;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { useLocalStorage = true; resolve(null); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_NAME)) {
+        const store = d.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        store.createIndex('status', 'status');
+        store.createIndex('createdAt', 'createdAt');
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = () => { useLocalStorage = true; resolve(null); };
+  });
+}
+
+function getAllPermits() {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      resolve(JSON.parse(localStorage.getItem('permits') || '[]'));
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => resolve([]);
+  });
+}
+
+function putPermit(permit) {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      getAllPermits().then(all => {
+        const idx = all.findIndex(p => p.id === permit.id);
+        if (idx >= 0) all[idx] = permit; else all.push(permit);
+        localStorage.setItem('permits', JSON.stringify(all));
+        resolve();
+      });
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(permit);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+
+function deletePermit(id) {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      getAllPermits().then(all => {
+        localStorage.setItem('permits', JSON.stringify(all.filter(p => p.id !== id)));
+        resolve();
+      });
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.oncomplete = () => resolve();
+  });
+}
+
+function clearAllPermits() {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      localStorage.removeItem('permits');
+      resolve();
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+    tx.oncomplete = () => resolve();
+  });
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' +
+         d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function generateHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+}
+
+const STATUS_ORDER = ['submitted', 'scheduled', 'assigned', 'passed', 'failed'];
+const STATUS_LABELS = {
+  submitted: 'Application Submitted',
+  scheduled: 'City Scheduled',
+  assigned: 'Inspector Assigned',
+  passed: 'Passed',
+  failed: 'Failed'
+};
+const STATUS_ICONS = { submitted: '📄', scheduled: '📅', assigned: '👷', passed: '✅', failed: '❌' };
+const TYPE_LABELS = {
+  'gas-line': 'Gas Line', 'water-heater': 'Water Heater', 'electrical-panel': 'Electrical Panel',
+  'sewer-line': 'Sewer Line', 'hvac-install': 'HVAC Install', 'water-line': 'Water Line',
+  'drain-repair': 'Drain Repair', 'other': 'Other'
+};
+const ENTITY_LABELS = {
+  'city-codes': 'City Building Codes Dept', 'jea': 'Jackson Energy Authority',
+  'county': 'Madison County', 'other': 'Other'
+};
+
+// ═══════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════
+let currentView = 'tracker';
+let currentFilter = 'all';
+let pendingPhotos = [];
+let statusPhotos = [];
+let undoTimeout = null;
+let undoPermit = null;
+
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+  document.querySelectorAll('.desktop-nav-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+
+  if (view === 'permits') renderPermitsList();
+  if (view === 'dashboard') renderDashboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// PHOTO HANDLING
+// ═══════════════════════════════════════════
+function handlePhoto(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      pendingPhotos.push({ name: file.name, data: ev.target.result, ts: Date.now() });
+      renderPhotoGrid('photoGrid', pendingPhotos);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function handleStatusPhoto(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      statusPhotos.push({ name: file.name, data: ev.target.result, ts: Date.now() });
+      renderPhotoGrid('statusPhotoGrid', statusPhotos);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function renderPhotoGrid(containerId, photos) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = photos.map((p, i) =>
+    `<img src="${p.data}" class="photo-thumb" alt="${p.name}" onclick="previewPhoto('${containerId}', ${i})">`
+  ).join('');
+}
+
+function previewPhoto(containerId, idx) {
+  const photos = containerId === 'photoGrid' ? pendingPhotos : statusPhotos;
+  const w = window.open('', '_blank');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${photos[idx].data}" style="max-width:100%;max-height:100vh;"></body></html>`);
+}
+
+// ═══════════════════════════════════════════
+// SAVE PERMIT
+// ═══════════════════════════════════════════
+async function savePermit(e) {
+  e.preventDefault();
+  const jobName = document.getElementById('jobName').value.trim();
+  const jobAddress = document.getElementById('jobAddress').value.trim();
+  const permitType = document.getElementById('permitType').value;
+
+  // Validate
+  let valid = true;
+  if (!jobName) { document.getElementById('jobName').classList.add('invalid', 'shake'); valid = false; }
+  if (!jobAddress) { document.getElementById('jobAddress').classList.add('invalid', 'shake'); valid = false; }
+  if (!permitType) { document.getElementById('permitType').classList.add('invalid', 'shake'); valid = false; }
+
+  if (!valid) {
+    setTimeout(() => document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')), 500);
+    showToast('Please fill in all required fields', 'error');
+    return false;
+  }
+
+  const now = Date.now();
+  const permit = {
+    id: genId(),
+    jobName,
+    address: jobAddress,
+    permitType,
+    filingEntity: document.getElementById('filingEntity').value,
+    techName: document.getElementById('techName').value.trim(),
+    notes: document.getElementById('jobNotes').value.trim(),
+    status: 'submitted',
+    photos: [...pendingPhotos],
+    timeline: [{
+      action: 'Application Submitted',
+      status: 'submitted',
+      timestamp: now,
+      note: 'Permit application filed with ' + ENTITY_LABELS[document.getElementById('filingEntity').value],
+      photos: pendingPhotos.length > 0 ? [...pendingPhotos] : []
+    }],
+    createdAt: now,
+    updatedAt: now,
+    isDemo: false
+  };
+
+  await putPermit(permit);
+
+  // Reset form
+  document.getElementById('permitForm').reset();
+  pendingPhotos = [];
+  document.getElementById('photoGrid').innerHTML = '';
+  document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+
+  showToast(`Permit tracked: ${jobName}`, 'success');
+  checkDemoBanner();
+  return false;
+}
+
+// Clear invalid on input
+document.querySelectorAll('.form-input, .form-select').forEach(el => {
+  el.addEventListener('input', () => el.classList.remove('invalid'));
+});
+
+// ═══════════════════════════════════════════
+// PERMITS LIST
+// ═══════════════════════════════════════════
+async function renderPermitsList() {
+  const permits = await getAllPermits();
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let filtered = permits.filter(p => {
+    if (currentFilter !== 'all' && p.status !== currentFilter) return false;
+    if (search && !p.jobName.toLowerCase().includes(search) && !p.address.toLowerCase().includes(search) && !(p.techName || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  filtered.sort((a, b) => b.updatedAt - a.updatedAt);
+
+  const container = document.getElementById('permitsList');
+  const emptyEl = document.getElementById('permitsEmpty');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  container.innerHTML = filtered.map((p, i) => `
+    <div class="permit-card" data-status="${p.status}" onclick="showDetail('${p.id}')" style="animation-delay:${i * 0.05}s">
+      <div class="pc-top">
+        <div class="pc-job">${escHtml(p.jobName)}</div>
+        <span class="pc-badge badge-${p.status}">${STATUS_LABELS[p.status] || p.status}</span>
+      </div>
+      <div class="pc-address">📍 ${escHtml(p.address)}</div>
+      <div class="pc-type">${STATUS_ICONS[p.status] || '📄'} ${TYPE_LABELS[p.permitType] || p.permitType} · ${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</div>
+      <div class="pc-date">Updated ${formatDateTime(p.updatedAt)}</div>
+    </div>
+  `).join('');
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderPermitsList();
+}
+
+function escHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+// ═══════════════════════════════════════════
+// PERMIT DETAIL
+// ═══════════════════════════════════════════
+async function showDetail(id) {
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  const statusIdx = STATUS_ORDER.indexOf(p.status);
+  const isFinal = p.status === 'passed' || p.status === 'failed';
+  const connectorPct = p.status === 'failed' ? ((Math.min(statusIdx, 3)) / 4 * 100) :
+                       isFinal ? 100 : (statusIdx / 4 * 100);
+
+  // Build pipeline stages
+  const stages = ['submitted', 'scheduled', 'assigned', 'passed'];
+  const pipelineHtml = stages.map((s, i) => {
+    let cls = '';
+    if (p.status === 'failed' && i === statusIdx) cls = 'failed';
+    else if (i < statusIdx || (isFinal && i <= 3 && p.status === 'passed')) cls = 'completed';
+    else if (i === statusIdx) cls = 'active';
+    const icon = cls === 'completed' ? '✓' : cls === 'failed' ? '✕' : cls === 'active' ? '●' : '';
+    return `<div class="status-stage ${cls}"><div class="status-dot">${icon}</div><div class="status-label">${STATUS_LABELS[s]}</div></div>`;
+  }).join('');
+
+  // Share link (self-referencing hash)
+  const shareHash = generateHash(p.id + p.createdAt);
+  const shareUrl = `${window.location.origin}${window.location.pathname}#permit-${shareHash}`;
+
+  // Receipt
+  const submissionEvent = p.timeline.find(t => t.status === 'submitted');
+
+  const html = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div>
+        <h1 style="font-size:1.3rem; margin-bottom:2px;">${escHtml(p.jobName)}</h1>
+        <span class="pc-badge badge-${p.status}" style="font-size:0.7rem;">${STATUS_LABELS[p.status]}</span>
+      </div>
+      <div class="btn-group">
+        ${!isFinal ? `<button class="btn btn-primary btn-sm" onclick="openStatusModal('${p.id}')">🔄 Update</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="deletePermitConfirm('${p.id}')">🗑️</button>
+      </div>
     </div>
 
-    <div class="app-container">
-        <!-- Weather Alert Banner -->
-        <div class="weather-alert hidden" id="weatherAlert">
-            ❄️ <strong>FREEZE WARNING ACTIVE</strong> — Pipe burst risk elevated for Jackson area
-            <button onclick="dismissWeatherAlert()" style="background:none;border:none;margin-left:12px;cursor:pointer;">✕</button>
-        </div>
-
-        <!-- Demo Banner -->
-        <div class="demo-banner" id="demoBanner">
-            <span>📋 Viewing demo data — showing sample triage records</span>
-            <button onclick="clearDemoData()">Clear Demo</button>
-        </div>
-
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-brand">
-                <div class="brand-icon">🔧</div>
-                <div class="brand-text">Tim Ferguson <span>TRIAGE</span></div>
-            </div>
-        </header>
-
-        <!-- Bottom Navigation -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-screen="triage" onclick="showScreen('triage')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span>Triage</span>
-            </button>
-            <button class="nav-item" data-screen="history" onclick="showScreen('history')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                </svg>
-                <span>History</span>
-            </button>
-            <button class="nav-item" data-screen="guides" onclick="showScreen('guides')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                </svg>
-                <span>Guides</span>
-            </button>
-            <button class="nav-item" data-screen="dashboard" onclick="showScreen('dashboard')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                <span>Stats</span>
-            </button>
-        </nav>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Triage Screen -->
-            <section class="screen active" id="triageScreen">
-                <div id="triageContent">
-                    <!-- Dynamic content loaded here -->
-                </div>
-            </section>
-
-            <!-- History Screen -->
-            <section class="screen" id="historyScreen">
-                <div class="screen-intro">
-                    <h2>Assessment History</h2>
-                    <p>After-hours call log with severity and outcomes</p>
-                </div>
-                <div id="historyContent">
-                    <!-- Dynamic content loaded here -->
-                </div>
-                <div class="import-export-section">
-                    <h4>Data Management</h4>
-                    <div class="import-export-grid">
-                        <button class="ie-btn" onclick="exportCSV()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Export CSV
-                        </button>
-                        <button class="ie-btn" onclick="exportJSON()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                            </svg>
-                            Full Backup
-                        </button>
-                        <button class="ie-btn" onclick="document.getElementById('csvInput').click()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                            </svg>
-                            Import CSV
-                        </button>
-                        <button class="ie-btn" onclick="document.getElementById('jsonInput').click()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                            </svg>
-                            Restore Backup
-                        </button>
-                    </div>
-                    <input type="file" id="csvInput" class="hidden-input" accept=".csv" onchange="importCSV(event)">
-                    <input type="file" id="jsonInput" class="hidden-input" accept=".json" onchange="importJSON(event)">
-                </div>
-            </section>
-
-            <!-- Guides Screen -->
-            <section class="screen" id="guidesScreen">
-                <div class="screen-intro">
-                    <h2>Emergency Guides</h2>
-                    <p>Quick reference for common emergency situations</p>
-                </div>
-                <div class="guide-list">
-                    <div class="guide-item" onclick="openGuide('shutoff')">
-                        <div class="guide-icon">🚰</div>
-                        <div class="guide-content">
-                            <h4>Water Shut-Off Locations</h4>
-                            <p>Find and turn off your main water supply</p>
-                        </div>
-                    </div>
-                    <div class="guide-item" onclick="openGuide('breaker')">
-                        <div class="guide-icon">⚡</div>
-                        <div class="guide-content">
-                            <h4>Breaker Panel Basics</h4>
-                            <p>How to safely reset a tripped breaker</p>
-                        </div>
-                    </div>
-                    <div class="guide-item" onclick="openGuide('gas')">
-                        <div class="guide-icon">🔥</div>
-                        <div class="guide-content">
-                            <h4>Gas Leak Response</h4>
-                            <p>Critical steps if you smell gas</p>
-                        </div>
-                    </div>
-                    <div class="guide-item" onclick="openGuide('freeze')">
-                        <div class="guide-icon">❄️</div>
-                        <div class="guide-content">
-                            <h4>Freeze Prevention</h4>
-                            <p>Protect pipes during Jackson cold snaps</p>
-                        </div>
-                    </div>
-                    <div class="guide-item" onclick="openGuide('hvac')">
-                        <div class="guide-icon">🌡️</div>
-                        <div class="guide-content">
-                            <h4>HVAC Quick Fixes</h4>
-                            <p>Common issues you can check yourself</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Dashboard Screen -->
-            <section class="screen" id="dashboardScreen">
-                <div class="screen-intro">
-                    <h2>Triage Dashboard</h2>
-                    <p>Your after-hours call statistics</p>
-                </div>
-                <div class="stats-grid" id="statsGrid">
-                    <!-- Dynamic stats loaded here -->
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Settings</h3>
-                    </div>
-                    <div class="toggle-row">
-                        <span class="toggle-label">Weather Alert Mode</span>
-                        <div class="toggle-switch" id="weatherToggle" onclick="toggleWeatherAlert()"></div>
-                    </div>
-                    <div class="toggle-row">
-                        <span class="toggle-label">Sound Notifications</span>
-                        <div class="toggle-switch" id="soundToggle" onclick="toggleSetting('soundEnabled')"></div>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <!-- STATUS PIPELINE -->
+    <div class="card" style="padding:20px 12px;">
+      <div class="status-pipeline">
+        <div class="status-connector"><div class="status-connector-fill" style="width:${connectorPct}%"></div></div>
+        ${pipelineHtml}
+      </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Undo Banner -->
-    <div class="undo-banner hidden" id="undoBanner">
-        <span>Assessment deleted</span>
-        <button class="undo-btn" onclick="undoDelete()">Undo</button>
+    <!-- JOB INFO -->
+    <div class="detail-section">
+      <div class="detail-section-title">Job Information</div>
+      <div class="detail-row"><span class="dr-label">Address</span><span class="dr-value">${escHtml(p.address)}</span></div>
+      <div class="detail-row"><span class="dr-label">Permit Type</span><span class="dr-value">${TYPE_LABELS[p.permitType] || p.permitType}</span></div>
+      <div class="detail-row"><span class="dr-label">Filing Entity</span><span class="dr-value">${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</span></div>
+      <div class="detail-row"><span class="dr-label">Assigned Tech</span><span class="dr-value">${escHtml(p.techName || '—')}</span></div>
+      <div class="detail-row"><span class="dr-label">Created</span><span class="dr-value">${formatDateTime(p.createdAt)}</span></div>
+      ${p.notes ? `<div style="margin-top:8px; font-size:0.85rem; color:var(--white-70); font-style:italic;">"${escHtml(p.notes)}"</div>` : ''}
     </div>
 
-    <!-- Guide Modal -->
-    <div class="modal-overlay" id="guideModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h3 class="modal-title" id="guideTitle">Guide</h3>
-                <button class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="modal-body" id="guideBody">
-                <!-- Dynamic content -->
-            </div>
+    <!-- SHARE LINK -->
+    <div class="detail-section">
+      <div class="detail-section-title">📎 Customer Status Link</div>
+      <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:8px;">Share this link with the customer so they can track permit status.</p>
+      <div class="share-link-box">
+        <span class="sl-url" id="shareUrl">${shareUrl}</span>
+        <button class="sl-copy" onclick="copyShareLink()">Copy</button>
+      </div>
+    </div>
+
+    <!-- SUBMISSION RECEIPT -->
+    <div class="detail-section">
+      <div class="detail-section-title">🧾 Submission Receipt</div>
+      <div class="receipt-card" id="receiptCard">
+        <div class="rc-header">
+          <h3>TIM FERGUSON PLUMBING</h3>
+          <div>Air & Electric — Jackson, TN</div>
+          <div class="rc-subtitle">PERMIT SUBMISSION RECEIPT</div>
         </div>
+        <div class="rc-row"><span class="rc-label">Job:</span><span class="rc-val">${escHtml(p.jobName)}</span></div>
+        <div class="rc-row"><span class="rc-label">Address:</span><span class="rc-val">${escHtml(p.address)}</span></div>
+        <div class="rc-row"><span class="rc-label">Permit Type:</span><span class="rc-val">${TYPE_LABELS[p.permitType] || p.permitType}</span></div>
+        <div class="rc-row"><span class="rc-label">Filed With:</span><span class="rc-val">${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</span></div>
+        <div class="rc-row"><span class="rc-label">Filed By:</span><span class="rc-val">${escHtml(p.techName || 'Tim Ferguson Plumbing')}</span></div>
+        <div class="rc-row"><span class="rc-label">Submitted:</span><span class="rc-val">${submissionEvent ? formatDateTime(submissionEvent.timestamp) : formatDateTime(p.createdAt)}</span></div>
+        <div class="rc-row"><span class="rc-label">Current Status:</span><span class="rc-val" style="color:${p.status === 'passed' ? '#22c55e' : p.status === 'failed' ? '#ef4444' : '#d1242b'};">${STATUS_LABELS[p.status]}</span></div>
+        <div class="rc-stamp">
+          TIMESTAMPED PROOF OF FILING<br>
+          <span class="stamp-hash">REF: TFP-${shareHash}-${new Date(p.createdAt).getFullYear()}</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-block" onclick="printReceipt('${p.id}')">🖨️ Print Receipt</button>
     </div>
 
-    <script>
-        // ============================================
-        // SECURITY LAYER - Access Control
-        // ============================================
-        
-        // Hash function for access validation
-        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
-        
-        // Precomputed hash of "ferg2026"
-        const _V = 181969462;
-        
-        // Check access and unlock
-        function checkAccess() {
-            const input = document.getElementById('securityInput').value;
-            const errorEl = document.getElementById('securityError');
-            
-            if (_h(input) === _V) {
-                document.getElementById('securityOverlay').classList.add('hidden');
-                localStorage.setItem('tf_access_granted', 'true');
-                initApp();
-            } else {
-                errorEl.textContent = 'Invalid access key';
-                document.getElementById('securityInput').value = '';
-                document.getElementById('securityInput').focus();
-            }
-        }
-        
-        // Allow Enter key to submit
-        document.getElementById('securityInput')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') checkAccess();
-        });
-        
-        // Check for existing access
-        function hasAccess() {
-            return localStorage.getItem('tf_access_granted') === 'true';
-        }
-        
-        // Anti-scrape measures
-        if (typeof document !== 'undefined') {
-            // Disable right-click
-            document.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Block keyboard shortcuts
-            document.addEventListener('keydown', (e) => {
-                // Ctrl+S (Save)
-                if (e.ctrlKey && e.key === 's') {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+U (View Source)
-                if (e.ctrlKey && e.key === 'u') {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+I (DevTools)
-                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                    e.preventDefault();
-                    return false;
-                }
-                // F12 (DevTools)
-                if (e.key === 'F12') {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        }
-        
-        // ============================================
-        // Tim Ferguson Emergency Triage System
-        // Jackson, TN - Premium Custom Tool
-        // ============================================
-
-        const APP_VERSION = '1.0.1';
-        const DB_NAME = 'TimFergusonTriageDB';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'assessments';
-        const SETTINGS_KEY = 'tf_triage_settings';
-
-        let db = null;
-        let assessments = [];
-        let currentAssessment = null;
-        let currentStep = 0;
-        let deletedAssessment = null;
-        let undoTimeout = null;
-
-        // Triage questions by category
-        const triageQuestions = {
-            plumbing: [
-                {
-                    id: 'water_active',
-                    text: 'Is water actively leaking or flooding right now?',
-                    options: [
-                        { label: 'Yes, water is spreading', value: 'yes', severity: 40 },
-                        { label: 'Small drip or contained', value: 'minor', severity: 15 },
-                        { label: 'No active water', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'water_shutoff',
-                    text: 'Can you access and turn off the water supply?',
-                    options: [
-                        { label: "Yes, I've turned it off", value: 'yes', severity: -10 },
-                        { label: "Can't find it / Won't turn", value: 'no', severity: 20 },
-                        { label: 'Not applicable', value: 'na', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'property_damage',
-                    text: 'Is water damaging flooring, walls, or belongings?',
-                    options: [
-                        { label: 'Yes, significant damage', value: 'yes', severity: 25 },
-                        { label: 'Minor / contained with towels', value: 'minor', severity: 10 },
-                        { label: 'No damage occurring', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'home_age',
-                    text: 'Was your home built before 1980?',
-                    jacksonLogic: true,
-                    options: [
-                        { label: 'Yes (older pipes)', value: 'yes', severity: 10 },
-                        { label: 'No / Not sure', value: 'no', severity: 0 }
-                    ]
-                }
-            ],
-            hvac: [
-                {
-                    id: 'temp_unsafe',
-                    text: 'Is the indoor temperature unsafe for occupants?',
-                    options: [
-                        { label: 'Yes, dangerous levels', value: 'yes', severity: 40 },
-                        { label: 'Uncomfortable but safe', value: 'minor', severity: 15 },
-                        { label: 'Temperature is fine', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'vulnerable_occupants',
-                    text: 'Are there elderly, infants, or pets in the home?',
-                    options: [
-                        { label: 'Yes', value: 'yes', severity: 20 },
-                        { label: 'No', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'strange_sounds',
-                    text: 'Is the unit making unusual noises or smells?',
-                    options: [
-                        { label: 'Burning smell or loud banging', value: 'yes', severity: 30 },
-                        { label: 'Minor rattling or humming', value: 'minor', severity: 10 },
-                        { label: 'Runs normally or not at all', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'thermostat_check',
-                    text: 'Have you checked thermostat batteries and settings?',
-                    options: [
-                        { label: 'Yes, still not working', value: 'yes', severity: 5 },
-                        { label: "No, I'll try that", value: 'no', severity: -15 }
-                    ]
-                }
-            ],
-            electrical: [
-                {
-                    id: 'sparks_smoke',
-                    text: 'Did you see sparks, smoke, or smell burning?',
-                    options: [
-                        { label: 'Yes', value: 'yes', severity: 50 },
-                        { label: 'No', value: 'no', severity: 0 }
-                    ]
-                },
-                {
-                    id: 'power_scope',
-                    text: 'How much of your home lost power?',
-                    options: [
-                        { label: 'Whole house is out', value: 'whole', severity: 20 },
-                        { label: 'One room or area', value: 'partial', severity: 10 },
-                        { label: 'Single outlet or switch', value: 'single', severity: 5 }
-                    ]
-                },
-                {
-                    id: 'breaker_check',
-                    text: 'Have you checked your breaker panel?',
-                    options: [
-                        { label: 'Yes, breakers keep tripping', value: 'tripping', severity: 25 },
-                        { label: 'Yes, everything looks normal', value: 'normal', severity: 5 },
-                        { label: "No / Don't know how", value: 'no', severity: 10 }
-                    ]
-                },
-                {
-                    id: 'neighbor_power',
-                    text: 'Do your neighbors have power?',
-                    jacksonLogic: true,
-                    options: [
-                        { label: 'Yes, they have power', value: 'yes', severity: 10 },
-                        { label: "No, it's a utility outage", value: 'no', severity: -30 },
-                        { label: "Don't know", value: 'unknown', severity: 0 }
-                    ]
-                }
-            ]
-        };
-
-        // Emergency Guides Content
-        const guides = {
-            shutoff: {
-                title: 'Water Shut-Off Locations',
-                content: `
-                    <p><strong>Main Shut-Off Valve:</strong> Usually located near where the main water line enters your home — often in the basement, crawl space, or near the water heater.</p>
-                    <ul>
-                        <li><strong>Gate Valve:</strong> Round handle — turn clockwise until tight</li>
-                        <li><strong>Ball Valve:</strong> Lever handle — turn 90° perpendicular to pipe</li>
-                    </ul>
-                    <p><strong>Street Shut-Off:</strong> Located at the meter near the curb. Requires a special key — we can help if your main valve fails.</p>
-                    <p><strong>Jackson Tip:</strong> In older midtown homes, the main valve may be in an unfinished utility closet or behind the water heater.</p>
-                    <p><strong>After Shut-Off:</strong> Open a faucet at the lowest point in your home to drain remaining water.</p>
-                `
-            },
-            breaker: {
-                title: 'Breaker Panel Basics',
-                content: `
-                    <p><strong>Finding Your Panel:</strong> Usually in a garage, basement, utility room, or hallway closet. It's a gray metal box with a door.</p>
-                    <p><strong>Identifying a Tripped Breaker:</strong></p>
-                    <ul>
-                        <li>A tripped breaker will be in the middle position (not fully ON or OFF)</li>
-                        <li>Some breakers show a red or orange indicator when tripped</li>
-                    </ul>
-                    <p><strong>To Reset:</strong></p>
-                    <ol>
-                        <li>Push the breaker fully to OFF (you'll feel a click)</li>
-                        <li>Then push it firmly to ON</li>
-                    </ol>
-                    <p><strong>⚠️ Warning:</strong> If a breaker trips repeatedly, DO NOT keep resetting it. This indicates a serious problem — call us immediately.</p>
-                    <p><strong>Jackson Note:</strong> Many older Jackson homes have Federal Pacific or Zinsco panels that should be replaced for safety.</p>
-                `
-            },
-            gas: {
-                title: 'Gas Leak Response',
-                content: `
-                    <p><strong>⚠️ CRITICAL — If you smell gas:</strong></p>
-                    <ol>
-                        <li><strong>Do NOT</strong> turn on/off any lights or electrical switches</li>
-                        <li><strong>Do NOT</strong> use your phone inside the home</li>
-                        <li><strong>Leave immediately</strong> — leave doors open as you exit</li>
-                        <li><strong>Call 911</strong> from outside, away from the building</li>
-                    </ol>
-                    <p><strong>Gas Shut-Off:</strong> Located on the gas meter outside. Requires a wrench to turn the valve 90° (perpendicular to pipe).</p>
-                    <p><strong>Natural gas smells like:</strong> Rotten eggs or sulfur (the smell is added for safety).</p>
-                    <p><strong>For Jackson City Gas:</strong> (731) 423-8490</p>
-                    <p><strong>We handle:</strong> Gas line repairs, appliance hookups, and gas leak detection after the area is cleared safe.</p>
-                `
-            },
-            freeze: {
-                title: 'Freeze Prevention',
-                content: `
-                    <p><strong>Jackson freeze risk:</strong> Temps below 28°F can freeze pipes, especially in older homes and exterior walls.</p>
-                    <p><strong>Prevention Steps:</strong></p>
-                    <ul>
-                        <li>Let faucets drip slightly — moving water freezes slower</li>
-                        <li>Open cabinet doors under sinks on exterior walls</li>
-                        <li>Keep thermostat at 55°F minimum, even when away</li>
-                        <li>Disconnect garden hoses and cover outdoor spigots</li>
-                    </ul>
-                    <p><strong>If Pipes Freeze:</strong></p>
-                    <ul>
-                        <li>Turn off water at the main shut-off valve immediately</li>
-                        <li>Keep the affected faucet open</li>
-                        <li>Use a hair dryer to slowly thaw visible pipes (NEVER a torch)</li>
-                    </ul>
-                    <p><strong>Signs of Burst Pipe:</strong> No water, water stains on walls/ceiling, or hissing sounds.</p>
-                    <p><strong>Jackson Warning:</strong> Homes in midtown with pier-and-beam foundations are especially vulnerable — we offer pre-winter pipe insulation.</p>
-                `
-            },
-            hvac: {
-                title: 'HVAC Quick Fixes',
-                content: `
-                    <p><strong>Before You Call — Check These First:</strong></p>
-                    <ul>
-                        <li><strong>Thermostat batteries:</strong> Most require 2 AA batteries. A blank screen often means dead batteries.</li>
-                        <li><strong>Thermostat setting:</strong> Make sure it's on HEAT or COOL (not just FAN or OFF)</li>
-                        <li><strong>Air filter:</strong> A clogged filter can cause shutdowns. Check monthly — located in the return air vent or at the unit.</li>
-                        <li><strong>Breaker panel:</strong> Check for a tripped breaker labeled "HVAC," "Furnace," or "AC"</li>
-                        <li><strong>Outdoor unit:</strong> Make sure nothing is blocking the condenser (leaves, debris, ice)</li>
-                    </ul>
-                    <p><strong>Common Issues That Need Us:</strong></p>
-                    <ul>
-                        <li>Refrigerant leaks (AC blowing warm)</li>
-                        <li>Blower motor failure</li>
-                        <li>Ignition problems (furnace not lighting)</li>
-                        <li>Frozen evaporator coils</li>
-                    </ul>
-                    <p><strong>Jackson Humidity Tip:</strong> Our humid summers make AC drain clogs common — clear your condensate drain line with vinegar monthly.</p>
-                `
-            }
-        };
-
-        // Demo data for Jackson, TN
-        const demoAssessments = [
-            {
-                id: 'demo_1',
-                category: 'plumbing',
-                categoryLabel: 'Plumbing',
-                severity: 75,
-                severityLevel: 'critical',
-                result: 'emergency',
-                summary: 'Burst pipe in midtown home — water flooding basement',
-                answers: { water_active: 'yes', water_shutoff: 'no', property_damage: 'yes', home_age: 'yes' },
-                outcome: 'dispatched',
-                notes: 'Pre-1960 home, galvanized pipe failure. Tech arrived 45 min.',
-                timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
-                isDemo: true
-            },
-            {
-                id: 'demo_2',
-                category: 'plumbing',
-                categoryLabel: 'Plumbing',
-                severity: 25,
-                severityLevel: 'safe',
-                result: 'next-day',
-                summary: 'Running toilet at 2 AM — flapper valve issue',
-                answers: { water_active: 'minor', water_shutoff: 'yes', property_damage: 'no', home_age: 'no' },
-                outcome: 'scheduled',
-                notes: 'Customer saved $149 by booking 8 AM slot',
-                timestamp: new Date(Date.now() - 86400000).toISOString(),
-                isDemo: true
-            },
-            {
-                id: 'demo_3',
-                category: 'hvac',
-                categoryLabel: 'HVAC',
-                severity: 65,
-                severityLevel: 'warning',
-                result: 'emergency',
-                summary: 'No heat during 28°F cold snap — elderly resident',
-                answers: { temp_unsafe: 'minor', vulnerable_occupants: 'yes', strange_sounds: 'no', thermostat_check: 'yes' },
-                outcome: 'dispatched',
-                notes: 'Weather alert mode active. Ignitor failure.',
-                timestamp: new Date(Date.now() - 43200000).toISOString(),
-                isDemo: true
-            },
-            {
-                id: 'demo_4',
-                category: 'electrical',
-                categoryLabel: 'Electrical',
-                severity: 35,
-                severityLevel: 'warning',
-                result: 'next-day',
-                summary: 'Flickering lights in master bedroom — outlet warm',
-                answers: { sparks_smoke: 'no', power_scope: 'single', breaker_check: 'normal', neighbor_power: 'yes' },
-                outcome: 'scheduled',
-                notes: 'Loose connection suspected. Morning appointment.',
-                timestamp: new Date(Date.now() - 21600000).toISOString(),
-                isDemo: true
-            }
-        ];
-
-        // ============================================
-        // Database Functions
-        // ============================================
-
-        async function initDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-                request.onerror = () => {
-                    console.warn('IndexedDB failed, using localStorage fallback');
-                    resolve(null);
-                };
-
-                request.onsuccess = (event) => {
-                    db = event.target.result;
-                    resolve(db);
-                };
-
-                request.onupgradeneeded = (event) => {
-                    const database = event.target.result;
-                    if (!database.objectStoreNames.contains(STORE_NAME)) {
-                        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
-                        store.createIndex('timestamp', 'timestamp', { unique: false });
-                        store.createIndex('category', 'category', { unique: false });
-                        store.createIndex('severityLevel', 'severityLevel', { unique: false });
-                    }
-                };
-            });
-        }
-
-        async function loadAssessments() {
-            if (db) {
-                return new Promise((resolve) => {
-                    const transaction = db.transaction([STORE_NAME], 'readonly');
-                    const store = transaction.objectStore(STORE_NAME);
-                    const request = store.getAll();
-
-                    request.onsuccess = () => {
-                        assessments = request.result || [];
-                        resolve(assessments);
-                    };
-
-                    request.onerror = () => {
-                        assessments = JSON.parse(localStorage.getItem('tf_assessments') || '[]');
-                        resolve(assessments);
-                    };
-                });
-            } else {
-                assessments = JSON.parse(localStorage.getItem('tf_assessments') || '[]');
-                return assessments;
-            }
-        }
-
-        async function saveAssessment(assessment) {
-            if (db) {
-                return new Promise((resolve, reject) => {
-                    const transaction = db.transaction([STORE_NAME], 'readwrite');
-                    const store = transaction.objectStore(STORE_NAME);
-                    const request = store.put(assessment);
-
-                    request.onsuccess = () => {
-                        showToast('Assessment saved', 'success');
-                        resolve();
-                    };
-
-                    request.onerror = () => {
-                        saveToLocalStorage();
-                        resolve();
-                    };
-                });
-            } else {
-                saveToLocalStorage();
-            }
-        }
-
-        async function deleteAssessment(id) {
-            const index = assessments.findIndex(a => a.id === id);
-            if (index === -1) return;
-
-            deletedAssessment = { ...assessments[index], index };
-            assessments.splice(index, 1);
-
-            if (db) {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                store.delete(id);
-            }
-
-            saveToLocalStorage();
-            showUndoBanner();
-            renderHistory();
-            updateStats();
-        }
-
-        function saveToLocalStorage() {
-            localStorage.setItem('tf_assessments', JSON.stringify(assessments));
-        }
-
-        async function undoDelete() {
-            if (!deletedAssessment) return;
-
-            assessments.splice(deletedAssessment.index, 0, deletedAssessment);
-
-            if (db) {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                store.put(deletedAssessment);
-            }
-
-            saveToLocalStorage();
-            hideUndoBanner();
-            deletedAssessment = null;
-            renderHistory();
-            updateStats();
-            showToast('Assessment restored', 'success');
-        }
-
-        // ============================================
-        // Settings Functions
-        // ============================================
-
-        function getSettings() {
-            const defaults = {
-                weatherAlertEnabled: false,
-                soundEnabled: true,
-                demoDismissed: false
-            };
-            const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
-            return { ...defaults, ...saved };
-        }
-
-        function saveSettings(settings) {
-            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-        }
-
-        function toggleWeatherAlert() {
-            const settings = getSettings();
-            settings.weatherAlertEnabled = !settings.weatherAlertEnabled;
-            saveSettings(settings);
-
-            document.getElementById('weatherToggle').classList.toggle('active', settings.weatherAlertEnabled);
-            document.getElementById('weatherAlert').classList.toggle('hidden', !settings.weatherAlertEnabled);
-
-            showToast(settings.weatherAlertEnabled ? 'Weather alert mode ON — Severity thresholds adjusted' : 'Weather alert mode OFF', 'success');
-        }
-
-        function dismissWeatherAlert() {
-            const settings = getSettings();
-            settings.weatherAlertEnabled = false;
-            saveSettings(settings);
-            document.getElementById('weatherAlert').classList.add('hidden');
-            document.getElementById('weatherToggle').classList.remove('active');
-        }
-
-        function toggleSetting(key) {
-            const settings = getSettings();
-            settings[key] = !settings[key];
-            saveSettings(settings);
-            document.getElementById('soundToggle').classList.toggle('active', settings.soundEnabled);
-        }
-
-        // ============================================
-        // UI Functions
-        // ============================================
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            document.getElementById(screenId + 'Screen').classList.add('active');
-            document.querySelector(`[data-screen="${screenId}"]`).classList.add('active');
-
-            if (screenId === 'triage' && !currentAssessment) {
-                renderCategorySelection();
-            } else if (screenId === 'history') {
-                renderHistory();
-            } else if (screenId === 'dashboard') {
-                updateStats();
-            }
-        }
-
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `${type === 'success' ? '✓' : '⚠'} ${message}`;
-            container.appendChild(toast);
-
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        function showUndoBanner() {
-            clearTimeout(undoTimeout);
-            document.getElementById('undoBanner').classList.remove('hidden');
-
-            undoTimeout = setTimeout(() => {
-                hideUndoBanner();
-                deletedAssessment = null;
-            }, 5000);
-        }
-
-        function hideUndoBanner() {
-            document.getElementById('undoBanner').classList.add('hidden');
-        }
-
-        // ============================================
-        // Triage Flow
-        // ============================================
-
-        function renderCategorySelection() {
-            const hasAssessments = assessments.filter(a => !a.isDemo).length > 0;
-            const settings = getSettings();
-
-            let html = `
-                <div class="screen-intro">
-                    <h2>Emergency Assessment</h2>
-                    <p>Select your issue type to start the diagnostic</p>
-                </div>
-            `;
-
-            if (settings.weatherAlertEnabled) {
-                html += `<div class="jackson-badge">❄️ Jackson Weather Alert Active</div>`;
-            }
-
-            html += `
-                <div class="category-grid">
-                    <div class="category-card" onclick="startTriage('plumbing')" tabindex="0">
-                        <div class="category-icon">🚰</div>
-                        <div class="category-label">Plumbing</div>
-                    </div>
-                    <div class="category-card" onclick="startTriage('hvac')" tabindex="0">
-                        <div class="category-icon">🌡️</div>
-                        <div class="category-label">HVAC</div>
-                    </div>
-                    <div class="category-card" onclick="startTriage('electrical')" tabindex="0">
-                        <div class="category-icon">⚡</div>
-                        <div class="category-label">Electrical</div>
-                    </div>
-                </div>
-            `;
-
-            if (!hasAssessments && settings.demoDismissed) {
-                html += `
-                    <div class="empty-state" style="margin-top: 32px;">
-                        <p class="empty-text">Or <a href="#" onclick="showScreen('history'); return false;" style="color: var(--tf-red);">import existing data</a></p>
-                    </div>
-                `;
-            }
-
-            document.getElementById('triageContent').innerHTML = html;
-        }
-
-        function startTriage(category) {
-            currentAssessment = {
-                id: 'tf_' + Date.now(),
-                category: category,
-                categoryLabel: category.charAt(0).toUpperCase() + category.slice(1),
-                answers: {},
-                severity: 0,
-                timestamp: new Date().toISOString(),
-                isDemo: false
-            };
-            currentStep = 0;
-            renderQuestion();
-        }
-
-        function renderQuestion() {
-            const questions = triageQuestions[currentAssessment.category];
-            const question = questions[currentStep];
-            const progress = ((currentStep) / questions.length) * 100;
-
-            let html = `
-                <div class="progress-container">
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${progress}%"></div>
-                    </div>
-                    <div class="progress-text">Question ${currentStep + 1} of ${questions.length}</div>
-                </div>
-            `;
-
-            html += `<div class="question-card">`;
-
-            if (question.jacksonLogic) {
-                html += `<div class="jackson-badge">📍 Jackson Logic</div>`;
-            }
-
-            html += `
-                <div class="question-number">Question ${currentStep + 1}</div>
-                <div class="question-text">${question.text}</div>
-                <div class="options-grid">
-            `;
-
-            question.options.forEach((opt, i) => {
-                html += `
-                    <button class="option-btn" onclick="answerQuestion('${question.id}', '${opt.value}', ${opt.severity})">
-                        ${opt.label}
-                    </button>
-                `;
-            });
-
-            html += `</div></div>`;
-
-            if (currentStep > 0) {
-                html += `
-                    <button class="btn btn-secondary" onclick="previousQuestion()" style="margin-top: 16px;">
-                        ← Back
-                    </button>
-                `;
-            }
-
-            document.getElementById('triageContent').innerHTML = html;
-        }
-
-        function answerQuestion(questionId, value, severityPoints) {
-            currentAssessment.answers[questionId] = value;
-
-            // Apply weather alert modifier for HVAC temperature questions
-            const settings = getSettings();
-            if (settings.weatherAlertEnabled && currentAssessment.category === 'hvac' && questionId === 'temp_unsafe') {
-                severityPoints += 15; // Bump severity during freeze warnings
-            }
-            if (settings.weatherAlertEnabled && currentAssessment.category === 'plumbing' && questionId === 'home_age' && value === 'yes') {
-                severityPoints += 10; // Older pipes + freeze = higher risk
-            }
-
-            currentAssessment.severity += severityPoints;
-
-            const questions = triageQuestions[currentAssessment.category];
-            currentStep++;
-
-            if (currentStep >= questions.length) {
-                calculateResult();
-            } else {
-                renderQuestion();
-            }
-        }
-
-        function previousQuestion() {
-            if (currentStep > 0) {
-                currentStep--;
-                // We'd need to subtract the previous severity, but for simplicity we just go back
-                renderQuestion();
-            }
-        }
-
-        function calculateResult() {
-            // Normalize severity to 0-100 range and determine level
-            const severity = Math.min(100, Math.max(0, currentAssessment.severity));
-            currentAssessment.severity = severity;
-
-            if (severity >= 50) {
-                currentAssessment.severityLevel = 'critical';
-                currentAssessment.result = 'emergency';
-                currentAssessment.summary = `${currentAssessment.categoryLabel} emergency — immediate dispatch required`;
-            } else if (severity >= 30) {
-                currentAssessment.severityLevel = 'warning';
-                currentAssessment.result = 'next-day';
-                currentAssessment.summary = `${currentAssessment.categoryLabel} issue — priority morning slot recommended`;
-            } else {
-                currentAssessment.severityLevel = 'safe';
-                currentAssessment.result = 'next-day';
-                currentAssessment.summary = `${currentAssessment.categoryLabel} issue — safe to wait for regular appointment`;
-            }
-
-            renderResult();
-        }
-
-        function renderResult() {
-            const isCritical = currentAssessment.severityLevel === 'critical';
-            const isWarning = currentAssessment.severityLevel === 'warning';
-
-            let html = `<div class="result-container">`;
-
-            html += `
-                <div class="severity-indicator ${currentAssessment.severityLevel}">
-                    <div class="severity-score">${currentAssessment.severity}</div>
-                    <div class="severity-label">${currentAssessment.severityLevel.toUpperCase()}</div>
-                </div>
-            `;
-
-            if (isCritical) {
-                html += `
-                    <h2 class="result-title">🚨 Emergency Dispatch Required</h2>
-                    <p class="result-subtitle">Your situation requires immediate attention. A priority technician will be dispatched.</p>
-                    <div class="btn-group">
-                        <a href="tel:+17314240015" class="btn btn-call">📞 Call VIP Priority Line</a>
-                        <button class="btn btn-secondary" onclick="saveAndReset('dispatched')">Log & Start New Assessment</button>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <h2 class="result-title">${isWarning ? '⚠️ Urgent But Safe' : '✓ Safe to Wait'}</h2>
-                    <p class="result-subtitle">${isWarning ? 'We recommend booking a priority morning slot.' : 'This can wait until regular business hours.'}</p>
-                    <div class="savings-badge">💰 Save $149 Dispatch Fee</div>
-                    <p style="color: var(--tf-muted); font-size: 0.9rem; margin-bottom: 24px;">Book a Priority 8 AM Slot Instead</p>
-                    <div class="btn-group">
-                        <a href="tel:+17314240015" class="btn btn-primary">📅 Book Priority 8 AM Slot</a>
-                        <button class="btn btn-secondary" onclick="saveAndReset('scheduled')">Log & Start New Assessment</button>
-                    </div>
-                `;
-            }
-
-            html += `</div>`;
-
-            document.getElementById('triageContent').innerHTML = html;
-        }
-
-        async function saveAndReset(outcome) {
-            currentAssessment.outcome = outcome;
-            assessments.unshift(currentAssessment);
-            await saveAssessment(currentAssessment);
-            saveToLocalStorage();
-
-            currentAssessment = null;
-            currentStep = 0;
-
-            updateStats();
-            renderCategorySelection();
-        }
-
-        // ============================================
-        // History & Stats
-        // ============================================
-
-        function renderHistory() {
-            const container = document.getElementById('historyContent');
-
-            if (assessments.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📋</div>
-                        <h3 class="empty-title">No Assessments Yet</h3>
-                        <p class="empty-text">Completed triage assessments will appear here.</p>
-                        <button class="btn btn-primary" onclick="showScreen('triage')">Start First Assessment</button>
-                    </div>
-                `;
-                return;
-            }
-
-            let html = '';
-            assessments.forEach(a => {
-                const date = new Date(a.timestamp);
-                const timeStr = date.toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    hour12: true
-                });
-
-                html += `
-                    <div class="log-item ${a.severityLevel}">
-                        <div class="log-header">
-                            <span class="log-category">${a.categoryLabel}</span>
-                            <span class="log-severity ${a.severityLevel}">${a.severityLevel}</span>
-                        </div>
-                        <div class="log-details">${a.summary}</div>
-                        ${a.notes ? `<div class="log-details" style="font-style: italic;">${a.notes}</div>` : ''}
-                        <div class="log-time">${timeStr} • Score: ${a.severity} • ${a.outcome === 'dispatched' ? 'Dispatched' : 'Scheduled'}</div>
-                        ${a.isDemo ? '<div class="log-time" style="color: #8b5cf6;">Demo record</div>' : ''}
-                        <div class="log-actions">
-                            <button class="log-action-btn delete" onclick="deleteAssessment('${a.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function updateStats() {
-            const nonDemo = assessments.filter(a => !a.isDemo);
-            const total = nonDemo.length;
-            const emergencies = nonDemo.filter(a => a.outcome === 'dispatched').length;
-            const scheduled = nonDemo.filter(a => a.outcome === 'scheduled').length;
-            const savings = scheduled * 149;
-
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${total}</div>
-                    <div class="stat-label">Total Assessments</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${emergencies}</div>
-                    <div class="stat-label">Emergency Dispatches</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value green">${scheduled}</div>
-                    <div class="stat-label">Next-Day Bookings</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value green">$${savings}</div>
-                    <div class="stat-label">Customer Savings</div>
-                </div>
-            `;
-
-            // Update settings toggles
-            const settings = getSettings();
-            document.getElementById('weatherToggle').classList.toggle('active', settings.weatherAlertEnabled);
-            document.getElementById('soundToggle').classList.toggle('active', settings.soundEnabled);
-        }
-
-        // ============================================
-        // Guides
-        // ============================================
-
-        function openGuide(guideId) {
-            const guide = guides[guideId];
-            if (!guide) return;
-
-            document.getElementById('guideTitle').textContent = guide.title;
-            document.getElementById('guideBody').innerHTML = guide.content;
-            document.getElementById('guideModal').classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('guideModal').classList.remove('active');
-        }
-
-        // Close modal on overlay click
-        document.getElementById('guideModal').addEventListener('click', (e) => {
-            if (e.target.id === 'guideModal') closeModal();
-        });
-
-        // ============================================
-        // Import/Export
-        // ============================================
-
-        function exportCSV() {
-            const nonDemo = assessments.filter(a => !a.isDemo);
-            if (nonDemo.length === 0) {
-                showToast('No assessments to export', 'error');
-                return;
-            }
-
-            const headers = ['Date', 'Category', 'Severity Score', 'Severity Level', 'Outcome', 'Summary', 'Notes'];
-            const rows = nonDemo.map(a => [
-                new Date(a.timestamp).toISOString(),
-                a.categoryLabel,
-                a.severity,
-                a.severityLevel,
-                a.outcome,
-                `"${a.summary}"`,
-                `"${a.notes || ''}"`
-            ]);
-
-            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-            downloadFile(csv, 'tim-ferguson-triage-export.csv', 'text/csv');
-            showToast('CSV exported', 'success');
-        }
-
-        function exportJSON() {
-            const nonDemo = assessments.filter(a => !a.isDemo);
-            const data = {
-                version: APP_VERSION,
-                exportDate: new Date().toISOString(),
-                settings: getSettings(),
-                assessments: nonDemo
-            };
-
-            downloadFile(JSON.stringify(data, null, 2), 'tim-ferguson-triage-backup.json', 'application/json');
-            showToast('Full backup exported', 'success');
-        }
-
-        function downloadFile(content, filename, mimeType) {
-            const blob = new Blob([content], { type: mimeType });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importCSV(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const lines = e.target.result.split('\n').filter(l => l.trim());
-                    const headers = lines[0].split(',');
-
-                    for (let i = 1; i < lines.length; i++) {
-                        const values = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-                        const clean = values.map(v => v.replace(/^"|"$/g, '').trim());
-
-                        const assessment = {
-                            id: 'tf_import_' + Date.now() + '_' + i,
-                            timestamp: clean[0] || new Date().toISOString(),
-                            category: (clean[1] || 'plumbing').toLowerCase(),
-                            categoryLabel: clean[1] || 'Plumbing',
-                            severity: parseInt(clean[2]) || 0,
-                            severityLevel: clean[3] || 'safe',
-                            outcome: clean[4] || 'scheduled',
-                            summary: clean[5] || 'Imported assessment',
-                            notes: clean[6] || '',
-                            result: clean[4] === 'dispatched' ? 'emergency' : 'next-day',
-                            answers: {},
-                            isDemo: false
-                        };
-
-                        assessments.unshift(assessment);
-                        await saveAssessment(assessment);
-                    }
-
-                    saveToLocalStorage();
-                    renderHistory();
-                    updateStats();
-                    showToast(`Imported ${lines.length - 1} assessments`, 'success');
-                } catch (err) {
-                    showToast('Failed to import CSV', 'error');
-                    console.error(err);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        function importJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                try {
-                    const data = JSON.parse(e.target.result);
-
-                    if (data.settings) {
-                        saveSettings({ ...getSettings(), ...data.settings });
-                    }
-
-                    if (data.assessments && Array.isArray(data.assessments)) {
-                        for (const a of data.assessments) {
-                            a.id = 'tf_import_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                            a.isDemo = false;
-                            assessments.unshift(a);
-                            await saveAssessment(a);
-                        }
-                    }
-
-                    saveToLocalStorage();
-                    renderHistory();
-                    updateStats();
-                    showToast(`Restored ${data.assessments?.length || 0} assessments`, 'success');
-                } catch (err) {
-                    showToast('Failed to restore backup', 'error');
-                    console.error(err);
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        // ============================================
-        // Demo Data
-        // ============================================
-
-        function loadDemoData() {
-            const settings = getSettings();
-            if (settings.demoDismissed) {
-                document.getElementById('demoBanner').classList.add('hidden');
-                return;
-            }
-
-            const hasReal = assessments.some(a => !a.isDemo);
-            if (!hasReal && assessments.length === 0) {
-                assessments = [...demoAssessments];
-                saveToLocalStorage();
-            }
-
-            const hasDemo = assessments.some(a => a.isDemo);
-            document.getElementById('demoBanner').classList.toggle('hidden', !hasDemo);
-        }
-
-        function clearDemoData() {
-            assessments = assessments.filter(a => !a.isDemo);
-            saveToLocalStorage();
-
-            if (db) {
-                const transaction = db.transaction([STORE_NAME], 'readwrite');
-                const store = transaction.objectStore(STORE_NAME);
-                demoAssessments.forEach(d => store.delete(d.id));
-            }
-
-            const settings = getSettings();
-            settings.demoDismissed = true;
-            saveSettings(settings);
-
-            document.getElementById('demoBanner').classList.add('hidden');
-            renderHistory();
-            updateStats();
-            showToast('Demo data cleared', 'success');
-        }
-
-        // ============================================
-        // Initialization
-        // ============================================
-
-        async function initApp() {
-            await initDB();
-            await loadAssessments();
-            loadDemoData();
-
-            const settings = getSettings();
-            document.getElementById('weatherAlert').classList.toggle('hidden', !settings.weatherAlertEnabled);
-
-            renderCategorySelection();
-            updateStats();
-
-            // Keyboard support for modal
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeModal();
-            });
-            
-            // Show welcome toast
-            showToast('Triage system ready', 'success');
-        }
-        
-        // Check access on load
-        if (hasAccess()) {
-            document.getElementById('securityOverlay').classList.add('hidden');
-            initApp();
-        } else {
-            // Focus the input
-            setTimeout(() => document.getElementById('securityInput')?.focus(), 100);
-        }
-    </script>
+    <!-- PHOTOS -->
+    ${(p.photos && p.photos.length > 0) ? `
+    <div class="detail-section">
+      <div class="detail-section-title">📷 Photos & Documents</div>
+      <div class="photo-grid">${p.photos.map((ph, i) =>
+        `<img src="${ph.data}" class="photo-thumb" style="width:80px;height:80px;" onclick="window.open('').document.write('<img src=\\'${ph.data}\\' style=\\'max-width:100%;max-height:100vh;\\'>')">`
+      ).join('')}</div>
+    </div>` : ''}
+
+    <!-- TIMELINE -->
+    <div class="detail-section">
+      <div class="detail-section-title">📜 Activity Log</div>
+      <div class="timeline">
+        ${(p.timeline || []).slice().reverse().map(t => {
+          const dotCls = t.status === 'submitted' ? 'tl-submit' : t.status === 'scheduled' ? 'tl-schedule' :
+                         t.status === 'assigned' ? 'tl-assign' : t.status === 'passed' ? 'tl-pass' :
+                         t.status === 'failed' ? 'tl-fail' : 'tl-note';
+          return `
+          <div class="timeline-item">
+            <div class="timeline-dot ${dotCls}">${STATUS_ICONS[t.status] || '📝'}</div>
+            <div class="timeline-body">
+              <div class="tl-action">${escHtml(t.action)}</div>
+              <div class="tl-time">${formatDateTime(t.timestamp)}</div>
+              ${t.note ? `<div class="tl-note-text">${escHtml(t.note)}</div>` : ''}
+              ${(t.photos && t.photos.length) ? `<div class="photo-grid" style="margin-top:6px;">${t.photos.map(ph =>
+                `<img src="${ph.data}" class="photo-thumb" style="width:48px;height:48px;" onclick="window.open('').document.write('<img src=\\'${ph.data}\\' style=\\'max-width:100%;max-height:100vh;\\'>')">`
+              ).join('')}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detailContent').innerHTML = html;
+  switchView('detail');
+}
+
+function copyShareLink() {
+  const url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied to clipboard', 'success'))
+    .catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Link copied to clipboard', 'success');
+    });
+}
+
+function printReceipt(id) {
+  window.print();
+}
+
+// ═══════════════════════════════════════════
+// STATUS UPDATE
+// ═══════════════════════════════════════════
+function openStatusModal(id) {
+  document.getElementById('statusPermitId').value = id;
+  statusPhotos = [];
+  document.getElementById('statusPhotoGrid').innerHTML = '';
+  document.getElementById('statusNote').value = '';
+  document.getElementById('statusModal').classList.add('active');
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.remove('active');
+}
+
+async function submitStatusUpdate() {
+  const id = document.getElementById('statusPermitId').value;
+  const newStatus = document.getElementById('newStatus').value;
+  const note = document.getElementById('statusNote').value.trim();
+
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  p.status = newStatus;
+  p.updatedAt = Date.now();
+  p.timeline.push({
+    action: `Status updated to ${STATUS_LABELS[newStatus]}`,
+    status: newStatus,
+    timestamp: Date.now(),
+    note: note,
+    photos: statusPhotos.length > 0 ? [...statusPhotos] : []
+  });
+
+  // Merge photos
+  if (statusPhotos.length > 0) {
+    p.photos = (p.photos || []).concat(statusPhotos);
+  }
+
+  await putPermit(p);
+  closeStatusModal();
+  showToast(`Status: ${STATUS_LABELS[newStatus]}`, 'success');
+  showDetail(id);
+}
+
+// ═══════════════════════════════════════════
+// DELETE WITH UNDO
+// ═══════════════════════════════════════════
+async function deletePermitConfirm(id) {
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  undoPermit = { ...p };
+  await deletePermit(id);
+
+  showToast(`"${p.jobName}" deleted`, 'undo', () => {
+    // Undo action
+    putPermit(undoPermit).then(() => {
+      undoPermit = null;
+      showDetail(id);
+      showToast('Restored!', 'success');
+    });
+  });
+
+  switchView('permits');
+  renderPermitsList();
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+async function renderDashboard() {
+  const permits = await getAllPermits();
+  const counts = { submitted: 0, scheduled: 0, assigned: 0, passed: 0, failed: 0 };
+  permits.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+
+  const active = counts.submitted + counts.scheduled + counts.assigned;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card stat-active"><div class="stat-num">${active}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card stat-passed"><div class="stat-num">${counts.passed}</div><div class="stat-label">Passed</div></div>
+    <div class="stat-card stat-pending"><div class="stat-num">${counts.submitted}</div><div class="stat-label">Submitted</div></div>
+    <div class="stat-card stat-failed"><div class="stat-num">${counts.failed}</div><div class="stat-label">Failed</div></div>
+  `;
+
+  // Recent activity
+  const allEvents = [];
+  permits.forEach(p => {
+    (p.timeline || []).forEach(t => {
+      allEvents.push({ ...t, jobName: p.jobName, permitId: p.id });
+    });
+  });
+  allEvents.sort((a, b) => b.timestamp - a.timestamp);
+  const recent = allEvents.slice(0, 10);
+
+  document.getElementById('recentActivity').innerHTML = recent.length === 0
+    ? '<p style="color:var(--white-50); font-size:0.85rem; text-align:center; padding:20px;">No activity yet.</p>'
+    : recent.map(t => `
+      <div style="display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--dark-border); cursor:pointer;" onclick="showDetail('${t.permitId}')">
+        <span style="font-size:16px;">${STATUS_ICONS[t.status] || '📝'}</span>
+        <div style="flex:1;">
+          <div style="font-size:0.85rem; font-weight:500;">${escHtml(t.jobName)}</div>
+          <div style="font-size:0.75rem; color:var(--white-50);">${escHtml(t.action)}</div>
+          <div style="font-size:0.65rem; color:var(--white-30);">${formatDateTime(t.timestamp)}</div>
+        </div>
+      </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════
+// TOAST SYSTEM
+// ═══════════════════════════════════════════
+function showToast(msg, type = 'success', undoFn = null) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type === 'undo' ? 'undo' : type}`;
+
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'undo' ? '↩️' : 'ℹ️';
+
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <span class="toast-msg">${escHtml(msg)}</span>
+    ${undoFn ? '<span class="toast-action" onclick="this.parentElement._undoFn()">UNDO</span>' : ''}
+  `;
+
+  if (undoFn) {
+    toast._undoFn = () => {
+      undoFn();
+      toast.remove();
+    };
+  }
+
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, undoFn ? 5000 : 3000);
+}
+
+// ═══════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════
+function openImportModal() { document.getElementById('importModal').classList.add('active'); }
+function closeImportModal() { document.getElementById('importModal').classList.remove('active'); }
+
+async function exportCSV() {
+  const permits = await getAllPermits();
+  if (!permits.length) { showToast('No data to export', 'error'); return; }
+  const headers = ['jobName', 'address', 'permitType', 'filingEntity', 'techName', 'status', 'createdAt', 'updatedAt', 'notes'];
+  const rows = permits.map(p => headers.map(h => {
+    let v = p[h] || '';
+    if (h === 'createdAt' || h === 'updatedAt') v = new Date(v).toISOString();
+    return `"${String(v).replace(/"/g, '""')}"`;
+  }).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile(csv, 'permit-patrol-export.csv', 'text/csv');
+  showToast('CSV exported', 'success');
+}
+
+async function exportJSON() {
+  const permits = await getAllPermits();
+  const data = { version: '1.0', app: 'Jackson Permit Patrol', exportedAt: new Date().toISOString(), permits };
+  downloadFile(JSON.stringify(data, null, 2), 'permit-patrol-backup.json', 'application/json');
+  showToast('Backup saved', 'success');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function importCSVFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  await parseAndImportCSV(text);
+  e.target.value = '';
+}
+
+async function importPastedData() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showToast('Nothing to import', 'error'); return; }
+  await parseAndImportCSV(text, '\t');
+  document.getElementById('pasteArea').value = '';
+}
+
+async function parseAndImportCSV(text, sep = null) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('Need header + at least 1 row', 'error'); return; }
+
+  // Auto-detect separator
+  if (!sep) sep = lines[0].includes('\t') ? '\t' : ',';
+
+  const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+  const nameIdx = headers.findIndex(h => h.includes('job') || h.includes('name') || h.includes('customer'));
+  const addrIdx = headers.findIndex(h => h.includes('addr'));
+  const typeIdx = headers.findIndex(h => h.includes('type'));
+  const statusIdx = headers.findIndex(h => h.includes('status'));
+  const techIdx = headers.findIndex(h => h.includes('tech'));
+
+  if (nameIdx < 0) { showToast('Could not find job/customer name column', 'error'); return; }
+
+  let count = 0;
+  const now = Date.now();
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(sep).map(c => c.replace(/^"|"$/g, '').trim());
+    const jobName = cols[nameIdx];
+    if (!jobName) continue;
+
+    const status = statusIdx >= 0 ? (cols[statusIdx] || 'submitted').toLowerCase() : 'submitted';
+    const permit = {
+      id: genId(),
+      jobName,
+      address: addrIdx >= 0 ? cols[addrIdx] || '' : '',
+      permitType: typeIdx >= 0 ? cols[typeIdx] || 'other' : 'other',
+      filingEntity: 'city-codes',
+      techName: techIdx >= 0 ? cols[techIdx] || '' : '',
+      notes: '',
+      status: STATUS_ORDER.includes(status) ? status : 'submitted',
+      photos: [],
+      timeline: [{ action: 'Imported', status: 'submitted', timestamp: now, note: 'Imported from CSV', photos: [] }],
+      createdAt: now - (lines.length - i) * 86400000,
+      updatedAt: now,
+      isDemo: false
+    };
+    await putPermit(permit);
+    count++;
+  }
+
+  closeImportModal();
+  showToast(`Imported ${count} permits`, 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+async function importJSONFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data.permits || !Array.isArray(data.permits)) throw new Error('Invalid format');
+    for (const p of data.permits) await putPermit(p);
+    closeImportModal();
+    showToast(`Restored ${data.permits.length} permits`, 'success');
+    checkDemoBanner();
+    renderPermitsList();
+  } catch (err) {
+    showToast('Invalid backup file', 'error');
+  }
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════
+async function loadDemoData() {
+  const now = Date.now();
+  const demos = [
+    {
+      id: genId(), jobName: 'Henderson Gas Line Repair', address: '312 Campbell St, Jackson, TN 38301',
+      permitType: 'gas-line', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: 'Gas leak detected at meter. JEA shutoff performed. Needs city inspection before re-connect.',
+      status: 'scheduled', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 172800000, note: 'Filed with City Building Codes Dept. Receipt #4821.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 86400000, note: 'Inspector tentatively scheduled for Thursday AM.', photos: [] }
+      ],
+      createdAt: now - 172800000, updatedAt: now - 86400000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Martinez Water Heater Replace', address: '1547 Hollywood Dr, Jackson, TN 38301',
+      permitType: 'water-heater', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: '50-gal gas water heater replacement. Customer has been without hot water since Monday.',
+      status: 'assigned', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 259200000, note: 'Filed with City Building Codes Dept.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 172800000, note: 'Scheduled for inspection window.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 43200000, note: 'Inspector John Davis assigned, ETA Friday 10am-12pm.', photos: [] }
+      ],
+      createdAt: now - 259200000, updatedAt: now - 43200000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Whitfield Electrical Panel Upgrade', address: '88 Lexington Ave, Jackson, TN 38301',
+      permitType: 'electrical-panel', filingEntity: 'jea', techName: 'Brian Ferguson',
+      notes: '100A to 200A panel upgrade. JEA coordination required for meter pull/reset.',
+      status: 'submitted', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 36000000, note: 'Filed with Jackson Energy Authority. Awaiting confirmation.', photos: [] }
+      ],
+      createdAt: now - 36000000, updatedAt: now - 36000000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Cooper Sewer Line Replacement', address: '2201 N Highland Ave, Jackson, TN 38305',
+      permitType: 'sewer-line', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: 'Full sewer lateral replacement. City sidewalk cut required — need ROW permit also.',
+      status: 'passed', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 604800000, note: 'Filed with City Building Codes Dept and ROW permit with Public Works.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 518400000, note: 'Inspection scheduled.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 432000000, note: 'Inspector verified trench depth and grade.', photos: [] },
+        { action: 'Status updated to Passed', status: 'passed', timestamp: now - 345600000, note: '✅ Inspection passed. Backfill authorized. ROW restoration within 5 days.', photos: [] }
+      ],
+      createdAt: now - 604800000, updatedAt: now - 345600000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Baker HVAC Install', address: '455 Old Hickory Blvd, Jackson, TN 38305',
+      permitType: 'hvac-install', filingEntity: 'city-codes', techName: 'Brian Ferguson',
+      notes: 'New 3-ton heat pump system. Ductwork modification included.',
+      status: 'failed', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 432000000, note: 'Filed with City Building Codes Dept.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 345600000, note: 'Scheduled for routine HVAC inspection.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 259200000, note: 'Inspector assigned.', photos: [] },
+        { action: 'Status updated to Failed', status: 'failed', timestamp: now - 172800000, note: '❌ Failed — condensate drain not properly routed per code. Re-inspection needed after fix.', photos: [] }
+      ],
+      createdAt: now - 432000000, updatedAt: now - 172800000, isDemo: true
+    }
+  ];
+
+  for (const d of demos) await putPermit(d);
+  showToast('Demo data loaded — 5 sample permits', 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+async function clearDemoData() {
+  const permits = await getAllPermits();
+  const demos = permits.filter(p => p.isDemo);
+  for (const d of demos) await deletePermit(d.id);
+  document.getElementById('demoBanner').style.display = 'none';
+  showToast('Demo data cleared', 'success');
+  renderPermitsList();
+}
+
+async function checkDemoBanner() {
+  const permits = await getAllPermits();
+  const hasDemo = permits.some(p => p.isDemo);
+  document.getElementById('demoBanner').style.display = hasDemo ? 'flex' : 'none';
+  // Show/hide empty state
+  const hasAny = permits.length > 0;
+  document.getElementById('trackerEmpty').style.display = hasAny ? 'none' : 'block';
+}
+
+async function confirmClearAll() {
+  if (!confirm('⚠️ This will permanently delete ALL permits. Are you sure?')) return;
+  await clearAllPermits();
+  showToast('All data cleared', 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+// ═══════════════════════════════════════════
+// HASH ROUTING (for shared links)
+// ═══════════════════════════════════════════
+async function checkHashRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#permit-')) {
+    const targetHash = hash.replace('#permit-', '');
+    const permits = await getAllPermits();
+    const match = permits.find(p => generateHash(p.id + p.createdAt) === targetHash);
+    if (match) showDetail(match.id);
+  }
+}
+
+// ═══════════════════════════════════════════
+// CLOSE MODALS ON OVERLAY CLICK
+// ═══════════════════════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+async function init() {
+  await openDB();
+  await checkDemoBanner();
+  await checkHashRoute();
+}
+
+init();
+</script>
 </body>
 </html>
