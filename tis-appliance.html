@@ -1,0 +1,2641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TIS Appliance Repair — Smart Scheduler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tis-green: #16ab13;
+            --tis-green-dark: #129410;
+            --tis-green-light: #e8f7e8;
+            --tis-green-lighter: #f4fbf4;
+            --tis-dark: #0a0909;
+            --tis-red: #d92121;
+            --tis-red-light: #fef2f2;
+            --neutral-50: #fafafa;
+            --neutral-100: #f5f5f5;
+            --neutral-200: #e5e5e5;
+            --neutral-300: #d4d4d4;
+            --neutral-400: #a3a3a3;
+            --neutral-500: #737373;
+            --neutral-600: #525252;
+            --neutral-700: #404040;
+            --neutral-800: #262626;
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --transition-fast: 150ms ease;
+            --transition-medium: 250ms ease;
+            --transition-slow: 350ms ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--neutral-100);
+            color: var(--tis-dark);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Bitter', Georgia, serif;
+            font-weight: 600;
+            line-height: 1.25;
+        }
+
+        /* App Shell */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--white);
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--neutral-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--tis-green), var(--tis-green-dark));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-size: 18px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand-text {
+            font-family: 'Bitter', serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--tis-green);
+        }
+
+        .brand-text span {
+            color: var(--tis-dark);
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: var(--neutral-100);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--neutral-600);
+            font-size: 18px;
+        }
+
+        .header-btn:hover {
+            background: var(--neutral-200);
+            color: var(--tis-dark);
+        }
+
+        .header-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            padding-bottom: 90px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Tab Views */
+        .tab-view {
+            display: none;
+            animation: fadeIn var(--transition-medium);
+        }
+
+        .tab-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Date Selector */
+        .date-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--white);
+            padding: 12px 16px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .date-nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--neutral-100);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: var(--neutral-600);
+            transition: all var(--transition-fast);
+        }
+
+        .date-nav-btn:hover {
+            background: var(--tis-green-light);
+            color: var(--tis-green);
+        }
+
+        .date-display {
+            text-align: center;
+        }
+
+        .date-day {
+            font-family: 'Bitter', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--tis-dark);
+        }
+
+        .date-full {
+            font-size: 13px;
+            color: var(--neutral-500);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-value {
+            font-family: 'Bitter', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--tis-green);
+        }
+
+        .stat-card.pending .stat-value {
+            color: var(--neutral-500);
+        }
+
+        .stat-card.completed .stat-value {
+            color: var(--tis-green);
+        }
+
+        .stat-card.urgent .stat-value {
+            color: var(--tis-red);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--neutral-500);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-family: 'Bitter', serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tis-dark);
+        }
+
+        .section-action {
+            font-size: 14px;
+            color: var(--tis-green);
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        /* Job Cards */
+        .job-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .job-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--neutral-300);
+            transition: all var(--transition-medium);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .job-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .job-card:active {
+            transform: scale(0.99);
+        }
+
+        .job-card.status-scheduled {
+            border-left-color: var(--neutral-400);
+        }
+
+        .job-card.status-enroute {
+            border-left-color: #3b82f6;
+        }
+
+        .job-card.status-arrived {
+            border-left-color: #f59e0b;
+        }
+
+        .job-card.status-diagnosed {
+            border-left-color: #8b5cf6;
+        }
+
+        .job-card.status-completed {
+            border-left-color: var(--tis-green);
+            opacity: 0.85;
+        }
+
+        .job-card.urgent {
+            border-left-color: var(--tis-red);
+            background: linear-gradient(135deg, var(--white), var(--tis-red-light));
+        }
+
+        .job-card.urgent::before {
+            content: '⚡';
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            font-size: 14px;
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .job-time {
+            font-family: 'Bitter', serif;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--tis-dark);
+        }
+
+        .job-status {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            background: var(--neutral-100);
+            color: var(--neutral-600);
+        }
+
+        .job-status.status-enroute {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .job-status.status-arrived {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .job-status.status-diagnosed {
+            background: #ede9fe;
+            color: #6d28d9;
+        }
+
+        .job-status.status-completed {
+            background: var(--tis-green-light);
+            color: var(--tis-green-dark);
+        }
+
+        .job-customer {
+            font-weight: 600;
+            font-size: 16px;
+            color: var(--tis-dark);
+            margin-bottom: 4px;
+        }
+
+        .job-appliance {
+            font-size: 14px;
+            color: var(--neutral-600);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .job-appliance-icon {
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .job-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--neutral-100);
+        }
+
+        .job-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--neutral-500);
+        }
+
+        .job-meta-item svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .job-tech {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--neutral-600);
+            background: var(--neutral-100);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .tech-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--tis-green);
+            color: var(--white);
+            font-size: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all var(--transition-fast);
+        }
+
+        .quick-action-btn.primary {
+            background: var(--tis-green);
+            color: var(--white);
+        }
+
+        .quick-action-btn.primary:hover {
+            background: var(--tis-green-dark);
+        }
+
+        .quick-action-btn.secondary {
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+        }
+
+        .quick-action-btn.secondary:hover {
+            background: var(--neutral-200);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            background: var(--white);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .empty-state-title {
+            font-family: 'Bitter', serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--tis-dark);
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            font-size: 15px;
+            color: var(--neutral-500);
+            margin-bottom: 24px;
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .empty-state-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            min-height: 48px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--tis-green), var(--tis-green-dark));
+            color: var(--white);
+            box-shadow: var(--shadow-md), 0 4px 14px rgba(22, 171, 19, 0.35);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg), 0 6px 20px rgba(22, 171, 19, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--neutral-100);
+            color: var(--neutral-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neutral-200);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--tis-green);
+            padding: 12px 20px;
+        }
+
+        .btn-ghost:hover {
+            background: var(--tis-green-light);
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, var(--tis-green-light), #d9f7d9);
+            border: 1px solid var(--tis-green);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .demo-banner-text {
+            font-size: 13px;
+            color: var(--tis-green-dark);
+        }
+
+        .demo-banner-text strong {
+            font-weight: 600;
+        }
+
+        .demo-banner-dismiss {
+            background: var(--tis-green);
+            color: var(--white);
+            border: none;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all var(--transition-fast);
+        }
+
+        .demo-banner-dismiss:hover {
+            background: var(--tis-green-dark);
+        }
+
+        /* Bottom Tab Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid var(--neutral-200);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            min-width: 64px;
+            min-height: 48px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+            color: var(--neutral-400);
+        }
+
+        .nav-item:hover {
+            background: var(--neutral-100);
+        }
+
+        .nav-item.active {
+            color: var(--tis-green);
+        }
+
+        .nav-item.active .nav-icon {
+            background: var(--tis-green-light);
+        }
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Floating Action Button */
+        .fab {
+            position: fixed;
+            bottom: 90px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--tis-green), var(--tis-green-dark));
+            color: var(--white);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--shadow-lg), 0 6px 20px rgba(22, 171, 19, 0.4);
+            z-index: 500;
+            transition: all var(--transition-medium);
+        }
+
+        .fab:hover {
+            transform: scale(1.08);
+            box-shadow: var(--shadow-xl), 0 8px 25px rgba(22, 171, 19, 0.5);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fadeIn var(--transition-medium);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp var(--transition-medium);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 20px 16px;
+            border-bottom: 1px solid var(--neutral-100);
+            position: sticky;
+            top: 0;
+            background: var(--white);
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-family: 'Bitter', serif;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--neutral-100);
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--neutral-600);
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--neutral-200);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--neutral-100);
+            display: flex;
+            gap: 12px;
+            background: var(--white);
+            position: sticky;
+            bottom: 0;
+        }
+
+        .modal-footer .btn {
+            flex: 1;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--neutral-700);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--neutral-200);
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-family: inherit;
+            transition: all var(--transition-fast);
+            background: var(--white);
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--tis-green);
+            box-shadow: 0 0 0 3px var(--tis-green-light);
+        }
+
+        .form-input::placeholder {
+            color: var(--neutral-400);
+        }
+
+        .form-input.error {
+            border-color: var(--tis-red);
+        }
+
+        .form-error {
+            font-size: 12px;
+            color: var(--tis-red);
+            margin-top: 4px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23737373' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+
+        textarea.form-input {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .form-checkbox input {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--tis-green);
+            cursor: pointer;
+        }
+
+        .form-checkbox-label {
+            font-size: 14px;
+            color: var(--neutral-700);
+        }
+
+        /* Customer View */
+        .customer-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .customer-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .customer-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .customer-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--tis-green-light);
+            color: var(--tis-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Bitter', serif;
+        }
+
+        .customer-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tis-dark);
+            margin-bottom: 2px;
+        }
+
+        .customer-info p {
+            font-size: 13px;
+            color: var(--neutral-500);
+        }
+
+        .customer-appliances {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .appliance-tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: var(--neutral-100);
+            border-radius: 20px;
+            color: var(--neutral-600);
+        }
+
+        /* Settings View */
+        .settings-section {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .settings-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--neutral-100);
+        }
+
+        .settings-title {
+            font-family: 'Bitter', serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tis-dark);
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--neutral-100);
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-item:hover {
+            background: var(--neutral-50);
+        }
+
+        .settings-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--neutral-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .settings-item-text {
+            font-size: 15px;
+            color: var(--tis-dark);
+        }
+
+        .settings-item-arrow {
+            color: var(--neutral-400);
+            font-size: 14px;
+        }
+
+        /* Technician Cards */
+        .tech-card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .tech-avatar-large {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--tis-green), var(--tis-green-dark));
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 600;
+            font-family: 'Bitter', serif;
+        }
+
+        .tech-info {
+            flex: 1;
+        }
+
+        .tech-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tis-dark);
+            margin-bottom: 4px;
+        }
+
+        .tech-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .tech-stat {
+            font-size: 13px;
+            color: var(--neutral-500);
+        }
+
+        .tech-stat strong {
+            color: var(--tis-green);
+            font-weight: 600;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: calc(100% - 32px);
+            max-width: 400px;
+            pointer-events: none;
+        }
+
+        .toast {
+            background: var(--tis-dark);
+            color: var(--white);
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            animation: toastIn var(--transition-medium);
+            pointer-events: auto;
+        }
+
+        .toast.success {
+            background: var(--tis-green);
+        }
+
+        .toast.error {
+            background: var(--tis-red);
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast-message {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toast-undo {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: var(--white);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .toast-undo:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Search Bar */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 12px 16px;
+            gap: 12px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-bar svg {
+            width: 20px;
+            height: 20px;
+            color: var(--neutral-400);
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            font-size: 16px;
+            background: transparent;
+            outline: none;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--neutral-400);
+        }
+
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, var(--neutral-200), var(--neutral-100), var(--neutral-200));
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--radius-sm);
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Print Styles */
+        @media print {
+            .app-header,
+            .bottom-nav,
+            .fab,
+            .demo-banner,
+            .toast-container {
+                display: none !important;
+            }
+
+            .main-content {
+                padding: 0;
+                overflow: visible;
+            }
+
+            .job-card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid var(--neutral-300);
+                margin-bottom: 12px;
+            }
+
+            body {
+                background: white;
+            }
+
+            .date-selector {
+                border: 1px solid var(--neutral-300);
+                box-shadow: none;
+            }
+        }
+
+        /* Desktop Enhancements */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 24px 32px;
+                padding-bottom: 100px;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .job-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+
+            .modal {
+                border-radius: var(--radius-xl);
+                max-height: 85vh;
+                margin: auto;
+            }
+
+            .modal-overlay {
+                align-items: center;
+                padding: 40px;
+            }
+
+            .fab {
+                right: 32px;
+                width: 64px;
+                height: 64px;
+                font-size: 28px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .job-list {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-icon">🔧</div>
+                <div class="brand-text">TIS <span>Scheduler</span></div>
+            </div>
+            <div class="header-actions">
+                <button class="header-btn" onclick="openModal('import-modal')" title="Import Data">📥</button>
+                <button class="header-btn" onclick="openModal('export-modal')" title="Export Data">📤</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Jobs Tab -->
+            <div id="jobs-tab" class="tab-view active">
+                <!-- Demo Banner -->
+                <div id="demo-banner" class="demo-banner" style="display: none;">
+                    <div class="demo-banner-text">
+                        <strong>Demo Mode:</strong> Sample jobs for Lexington, KY area. Tap "Clear Demo" to start fresh.
+                    </div>
+                    <button class="demo-banner-dismiss" onclick="clearDemoData()">Clear Demo</button>
+                </div>
+
+                <!-- Date Selector -->
+                <div class="date-selector">
+                    <button class="date-nav-btn" onclick="changeDate(-1)">◀</button>
+                    <div class="date-display">
+                        <div class="date-day" id="date-day">Today</div>
+                        <div class="date-full" id="date-full">February 7, 2026</div>
+                    </div>
+                    <button class="date-nav-btn" onclick="changeDate(1)">▶</button>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-row">
+                    <div class="stat-card pending">
+                        <div class="stat-value" id="stat-pending">0</div>
+                        <div class="stat-label">Pending</div>
+                    </div>
+                    <div class="stat-card completed">
+                        <div class="stat-value" id="stat-completed">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-card urgent">
+                        <div class="stat-value" id="stat-urgent">0</div>
+                        <div class="stat-label">Urgent</div>
+                    </div>
+                </div>
+
+                <!-- Job List -->
+                <div class="section-header">
+                    <h2 class="section-title">Today's Jobs</h2>
+                    <span class="section-action" onclick="openModal('job-modal')">+ Add Job</span>
+                </div>
+
+                <div id="job-list" class="job-list">
+                    <!-- Jobs render here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">📋</div>
+                    <h3 class="empty-state-title">No Jobs Scheduled</h3>
+                    <p class="empty-state-text">Start by adding your first job or load demo data to explore the scheduler.</p>
+                    <div class="empty-state-actions">
+                        <button class="btn btn-primary" onclick="openModal('job-modal')">
+                            <span>+</span> Add First Job
+                        </button>
+                        <button class="btn btn-ghost" onclick="loadDemoData()">Load Demo Data</button>
+                        <button class="btn btn-ghost" onclick="openModal('import-modal')">Import from File</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customers Tab -->
+            <div id="customers-tab" class="tab-view">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="customer-search" placeholder="Search customers..." oninput="filterCustomers()">
+                </div>
+
+                <div class="section-header">
+                    <h2 class="section-title">Customers</h2>
+                    <span class="section-action" onclick="openModal('customer-modal')">+ Add Customer</span>
+                </div>
+
+                <div id="customer-list">
+                    <!-- Customers render here -->
+                </div>
+
+                <div id="customer-empty" class="empty-state" style="display: none;">
+                    <div class="empty-state-icon">👥</div>
+                    <h3 class="empty-state-title">No Customers Yet</h3>
+                    <p class="empty-state-text">Add customers to track their appliances and service history.</p>
+                    <button class="btn btn-primary" onclick="openModal('customer-modal')">
+                        <span>+</span> Add Customer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Team Tab -->
+            <div id="team-tab" class="tab-view">
+                <div class="section-header">
+                    <h2 class="section-title">Technicians</h2>
+                </div>
+
+                <div id="tech-list">
+                    <!-- Techs render here -->
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-view">
+                <div class="settings-section">
+                    <div class="settings-header">
+                        <h3 class="settings-title">Data Management</h3>
+                    </div>
+                    <div class="settings-item" onclick="openModal('export-modal')">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">📤</div>
+                            <span class="settings-item-text">Export Data</span>
+                        </div>
+                        <span class="settings-item-arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="openModal('import-modal')">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">📥</div>
+                            <span class="settings-item-text">Import Data</span>
+                        </div>
+                        <span class="settings-item-arrow">›</span>
+                    </div>
+                    <div class="settings-item" onclick="copyToClipboard()">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">📋</div>
+                            <span class="settings-item-text">Copy All Data</span>
+                        </div>
+                        <span class="settings-item-arrow">›</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-header">
+                        <h3 class="settings-title">About</h3>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">🔧</div>
+                            <span class="settings-item-text">TIS Appliance Repair Scheduler</span>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">📞</div>
+                            <span class="settings-item-text">(859) 519-0669</span>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon">📍</div>
+                            <span class="settings-item-text">Lexington, KY — 35 mile radius</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-header">
+                        <h3 class="settings-title">Danger Zone</h3>
+                    </div>
+                    <div class="settings-item" onclick="confirmClearAll()">
+                        <div class="settings-item-left">
+                            <div class="settings-item-icon" style="background: var(--tis-red-light);">🗑️</div>
+                            <span class="settings-item-text" style="color: var(--tis-red);">Clear All Data</span>
+                        </div>
+                        <span class="settings-item-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="jobs-tab" onclick="switchTab('jobs-tab')">
+                <div class="nav-icon">📋</div>
+                <span class="nav-label">Jobs</span>
+            </button>
+            <button class="nav-item" data-tab="customers-tab" onclick="switchTab('customers-tab')">
+                <div class="nav-icon">👥</div>
+                <span class="nav-label">Customers</span>
+            </button>
+            <button class="nav-item" data-tab="team-tab" onclick="switchTab('team-tab')">
+                <div class="nav-icon">🛠️</div>
+                <span class="nav-label">Team</span>
+            </button>
+            <button class="nav-item" data-tab="settings-tab" onclick="switchTab('settings-tab')">
+                <div class="nav-icon">⚙️</div>
+                <span class="nav-label">Settings</span>
+            </button>
+        </nav>
+
+        <!-- FAB -->
+        <button class="fab" onclick="openModal('job-modal')">+</button>
+
+        <!-- Toast Container -->
+        <div class="toast-container" id="toast-container"></div>
+    </div>
+
+    <!-- Job Modal -->
+    <div class="modal-overlay" id="job-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="job-modal-title">Add New Job</h3>
+                <button class="modal-close" onclick="closeModal('job-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="job-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Customer Name *</label>
+                    <input type="text" class="form-input" id="job-customer" placeholder="e.g., John Smith" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" class="form-input" id="job-phone" placeholder="(859) 555-0123" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Address *</label>
+                    <input type="text" class="form-input" id="job-address" placeholder="123 Main St, Lexington, KY" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Date *</label>
+                        <input type="date" class="form-input" id="job-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Time *</label>
+                        <input type="time" class="form-input" id="job-time" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Appliance Type *</label>
+                        <select class="form-input" id="job-appliance">
+                            <option value="refrigerator">🧊 Refrigerator</option>
+                            <option value="washer">🌀 Washer</option>
+                            <option value="dryer">💨 Dryer</option>
+                            <option value="dishwasher">🍽️ Dishwasher</option>
+                            <option value="oven">🔥 Oven/Range</option>
+                            <option value="microwave">📡 Microwave</option>
+                            <option value="garbage-disposal">♻️ Disposal</option>
+                            <option value="water-heater">🚿 Water Heater</option>
+                            <option value="freezer">❄️ Freezer</option>
+                            <option value="other">🔧 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assign To</label>
+                        <select class="form-input" id="job-tech">
+                            <option value="barry">Barry</option>
+                            <option value="denny">Denny</option>
+                            <option value="unassigned">Unassigned</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Issue Description</label>
+                    <textarea class="form-input" id="job-notes" placeholder="Describe the problem..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="job-urgent">
+                        <span class="form-checkbox-label">⚡ Mark as Urgent (food spoilage, flooding, etc.)</span>
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('job-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveJob()">Save Job</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Modal -->
+    <div class="modal-overlay" id="customer-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Customer</h3>
+                <button class="modal-close" onclick="closeModal('customer-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="customer-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Customer Name *</label>
+                    <input type="text" class="form-input" id="customer-name" placeholder="e.g., John Smith" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone Number *</label>
+                    <input type="tel" class="form-input" id="customer-phone" placeholder="(859) 555-0123" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Address *</label>
+                    <input type="text" class="form-input" id="customer-address" placeholder="123 Main St, Lexington, KY" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="customer-email" placeholder="customer@email.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-input" id="customer-notes" placeholder="Special instructions, gate codes, etc."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('customer-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="job-detail-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Job Details</h3>
+                <button class="modal-close" onclick="closeModal('job-detail-modal')">✕</button>
+            </div>
+            <div class="modal-body" id="job-detail-content">
+                <!-- Content populated dynamically -->
+            </div>
+            <div class="modal-footer" id="job-detail-footer">
+                <!-- Actions populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="export-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Export Data</h3>
+                <button class="modal-close" onclick="closeModal('export-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: var(--neutral-600);">Choose an export format to download your data.</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="btn btn-secondary" onclick="exportData('json')" style="justify-content: flex-start;">
+                        📄 Export as JSON (Full Backup)
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportData('csv-jobs')" style="justify-content: flex-start;">
+                        📊 Export Jobs as CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportData('csv-customers')" style="justify-content: flex-start;">
+                        📊 Export Customers as CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="import-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Import Data</h3>
+                <button class="modal-close" onclick="closeModal('import-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Import JSON Backup</label>
+                    <input type="file" class="form-input" id="import-file" accept=".json" onchange="handleImportFile(event)">
+                </div>
+                
+                <div style="text-align: center; color: var(--neutral-400); margin: 20px 0;">— or —</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Paste JSON Data</label>
+                    <textarea class="form-input" id="import-text" placeholder='{"jobs":[], "customers":[]}'></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('import-modal')">Cancel</button>
+                <button class="btn btn-primary" onclick="importData()">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // TIS Appliance Repair — Smart Scheduler
+        // Premium Field Service Management Tool
+        // ============================================
+
+        // Security Layer - Access Control
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=-1894654314;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+
+        // Anti-debugging protection
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'))||(e.ctrlKey&&e.key==='U')){e.preventDefault();return false;}
+        });
+
+        const DB_NAME = 'TISScheduler';
+        const DB_VERSION = 1;
+        let db = null;
+        let currentDate = new Date();
+        let undoStack = [];
+
+        // Appliance Icons
+        const applianceIcons = {
+            'refrigerator': '🧊',
+            'washer': '🌀',
+            'dryer': '💨',
+            'dishwasher': '🍽️',
+            'oven': '🔥',
+            'microwave': '📡',
+            'garbage-disposal': '♻️',
+            'water-heater': '🚿',
+            'freezer': '❄️',
+            'other': '🔧'
+        };
+
+        // Status Labels
+        const statusLabels = {
+            'scheduled': 'Scheduled',
+            'enroute': 'En Route',
+            'arrived': 'Arrived',
+            'diagnosed': 'Diagnosed',
+            'completed': 'Completed'
+        };
+
+        // ============================================
+        // IndexedDB Setup
+        // ============================================
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = () => {
+                    console.warn('IndexedDB failed, falling back to localStorage');
+                    db = null;
+                    resolve(false);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(true);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+
+                    if (!database.objectStoreNames.contains('jobs')) {
+                        const jobStore = database.createObjectStore('jobs', { keyPath: 'id' });
+                        jobStore.createIndex('date', 'date', { unique: false });
+                        jobStore.createIndex('status', 'status', { unique: false });
+                    }
+
+                    if (!database.objectStoreNames.contains('customers')) {
+                        const customerStore = database.createObjectStore('customers', { keyPath: 'id' });
+                        customerStore.createIndex('name', 'name', { unique: false });
+                    }
+
+                    if (!database.objectStoreNames.contains('settings')) {
+                        database.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+
+        // ============================================
+        // Storage Helpers (IndexedDB with localStorage fallback)
+        // ============================================
+
+        async function saveToStore(storeName, data) {
+            if (db) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const request = store.put(data);
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = () => reject(request.error);
+                });
+            } else {
+                // localStorage fallback
+                const key = `tis_${storeName}`;
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const index = existing.findIndex(item => item.id === data.id);
+                if (index >= 0) {
+                    existing[index] = data;
+                } else {
+                    existing.push(data);
+                }
+                localStorage.setItem(key, JSON.stringify(existing));
+                return true;
+            }
+        }
+
+        async function getAllFromStore(storeName) {
+            if (db) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = () => reject(request.error);
+                });
+            } else {
+                const key = `tis_${storeName}`;
+                return JSON.parse(localStorage.getItem(key) || '[]');
+            }
+        }
+
+        async function deleteFromStore(storeName, id) {
+            if (db) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = () => reject(request.error);
+                });
+            } else {
+                const key = `tis_${storeName}`;
+                const existing = JSON.parse(localStorage.getItem(key) || '[]');
+                const filtered = existing.filter(item => item.id !== id);
+                localStorage.setItem(key, JSON.stringify(filtered));
+                return true;
+            }
+        }
+
+        async function clearStore(storeName) {
+            if (db) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const request = store.clear();
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = () => reject(request.error);
+                });
+            } else {
+                localStorage.removeItem(`tis_${storeName}`);
+                return true;
+            }
+        }
+
+        // ============================================
+        // UI Functions
+        // ============================================
+
+        function switchTab(tabId) {
+            // Update tab views
+            document.querySelectorAll('.tab-view').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+
+            // Hide/show FAB based on tab
+            const fab = document.querySelector('.fab');
+            fab.style.display = (tabId === 'jobs-tab' || tabId === 'customers-tab') ? 'flex' : 'none';
+
+            // Render content
+            if (tabId === 'jobs-tab') renderJobs();
+            if (tabId === 'customers-tab') renderCustomers();
+            if (tabId === 'team-tab') renderTeam();
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            // Set default date for job modal
+            if (modalId === 'job-modal') {
+                document.getElementById('job-date').value = formatDateInput(currentDate);
+                document.getElementById('job-modal-title').textContent = 'Add New Job';
+                document.getElementById('job-id').value = '';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            document.body.style.overflow = '';
+
+            // Reset forms
+            if (modalId === 'job-modal') {
+                document.querySelectorAll('#job-modal .form-input').forEach(input => {
+                    if (input.type === 'checkbox') input.checked = false;
+                    else input.value = '';
+                });
+            }
+            if (modalId === 'customer-modal') {
+                document.querySelectorAll('#customer-modal .form-input').forEach(input => {
+                    input.value = '';
+                });
+            }
+        }
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        // ============================================
+        // Date Functions
+        // ============================================
+
+        function formatDateInput(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function formatDateDisplay(date) {
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (formatDateInput(date) === formatDateInput(today)) return 'Today';
+            if (formatDateInput(date) === formatDateInput(tomorrow)) return 'Tomorrow';
+            if (formatDateInput(date) === formatDateInput(yesterday)) return 'Yesterday';
+
+            return date.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        function formatDateFull(date) {
+            return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        function changeDate(delta) {
+            currentDate.setDate(currentDate.getDate() + delta);
+            updateDateDisplay();
+            renderJobs();
+        }
+
+        function updateDateDisplay() {
+            document.getElementById('date-day').textContent = formatDateDisplay(currentDate);
+            document.getElementById('date-full').textContent = formatDateFull(currentDate);
+        }
+
+        // ============================================
+        // Toast Notifications
+        // ============================================
+
+        function showToast(message, type = 'success', undoAction = null) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+
+            let html = `<span class="toast-message">${message}</span>`;
+            if (undoAction) {
+                html += `<button class="toast-undo">Undo</button>`;
+            }
+            toast.innerHTML = html;
+
+            if (undoAction) {
+                const undoBtn = toast.querySelector('.toast-undo');
+                undoBtn.addEventListener('click', () => {
+                    undoAction();
+                    toast.remove();
+                });
+            }
+
+            container.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ============================================
+        // Job Functions
+        // ============================================
+
+        async function renderJobs() {
+            const jobs = await getAllFromStore('jobs');
+            const dateStr = formatDateInput(currentDate);
+            const todayJobs = jobs.filter(j => j.date === dateStr);
+
+            // Sort by time
+            todayJobs.sort((a, b) => a.time.localeCompare(b.time));
+
+            // Update stats
+            const pending = todayJobs.filter(j => j.status !== 'completed').length;
+            const completed = todayJobs.filter(j => j.status === 'completed').length;
+            const urgent = todayJobs.filter(j => j.urgent && j.status !== 'completed').length;
+
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-urgent').textContent = urgent;
+
+            const jobList = document.getElementById('job-list');
+            const emptyState = document.getElementById('empty-state');
+
+            // Check if demo data exists
+            const hasDemo = jobs.some(j => j.isDemo);
+            document.getElementById('demo-banner').style.display = hasDemo ? 'flex' : 'none';
+
+            if (todayJobs.length === 0) {
+                jobList.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            jobList.innerHTML = todayJobs.map(job => `
+                <div class="job-card status-${job.status} ${job.urgent ? 'urgent' : ''}" onclick="openJobDetail('${job.id}')">
+                    <div class="job-header">
+                        <span class="job-time">${formatTime(job.time)}</span>
+                        <span class="job-status status-${job.status}">${statusLabels[job.status]}</span>
+                    </div>
+                    <div class="job-customer">${escapeHtml(job.customer)}</div>
+                    <div class="job-appliance">
+                        <span class="job-appliance-icon">${applianceIcons[job.appliance] || '🔧'}</span>
+                        <span>${capitalizeFirst(job.appliance)} Repair</span>
+                    </div>
+                    <div class="job-meta">
+                        <span class="job-meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            ${escapeHtml(job.address.split(',')[0])}
+                        </span>
+                        <span class="job-tech">
+                            <span class="tech-avatar">${job.tech === 'unassigned' ? '?' : job.tech.charAt(0).toUpperCase()}</span>
+                            ${capitalizeFirst(job.tech)}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function saveJob() {
+            const id = document.getElementById('job-id').value || generateId();
+            const job = {
+                id,
+                customer: document.getElementById('job-customer').value.trim(),
+                phone: document.getElementById('job-phone').value.trim(),
+                address: document.getElementById('job-address').value.trim(),
+                date: document.getElementById('job-date').value,
+                time: document.getElementById('job-time').value,
+                appliance: document.getElementById('job-appliance').value,
+                tech: document.getElementById('job-tech').value,
+                notes: document.getElementById('job-notes').value.trim(),
+                urgent: document.getElementById('job-urgent').checked,
+                status: 'scheduled',
+                createdAt: new Date().toISOString(),
+                isDemo: false
+            };
+
+            // Validation
+            if (!job.customer || !job.phone || !job.address || !job.date || !job.time) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            await saveToStore('jobs', job);
+            closeModal('job-modal');
+            showToast('Job saved successfully!');
+            renderJobs();
+
+            // Also save/update customer
+            await autoSaveCustomer(job);
+        }
+
+        async function openJobDetail(jobId) {
+            const jobs = await getAllFromStore('jobs');
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const content = document.getElementById('job-detail-content');
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                        <div style="width: 56px; height: 56px; background: var(--tis-green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                            ${applianceIcons[job.appliance] || '🔧'}
+                        </div>
+                        <div>
+                            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(job.customer)}</h3>
+                            <p style="color: var(--neutral-500); font-size: 14px;">${capitalizeFirst(job.appliance)} Repair</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--neutral-100); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--neutral-500); font-size: 13px;">Status</span>
+                            <span class="job-status status-${job.status}">${statusLabels[job.status]}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--neutral-500); font-size: 13px;">Scheduled</span>
+                            <span style="font-weight: 500;">${formatTime(job.time)} · ${formatDateFull(new Date(job.date + 'T00:00:00'))}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--neutral-500); font-size: 13px;">Technician</span>
+                            <span style="font-weight: 500;">${capitalizeFirst(job.tech)}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <p style="font-size: 13px; color: var(--neutral-500); margin-bottom: 4px;">ADDRESS</p>
+                        <p style="font-size: 15px;">${escapeHtml(job.address)}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 16px;">
+                        <p style="font-size: 13px; color: var(--neutral-500); margin-bottom: 4px;">PHONE</p>
+                        <a href="tel:${job.phone}" style="font-size: 15px; color: var(--tis-green); text-decoration: none;">${escapeHtml(job.phone)}</a>
+                    </div>
+                    
+                    ${job.notes ? `
+                    <div style="margin-bottom: 16px;">
+                        <p style="font-size: 13px; color: var(--neutral-500); margin-bottom: 4px;">NOTES</p>
+                        <p style="font-size: 15px;">${escapeHtml(job.notes)}</p>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <p style="font-size: 13px; color: var(--neutral-500); margin-bottom: 8px;">UPDATE STATUS</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        ${['scheduled', 'enroute', 'arrived', 'diagnosed', 'completed'].map(status => `
+                            <button class="quick-action-btn ${job.status === status ? 'primary' : 'secondary'}" 
+                                    onclick="updateJobStatus('${job.id}', '${status}')"
+                                    style="flex: none; padding: 8px 14px;">
+                                ${statusLabels[status]}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            const footer = document.getElementById('job-detail-footer');
+            footer.innerHTML = `
+                <button class="btn btn-secondary" onclick="editJob('${job.id}')">✏️ Edit</button>
+                <button class="btn btn-secondary" style="color: var(--tis-red);" onclick="deleteJob('${job.id}')">🗑️ Delete</button>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.address)}" 
+                   target="_blank" class="btn btn-primary" style="flex: 2;">
+                    📍 Navigate
+                </a>
+            `;
+
+            openModal('job-detail-modal');
+        }
+
+        async function updateJobStatus(jobId, status) {
+            const jobs = await getAllFromStore('jobs');
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const oldStatus = job.status;
+            job.status = status;
+            await saveToStore('jobs', job);
+
+            showToast(`Status updated to ${statusLabels[status]}`);
+            openJobDetail(jobId); // Refresh modal
+            renderJobs();
+        }
+
+        async function editJob(jobId) {
+            const jobs = await getAllFromStore('jobs');
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            closeModal('job-detail-modal');
+
+            // Populate form
+            document.getElementById('job-id').value = job.id;
+            document.getElementById('job-customer').value = job.customer;
+            document.getElementById('job-phone').value = job.phone;
+            document.getElementById('job-address').value = job.address;
+            document.getElementById('job-date').value = job.date;
+            document.getElementById('job-time').value = job.time;
+            document.getElementById('job-appliance').value = job.appliance;
+            document.getElementById('job-tech').value = job.tech;
+            document.getElementById('job-notes').value = job.notes || '';
+            document.getElementById('job-urgent').checked = job.urgent;
+            document.getElementById('job-modal-title').textContent = 'Edit Job';
+
+            openModal('job-modal');
+        }
+
+        async function deleteJob(jobId) {
+            const jobs = await getAllFromStore('jobs');
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            await deleteFromStore('jobs', jobId);
+            closeModal('job-detail-modal');
+
+            showToast('Job deleted', 'success', async () => {
+                await saveToStore('jobs', job);
+                renderJobs();
+            });
+
+            renderJobs();
+        }
+
+        // ============================================
+        // Customer Functions
+        // ============================================
+
+        async function renderCustomers() {
+            const customers = await getAllFromStore('customers');
+            const jobs = await getAllFromStore('jobs');
+
+            const customerList = document.getElementById('customer-list');
+            const emptyState = document.getElementById('customer-empty');
+
+            if (customers.length === 0) {
+                customerList.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Sort by name
+            customers.sort((a, b) => a.name.localeCompare(b.name));
+
+            customerList.innerHTML = customers.map(customer => {
+                // Get unique appliances from their jobs
+                const customerJobs = jobs.filter(j => j.phone === customer.phone);
+                const appliances = [...new Set(customerJobs.map(j => j.appliance))];
+
+                return `
+                <div class="customer-card" onclick="viewCustomer('${customer.id}')">
+                    <div class="customer-header">
+                        <div class="customer-avatar">${customer.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
+                        <div class="customer-info">
+                            <h3>${escapeHtml(customer.name)}</h3>
+                            <p>${escapeHtml(customer.phone)}</p>
+                        </div>
+                    </div>
+                    ${appliances.length > 0 ? `
+                    <div class="customer-appliances">
+                        ${appliances.slice(0, 4).map(a => `
+                            <span class="appliance-tag">${applianceIcons[a] || '🔧'} ${capitalizeFirst(a)}</span>
+                        `).join('')}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            }).join('');
+        }
+
+        async function saveCustomer() {
+            const id = document.getElementById('customer-id').value || generateId();
+            const customer = {
+                id,
+                name: document.getElementById('customer-name').value.trim(),
+                phone: document.getElementById('customer-phone').value.trim(),
+                address: document.getElementById('customer-address').value.trim(),
+                email: document.getElementById('customer-email').value.trim(),
+                notes: document.getElementById('customer-notes').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+
+            if (!customer.name || !customer.phone || !customer.address) {
+                showToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            await saveToStore('customers', customer);
+            closeModal('customer-modal');
+            showToast('Customer saved!');
+            renderCustomers();
+        }
+
+        async function autoSaveCustomer(job) {
+            const customers = await getAllFromStore('customers');
+            const existing = customers.find(c => c.phone === job.phone);
+
+            if (!existing) {
+                const customer = {
+                    id: generateId(),
+                    name: job.customer,
+                    phone: job.phone,
+                    address: job.address,
+                    email: '',
+                    notes: '',
+                    createdAt: new Date().toISOString()
+                };
+                await saveToStore('customers', customer);
+            }
+        }
+
+        function filterCustomers() {
+            const query = document.getElementById('customer-search').value.toLowerCase();
+            const cards = document.querySelectorAll('#customer-list .customer-card');
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        async function viewCustomer(customerId) {
+            // For now, just edit
+            const customers = await getAllFromStore('customers');
+            const customer = customers.find(c => c.id === customerId);
+            if (!customer) return;
+
+            document.getElementById('customer-id').value = customer.id;
+            document.getElementById('customer-name').value = customer.name;
+            document.getElementById('customer-phone').value = customer.phone;
+            document.getElementById('customer-address').value = customer.address;
+            document.getElementById('customer-email').value = customer.email || '';
+            document.getElementById('customer-notes').value = customer.notes || '';
+
+            openModal('customer-modal');
+        }
+
+        // ============================================
+        // Team Functions
+        // ============================================
+
+        async function renderTeam() {
+            const jobs = await getAllFromStore('jobs');
+            const today = formatDateInput(new Date());
+
+            const techs = [
+                { name: 'Barry', id: 'barry' },
+                { name: 'Denny', id: 'denny' }
+            ];
+
+            const techList = document.getElementById('tech-list');
+            techList.innerHTML = techs.map(tech => {
+                const techJobs = jobs.filter(j => j.tech === tech.id);
+                const todayJobs = techJobs.filter(j => j.date === today);
+                const completedToday = todayJobs.filter(j => j.status === 'completed').length;
+                const totalCompleted = techJobs.filter(j => j.status === 'completed').length;
+
+                return `
+                <div class="tech-card">
+                    <div class="tech-avatar-large">${tech.name.charAt(0)}</div>
+                    <div class="tech-info">
+                        <div class="tech-name">${tech.name}</div>
+                        <div class="tech-stats">
+                            <span class="tech-stat"><strong>${todayJobs.length}</strong> today</span>
+                            <span class="tech-stat"><strong>${completedToday}</strong> done</span>
+                            <span class="tech-stat"><strong>${totalCompleted}</strong> total</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+
+            // Add route summary card
+            const todayAllJobs = jobs.filter(j => j.date === today && j.status !== 'completed');
+            if (todayAllJobs.length > 0) {
+                techList.innerHTML += `
+                <div class="settings-section" style="margin-top: 16px;">
+                    <div class="settings-header">
+                        <h3 class="settings-title">📍 Today's Route Summary</h3>
+                    </div>
+                    ${todayAllJobs.map(job => `
+                        <div class="settings-item" onclick="openJobDetail('${job.id}')">
+                            <div class="settings-item-left">
+                                <div class="settings-item-icon">${applianceIcons[job.appliance] || '🔧'}</div>
+                                <div>
+                                    <span class="settings-item-text">${escapeHtml(job.customer)}</span>
+                                    <p style="font-size: 12px; color: var(--neutral-500);">${formatTime(job.time)} · ${capitalizeFirst(job.tech)}</p>
+                                </div>
+                            </div>
+                            <span class="settings-item-arrow">›</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            }
+        }
+
+        // ============================================
+        // Demo Data
+        // ============================================
+
+        const demoJobs = [
+            {
+                id: 'demo-1',
+                customer: 'Sarah Mitchell',
+                phone: '(859) 555-0142',
+                address: '2841 Richmond Rd, Lexington, KY 40509',
+                date: formatDateInput(new Date()),
+                time: '09:00',
+                appliance: 'refrigerator',
+                tech: 'denny',
+                notes: 'Not cooling properly, food getting warm. Possible compressor issue. Has extended warranty.',
+                urgent: true,
+                status: 'scheduled',
+                isDemo: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'demo-2',
+                customer: 'Robert Chen',
+                phone: '(859) 555-0198',
+                address: '456 Tates Creek Rd, Lexington, KY 40502',
+                date: formatDateInput(new Date()),
+                time: '11:30',
+                appliance: 'washer',
+                tech: 'barry',
+                notes: 'Washer not draining. Making grinding noise during spin cycle.',
+                urgent: false,
+                status: 'enroute',
+                isDemo: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'demo-3',
+                customer: 'Maria Gonzalez',
+                phone: '(859) 555-0267',
+                address: '789 Nicholasville Rd, Nicholasville, KY 40356',
+                date: formatDateInput(new Date()),
+                time: '14:00',
+                appliance: 'dishwasher',
+                tech: 'denny',
+                notes: 'Water leaking from bottom. About 3 years old.',
+                urgent: false,
+                status: 'scheduled',
+                isDemo: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'demo-4',
+                customer: 'James Wilson',
+                phone: '(859) 555-0334',
+                address: '321 Georgetown St, Georgetown, KY 40324',
+                date: formatDateInput(new Date()),
+                time: '16:00',
+                appliance: 'oven',
+                tech: 'barry',
+                notes: 'Gas oven not igniting. Electronic igniter clicks but no flame.',
+                urgent: false,
+                status: 'scheduled',
+                isDemo: true,
+                createdAt: new Date().toISOString()
+            },
+            {
+                id: 'demo-5',
+                customer: 'Linda Thompson',
+                phone: '(859) 555-0421',
+                address: '555 Paris Pike, Versailles, KY 40383',
+                date: formatDateInput(new Date()),
+                time: '08:30',
+                appliance: 'dryer',
+                tech: 'denny',
+                notes: 'Dryer runs but no heat. Checked lint trap, seems fine.',
+                urgent: false,
+                status: 'completed',
+                isDemo: true,
+                createdAt: new Date().toISOString()
+            }
+        ];
+
+        const demoCustomers = [
+            { id: 'demo-c1', name: 'Sarah Mitchell', phone: '(859) 555-0142', address: '2841 Richmond Rd, Lexington, KY 40509', email: 'sarah.m@email.com', notes: 'Has 2 dogs', isDemo: true },
+            { id: 'demo-c2', name: 'Robert Chen', phone: '(859) 555-0198', address: '456 Tates Creek Rd, Lexington, KY 40502', email: '', notes: 'Gate code: 1234', isDemo: true },
+            { id: 'demo-c3', name: 'Maria Gonzalez', phone: '(859) 555-0267', address: '789 Nicholasville Rd, Nicholasville, KY 40356', email: '', notes: '', isDemo: true },
+            { id: 'demo-c4', name: 'James Wilson', phone: '(859) 555-0334', address: '321 Georgetown St, Georgetown, KY 40324', email: 'j.wilson@work.com', notes: '', isDemo: true },
+            { id: 'demo-c5', name: 'Linda Thompson', phone: '(859) 555-0421', address: '555 Paris Pike, Versailles, KY 40383', email: '', notes: 'Repeat customer since 2020', isDemo: true }
+        ];
+
+        async function loadDemoData() {
+            for (const job of demoJobs) {
+                await saveToStore('jobs', job);
+            }
+            for (const customer of demoCustomers) {
+                await saveToStore('customers', customer);
+            }
+            showToast('Demo data loaded!');
+            renderJobs();
+        }
+
+        async function clearDemoData() {
+            const jobs = await getAllFromStore('jobs');
+            const customers = await getAllFromStore('customers');
+
+            for (const job of jobs.filter(j => j.isDemo)) {
+                await deleteFromStore('jobs', job.id);
+            }
+            for (const customer of customers.filter(c => c.isDemo)) {
+                await deleteFromStore('customers', customer.id);
+            }
+
+            showToast('Demo data cleared');
+            renderJobs();
+        }
+
+        // ============================================
+        // Export/Import Functions
+        // ============================================
+
+        async function exportData(format) {
+            const jobs = await getAllFromStore('jobs');
+            const customers = await getAllFromStore('customers');
+
+            let content, filename, mimeType;
+
+            if (format === 'json') {
+                content = JSON.stringify({ jobs, customers, exportedAt: new Date().toISOString() }, null, 2);
+                filename = `tis-scheduler-backup-${formatDateInput(new Date())}.json`;
+                mimeType = 'application/json';
+            } else if (format === 'csv-jobs') {
+                const headers = ['Date', 'Time', 'Customer', 'Phone', 'Address', 'Appliance', 'Tech', 'Status', 'Urgent', 'Notes'];
+                const rows = jobs.map(j => [
+                    j.date, j.time, j.customer, j.phone, j.address, j.appliance, j.tech, j.status, j.urgent ? 'Yes' : 'No', j.notes
+                ]);
+                content = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+                filename = `tis-jobs-${formatDateInput(new Date())}.csv`;
+                mimeType = 'text/csv';
+            } else if (format === 'csv-customers') {
+                const headers = ['Name', 'Phone', 'Address', 'Email', 'Notes'];
+                const rows = customers.map(c => [c.name, c.phone, c.address, c.email, c.notes]);
+                content = [headers, ...rows].map(row => row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')).join('\n');
+                filename = `tis-customers-${formatDateInput(new Date())}.csv`;
+                mimeType = 'text/csv';
+            }
+
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            closeModal('export-modal');
+            showToast(`Exported ${format.toUpperCase()} successfully!`);
+        }
+
+        async function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('import-text').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+
+        async function importData() {
+            const text = document.getElementById('import-text').value.trim();
+            if (!text) {
+                showToast('Please provide JSON data to import', 'error');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(text);
+
+                if (data.jobs && Array.isArray(data.jobs)) {
+                    for (const job of data.jobs) {
+                        job.isDemo = false;
+                        await saveToStore('jobs', job);
+                    }
+                }
+
+                if (data.customers && Array.isArray(data.customers)) {
+                    for (const customer of data.customers) {
+                        customer.isDemo = false;
+                        await saveToStore('customers', customer);
+                    }
+                }
+
+                closeModal('import-modal');
+                document.getElementById('import-text').value = '';
+                document.getElementById('import-file').value = '';
+                showToast(`Imported ${data.jobs?.length || 0} jobs, ${data.customers?.length || 0} customers`);
+                renderJobs();
+                renderCustomers();
+            } catch (e) {
+                showToast('Invalid JSON format', 'error');
+            }
+        }
+
+        async function copyToClipboard() {
+            const jobs = await getAllFromStore('jobs');
+            const customers = await getAllFromStore('customers');
+            const data = JSON.stringify({ jobs, customers }, null, 2);
+
+            try {
+                await navigator.clipboard.writeText(data);
+                showToast('Data copied to clipboard!');
+            } catch (e) {
+                showToast('Failed to copy', 'error');
+            }
+        }
+
+        async function confirmClearAll() {
+            if (confirm('⚠️ This will permanently delete ALL data including jobs and customers. This cannot be undone. Continue?')) {
+                await clearStore('jobs');
+                await clearStore('customers');
+                showToast('All data cleared');
+                renderJobs();
+                renderCustomers();
+            }
+        }
+
+        // ============================================
+        // Utility Functions
+        // ============================================
+
+        function generateId() {
+            return 'job_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+        }
+
+        function formatTime(time24) {
+            if (!time24) return '';
+            const [h, m] = time24.split(':');
+            const hour = parseInt(h);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            return `${hour12}:${m} ${ampm}`;
+        }
+
+        function capitalizeFirst(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(/-/g, ' ');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================
+        // Initialize App
+        // ============================================
+
+        async function init() {
+            await initDB();
+            updateDateDisplay();
+            renderJobs();
+
+            // Check if first launch
+            const jobs = await getAllFromStore('jobs');
+            if (jobs.length === 0) {
+                // Show empty state by default
+            }
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
