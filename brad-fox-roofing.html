@@ -1,0 +1,2075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>FoxGuard Resilience Auditor — Brad Fox Roofing</title>
+<meta name="description" content="Is your roof ready for the Rogue Valley climate? Free roof resilience assessment from Brad Fox Roofing, Grants Pass, Oregon.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🛡️%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Security: prevent text selection on structural elements */
+.mobile-header, .top-nav, .bottom-tabs, .card-header, .nav-link, .tab-btn {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+:root {
+  --green: #39673c;
+  --green-light: #4a8a4e;
+  --green-dark: #2a4e2d;
+  --loam: #2d2509;
+  --cedar: #efa15f;
+  --cedar-dark: #d4893e;
+  --cedar-light: #f5c48a;
+  --bg: #fafbfa;
+  --bg-card: #ffffff;
+  --bg-input: #f3f5f3;
+  --border: #dce0dc;
+  --border-focus: #39673c;
+  --text: #2d2509;
+  --text-mid: #5a5a42;
+  --text-light: #8a8a72;
+  --danger: #c0392b;
+  --danger-light: #e74c3c;
+  --warning: #e67e22;
+  --success: #27ae60;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 2px 8px rgba(45,37,9,0.08);
+  --shadow-lg: 0 8px 32px rgba(45,37,9,0.12);
+  --shadow-hover: 0 4px 16px rgba(45,37,9,0.14);
+  --transition: 0.2s ease;
+  --nav-height: 64px;
+  --tab-height: 72px;
+}
+
+html { font-size: 16px; -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  padding-bottom: calc(var(--tab-height) + 16px);
+  overflow-x: hidden;
+}
+@media (min-width: 1024px) { body { padding-bottom: 0; } }
+
+h1, h2, h3, h4, h5 { font-family: 'Archivo', sans-serif; font-weight: 700; line-height: 1.25; }
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.15rem; }
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ========== LAYOUT ========== */
+.app-container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+@media (min-width: 1024px) { .app-container { padding: 0 32px; } }
+
+/* ========== TOP NAV (Desktop) ========== */
+.top-nav {
+  display: none;
+  background: var(--loam);
+  color: #fff;
+  height: var(--nav-height);
+  align-items: center;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+@media (min-width: 1024px) { .top-nav { display: flex; } }
+
+.top-nav .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: auto;
+}
+.top-nav .brand svg { width: 36px; height: 36px; }
+.top-nav .brand-text { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.02em; }
+.top-nav .brand-sub { font-size: 0.7rem; font-weight: 400; opacity: 0.7; display: block; margin-top: -2px; }
+
+.nav-links { display: flex; gap: 4px; }
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+.nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: #fff; }
+.nav-link.active { background: rgba(57,103,60,0.4); color: var(--cedar-light); }
+.nav-link svg { width: 18px; height: 18px; }
+
+.nav-actions { display: flex; gap: 8px; margin-left: 16px; }
+
+/* ========== MOBILE HEADER ========== */
+.mobile-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--loam);
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+@media (min-width: 1024px) { .mobile-header { display: none; } }
+.mobile-header .brand { display: flex; align-items: center; gap: 10px; }
+.mobile-header .brand svg { width: 32px; height: 32px; }
+.mobile-header .brand-text { font-family: 'Archivo', sans-serif; font-weight: 800; font-size: 1rem; }
+.mobile-header .brand-sub { font-size: 0.65rem; opacity: 0.7; display: block; }
+.mobile-header-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* ========== BOTTOM TAB BAR (Mobile) ========== */
+.bottom-tabs {
+  display: flex;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  height: var(--tab-height);
+  z-index: 100;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.06);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+@media (min-width: 1024px) { .bottom-tabs { display: none; } }
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: var(--text-light);
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: 'Archivo', sans-serif;
+  cursor: pointer;
+  transition: var(--transition);
+  padding: 6px 4px;
+  min-height: 44px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tab-btn svg { width: 22px; height: 22px; }
+.tab-btn.active { color: var(--green); }
+.tab-btn:active { transform: scale(0.95); }
+
+/* ========== PAGE SECTIONS ========== */
+.page { display: none; padding: 20px 0; animation: fadeIn 0.25s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========== CARDS ========== */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-hover); }
+.card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.card-header h2 { flex: 1; }
+.card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.card-icon svg { width: 22px; height: 22px; }
+.card-icon.green { background: rgba(57,103,60,0.12); color: var(--green); }
+.card-icon.cedar { background: rgba(239,161,95,0.15); color: var(--cedar-dark); }
+.card-icon.danger { background: rgba(192,57,43,0.12); color: var(--danger); }
+
+/* ========== FORMS ========== */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+  font-family: 'Archivo', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.form-hint { font-size: 0.78rem; color: var(--text-light); margin-top: 4px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+input[type="date"], select, textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  background: var(--bg-input);
+  transition: var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 48px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(57,103,60,0.15);
+}
+textarea { min-height: 100px; resize: vertical; }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a5a42' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+
+.radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio-option, .checkbox-option {
+  position: relative;
+  flex: 1;
+  min-width: 140px;
+}
+.radio-option input, .checkbox-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-option label, .checkbox-option label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  font-weight: 500;
+  min-height: 48px;
+  background: var(--bg-input);
+}
+.radio-option input:checked + label, .checkbox-option input:checked + label {
+  border-color: var(--green);
+  background: rgba(57,103,60,0.06);
+  color: var(--green-dark);
+}
+.radio-option label:hover, .checkbox-option label:hover { border-color: var(--text-light); }
+
+/* ========== BUTTONS ========== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 48px;
+  min-width: 48px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn svg { width: 18px; height: 18px; }
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--green); color: #fff; }
+.btn-primary:hover { background: var(--green-light); box-shadow: var(--shadow); }
+.btn-cedar { background: var(--cedar); color: var(--loam); }
+.btn-cedar:hover { background: var(--cedar-dark); color: #fff; }
+.btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--green); color: var(--green); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-light); }
+.btn-sm { padding: 8px 14px; font-size: 0.8rem; min-height: 40px; }
+.btn-full { width: 100%; }
+.btn-icon { padding: 10px; border-radius: 50%; }
+
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ========== STEPPER ========== */
+.stepper {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 24px;
+  padding: 0 8px;
+}
+.step-dot {
+  width: 40px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border);
+  transition: var(--transition);
+}
+.step-dot.active { background: var(--green); }
+.step-dot.completed { background: var(--cedar); }
+
+/* ========== RISK GAUGE ========== */
+.gauge-container { text-align: center; padding: 24px 0; }
+.gauge-score {
+  font-family: 'Archivo', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.gauge-label { font-size: 1rem; font-weight: 600; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.08em; }
+.gauge-bar { height: 12px; border-radius: 6px; background: var(--border); overflow: hidden; margin: 16px 0; }
+.gauge-fill { height: 100%; border-radius: 6px; transition: width 1s ease, background 1s ease; }
+
+/* ========== RISK CARDS ========== */
+.risk-card {
+  border-left: 4px solid var(--border);
+  padding: 16px 16px 16px 20px;
+  margin-bottom: 12px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--bg-card);
+}
+.risk-card.critical { border-left-color: var(--danger); background: rgba(192,57,43,0.04); }
+.risk-card.high { border-left-color: var(--warning); background: rgba(230,126,34,0.04); }
+.risk-card.moderate { border-left-color: var(--cedar); background: rgba(239,161,95,0.04); }
+.risk-card.low { border-left-color: var(--success); background: rgba(39,174,96,0.04); }
+
+.risk-level {
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+.risk-card.critical .risk-level { color: var(--danger); }
+.risk-card.high .risk-level { color: var(--warning); }
+.risk-card.moderate .risk-level { color: var(--cedar-dark); }
+.risk-card.low .risk-level { color: var(--success); }
+
+.risk-title { font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+.risk-desc { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; }
+.risk-solution { margin-top: 10px; padding: 10px 14px; background: rgba(57,103,60,0.06); border-radius: var(--radius-sm); font-size: 0.85rem; }
+.risk-solution strong { color: var(--green-dark); }
+
+/* ========== AUDIT LIST ========== */
+.audit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-card);
+}
+.audit-item:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.audit-item .score-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+.audit-item .audit-info { flex: 1; min-width: 0; }
+.audit-item .audit-address { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.audit-item .audit-meta { font-size: 0.78rem; color: var(--text-light); display: flex; gap: 12px; flex-wrap: wrap; }
+.audit-item .audit-date { font-size: 0.75rem; color: var(--text-light); white-space: nowrap; }
+
+.demo-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--cedar-light);
+  color: var(--loam);
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 8px;
+}
+
+/* ========== DEMO BANNER ========== */
+.demo-banner {
+  background: linear-gradient(135deg, var(--cedar-light), var(--cedar));
+  color: var(--loam);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.demo-banner svg { flex-shrink: 0; width: 20px; height: 20px; }
+.demo-banner .dismiss-demo {
+  margin-left: auto;
+  background: rgba(45,37,9,0.15);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--loam);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ========== WELCOME EMPTY STATE ========== */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+.empty-state svg { width: 80px; height: 80px; color: var(--green); margin-bottom: 16px; opacity: 0.6; }
+.empty-state h2 { margin-bottom: 8px; }
+.empty-state p { color: var(--text-mid); margin-bottom: 24px; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+/* ========== TOAST ========== */
+.toast-container { position: fixed; top: 80px; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+@media (max-width: 1023px) { .toast-container { top: auto; bottom: calc(var(--tab-height) + 16px); left: 16px; right: 16px; } }
+.toast {
+  background: var(--loam);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.3s ease;
+  max-width: 400px;
+}
+.toast.success { border-left: 4px solid var(--success); }
+.toast.error { border-left: 4px solid var(--danger); }
+.toast.info { border-left: 4px solid var(--cedar); }
+.toast .undo-btn {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: var(--cedar-light);
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ========== MODAL ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.modal-overlay.show { display: flex; }
+@media (min-width: 1024px) { .modal-overlay.show { align-items: center; } }
+.modal {
+  background: var(--bg-card);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 24px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+@media (min-width: 1024px) { .modal { border-radius: var(--radius); } }
+@keyframes slideUp { from { transform: translateY(40px); } to { transform: translateY(0); } }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-close {
+  width: 40px; height: 40px;
+  border: none; background: var(--bg-input);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; color: var(--text-mid);
+}
+
+/* ========== PRINT ========== */
+@media print {
+  body { padding: 0; background: #fff; }
+  .mobile-header, .top-nav, .bottom-tabs, .toast-container, .modal-overlay,
+  .demo-banner, .btn-group, .no-print { display: none !important; }
+  .page { display: block !important; padding: 0; }
+  .page:not(.print-target) { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  .risk-card { break-inside: avoid; }
+  .gauge-score { font-size: 3rem; }
+  @page { margin: 1.5cm; }
+}
+
+/* ========== CHART ========== */
+.chart-wrapper { max-width: 300px; margin: 0 auto; }
+
+/* ========== UTILITY ========== */
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mt-24 { margin-top: 24px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-16 { margin-bottom: 16px; }
+.text-center { text-align: center; }
+.text-light { color: var(--text-light); }
+.text-sm { font-size: 0.85rem; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ========== DATA PAGE ========== */
+.data-section { border: 2px dashed var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; text-align: center; }
+.data-section h3 { margin-bottom: 8px; }
+.data-section p { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 12px; }
+
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; text-align: center; }
+.stat-value { font-family: 'Archivo', sans-serif; font-size: 2rem; font-weight: 800; color: var(--green); }
+.stat-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-top: 4px; }
+
+/* ========== VALIDATION ========== */
+.field-error { border-color: var(--danger) !important; }
+.error-text { color: var(--danger); font-size: 0.78rem; margin-top: 4px; }
+
+/* ========== SECTION DIVIDER ========== */
+.section-title {
+  font-family: 'Archivo', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-light);
+  margin: 24px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Step transitions */
+.step-content { display: none; }
+.step-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+/* CTA Footer in report */
+.cta-footer {
+  background: linear-gradient(135deg, var(--green-dark), var(--green));
+  color: #fff;
+  padding: 24px;
+  border-radius: var(--radius);
+  text-align: center;
+  margin-top: 24px;
+}
+.cta-footer h3 { color: var(--cedar-light); margin-bottom: 8px; }
+.cta-footer p { opacity: 0.9; margin-bottom: 16px; font-size: 0.9rem; }
+.cta-footer .btn { background: var(--cedar); color: var(--loam); }
+.cta-footer .phone { font-family: 'Archivo', sans-serif; font-size: 1.5rem; font-weight: 800; margin-top: 12px; }
+.cta-footer .phone a { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ========== SVG DEFS ========== -->
+<svg style="display:none">
+  <symbol id="icon-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="icon-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></symbol>
+  <symbol id="icon-report" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+  <symbol id="icon-data" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></symbol>
+  <symbol id="icon-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.07-2.14 0-5.5 3-7 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.15.5-2.5 1.5-3.5l1 1z"/></symbol>
+  <symbol id="icon-tree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7"/><path d="M5 12H2l10-9 10 9h-3l1 7H4l1-7z"/></symbol>
+  <symbol id="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+  <symbol id="icon-droplet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></symbol>
+  <symbol id="icon-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="icon-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="icon-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+  <symbol id="icon-printer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></symbol>
+  <symbol id="icon-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="icon-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="icon-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="icon-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <symbol id="icon-clipboard" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></symbol>
+</svg>
+
+<!-- ========== MOBILE HEADER ========== -->
+<header class="mobile-header">
+  <div class="brand">
+    <svg><use href="#icon-shield"/></svg>
+    <div>
+      <div class="brand-text">FoxGuard Auditor</div>
+      <span class="brand-sub">Brad Fox Roofing — Grants Pass, OR</span>
+    </div>
+  </div>
+  <div class="mobile-header-actions">
+    <button class="btn btn-sm btn-cedar" onclick="startNewAudit()" aria-label="New Audit">
+      <svg style="width:16px;height:16px"><use href="#icon-plus"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- ========== DESKTOP NAV ========== -->
+<nav class="top-nav" role="navigation" aria-label="Main Navigation">
+  <div class="brand">
+    <svg><use href="#icon-shield"/></svg>
+    <div>
+      <div class="brand-text">FoxGuard Resilience Auditor</div>
+      <span class="brand-sub">Brad Fox Roofing — Grants Pass, Oregon</span>
+    </div>
+  </div>
+  <div class="nav-links">
+    <button class="nav-link active" data-page="audits" onclick="switchPage('audits')">
+      <svg><use href="#icon-list"/></svg> Audits
+    </button>
+    <button class="nav-link" data-page="new-audit" onclick="startNewAudit()">
+      <svg><use href="#icon-plus"/></svg> New Audit
+    </button>
+    <button class="nav-link" data-page="report" onclick="switchPage('report')" id="nav-report-btn" style="display:none">
+      <svg><use href="#icon-report"/></svg> Report
+    </button>
+    <button class="nav-link" data-page="data" onclick="switchPage('data')">
+      <svg><use href="#icon-data"/></svg> Data
+    </button>
+  </div>
+  <div class="nav-actions">
+    <button class="btn btn-cedar btn-sm" onclick="startNewAudit()">
+      <svg style="width:16px;height:16px"><use href="#icon-plus"/></svg> New Audit
+    </button>
+  </div>
+</nav>
+
+<!-- ========== BOTTOM TAB BAR (MOBILE) ========== -->
+<nav class="bottom-tabs" role="navigation" aria-label="Mobile Navigation">
+  <button class="tab-btn active" data-page="audits" onclick="switchPage('audits')" aria-label="Audits">
+    <svg><use href="#icon-list"/></svg>
+    Audits
+  </button>
+  <button class="tab-btn" data-page="new-audit" onclick="startNewAudit()" aria-label="New Audit">
+    <svg><use href="#icon-plus"/></svg>
+    New
+  </button>
+  <button class="tab-btn" data-page="report" onclick="switchPage('report')" id="tab-report-btn" style="display:none" aria-label="Report">
+    <svg><use href="#icon-report"/></svg>
+    Report
+  </button>
+  <button class="tab-btn" data-page="data" onclick="switchPage('data')" aria-label="Data">
+    <svg><use href="#icon-data"/></svg>
+    Data
+  </button>
+</nav>
+
+<!-- ========== TOAST CONTAINER ========== -->
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+<!-- ========== PAGE: AUDITS LIST ========== -->
+<main class="app-container">
+  <div class="page active" id="page-audits">
+
+    <div class="demo-banner" id="demoBanner" style="display:none">
+      <svg><use href="#icon-alert"/></svg>
+      <span>You're viewing demo data for Grants Pass properties. Tap "New Audit" to start your own assessment.</span>
+      <button class="dismiss-demo" onclick="dismissDemo()" aria-label="Dismiss demo notice">&times;</button>
+    </div>
+
+    <div id="auditsList"></div>
+
+    <div class="empty-state" id="emptyState" style="display:none">
+      <svg><use href="#icon-shield"/></svg>
+      <h2>Welcome to FoxGuard</h2>
+      <p>Assess your roof's resilience against the Rogue Valley's toughest threats — wildfire ash, moss growth, UV damage, and freeze-thaw cycles.</p>
+      <button class="btn btn-primary btn-full" onclick="startNewAudit()" style="max-width:320px;margin:0 auto">
+        <svg><use href="#icon-plus"/></svg> Start Your First Roof Audit
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== PAGE: NEW AUDIT (MULTI-STEP) ========== -->
+  <div class="page" id="page-new-audit">
+    <div class="stepper" id="auditStepper">
+      <div class="step-dot active" data-step="1"></div>
+      <div class="step-dot" data-step="2"></div>
+      <div class="step-dot" data-step="3"></div>
+      <div class="step-dot" data-step="4"></div>
+      <div class="step-dot" data-step="5"></div>
+    </div>
+
+    <!-- STEP 1: Property Info -->
+    <div class="step-content active" id="step-1">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green"><svg><use href="#icon-home"/></svg></div>
+          <div>
+            <h2>Property Information</h2>
+            <p class="text-sm text-light">Tell us about the property being assessed</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="ownerName">Homeowner Name</label>
+          <input type="text" id="ownerName" placeholder="e.g., Sarah & Mike Thompson">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="address">Property Address <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="address" placeholder="e.g., 842 Rogue River Highway, Grants Pass" required>
+          <p class="form-hint">Include street address in the Grants Pass / Medford area</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="(541) 555-0123">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" id="email" placeholder="homeowner@email.com">
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="nextStep(1)">
+          Continue — Roof Details <svg><use href="#icon-chevron-right"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Roof Details -->
+    <div class="step-content" id="step-2">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon cedar"><svg><use href="#icon-home"/></svg></div>
+          <div>
+            <h2>Current Roof Details</h2>
+            <p class="text-sm text-light">What do we know about the existing roof?</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="roofAge">Roof Age (Years) <span style="color:var(--danger)">*</span></label>
+          <select id="roofAge">
+            <option value="">Select age range...</option>
+            <option value="0-5">0–5 years (nearly new)</option>
+            <option value="6-10">6–10 years</option>
+            <option value="11-15">11–15 years</option>
+            <option value="16-20">16–20 years</option>
+            <option value="21-25">21–25 years (aging)</option>
+            <option value="26-30">26–30 years (end of life)</option>
+            <option value="30+">30+ years (overdue)</option>
+            <option value="unknown">Unknown</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="roofType">Current Roofing Material</label>
+          <select id="roofType">
+            <option value="">Select material...</option>
+            <option value="3-tab">3-Tab Asphalt Shingle</option>
+            <option value="architectural">Architectural/Dimensional Shingle</option>
+            <option value="metal">Metal Roofing</option>
+            <option value="wood-shake">Wood Shake</option>
+            <option value="tile">Concrete/Clay Tile</option>
+            <option value="flat-membrane">Flat / Membrane (TPO, EPDM)</option>
+            <option value="unknown">Not Sure</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Primary Slope Orientation</label>
+          <p class="form-hint mb-8">Which direction does your main roof slope face?</p>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="slopeDir" id="slope-north" value="north">
+              <label for="slope-north">🧭 North</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="slopeDir" id="slope-south" value="south">
+              <label for="slope-south">☀️ South</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="slopeDir" id="slope-east" value="east">
+              <label for="slope-east">🌅 East</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="slopeDir" id="slope-west" value="west">
+              <label for="slope-west">🌄 West</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="roofPitch">Roof Pitch</label>
+          <select id="roofPitch">
+            <option value="">Select pitch...</option>
+            <option value="low">Low (2/12 – 4/12) — Nearly flat</option>
+            <option value="standard">Standard (5/12 – 7/12)</option>
+            <option value="steep">Steep (8/12 – 12/12)</option>
+            <option value="unknown">Not Sure</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="prevStep(2)">
+            <svg><use href="#icon-arrow-left"/></svg> Back
+          </button>
+          <button class="btn btn-primary" style="flex:1" onclick="nextStep(2)">
+            Continue — Environmental <svg><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: Environmental Risk -->
+    <div class="step-content" id="step-3">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon danger"><svg><use href="#icon-fire"/></svg></div>
+          <div>
+            <h2>Environmental Risk Factors</h2>
+            <p class="text-sm text-light">Conditions specific to the Rogue Valley</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tree Canopy Coverage</label>
+          <p class="form-hint mb-8">Do large trees overhang or shade the roof?</p>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="canopy" id="canopy-none" value="none">
+              <label for="canopy-none">🏜️ None</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="canopy" id="canopy-light" value="light">
+              <label for="canopy-light">🌳 Light</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="canopy" id="canopy-moderate" value="moderate">
+              <label for="canopy-moderate">🌲🌲 Moderate</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="canopy" id="canopy-heavy" value="heavy">
+              <label for="canopy-heavy">🌲🌲🌲 Heavy</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Wildfire Interface Zone</label>
+          <p class="form-hint mb-8">Is the property near wildland areas, timber, or brush?</p>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="fireZone" id="fire-urban" value="urban">
+              <label for="fire-urban">🏘️ Urban/Town</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="fireZone" id="fire-suburban" value="suburban">
+              <label for="fire-suburban">🏡 Suburban</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="fireZone" id="fire-wui" value="wui">
+              <label for="fire-wui">🔥 WUI Zone</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="fireZone" id="fire-rural" value="rural">
+              <label for="fire-rural">🌲 Rural/Forest</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Visible Moss or Algae?</label>
+          <div class="radio-group">
+            <div class="radio-option">
+              <input type="radio" name="mossVisible" id="moss-none" value="none">
+              <label for="moss-none">✅ None</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="mossVisible" id="moss-spots" value="spots">
+              <label for="moss-spots">🟡 Some spots</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="mossVisible" id="moss-significant" value="significant">
+              <label for="moss-significant">🟠 Significant</label>
+            </div>
+            <div class="radio-option">
+              <input type="radio" name="mossVisible" id="moss-heavy" value="heavy">
+              <label for="moss-heavy">🔴 Heavy growth</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="prevStep(3)">
+            <svg><use href="#icon-arrow-left"/></svg> Back
+          </button>
+          <button class="btn btn-primary" style="flex:1" onclick="nextStep(3)">
+            Continue — Symptoms <svg><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: Symptoms -->
+    <div class="step-content" id="step-4">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon cedar"><svg><use href="#icon-alert"/></svg></div>
+          <div>
+            <h2>Current Symptoms</h2>
+            <p class="text-sm text-light">Check all visible issues</p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observed Issues (check all that apply)</label>
+          <div style="display:grid;gap:8px;margin-top:8px">
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-granule" value="granule-loss">
+              <label for="sym-granule">⚫ Granule loss in gutters / bare spots</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-curling" value="curling">
+              <label for="sym-curling">🔄 Curling or buckling shingles</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-leak" value="leak">
+              <label for="sym-leak">💧 Active leak or water staining</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-missing" value="missing-shingles">
+              <label for="sym-missing">💨 Missing or blown-off shingles</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-sagging" value="sagging">
+              <label for="sym-sagging">📐 Sagging ridge or deck</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-flashing" value="flashing">
+              <label for="sym-flashing">🔩 Damaged or lifted flashing</label>
+            </div>
+            <div class="checkbox-option" style="min-width:100%">
+              <input type="checkbox" id="sym-ventilation" value="ventilation">
+              <label for="sym-ventilation">♨️ Poor attic ventilation / ice dams</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="notes">Additional Notes</label>
+          <textarea id="notes" placeholder="Any other details about the roof's condition, recent storms, concerns about wildfire exposure, etc."></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-outline" onclick="prevStep(4)">
+            <svg><use href="#icon-arrow-left"/></svg> Back
+          </button>
+          <button class="btn btn-primary" style="flex:1" onclick="nextStep(4)">
+            Continue — Review <svg><use href="#icon-chevron-right"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 5: Review & Submit -->
+    <div class="step-content" id="step-5">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon green"><svg><use href="#icon-check"/></svg></div>
+          <div>
+            <h2>Review & Generate Report</h2>
+            <p class="text-sm text-light">Confirm the details before generating the resilience score</p>
+          </div>
+        </div>
+
+        <div id="reviewSummary"></div>
+
+        <div class="btn-group mt-16">
+          <button class="btn btn-outline" onclick="prevStep(5)">
+            <svg><use href="#icon-arrow-left"/></svg> Back
+          </button>
+          <button class="btn btn-cedar" style="flex:1" onclick="submitAudit()">
+            <svg><use href="#icon-shield"/></svg> Generate Resilience Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== PAGE: REPORT ========== -->
+  <div class="page print-target" id="page-report">
+    <div id="reportContent"></div>
+  </div>
+
+  <!-- ========== PAGE: DATA ========== -->
+  <div class="page" id="page-data">
+    <h1 class="mb-16">Data Management</h1>
+
+    <div class="stats-row" id="dataStats"></div>
+
+    <div class="section-title">Export Data</div>
+    <div class="card">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="exportCSV()">
+          <svg><use href="#icon-download"/></svg> Export CSV
+        </button>
+        <button class="btn btn-outline" onclick="exportJSON()">
+          <svg><use href="#icon-download"/></svg> JSON Backup
+        </button>
+      </div>
+    </div>
+
+    <div class="section-title">Import Data</div>
+    <div class="data-section">
+      <h3>Import CSV</h3>
+      <p>Upload a CSV file with audit data columns</p>
+      <input type="file" id="csvUpload" accept=".csv" style="display:none" onchange="importCSV(event)">
+      <button class="btn btn-outline" onclick="document.getElementById('csvUpload').click()">
+        <svg><use href="#icon-upload"/></svg> Choose CSV File
+      </button>
+    </div>
+
+    <div class="data-section">
+      <h3>Paste from Clipboard</h3>
+      <p>Paste CSV or tab-delimited data below</p>
+      <textarea id="clipboardPaste" placeholder="Paste data here (CSV or tab-separated)..." style="min-height:80px;margin-bottom:12px"></textarea>
+      <button class="btn btn-outline" onclick="importClipboard()">
+        <svg><use href="#icon-clipboard"/></svg> Import Pasted Data
+      </button>
+    </div>
+
+    <div class="data-section">
+      <h3>Restore JSON Backup</h3>
+      <p>Upload a previously exported JSON backup</p>
+      <input type="file" id="jsonUpload" accept=".json" style="display:none" onchange="importJSON(event)">
+      <button class="btn btn-outline" onclick="document.getElementById('jsonUpload').click()">
+        <svg><use href="#icon-upload"/></svg> Restore from JSON
+      </button>
+    </div>
+
+    <div class="section-title">Danger Zone</div>
+    <div class="card" style="border-color: var(--danger);">
+      <p class="text-sm mb-8">Clear all audits and reset to empty. This cannot be undone after 5 seconds.</p>
+      <button class="btn btn-danger" onclick="clearAllData()">
+        <svg><use href="#icon-trash"/></svg> Clear All Data
+      </button>
+    </div>
+  </div>
+</main>
+
+<!-- ========== MODAL: IMPORT/EXPORT ========== -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ========== SECURITY ==========
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-1676988497;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+  throw new Error('Invalid key');
+}
+
+// Disable right-click
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+// Block dev tools keys
+document.addEventListener('keydown', e => {
+  if((e.ctrlKey||e.metaKey) && ['u','s','p'].includes(e.key.toLowerCase())) e.preventDefault();
+  if(e.key==='F12' || (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(e.key.toLowerCase()))) e.preventDefault();
+});
+
+// ========== STATE ==========
+const DB_NAME = 'foxguard_audits';
+const DB_VERSION = 1;
+const STORE_NAME = 'audits';
+let db = null;
+let audits = [];
+let currentAuditId = null;
+let currentStep = 1;
+let undoTimeout = null;
+let undoData = null;
+
+// ========== INDEXEDDB ==========
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        const store = database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        store.createIndex('date', 'createdAt', { unique: false });
+        store.createIndex('score', 'score', { unique: false });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = () => {
+      console.warn('IndexedDB failed, falling back to localStorage');
+      db = null;
+      resolve(null);
+    };
+  });
+}
+
+async function getAllAudits() {
+  if (db) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve([]);
+    });
+  }
+  try { return JSON.parse(localStorage.getItem('foxguard_audits') || '[]'); } catch { return []; }
+}
+
+async function saveAudit(audit) {
+  if (db) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(audit);
+      tx.oncomplete = () => resolve();
+    });
+  }
+  const all = await getAllAudits();
+  const idx = all.findIndex(a => a.id === audit.id);
+  if (idx >= 0) all[idx] = audit; else all.push(audit);
+  localStorage.setItem('foxguard_audits', JSON.stringify(all));
+}
+
+async function deleteAudit(id) {
+  if (db) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(id);
+      tx.oncomplete = () => resolve();
+    });
+  }
+  const all = await getAllAudits();
+  localStorage.setItem('foxguard_audits', JSON.stringify(all.filter(a => a.id !== id)));
+}
+
+async function clearDB() {
+  if (db) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).clear();
+      tx.oncomplete = () => resolve();
+    });
+  }
+  localStorage.removeItem('foxguard_audits');
+}
+
+async function bulkSave(items) {
+  for (const item of items) { await saveAudit(item); }
+}
+
+// ========== DEMO DATA ==========
+function getDemoData() {
+  return [
+    {
+      id: 'demo-1', isDemo: true,
+      ownerName: 'Sarah & Mike Thompson',
+      address: '842 Rogue River Hwy, Grants Pass',
+      phone: '(541) 555-0134', email: '',
+      roofAge: '16-20', roofType: '3-tab', slopeDir: 'north', roofPitch: 'standard',
+      canopy: 'heavy', fireZone: 'suburban', mossVisible: 'significant',
+      symptoms: ['granule-loss'],
+      notes: 'North-facing slope under large Douglas Firs. Moss has been getting worse each winter.',
+      score: 38, riskLevel: 'high',
+      risks: null,
+      createdAt: '2026-01-20T09:15:00Z'
+    },
+    {
+      id: 'demo-2', isDemo: true,
+      ownerName: 'Jim Paulson',
+      address: '1255 Harbeck Rd, Grants Pass',
+      phone: '(541) 555-0278', email: 'jpaulson@email.com',
+      roofAge: '11-15', roofType: 'architectural', slopeDir: 'south', roofPitch: 'steep',
+      canopy: 'light', fireZone: 'urban', mossVisible: 'none',
+      symptoms: [],
+      notes: 'Roof looks okay from ground. Mainly wanting a proactive check before fire season.',
+      score: 72, riskLevel: 'moderate',
+      risks: null,
+      createdAt: '2026-01-25T14:30:00Z'
+    },
+    {
+      id: 'demo-3', isDemo: true,
+      ownerName: 'Rita & Dave Gonzalez',
+      address: '4610 Upper River Rd, Grants Pass',
+      phone: '(541) 555-0891', email: '',
+      roofAge: '26-30', roofType: 'wood-shake', slopeDir: 'west', roofPitch: 'standard',
+      canopy: 'moderate', fireZone: 'wui', mossVisible: 'spots',
+      symptoms: ['missing-shingles', 'flashing'],
+      notes: 'Wood shake original to the house. We survived the 2023 fire alerts but the shake is splitting badly. Need Class A rating.',
+      score: 22, riskLevel: 'critical',
+      risks: null,
+      createdAt: '2026-02-01T11:00:00Z'
+    },
+    {
+      id: 'demo-4', isDemo: true,
+      ownerName: 'Linda Chen',
+      address: '320 NE Savage St, Grants Pass',
+      phone: '', email: 'lindachen@gmail.com',
+      roofAge: '6-10', roofType: 'architectural', slopeDir: 'east', roofPitch: 'standard',
+      canopy: 'none', fireZone: 'urban', mossVisible: 'spots',
+      symptoms: ['ventilation'],
+      notes: 'Hot attic in summer, wondering about ventilation upgrades and sun tunnel installation.',
+      score: 78, riskLevel: 'low',
+      risks: null,
+      createdAt: '2026-02-03T16:45:00Z'
+    }
+  ];
+}
+
+// ========== SCORING ENGINE ==========
+function calculateScore(data) {
+  let score = 100;
+  const risks = [];
+
+  // Age penalty
+  const ageMap = { '0-5': 0, '6-10': 4, '11-15': 9, '16-20': 16, '21-25': 24, '26-30': 32, '30+': 42, 'unknown': 18 };
+  const agePen = ageMap[data.roofAge] || 18;
+  score -= agePen;
+  if (agePen >= 30) {
+    risks.push({
+      id: 'age', level: agePen >= 50 ? 'critical' : 'high',
+      icon: 'icon-clock',
+      title: 'Roof Age — End of Lifecycle',
+      desc: data.roofAge === '30+' ?
+        'At 30+ years, your roof has exceeded the expected lifespan for most materials in the Rogue Valley. Granule loss, UV-degraded sealant strips, and hidden dry rot are near-certain.' :
+        `At ${data.roofAge} years, your roof is entering the failure window. The Rogue Valley's extreme UV summers and wet winters accelerate aging dramatically.`,
+      solution: `<strong>Brad Fox Recommendation:</strong> Full tear-off inspection to assess deck condition. Owens Corning Duration series with 50-year warranty and SureNail® wind resistance technology. Brad personally inspects every board for dry rot during tear-off — something most contractors skip.`
+    });
+  } else if (agePen >= 12) {
+    risks.push({
+      id: 'age', level: 'moderate', icon: 'icon-clock',
+      title: 'Roof Age — Monitor Closely',
+      desc: `At ${data.roofAge} years, your roof is in the mid-life zone. The Grants Pass climate (freeze-thaw + UV) shortens effective life by 20-30% versus milder regions.`,
+      solution: `<strong>Brad Fox Recommendation:</strong> Professional inspection to catch early degradation before it becomes structural. Proactive maintenance saves thousands in emergency repairs.`
+    });
+  }
+
+  // Moss risk
+  const mossMap = { none: 0, spots: 5, significant: 12, heavy: 20 };
+  const mossPen = mossMap[data.mossVisible] || 0;
+  const northBonus = data.slopeDir === 'north' ? 8 : 0;
+  const canopyMoss = { none: 0, light: 2, moderate: 5, heavy: 10 };
+  const canopyPen = canopyMoss[data.canopy] || 0;
+  const totalMoss = mossPen + northBonus + canopyPen;
+  score -= totalMoss;
+
+  if (totalMoss >= 20) {
+    risks.push({
+      id: 'moss', level: totalMoss >= 35 ? 'critical' : 'high',
+      icon: 'icon-tree',
+      title: 'Moss & Biological Growth — Severe Threat',
+      desc: `Your combination of ${data.canopy !== 'none' ? 'tree canopy shade' : 'conditions'}, ${data.slopeDir === 'north' ? 'north-facing exposure' : 'orientation'}, and ${data.mossVisible === 'heavy' ? 'heavy visible moss' : 'existing moss growth'} creates an ideal environment for aggressive biological colonization. Moss roots (rhizoids) physically lift shingles, creating channels for water intrusion. In Grants Pass winters, this moisture freezes and expands, cracking the shingle substrate.`,
+      solution: `<strong>Brad Fox Recommendation:</strong> Zinc strip installation along ridgeline (zinc oxide naturally kills moss). Owens Corning StreakGuard® algae-resistant shingles. Strategic tree limb trimming to increase airflow. Brad's crew treats this as a system — not just cleaning moss, but preventing its return.`
+    });
+  } else if (totalMoss >= 8) {
+    risks.push({
+      id: 'moss', level: 'moderate', icon: 'icon-tree',
+      title: 'Moss & Biological Growth — Developing Risk',
+      desc: 'Early signs of biological growth indicate conditions favorable for moss establishment. In the Rogue Valley, this can escalate from "cosmetic" to "structural" in 2-3 wet seasons.',
+      solution: `<strong>Brad Fox Recommendation:</strong> Zinc strip preventive treatment and moss-resistant shingle upgrade during next re-roof. Annual inspection to catch early growth.`
+    });
+  }
+
+  // Fire risk
+  const fireMap = { urban: 0, suburban: 3, wui: 14, rural: 18 };
+  const firePen = fireMap[data.fireZone] || 0;
+  const woodShakeFire = data.roofType === 'wood-shake' ? 10 : 0;
+  const totalFire = firePen + woodShakeFire;
+  score -= totalFire;
+
+  if (totalFire >= 15) {
+    risks.push({
+      id: 'fire', level: totalFire >= 30 ? 'critical' : 'high',
+      icon: 'icon-fire',
+      title: 'Wildfire Ignition Risk' + (data.roofType === 'wood-shake' ? ' — Wood Shake Alert' : ''),
+      desc: data.roofType === 'wood-shake' ?
+        `URGENT: Wood shake roofing in a ${data.fireZone === 'wui' ? 'Wildland-Urban Interface' : 'rural/forest'} zone is the #1 ignition pathway for structure fires. Ember cast from wildfires can ignite dry shake from over a mile away. The Rogue Valley's fire season (Aug–Oct) generates significant ember exposure.` :
+        `Your property's location in the ${data.fireZone === 'wui' ? 'Wildland-Urban Interface' : 'rural/forest'} zone means elevated wildfire ember exposure. The Rogue Valley's fire history (Almeda Fire 2020, Smith River Complex 2023) demonstrates this is not theoretical.`,
+      solution: data.roofType === 'wood-shake' ?
+        `<strong>Brad Fox Recommendation:</strong> PRIORITY: Replace wood shake with Class A fire-rated architectural shingles or ASC Building Products standing seam metal roofing. Metal valleys to prevent ember collection in roof valleys. Brad installs enhanced drip edge and ember-resistant ridge vent systems for WUI properties.` :
+        `<strong>Brad Fox Recommendation:</strong> Class A fire-rated Owens Corning Duration with enhanced metal valley systems (ASC Building Products). Ember-resistant ridge venting and upgraded drip edge. Brad's WUI package includes inspection of all penetrations for ember entry points.`
+    });
+  } else if (totalFire >= 5) {
+    risks.push({
+      id: 'fire', level: 'moderate', icon: 'icon-fire',
+      title: 'Wildfire Awareness — Moderate Exposure',
+      desc: 'While not in the highest-risk zone, Grants Pass smoke and ash exposure during fire season can accelerate shingle degradation. Ash mixed with rain creates a mildly acidic solution that attacks granule adhesion.',
+      solution: `<strong>Brad Fox Recommendation:</strong> Ensure Class A fire rating on next re-roof. Post-fire-season inspection to check for ash damage. Clean gutters of debris that could serve as fuel.`
+    });
+  }
+
+  // UV / Thermal risk
+  const uvBase = data.slopeDir === 'south' || data.slopeDir === 'west' ? 10 : 3;
+  const lowPitch = data.roofPitch === 'low' ? 5 : 0;
+  const totalUV = uvBase + lowPitch;
+  score -= totalUV;
+
+  if (totalUV >= 10) {
+    risks.push({
+      id: 'uv', level: 'high', icon: 'icon-sun',
+      title: 'UV & Thermal Shock Exposure',
+      desc: `Your ${data.slopeDir}-facing slope receives maximum solar exposure during Grants Pass summers (regularly 95-105°F). This bakes the volatile oils from asphalt shingles, causing premature brittleness and cracking. ${data.roofPitch === 'low' ? 'Low-slope roofs absorb even more heat, accelerating this process.' : ''} Combined with winter freezes, this thermal cycling is the #1 silent killer of roofs in the Rogue Valley.`,
+      solution: `<strong>Brad Fox Recommendation:</strong> High-reflectance, polymer-modified shingles with enhanced flexibility (Owens Corning TruDefinition® Duration COOL series). Proper ridge and soffit ventilation to reduce attic temperature. Brad's standard practice includes upgrading ventilation on every full replacement — most contractors skip this.`
+    });
+  } else {
+    risks.push({
+      id: 'uv', level: 'low', icon: 'icon-sun',
+      title: 'UV Exposure — Standard Level',
+      desc: 'Your roof orientation provides some natural protection from the worst UV exposure, but all Grants Pass roofs experience significant thermal stress.',
+      solution: `<strong>Brad Fox Recommendation:</strong> Standard quality shingles with adequate ventilation. Monitor for early curling or color fading which indicates UV degradation.`
+    });
+  }
+
+  // Symptom penalties
+  const symPenalties = {
+    'granule-loss': 5, 'curling': 6, 'leak': 10, 'missing-shingles': 8,
+    'sagging': 14, 'flashing': 6, 'ventilation': 4
+  };
+  let symTotal = 0;
+  (data.symptoms || []).forEach(s => { symTotal += symPenalties[s] || 0; });
+  score -= symTotal;
+
+  if (data.symptoms && data.symptoms.includes('sagging')) {
+    risks.push({
+      id: 'structural', level: 'critical', icon: 'icon-alert',
+      title: 'Structural Concern — Sagging Detected',
+      desc: 'Sagging in the ridge line or roof deck is a serious structural warning. This typically indicates prolonged water intrusion, dry rot in the rafters or decking, or inadequate structural support. This requires immediate professional evaluation.',
+      solution: `<strong>Brad Fox Recommendation:</strong> URGENT professional inspection. Brad's full tear-off process includes complete deck inspection and replacement of any compromised structural members. He personally checks every board — "We don't just cover up problems." This is exactly why the owner needs to be on every job.`
+    });
+  }
+
+  if (data.symptoms && data.symptoms.includes('leak')) {
+    risks.push({
+      id: 'leak', level: 'critical', icon: 'icon-droplet',
+      title: 'Active Water Intrusion',
+      desc: 'An active leak means your roof\'s weather barrier has been compromised. Every rain event causes additional damage to insulation, framing, drywall, and can promote mold growth. In Grants Pass\'s rainy season (Oct-Apr), this compounds rapidly.',
+      solution: `<strong>Brad Fox Recommendation:</strong> Priority scheduling for leak assessment. Brad will trace the intrusion point (which is often far from where you see the stain), evaluate underlying damage, and recommend either targeted repair or full replacement based on the overall roof condition.`
+    });
+  }
+
+  // Clamp score
+  score = Math.max(12, Math.min(100, score));
+
+  // Sort risks by severity
+  const levelOrder = { critical: 0, high: 1, moderate: 2, low: 3 };
+  risks.sort((a, b) => levelOrder[a.level] - levelOrder[b.level]);
+
+  // Determine overall level
+  let riskLevel = 'low';
+  if (score <= 30) riskLevel = 'critical';
+  else if (score <= 50) riskLevel = 'high';
+  else if (score <= 70) riskLevel = 'moderate';
+
+  return { score, riskLevel, risks };
+}
+
+// ========== NAVIGATION ==========
+function switchPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  if (page) page.classList.add('active');
+
+  // Update nav
+  document.querySelectorAll('.nav-link, .tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === pageId);
+  });
+
+  if (pageId === 'audits') refreshAuditsList();
+  if (pageId === 'data') refreshDataPage();
+}
+
+function startNewAudit() {
+  currentAuditId = null;
+  currentStep = 1;
+  // Clear form
+  ['ownerName','address','phone','email','notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['roofAge','roofType','roofPitch'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.selectedIndex = 0;
+  });
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+
+  updateStepper();
+  showStep(1);
+  switchPage('new-audit');
+}
+
+function showStep(n) {
+  document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+  const step = document.getElementById('step-' + n);
+  if (step) step.classList.add('active');
+  currentStep = n;
+  updateStepper();
+  if (n === 5) buildReviewSummary();
+}
+
+function updateStepper() {
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const s = parseInt(dot.dataset.step);
+    dot.classList.remove('active', 'completed');
+    if (s === currentStep) dot.classList.add('active');
+    else if (s < currentStep) dot.classList.add('completed');
+  });
+}
+
+function nextStep(from) {
+  // Validation
+  if (from === 1) {
+    const addr = document.getElementById('address').value.trim();
+    if (!addr) {
+      document.getElementById('address').classList.add('field-error');
+      showToast('Please enter a property address', 'error');
+      return;
+    }
+    document.getElementById('address').classList.remove('field-error');
+  }
+  if (from === 2) {
+    const age = document.getElementById('roofAge').value;
+    if (!age) {
+      document.getElementById('roofAge').classList.add('field-error');
+      showToast('Please select the roof age', 'error');
+      return;
+    }
+    document.getElementById('roofAge').classList.remove('field-error');
+  }
+  showStep(from + 1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function prevStep(from) {
+  showStep(from - 1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildReviewSummary() {
+  const data = gatherFormData();
+  const dirNames = { north: 'North', south: 'South', east: 'East', west: 'West' };
+  const canopyNames = { none: 'No canopy', light: 'Light canopy', moderate: 'Moderate canopy', heavy: 'Heavy canopy' };
+  const fireNames = { urban: 'Urban/Town', suburban: 'Suburban', wui: 'Wildland-Urban Interface', rural: 'Rural/Forest' };
+  const mossNames = { none: 'None visible', spots: 'Some spots', significant: 'Significant growth', heavy: 'Heavy growth' };
+  const symLabels = {
+    'granule-loss': 'Granule loss', 'curling': 'Curling shingles', 'leak': 'Active leak',
+    'missing-shingles': 'Missing shingles', 'sagging': 'Sagging', 'flashing': 'Damaged flashing',
+    'ventilation': 'Poor ventilation'
+  };
+
+  let html = '<div style="display:grid;gap:12px">';
+  html += `<div class="risk-card low"><strong>Property:</strong> ${data.address}${data.ownerName ? ` (${data.ownerName})` : ''}</div>`;
+  html += `<div class="risk-card low"><strong>Roof:</strong> ${data.roofAge || '?'} years old, ${data.roofType || 'Unknown material'}, ${dirNames[data.slopeDir] || '?'}-facing</div>`;
+  html += `<div class="risk-card low"><strong>Environment:</strong> ${canopyNames[data.canopy] || '?'}, ${fireNames[data.fireZone] || '?'} zone, Moss: ${mossNames[data.mossVisible] || '?'}</div>`;
+  if (data.symptoms.length > 0) {
+    html += `<div class="risk-card moderate"><strong>Symptoms:</strong> ${data.symptoms.map(s => symLabels[s] || s).join(', ')}</div>`;
+  }
+  if (data.notes) {
+    html += `<div class="risk-card low"><strong>Notes:</strong> ${escapeHTML(data.notes)}</div>`;
+  }
+  html += '</div>';
+  document.getElementById('reviewSummary').innerHTML = html;
+}
+
+function gatherFormData() {
+  const symptoms = [];
+  document.querySelectorAll('#step-4 input[type="checkbox"]:checked').forEach(c => symptoms.push(c.value));
+  return {
+    ownerName: document.getElementById('ownerName').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    roofAge: document.getElementById('roofAge').value,
+    roofType: document.getElementById('roofType').value,
+    slopeDir: document.querySelector('input[name="slopeDir"]:checked')?.value || '',
+    roofPitch: document.getElementById('roofPitch').value,
+    canopy: document.querySelector('input[name="canopy"]:checked')?.value || '',
+    fireZone: document.querySelector('input[name="fireZone"]:checked')?.value || '',
+    mossVisible: document.querySelector('input[name="mossVisible"]:checked')?.value || '',
+    symptoms,
+    notes: document.getElementById('notes').value.trim()
+  };
+}
+
+async function submitAudit() {
+  const data = gatherFormData();
+  const result = calculateScore(data);
+
+  const audit = {
+    id: currentAuditId || ('audit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6)),
+    ...data,
+    score: result.score,
+    riskLevel: result.riskLevel,
+    risks: result.risks,
+    isDemo: false,
+    createdAt: new Date().toISOString()
+  };
+
+  await saveAudit(audit);
+  audits = await getAllAudits();
+
+  showToast('Resilience report generated!', 'success');
+  showReport(audit);
+}
+
+// ========== REPORT VIEW ==========
+function showReport(audit) {
+  currentAuditId = audit.id;
+  const result = audit.risks ? { score: audit.score, riskLevel: audit.riskLevel, risks: audit.risks } : calculateScore(audit);
+
+  const scoreColor = result.score <= 30 ? 'var(--danger)' : result.score <= 50 ? 'var(--warning)' : result.score <= 70 ? 'var(--cedar)' : 'var(--success)';
+  const riskLabels = { critical: 'Critical Risk', high: 'High Risk', moderate: 'Moderate Risk', low: 'Good Condition' };
+
+  let html = '';
+
+  // Header
+  html += `<div class="card" style="text-align:center;border-top:4px solid ${scoreColor}">`;
+  html += `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px" class="no-print">`;
+  html += `<button class="btn btn-outline btn-sm" onclick="switchPage('audits')"><svg style="width:16px;height:16px"><use href="#icon-arrow-left"/></svg> Back</button>`;
+  html += `<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="printReport()"><svg style="width:16px;height:16px"><use href="#icon-printer"/></svg> Print</button>`;
+  html += `<button class="btn btn-danger btn-sm" onclick="deleteAuditPrompt('${audit.id}')"><svg style="width:16px;height:16px"><use href="#icon-trash"/></svg></button></div></div>`;
+
+  html += `<div style="margin-bottom:8px"><svg style="width:48px;height:48px;color:${scoreColor}"><use href="#icon-shield"/></svg></div>`;
+  html += `<h3 style="color:var(--text-light);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em">FoxGuard Resilience Score</h3>`;
+  html += `<div class="gauge-score" style="color:${scoreColor}">${result.score}</div>`;
+  html += `<div class="gauge-label" style="color:${scoreColor}">${riskLabels[result.riskLevel]}</div>`;
+  html += `<div class="gauge-bar"><div class="gauge-fill" style="width:${result.score}%;background:${scoreColor}"></div></div>`;
+  html += `<p class="text-sm text-light mt-8">${escapeHTML(audit.address)}${audit.ownerName ? ' · ' + escapeHTML(audit.ownerName) : ''}</p>`;
+  html += `<p class="text-sm text-light">Assessed ${new Date(audit.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>`;
+  if (audit.isDemo) html += `<span class="demo-badge">Demo Data</span>`;
+  html += `</div>`;
+
+  // Radar Chart
+  html += `<div class="card no-print"><h3 class="mb-16">Threat Profile</h3><div class="chart-wrapper"><canvas id="radarChart"></canvas></div></div>`;
+
+  // Risk Cards
+  html += `<div class="section-title">Detailed Threat Analysis</div>`;
+  (result.risks || []).forEach(risk => {
+    html += `<div class="risk-card ${risk.level}">`;
+    html += `<div class="risk-level">${risk.level.toUpperCase()} RISK</div>`;
+    html += `<div class="risk-title"><svg style="width:18px;height:18px;vertical-align:middle;margin-right:6px"><use href="#${risk.icon}"/></svg>${risk.title}</div>`;
+    html += `<div class="risk-desc">${risk.desc}</div>`;
+    html += `<div class="risk-solution">${risk.solution}</div>`;
+    html += `</div>`;
+  });
+
+  // Material Recommendations
+  html += `<div class="card">`;
+  html += `<div class="card-header"><div class="card-icon green"><svg><use href="#icon-shield"/></svg></div><div><h2>Recommended Defense System</h2><p class="text-sm text-light">Based on your specific risk profile</p></div></div>`;
+
+  const recs = getRecommendations(audit, result);
+  recs.forEach(rec => {
+    html += `<div style="padding:12px 0;border-bottom:1px solid var(--border)">`;
+    html += `<div style="font-weight:700;font-family:'Archivo',sans-serif;font-size:0.95rem">${rec.product}</div>`;
+    html += `<div class="text-sm text-light">${rec.reason}</div></div>`;
+  });
+  html += `</div>`;
+
+  // CTA
+  html += `<div class="cta-footer">`;
+  html += `<h3>Ready to Protect Your Home?</h3>`;
+  html += `<p>Brad Fox personally evaluates every property and is on-site for every job. Currently booking ${getBookingWindow()} out — secure your consultation slot.</p>`;
+  html += `<a href="tel:5416606890" class="btn" style="text-decoration:none"><svg style="width:18px;height:18px"><use href="#icon-shield"/></svg> Call Brad — 541-660-6890</a>`;
+  html += `<div class="phone"><a href="tel:5416606890">541-660-6890</a></div>`;
+  html += `<p style="font-size:0.75rem;opacity:0.6;margin-top:8px">OR CCB #200032 · 30+ Years Experience · Owens Corning Certified</p>`;
+  html += `</div>`;
+
+  document.getElementById('reportContent').innerHTML = html;
+  document.getElementById('nav-report-btn').style.display = '';
+  document.getElementById('tab-report-btn').style.display = '';
+  switchPage('report');
+
+  // Draw radar chart after DOM update
+  setTimeout(() => drawRadarChart(audit, result), 100);
+}
+
+function getRecommendations(audit, result) {
+  const recs = [];
+  const hasFireRisk = (result.risks || []).some(r => r.id === 'fire' && (r.level === 'critical' || r.level === 'high'));
+  const hasMossRisk = (result.risks || []).some(r => r.id === 'moss' && (r.level === 'critical' || r.level === 'high'));
+
+  if (audit.roofType === 'wood-shake' || hasFireRisk) {
+    recs.push({ product: 'ASC Building Products Standing Seam Metal', reason: 'Class A fire-rated, 50+ year lifespan, impervious to ember ignition. Hidden Snap-Lok fastener system for clean aesthetics.' });
+  }
+  recs.push({ product: 'Owens Corning Duration® Architectural Shingles', reason: 'SureNail® technology for 130 MPH wind warranty. Class A fire rating. Available in 50-year limited warranty.' });
+  if (hasMossRisk) {
+    recs.push({ product: 'Owens Corning StreakGuard® Algae Resistance', reason: 'Copper-infused granules actively prevent moss and algae colonization — critical for Grants Pass climate.' });
+    recs.push({ product: 'Zinc Ridge Strip System', reason: 'Installed along ridgeline to create a natural zinc oxide wash that kills moss on every rain event.' });
+  }
+  recs.push({ product: 'Upgraded Ridge & Soffit Ventilation', reason: 'Reduces attic temperature by 30-40°F in summer, prevents moisture buildup in winter. Brad upgrades ventilation on every full replacement.' });
+  if ((result.risks || []).some(r => r.id === 'uv' && r.level === 'high')) {
+    recs.push({ product: 'TruDefinition® Duration COOL Series', reason: 'Solar-reflective granules reduce roof surface temperature and extend shingle life in high-UV environments.' });
+  }
+  return recs;
+}
+
+function getBookingWindow() {
+  const weeks = [3, 4, 5];
+  return weeks[Math.floor(Math.random() * weeks.length)] + ' weeks';
+}
+
+function drawRadarChart(audit, result) {
+  const canvas = document.getElementById('radarChart');
+  if (!canvas) return;
+
+  // Calculate individual threat scores (0-10 scale)
+  const ageMap = { '0-5': 1, '6-10': 3, '11-15': 5, '16-20': 7, '21-25': 8, '26-30': 9, '30+': 10, 'unknown': 5 };
+  const mossMap2 = { none: 1, spots: 4, significant: 7, heavy: 10 };
+  const fireMap2 = { urban: 1, suburban: 3, wui: 8, rural: 9 };
+  const canopyMap = { none: 1, light: 3, moderate: 6, heavy: 9 };
+
+  const mossBase = mossMap2[audit.mossVisible] || 3;
+  const canopyFactor = canopyMap[audit.canopy] || 3;
+  const mossFinal = Math.min(10, Math.round((mossBase + canopyFactor + (audit.slopeDir === 'north' ? 3 : 0)) / 2));
+
+  const uvScore = (audit.slopeDir === 'south' || audit.slopeDir === 'west') ? 8 : 4;
+  const symCount = (audit.symptoms || []).length;
+  const conditionScore = Math.min(10, 2 + symCount * 1.5);
+
+  const data = {
+    labels: ['Age Degradation', 'Moss & Bio Growth', 'Wildfire Exposure', 'UV & Thermal', 'Current Condition'],
+    datasets: [{
+      label: 'Threat Level',
+      data: [
+        ageMap[audit.roofAge] || 5,
+        mossFinal,
+        fireMap2[audit.fireZone] || 3,
+        uvScore,
+        conditionScore
+      ],
+      backgroundColor: 'rgba(239, 161, 95, 0.2)',
+      borderColor: '#efa15f',
+      borderWidth: 2,
+      pointBackgroundColor: '#efa15f',
+      pointBorderColor: '#fff',
+      pointBorderWidth: 2,
+      pointRadius: 5
+    }]
+  };
+
+  new Chart(canvas, {
+    type: 'radar',
+    data: data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      scales: {
+        r: {
+          beginAtZero: true,
+          max: 10,
+          ticks: { stepSize: 2, display: false },
+          grid: { color: 'rgba(45,37,9,0.1)' },
+          angleLines: { color: 'rgba(45,37,9,0.1)' },
+          pointLabels: {
+            font: { family: "'Archivo', sans-serif", size: 11, weight: '600' },
+            color: '#5a5a42'
+          }
+        }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+
+// ========== AUDITS LIST ==========
+async function refreshAuditsList() {
+  audits = await getAllAudits();
+
+  // Check demo banner
+  const hasDemoData = audits.some(a => a.isDemo);
+  const dismissed = localStorage.getItem('foxguard_demo_dismissed');
+  document.getElementById('demoBanner').style.display = (hasDemoData && !dismissed) ? 'flex' : 'none';
+
+  const container = document.getElementById('auditsList');
+  const empty = document.getElementById('emptyState');
+
+  if (audits.length === 0) {
+    container.innerHTML = '';
+    empty.style.display = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  // Sort by date desc
+  audits.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  let html = '';
+  audits.forEach(a => {
+    const result = a.risks ? a : { ...a, ...calculateScore(a) };
+    const scoreColor = result.score <= 30 ? 'var(--danger)' : result.score <= 50 ? 'var(--warning)' : result.score <= 70 ? 'var(--cedar)' : 'var(--success)';
+    const dateStr = new Date(a.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+    html += `<div class="audit-item" onclick="viewAudit('${a.id}')" role="button" tabindex="0" aria-label="View audit for ${escapeHTML(a.address)}">`;
+    html += `<div class="score-badge" style="background:${scoreColor}">${result.score}</div>`;
+    html += `<div class="audit-info">`;
+    html += `<div class="audit-address">${escapeHTML(a.address)}${a.isDemo ? '<span class="demo-badge">Demo</span>' : ''}</div>`;
+    html += `<div class="audit-meta">`;
+    if (a.ownerName) html += `<span>${escapeHTML(a.ownerName)}</span>`;
+    html += `<span>${a.roofAge || '?'} yr</span>`;
+    html += `</div></div>`;
+    html += `<div class="audit-date">${dateStr}</div>`;
+    html += `<svg style="width:18px;height:18px;color:var(--text-light);flex-shrink:0"><use href="#icon-chevron-right"/></svg>`;
+    html += `</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+async function viewAudit(id) {
+  const allAudits = await getAllAudits();
+  const audit = allAudits.find(a => a.id === id);
+  if (audit) showReport(audit);
+}
+
+function deleteAuditPrompt(id) {
+  const audit = audits.find(a => a.id === id);
+  if (!audit) return;
+
+  undoData = { ...audit };
+  deleteAudit(id).then(() => {
+    showToast(`Deleted audit for ${audit.address}`, 'info', true);
+    switchPage('audits');
+  });
+}
+
+// ========== DATA PAGE ==========
+async function refreshDataPage() {
+  audits = await getAllAudits();
+  const real = audits.filter(a => !a.isDemo);
+  const demo = audits.filter(a => a.isDemo);
+  const avgScore = audits.length > 0 ? Math.round(audits.reduce((s, a) => s + (a.score || 0), 0) / audits.length) : 0;
+
+  document.getElementById('dataStats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${audits.length}</div><div class="stat-label">Total Audits</div></div>
+    <div class="stat-card"><div class="stat-value">${real.length}</div><div class="stat-label">Real Audits</div></div>
+    <div class="stat-card"><div class="stat-value">${avgScore}</div><div class="stat-label">Avg Score</div></div>
+  `;
+}
+
+// ========== EXPORT ==========
+function exportCSV() {
+  if (audits.length === 0) { showToast('No data to export', 'error'); return; }
+  const headers = ['Address','Owner','Phone','Email','Roof Age','Material','Slope','Pitch','Canopy','Fire Zone','Moss','Symptoms','Score','Risk Level','Notes','Date'];
+  const rows = audits.map(a => [
+    a.address, a.ownerName, a.phone, a.email, a.roofAge, a.roofType, a.slopeDir, a.roofPitch,
+    a.canopy, a.fireZone, a.mossVisible, (a.symptoms || []).join(';'),
+    a.score, a.riskLevel, a.notes, a.createdAt
+  ]);
+  let csv = headers.join(',') + '\n';
+  rows.forEach(r => { csv += r.map(v => `"${(v || '').toString().replace(/"/g, '""')}"`).join(',') + '\n'; });
+
+  downloadFile(csv, `foxguard-audits-${new Date().toISOString().slice(0,10)}.csv`, 'text/csv');
+  showToast('CSV exported successfully', 'success');
+}
+
+function exportJSON() {
+  if (audits.length === 0) { showToast('No data to export', 'error'); return; }
+  const data = { version: 1, exportedAt: new Date().toISOString(), app: 'FoxGuard Resilience Auditor', audits };
+  downloadFile(JSON.stringify(data, null, 2), `foxguard-backup-${new Date().toISOString().slice(0,10)}.json`, 'application/json');
+  showToast('JSON backup exported', 'success');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ========== IMPORT ==========
+function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    parseCSVData(e.target.result);
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function importClipboard() {
+  const text = document.getElementById('clipboardPaste').value.trim();
+  if (!text) { showToast('Paste some data first', 'error'); return; }
+  parseCSVData(text);
+  document.getElementById('clipboardPaste').value = '';
+}
+
+function parseCSVData(text) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('No data rows found', 'error'); return; }
+
+  const sep = lines[0].includes('\t') ? '\t' : ',';
+  let imported = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCSVLine(lines[i], sep);
+    if (cols.length < 2 || !cols[0]) continue;
+
+    const audit = {
+      id: 'import-' + Date.now() + '-' + i,
+      address: cols[0] || '',
+      ownerName: cols[1] || '',
+      phone: cols[2] || '',
+      email: cols[3] || '',
+      roofAge: cols[4] || 'unknown',
+      roofType: cols[5] || 'unknown',
+      slopeDir: cols[6] || '',
+      roofPitch: cols[7] || 'unknown',
+      canopy: cols[8] || '',
+      fireZone: cols[9] || 'suburban',
+      mossVisible: cols[10] || 'none',
+      symptoms: (cols[11] || '').split(';').filter(Boolean),
+      score: parseInt(cols[12]) || 0,
+      riskLevel: cols[13] || 'moderate',
+      notes: cols[14] || '',
+      isDemo: false,
+      createdAt: cols[15] || new Date().toISOString()
+    };
+
+    if (!audit.score) {
+      const result = calculateScore(audit);
+      audit.score = result.score;
+      audit.riskLevel = result.riskLevel;
+      audit.risks = result.risks;
+    }
+
+    saveAudit(audit);
+    imported++;
+  }
+
+  showToast(`Imported ${imported} audit(s)`, 'success');
+  refreshAuditsList();
+}
+
+function parseCSVLine(line, sep) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === sep && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += ch; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.audits || !Array.isArray(data.audits)) throw new Error('Invalid format');
+      await bulkSave(data.audits);
+      showToast(`Restored ${data.audits.length} audit(s) from backup`, 'success');
+      refreshAuditsList();
+    } catch (err) {
+      showToast('Invalid JSON backup file', 'error');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+async function clearAllData() {
+  const allData = await getAllAudits();
+  undoData = allData;
+
+  await clearDB();
+  audits = [];
+  showToast('All data cleared', 'info', true);
+  refreshAuditsList();
+}
+
+// ========== TOAST ==========
+function showToast(msg, type = 'info', withUndo = false) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+
+  let html = `<span>${msg}</span>`;
+  if (withUndo) {
+    html += `<button class="undo-btn" onclick="undoAction(this)">UNDO (5s)</button>`;
+  }
+  toast.innerHTML = html;
+  container.appendChild(toast);
+
+  if (withUndo) {
+    if (undoTimeout) clearTimeout(undoTimeout);
+    undoTimeout = setTimeout(() => {
+      undoData = null;
+      toast.remove();
+    }, 5000);
+  } else {
+    setTimeout(() => toast.remove(), 3500);
+  }
+}
+
+async function undoAction(btn) {
+  if (undoTimeout) clearTimeout(undoTimeout);
+  if (undoData) {
+    if (Array.isArray(undoData)) {
+      await bulkSave(undoData);
+    } else {
+      await saveAudit(undoData);
+    }
+    undoData = null;
+    showToast('Action undone', 'success');
+    refreshAuditsList();
+  }
+  btn.closest('.toast').remove();
+}
+
+function dismissDemo() {
+  localStorage.setItem('foxguard_demo_dismissed', '1');
+  document.getElementById('demoBanner').style.display = 'none';
+}
+
+function printReport() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('print-target'));
+  document.getElementById('page-report').classList.add('print-target');
+  window.print();
+}
+
+// ========== HELPERS ==========
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ========== MODAL ==========
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('show');
+  }
+}
+
+// ========== KEYBOARD NAVIGATION ==========
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.target.classList.contains('audit-item')) {
+    e.target.click();
+  }
+});
+
+// ========== INIT ==========
+async function init() {
+  try {
+    await openDB();
+  } catch(e) {
+    console.warn('DB init error', e);
+  }
+  audits = await getAllAudits();
+
+  // Load demo data if no audits exist
+  if (audits.length === 0) {
+    const demos = getDemoData();
+    for (const d of demos) {
+      const result = calculateScore(d);
+      d.score = result.score;
+      d.riskLevel = result.riskLevel;
+      d.risks = result.risks;
+      await saveAudit(d);
+    }
+    audits = await getAllAudits();
+    // Fallback: if IndexedDB is slow, use in-memory demos
+    if (audits.length === 0) {
+      audits = demos;
+    }
+  }
+
+  refreshAuditsList();
+}
+
+// Render immediately with demo data as fallback for fast paint
+(function fastPaint() {
+  const demos = getDemoData();
+  demos.forEach(d => {
+    const result = calculateScore(d);
+    d.score = result.score;
+    d.riskLevel = result.riskLevel;
+    d.risks = result.risks;
+  });
+
+  // Render list HTML directly for immediate visibility
+  const container = document.getElementById('auditsList');
+  const empty = document.getElementById('emptyState');
+  if (container && empty) {
+    empty.style.display = 'none';
+    const demoBanner = document.getElementById('demoBanner');
+    if (demoBanner) demoBanner.style.display = 'flex';
+
+    let html = '';
+    demos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    demos.forEach(a => {
+      const scoreColor = a.score <= 30 ? 'var(--danger)' : a.score <= 50 ? 'var(--warning)' : a.score <= 70 ? 'var(--cedar)' : 'var(--success)';
+      const dateStr = new Date(a.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      html += `<div class="audit-item" onclick="viewAudit('${a.id}')" role="button" tabindex="0">`;
+      html += `<div class="score-badge" style="background:${scoreColor}">${a.score}</div>`;
+      html += `<div class="audit-info">`;
+      html += `<div class="audit-address">${a.address}<span class="demo-badge">Demo</span></div>`;
+      html += `<div class="audit-meta">`;
+      if (a.ownerName) html += `<span>${a.ownerName}</span>`;
+      html += `<span>${a.roofAge || '?'} yr</span></div></div>`;
+      html += `<div class="audit-date">${dateStr}</div>`;
+      html += `<svg style="width:18px;height:18px;color:var(--text-light);flex-shrink:0"><use href="#icon-chevron-right"/></svg></div>`;
+    });
+    container.innerHTML = html;
+  }
+})();
+
+// Then do the full async init to hydrate with IndexedDB
+init();
+</script>
+</body>
+</html>
