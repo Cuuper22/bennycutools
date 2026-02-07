@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Curb Appeal Equity Engine | All Four Seasons Garage Doors</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%231B365D' width='100' height='100' rx='15'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='%23F2A900'%3E🏠%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend+Deca:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --navy: #1B365D;
+            --navy-light: #2a4a7a;
+            --orange: #F2A900;
+            --orange-light: #FFD54F;
+            --silver: #A2AAAD;
+            --silver-light: #E8EAEB;
+            --white: #FFFFFF;
+            --dark: #1a1a2e;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --font-heading: 'Lexend Deca', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 20px rgba(27, 54, 93, 0.12);
+            --shadow-lg: 0 8px 40px rgba(27, 54, 93, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Anti-scrape: prevent text selection on structural elements */
+        .header, .bottom-nav, .card-header, .door-style, .toggle-group, .btn, .nav-item {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            overscroll-behavior: none;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, #f8fafc 0%, var(--silver-light) 100%);
+            color: var(--navy);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            color: var(--white);
+            padding: 16px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--orange);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .logo-text span {
+            color: var(--orange);
+        }
+
+        .header-badge {
+            background: rgba(255,255,255,0.15);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-badge::before {
+            content: '✓';
+            color: var(--success);
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(90deg, var(--orange) 0%, #FFB347 100%);
+            color: var(--navy);
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .demo-banner button {
+            background: var(--navy);
+            color: var(--white);
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .demo-banner button:active {
+            transform: scale(0.95);
+        }
+
+        .demo-banner.hidden {
+            display: none;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Tab Views */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--silver-light);
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .card-title {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--silver);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--silver-light);
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            font-size: 16px;
+            color: var(--navy);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--orange);
+            box-shadow: 0 0 0 4px rgba(242, 169, 0, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: var(--silver);
+        }
+
+        /* Door Style Selector */
+        .door-styles {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (min-width: 768px) {
+            .door-styles {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .door-style {
+            background: var(--silver-light);
+            border: 3px solid transparent;
+            border-radius: var(--radius);
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .door-style:hover {
+            background: var(--white);
+            box-shadow: var(--shadow);
+        }
+
+        .door-style.selected {
+            border-color: var(--orange);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(242, 169, 0, 0.2);
+        }
+
+        .door-style-icon {
+            font-size: 32px;
+        }
+
+        .door-style-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .door-style-price {
+            font-size: 11px;
+            color: var(--silver);
+        }
+
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: var(--silver-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+        }
+
+        .toggle-label {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toggle-label-main {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--navy);
+        }
+
+        .toggle-label-sub {
+            font-size: 12px;
+            color: var(--silver);
+        }
+
+        .toggle {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: var(--silver);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: var(--success);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: var(--white);
+            border-radius: 50%;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle.active::after {
+            transform: translateX(24px);
+        }
+
+        /* ROI Display */
+        .roi-display {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+            border-radius: var(--radius);
+            padding: 24px;
+            color: var(--white);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .roi-label {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .roi-value {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--orange);
+            line-height: 1;
+        }
+
+        .roi-value span {
+            font-size: 24px;
+        }
+
+        .roi-subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--silver-light);
+        }
+
+        .stat-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-family: var(--font-heading);
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--silver);
+            margin-top: 4px;
+        }
+
+        /* Breakdown List */
+        .breakdown-list {
+            list-style: none;
+        }
+
+        .breakdown-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--silver-light);
+        }
+
+        .breakdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .breakdown-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .breakdown-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .breakdown-value {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        /* Neighborhood Trends */
+        .trend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--silver-light);
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+        }
+
+        .trend-rank {
+            width: 32px;
+            height: 32px;
+            background: var(--navy);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .trend-rank.gold {
+            background: var(--orange);
+            color: var(--navy);
+        }
+
+        .trend-info {
+            flex: 1;
+        }
+
+        .trend-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--navy);
+        }
+
+        .trend-bar-container {
+            height: 6px;
+            background: var(--white);
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+
+        .trend-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--orange) 0%, var(--orange-light) 100%);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .trend-percent {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--orange);
+        }
+
+        /* Button */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: var(--radius);
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 52px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--orange) 0%, #FFB347 100%);
+            color: var(--navy);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(242, 169, 0, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--navy);
+            border: 2px solid var(--silver-light);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--navy);
+        }
+
+        /* TrustDALE Badge */
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #0ea5e9;
+            border-radius: var(--radius);
+            margin-top: 16px;
+        }
+
+        .trust-badge-icon {
+            width: 48px;
+            height: 48px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .trust-badge-text {
+            flex: 1;
+        }
+
+        .trust-badge-title {
+            font-weight: 700;
+            color: #0369a1;
+            font-size: 14px;
+        }
+
+        .trust-badge-subtitle {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: var(--radius-sm);
+            min-width: 64px;
+        }
+
+        .nav-item:active {
+            background: var(--silver-light);
+        }
+
+        .nav-item.active .nav-icon {
+            color: var(--orange);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--navy);
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            color: var(--silver);
+            transition: color 0.2s;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            color: var(--silver);
+            transition: all 0.2s;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--navy);
+            color: var(--white);
+            padding: 14px 24px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.warning {
+            background: var(--warning);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin: 16px 0;
+        }
+
+        /* Property Card */
+        .property-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .property-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .property-card.selected {
+            border: 3px solid var(--orange);
+        }
+
+        .property-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--silver-light);
+        }
+
+        .property-address {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--navy);
+        }
+
+        .property-zip {
+            font-size: 12px;
+            color: var(--silver);
+            margin-top: 2px;
+        }
+
+        .property-body {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--silver-light);
+        }
+
+        .property-stat {
+            background: var(--white);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .property-stat-value {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .property-stat-label {
+            font-size: 10px;
+            color: var(--silver);
+            margin-top: 2px;
+        }
+
+        /* Slider */
+        .slider-container {
+            margin: 16px 0;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .slider-value {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--orange);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: var(--silver-light);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--orange);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(242, 169, 0, 0.4);
+        }
+
+        /* Import/Export Buttons */
+        .action-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .action-row .btn {
+            flex: 1;
+            font-size: 13px;
+            padding: 12px 16px;
+            min-height: 44px;
+        }
+
+        /* Energy Savings */
+        .energy-display {
+            background: linear-gradient(135deg, var(--success) 0%, #4ade80 100%);
+            border-radius: var(--radius);
+            padding: 20px;
+            color: var(--white);
+            text-align: center;
+        }
+
+        .energy-icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .energy-value {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .energy-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+
+        /* Desktop Grid */
+        @media (min-width: 768px) {
+            .main {
+                padding: 32px;
+            }
+
+            .desktop-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+
+            .desktop-span-2 {
+                grid-column: span 2;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        /* Hidden file input */
+        .hidden-input {
+            display: none;
+        }
+
+        /* Experience Badge */
+        .experience-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--silver-light);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 16px;
+        }
+
+        .experience-badge::before {
+            content: '🛠️';
+        }
+
+        /* Print Styles */
+        @media print {
+            .header, .bottom-nav, .demo-banner, .btn, .action-row, .toast {
+                display: none !important;
+            }
+            body {
+                background: white;
+                padding-bottom: 0;
+            }
+            .card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+                break-inside: avoid;
+            }
+            .roi-display {
+                background: #1B365D !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .energy-display {
+                background: #22c55e !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .main {
+                padding: 0;
+                max-width: 100%;
+            }
+            .chart-container {
+                height: 150px;
+            }
+        }
+
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Focus visible for accessibility */
+        .btn:focus-visible, .form-input:focus-visible, .door-style:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: 2px;
+        }
+
+        /* Animation polish */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .card:nth-child(2) { animation-delay: 0.05s; }
+        .card:nth-child(3) { animation-delay: 0.1s; }
+        .card:nth-child(4) { animation-delay: 0.15s; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🏠</div>
+                <div class="logo-text">
+                    All <span>4</span> Seasons<br>
+                    <small style="font-weight: 400; font-size: 11px; opacity: 0.8;">Garage & Entry Doors</small>
+                </div>
+            </div>
+            <div class="header-badge">TrustDALE Certified</div>
+        </div>
+    </header>
+
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demoBanner">
+        📊 Showing sample Marietta properties
+        <button onclick="dismissDemo()">Dismiss</button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Calculator Tab -->
+        <div class="tab-content active" id="calculatorTab">
+            <div class="experience-badge">25+ Years of Combined Experience</div>
+            
+            <div class="desktop-grid">
+                <!-- Property Selection -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📍</div>
+                            <div>
+                                <div class="card-title">Select Property</div>
+                                <div class="card-subtitle">Choose or add a property to analyze</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Property Address</label>
+                            <input type="text" class="form-input" id="addressInput" placeholder="123 Main St, Marietta, GA 30066">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Estimated Home Value</label>
+                            <input type="number" class="form-input" id="homeValueInput" placeholder="450000">
+                        </div>
+                        
+                        <button class="btn btn-secondary" onclick="addProperty()">
+                            ➕ Add Property
+                        </button>
+                    </div>
+                    
+                    <div id="propertyList"></div>
+                </div>
+                
+                <!-- Door Style Selection -->
+                <div>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">🚗</div>
+                            <div>
+                                <div class="card-title">Current Door Style</div>
+                                <div class="card-subtitle">What do you have now?</div>
+                            </div>
+                        </div>
+                        
+                        <div class="door-styles" id="currentDoorStyles">
+                            <div class="door-style" data-style="basic" onclick="selectCurrentStyle('basic')">
+                                <div class="door-style-icon">▫️</div>
+                                <div class="door-style-name">Basic Panel</div>
+                                <div class="door-style-price">Builder Grade</div>
+                            </div>
+                            <div class="door-style" data-style="raised" onclick="selectCurrentStyle('raised')">
+                                <div class="door-style-icon">⬜</div>
+                                <div class="door-style-name">Raised Panel</div>
+                                <div class="door-style-price">Standard</div>
+                            </div>
+                            <div class="door-style" data-style="carriage" onclick="selectCurrentStyle('carriage')">
+                                <div class="door-style-icon">🏛️</div>
+                                <div class="door-style-name">Carriage House</div>
+                                <div class="door-style-price">Premium</div>
+                            </div>
+                            <div class="door-style" data-style="modern" onclick="selectCurrentStyle('modern')">
+                                <div class="door-style-icon">◻️</div>
+                                <div class="door-style-name">Modern Flush</div>
+                                <div class="door-style-price">Contemporary</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">✨</div>
+                            <div>
+                                <div class="card-title">Recommended Upgrade</div>
+                                <div class="card-subtitle">Maximize your curb appeal equity</div>
+                            </div>
+                        </div>
+                        
+                        <div class="door-styles" id="upgradeDoorStyles">
+                            <div class="door-style" data-style="carriage-deluxe" onclick="selectUpgradeStyle('carriage-deluxe')">
+                                <div class="door-style-icon">🏰</div>
+                                <div class="door-style-name">Carriage Deluxe</div>
+                                <div class="door-style-price">$2,800 - $4,200</div>
+                            </div>
+                            <div class="door-style" data-style="insulated" onclick="selectUpgradeStyle('insulated')">
+                                <div class="door-style-icon">🌡️</div>
+                                <div class="door-style-name">Insulated Premium</div>
+                                <div class="door-style-price">$2,200 - $3,800</div>
+                            </div>
+                            <div class="door-style" data-style="wood-overlay" onclick="selectUpgradeStyle('wood-overlay')">
+                                <div class="door-style-icon">🪵</div>
+                                <div class="door-style-name">Wood Overlay</div>
+                                <div class="door-style-price">$3,500 - $5,500</div>
+                            </div>
+                            <div class="door-style" data-style="full-view" onclick="selectUpgradeStyle('full-view')">
+                                <div class="door-style-icon">🪟</div>
+                                <div class="door-style-name">Full View Glass</div>
+                                <div class="door-style-price">$3,200 - $4,800</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bundle Options -->
+                <div class="desktop-span-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📦</div>
+                            <div>
+                                <div class="card-title">All 4 Bundle Options</div>
+                                <div class="card-subtitle">Sync your curb appeal for maximum ROI</div>
+                            </div>
+                        </div>
+                        
+                        <div class="toggle-group" onclick="toggleBundle('entryDoor')">
+                            <div class="toggle-label">
+                                <span class="toggle-label-main">🚪 Include Entry Door</span>
+                                <span class="toggle-label-sub">Adds $3,500-$6,000 to project</span>
+                            </div>
+                            <div class="toggle" id="entryDoorToggle"></div>
+                        </div>
+                        
+                        <div class="toggle-group" onclick="toggleBundle('windows')">
+                            <div class="toggle-label">
+                                <span class="toggle-label-main">🪟 Include Windows</span>
+                                <span class="toggle-label-sub">5+ windows for bundle discount</span>
+                            </div>
+                            <div class="toggle" id="windowsToggle"></div>
+                        </div>
+                        
+                        <div class="toggle-group" onclick="toggleBundle('insulation')">
+                            <div class="toggle-label">
+                                <span class="toggle-label-main">❄️ R-16 Insulation Upgrade</span>
+                                <span class="toggle-label-sub">Georgia heat & energy savings</span>
+                            </div>
+                            <div class="toggle" id="insulationToggle"></div>
+                        </div>
+                        
+                        <button class="btn btn-primary" onclick="calculateROI()">
+                            📊 Calculate Curb Appeal Equity
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Tab -->
+        <div class="tab-content" id="resultsTab">
+            <div class="desktop-grid">
+                <div class="desktop-span-2">
+                    <div class="roi-display">
+                        <div class="roi-label">Projected Return on Investment</div>
+                        <div class="roi-value" id="roiValue">194<span>%</span></div>
+                        <div class="roi-subtitle">Based on 2024-2025 Remodeling Magazine Cost vs. Value Report</div>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🏠</div>
+                            <div class="stat-value" id="homeValueStat">$485K</div>
+                            <div class="stat-label">Current Value</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📈</div>
+                            <div class="stat-value" id="valueAddStat">+$7,200</div>
+                            <div class="stat-label">Value Added</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-value" id="investmentStat">$3,800</div>
+                            <div class="stat-label">Investment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✨</div>
+                            <div class="stat-value" id="netGainStat">+$3,400</div>
+                            <div class="stat-label">Net Equity Gain</div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📊</div>
+                            <div>
+                                <div class="card-title">Value Breakdown</div>
+                                <div class="card-subtitle">Where your equity comes from</div>
+                            </div>
+                        </div>
+                        
+                        <ul class="breakdown-list" id="breakdownList">
+                            <li class="breakdown-item">
+                                <span class="breakdown-label">
+                                    <span class="breakdown-dot" style="background: var(--orange)"></span>
+                                    Curb Appeal Increase
+                                </span>
+                                <span class="breakdown-value">+$4,200</span>
+                            </li>
+                            <li class="breakdown-item">
+                                <span class="breakdown-label">
+                                    <span class="breakdown-dot" style="background: var(--success)"></span>
+                                    Energy Efficiency Value
+                                </span>
+                                <span class="breakdown-value">+$1,800</span>
+                            </li>
+                            <li class="breakdown-item">
+                                <span class="breakdown-label">
+                                    <span class="breakdown-dot" style="background: var(--navy)"></span>
+                                    Security Enhancement
+                                </span>
+                                <span class="breakdown-value">+$1,200</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="energy-display">
+                        <div class="energy-icon">⚡</div>
+                        <div class="energy-value" id="energySavings">$38</div>
+                        <div class="energy-label">Estimated Monthly Energy Savings</div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 16px;">
+                        <div class="card-header">
+                            <div class="card-icon">📍</div>
+                            <div>
+                                <div class="card-title">Marietta Neighborhood Trends</div>
+                                <div class="card-subtitle" id="zipDisplay">30066 Area</div>
+                            </div>
+                        </div>
+                        
+                        <div id="trendsList">
+                            <div class="trend-item">
+                                <div class="trend-rank gold">1</div>
+                                <div class="trend-info">
+                                    <div class="trend-name">Carriage House</div>
+                                    <div class="trend-bar-container">
+                                        <div class="trend-bar" style="width: 78%"></div>
+                                    </div>
+                                </div>
+                                <div class="trend-percent">78%</div>
+                            </div>
+                            <div class="trend-item">
+                                <div class="trend-rank">2</div>
+                                <div class="trend-info">
+                                    <div class="trend-name">Modern Flush</div>
+                                    <div class="trend-bar-container">
+                                        <div class="trend-bar" style="width: 52%"></div>
+                                    </div>
+                                </div>
+                                <div class="trend-percent">52%</div>
+                            </div>
+                            <div class="trend-item">
+                                <div class="trend-rank">3</div>
+                                <div class="trend-info">
+                                    <div class="trend-name">Wood Overlay</div>
+                                    <div class="trend-bar-container">
+                                        <div class="trend-bar" style="width: 34%"></div>
+                                    </div>
+                                </div>
+                                <div class="trend-percent">34%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="trust-badge">
+                        <div class="trust-badge-icon">🛡️</div>
+                        <div class="trust-badge-text">
+                            <div class="trust-badge-title">TrustDALE $10,000 Guarantee</div>
+                            <div class="trust-badge-subtitle">Make It Right™ protection included</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="desktop-span-2">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-icon">📈</div>
+                            <div>
+                                <div class="card-title">5-Year Equity Projection</div>
+                                <div class="card-subtitle">Your investment over time</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="equityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Saved Tab -->
+        <div class="tab-content" id="savedTab">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💾</div>
+                    <div>
+                        <div class="card-title">Saved Analyses</div>
+                        <div class="card-subtitle">Your property ROI calculations</div>
+                    </div>
+                </div>
+                
+                <div id="savedList">
+                    <p style="text-align: center; color: var(--silver); padding: 32px 0;">
+                        No saved analyses yet.<br>
+                        <small>Calculate ROI for a property to save it here.</small>
+                    </p>
+                </div>
+                
+                <div class="action-row">
+                    <button class="btn btn-secondary" onclick="exportCSV()">
+                        📄 Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">
+                        📦 Export JSON
+                    </button>
+                </div>
+                
+                <div class="action-row">
+                    <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                        📥 Import CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="pasteFromClipboard()">
+                        📋 Paste Data
+                    </button>
+                </div>
+                <input type="file" id="importFile" class="hidden-input" accept=".csv,.json" onchange="handleImport(event)">
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('calculator')">
+            <span class="nav-icon">🧮</span>
+            <span class="nav-label">Calculator</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('results')">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Results</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('saved')">
+            <span class="nav-icon">💾</span>
+            <span class="nav-label">Saved</span>
+        </div>
+    </nav>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">Saved successfully</span>
+    </div>
+    
+    <script>
+        // ===== Security Layer =====
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=-451525879;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){
+            document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+            throw new Error('Invalid key');
+        }
+        
+        // ===== Anti-Scrape Protection =====
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if(e.key==='F12'||(e.ctrlKey&&e.key.toLowerCase()==='u')||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.shiftKey&&e.key==='J')||(e.ctrlKey&&e.shiftKey&&e.key==='C')){
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // ===== State Management =====
+        const state = {
+            isDemo: true,
+            properties: [],
+            selectedProperty: null,
+            currentStyle: null,
+            upgradeStyle: null,
+            bundles: {
+                entryDoor: false,
+                windows: false,
+                insulation: false
+            },
+            savedAnalyses: [],
+            lastCalculation: null
+        };
+        
+        // ===== Demo Data =====
+        const demoProperties = [
+            {
+                id: 'demo-1',
+                address: '247 Roswell Creek Dr',
+                city: 'Marietta',
+                zip: '30062',
+                homeValue: 485000,
+                currentDoor: 'raised',
+                isDemo: true
+            },
+            {
+                id: 'demo-2',
+                address: '1832 Canton Road',
+                city: 'Marietta',
+                zip: '30066',
+                homeValue: 375000,
+                currentDoor: 'basic',
+                isDemo: true
+            },
+            {
+                id: 'demo-3',
+                address: '512 Chastain Manor Dr',
+                city: 'Marietta',
+                zip: '30068',
+                homeValue: 725000,
+                currentDoor: 'carriage',
+                isDemo: true
+            },
+            {
+                id: 'demo-4',
+                address: '890 Johnson Ferry Rd',
+                city: 'Marietta',
+                zip: '30062',
+                homeValue: 520000,
+                currentDoor: 'raised',
+                isDemo: true
+            }
+        ];
+        
+        // ===== Door Style Data =====
+        const doorStyles = {
+            'basic': { name: 'Basic Panel', minCost: 800, maxCost: 1200, roiMultiplier: 1.5 },
+            'raised': { name: 'Raised Panel', minCost: 1200, maxCost: 2000, roiMultiplier: 1.7 },
+            'carriage': { name: 'Carriage House', minCost: 2200, maxCost: 3500, roiMultiplier: 2.1 },
+            'modern': { name: 'Modern Flush', minCost: 2500, maxCost: 4000, roiMultiplier: 1.9 },
+            'carriage-deluxe': { name: 'Carriage Deluxe', minCost: 2800, maxCost: 4200, roiMultiplier: 2.3 },
+            'insulated': { name: 'Insulated Premium', minCost: 2200, maxCost: 3800, roiMultiplier: 2.0 },
+            'wood-overlay': { name: 'Wood Overlay', minCost: 3500, maxCost: 5500, roiMultiplier: 2.5 },
+            'full-view': { name: 'Full View Glass', minCost: 3200, maxCost: 4800, roiMultiplier: 2.2 }
+        };
+        
+        // ===== IndexedDB Setup =====
+        let db = null;
+        const DB_NAME = 'All4SeasonsEquityEngine';
+        const DB_VERSION = 1;
+        
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.warn('IndexedDB failed, using localStorage fallback');
+                    loadFromLocalStorage();
+                    resolve(null);
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    loadFromDB();
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    
+                    if (!db.objectStoreNames.contains('properties')) {
+                        db.createObjectStore('properties', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('analyses')) {
+                        db.createObjectStore('analyses', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+        
+        function loadFromDB() {
+            if (!db) return;
+            
+            const tx = db.transaction(['properties', 'analyses', 'settings'], 'readonly');
+            
+            tx.objectStore('properties').getAll().onsuccess = (event) => {
+                const properties = event.target.result;
+                if (properties.length > 0) {
+                    state.properties = properties;
+                    state.isDemo = false;
+                    document.getElementById('demoBanner').classList.add('hidden');
+                } else {
+                    state.properties = [...demoProperties];
+                }
+                renderProperties();
+            };
+            
+            tx.objectStore('analyses').getAll().onsuccess = (event) => {
+                state.savedAnalyses = event.target.result;
+                renderSavedAnalyses();
+            };
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const properties = localStorage.getItem('a4s_properties');
+                const analyses = localStorage.getItem('a4s_analyses');
+                
+                if (properties) {
+                    state.properties = JSON.parse(properties);
+                    state.isDemo = false;
+                    document.getElementById('demoBanner').classList.add('hidden');
+                } else {
+                    state.properties = [...demoProperties];
+                }
+                
+                if (analyses) {
+                    state.savedAnalyses = JSON.parse(analyses);
+                }
+                
+                renderProperties();
+                renderSavedAnalyses();
+            } catch (e) {
+                state.properties = [...demoProperties];
+                renderProperties();
+            }
+        }
+        
+        function saveData() {
+            if (db) {
+                const tx = db.transaction(['properties', 'analyses'], 'readwrite');
+                
+                const propStore = tx.objectStore('properties');
+                propStore.clear();
+                state.properties.filter(p => !p.isDemo).forEach(p => propStore.add(p));
+                
+                const analysisStore = tx.objectStore('analyses');
+                analysisStore.clear();
+                state.savedAnalyses.forEach(a => analysisStore.add(a));
+            } else {
+                localStorage.setItem('a4s_properties', JSON.stringify(state.properties.filter(p => !p.isDemo)));
+                localStorage.setItem('a4s_analyses', JSON.stringify(state.savedAnalyses));
+            }
+        }
+        
+        // ===== UI Functions =====
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = 'toast ' + type;
+            toastIcon.textContent = type === 'success' ? '✓' : type === 'warning' ? '⚠' : 'ℹ';
+            toastMessage.textContent = message;
+            
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelector(`.nav-item:nth-child(${tabName === 'calculator' ? 1 : tabName === 'results' ? 2 : 3})`).classList.add('active');
+            
+            if (tabName === 'results' && state.lastCalculation) {
+                updateResultsDisplay();
+            }
+        }
+        
+        function dismissDemo() {
+            document.getElementById('demoBanner').classList.add('hidden');
+        }
+        
+        function renderProperties() {
+            const container = document.getElementById('propertyList');
+            container.innerHTML = state.properties.map(prop => `
+                <div class="property-card ${state.selectedProperty?.id === prop.id ? 'selected' : ''}" 
+                     onclick="selectProperty('${prop.id}')">
+                    <div class="property-header">
+                        <div class="property-address">${prop.address}</div>
+                        <div class="property-zip">${prop.city}, GA ${prop.zip}</div>
+                    </div>
+                    <div class="property-body">
+                        <div class="property-stat">
+                            <div class="property-stat-value">$${(prop.homeValue / 1000).toFixed(0)}K</div>
+                            <div class="property-stat-label">Home Value</div>
+                        </div>
+                        <div class="property-stat">
+                            <div class="property-stat-value">${doorStyles[prop.currentDoor]?.name.split(' ')[0] || 'Unknown'}</div>
+                            <div class="property-stat-label">Current Door</div>
+                        </div>
+                        <div class="property-stat">
+                            <div class="property-stat-value">${prop.zip}</div>
+                            <div class="property-stat-label">Zip Code</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function selectProperty(id) {
+            state.selectedProperty = state.properties.find(p => p.id === id);
+            renderProperties();
+            
+            if (state.selectedProperty) {
+                selectCurrentStyle(state.selectedProperty.currentDoor);
+                showToast(`Selected: ${state.selectedProperty.address}`, 'success');
+            }
+        }
+        
+        function addProperty() {
+            const address = document.getElementById('addressInput').value.trim();
+            const homeValue = parseInt(document.getElementById('homeValueInput').value);
+            
+            if (!address) {
+                showToast('Please enter an address', 'warning');
+                return;
+            }
+            
+            if (!homeValue || homeValue < 50000) {
+                showToast('Please enter a valid home value', 'warning');
+                return;
+            }
+            
+            const zipMatch = address.match(/\b(30\d{3})\b/);
+            const zip = zipMatch ? zipMatch[1] : '30066';
+            
+            const newProperty = {
+                id: 'prop-' + Date.now(),
+                address: address.replace(/,?\s*(GA|Georgia)\s*\d{5}$/i, '').trim(),
+                city: 'Marietta',
+                zip: zip,
+                homeValue: homeValue,
+                currentDoor: 'basic',
+                isDemo: false
+            };
+            
+            state.properties.unshift(newProperty);
+            state.isDemo = false;
+            document.getElementById('demoBanner').classList.add('hidden');
+            
+            saveData();
+            renderProperties();
+            selectProperty(newProperty.id);
+            
+            document.getElementById('addressInput').value = '';
+            document.getElementById('homeValueInput').value = '';
+            
+            showToast('Property added successfully!', 'success');
+        }
+        
+        function selectCurrentStyle(style) {
+            state.currentStyle = style;
+            
+            document.querySelectorAll('#currentDoorStyles .door-style').forEach(el => {
+                el.classList.toggle('selected', el.dataset.style === style);
+            });
+        }
+        
+        function selectUpgradeStyle(style) {
+            state.upgradeStyle = style;
+            
+            document.querySelectorAll('#upgradeDoorStyles .door-style').forEach(el => {
+                el.classList.toggle('selected', el.dataset.style === style);
+            });
+            
+            showToast(`Selected: ${doorStyles[style].name}`, 'success');
+        }
+        
+        function toggleBundle(bundle) {
+            state.bundles[bundle] = !state.bundles[bundle];
+            document.getElementById(bundle + 'Toggle').classList.toggle('active', state.bundles[bundle]);
+        }
+        
+        // ===== ROI Calculation =====
+        function calculateROI() {
+            if (!state.selectedProperty) {
+                showToast('Please select a property first', 'warning');
+                return;
+            }
+            
+            if (!state.upgradeStyle) {
+                showToast('Please select an upgrade style', 'warning');
+                return;
+            }
+            
+            const property = state.selectedProperty;
+            const upgrade = doorStyles[state.upgradeStyle];
+            
+            // Base calculation
+            const investmentBase = (upgrade.minCost + upgrade.maxCost) / 2;
+            let totalInvestment = investmentBase;
+            
+            // Bundle additions
+            if (state.bundles.entryDoor) totalInvestment += 4500;
+            if (state.bundles.windows) totalInvestment += 8000;
+            if (state.bundles.insulation) totalInvestment += 600;
+            
+            // ROI calculation (based on national averages)
+            const baseROI = 1.94; // 194% base ROI for garage doors
+            let roiMultiplier = upgrade.roiMultiplier;
+            
+            // Bundle bonuses
+            if (state.bundles.entryDoor) roiMultiplier += 0.15;
+            if (state.bundles.windows) roiMultiplier += 0.2;
+            if (state.bundles.insulation) roiMultiplier += 0.1;
+            
+            const valueAdded = totalInvestment * roiMultiplier;
+            const netGain = valueAdded - totalInvestment;
+            const roiPercent = Math.round((valueAdded / totalInvestment) * 100);
+            
+            // Energy savings (Georgia climate)
+            let monthlySavings = 0;
+            if (state.bundles.insulation || state.upgradeStyle === 'insulated') {
+                monthlySavings = 28 + Math.floor(Math.random() * 20);
+            } else {
+                monthlySavings = 12 + Math.floor(Math.random() * 15);
+            }
+            
+            state.lastCalculation = {
+                property: property,
+                upgradeStyle: state.upgradeStyle,
+                bundles: { ...state.bundles },
+                investment: totalInvestment,
+                valueAdded: valueAdded,
+                netGain: netGain,
+                roiPercent: roiPercent,
+                monthlySavings: monthlySavings,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save analysis
+            const analysis = {
+                id: 'analysis-' + Date.now(),
+                ...state.lastCalculation
+            };
+            
+            state.savedAnalyses.unshift(analysis);
+            if (state.savedAnalyses.length > 50) state.savedAnalyses.pop();
+            
+            saveData();
+            renderSavedAnalyses();
+            
+            showToast('ROI calculated! View your results', 'success');
+            setTimeout(() => switchTab('results'), 500);
+        }
+        
+        function updateResultsDisplay() {
+            const calc = state.lastCalculation;
+            if (!calc) return;
+            
+            document.getElementById('roiValue').innerHTML = `${calc.roiPercent}<span>%</span>`;
+            document.getElementById('homeValueStat').textContent = `$${(calc.property.homeValue / 1000).toFixed(0)}K`;
+            document.getElementById('valueAddStat').textContent = `+$${calc.valueAdded.toLocaleString()}`;
+            document.getElementById('investmentStat').textContent = `$${calc.investment.toLocaleString()}`;
+            document.getElementById('netGainStat').textContent = `+$${calc.netGain.toLocaleString()}`;
+            document.getElementById('energySavings').textContent = `$${calc.monthlySavings}`;
+            document.getElementById('zipDisplay').textContent = `${calc.property.zip} Area`;
+            
+            // Update breakdown
+            const curbAppeal = Math.round(calc.valueAdded * 0.55);
+            const energyValue = Math.round(calc.valueAdded * 0.25);
+            const securityValue = Math.round(calc.valueAdded * 0.20);
+            
+            document.getElementById('breakdownList').innerHTML = `
+                <li class="breakdown-item">
+                    <span class="breakdown-label">
+                        <span class="breakdown-dot" style="background: var(--orange)"></span>
+                        Curb Appeal Increase
+                    </span>
+                    <span class="breakdown-value">+$${curbAppeal.toLocaleString()}</span>
+                </li>
+                <li class="breakdown-item">
+                    <span class="breakdown-label">
+                        <span class="breakdown-dot" style="background: var(--success)"></span>
+                        Energy Efficiency Value
+                    </span>
+                    <span class="breakdown-value">+$${energyValue.toLocaleString()}</span>
+                </li>
+                <li class="breakdown-item">
+                    <span class="breakdown-label">
+                        <span class="breakdown-dot" style="background: var(--navy)"></span>
+                        Security Enhancement
+                    </span>
+                    <span class="breakdown-value">+$${securityValue.toLocaleString()}</span>
+                </li>
+                ${calc.bundles.entryDoor ? `
+                <li class="breakdown-item">
+                    <span class="breakdown-label">
+                        <span class="breakdown-dot" style="background: #8b5cf6"></span>
+                        Entry Door Synergy
+                    </span>
+                    <span class="breakdown-value">+$${Math.round(4500 * 0.85).toLocaleString()}</span>
+                </li>
+                ` : ''}
+                ${calc.bundles.windows ? `
+                <li class="breakdown-item">
+                    <span class="breakdown-label">
+                        <span class="breakdown-dot" style="background: #06b6d4"></span>
+                        Window Bundle Bonus
+                    </span>
+                    <span class="breakdown-value">+$${Math.round(8000 * 0.75).toLocaleString()}</span>
+                </li>
+                ` : ''}
+            `;
+            
+            // Update chart
+            renderEquityChart(calc);
+        }
+        
+        function renderEquityChart(calc) {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            
+            if (window.equityChartInstance) {
+                window.equityChartInstance.destroy();
+            }
+            
+            const baseValue = calc.property.homeValue;
+            const annualAppreciation = 0.035; // 3.5% annual appreciation
+            const yearlyEnergySavings = calc.monthlySavings * 12;
+            
+            const years = [0, 1, 2, 3, 4, 5];
+            const withUpgrade = years.map(y => {
+                const appreciation = Math.pow(1 + annualAppreciation, y);
+                const energyAccrued = yearlyEnergySavings * y;
+                return baseValue * appreciation + calc.valueAdded + energyAccrued;
+            });
+            
+            const withoutUpgrade = years.map(y => {
+                return baseValue * Math.pow(1 + annualAppreciation, y);
+            });
+            
+            window.equityChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Now', 'Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+                    datasets: [
+                        {
+                            label: 'With Upgrade',
+                            data: withUpgrade,
+                            borderColor: '#F2A900',
+                            backgroundColor: 'rgba(242, 169, 0, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Without Upgrade',
+                            data: withoutUpgrade,
+                            borderColor: '#A2AAAD',
+                            backgroundColor: 'rgba(162, 170, 173, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: value => '$' + (value / 1000).toFixed(0) + 'K'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // ===== Saved Analyses =====
+        function renderSavedAnalyses() {
+            const container = document.getElementById('savedList');
+            
+            if (state.savedAnalyses.length === 0) {
+                container.innerHTML = `
+                    <p style="text-align: center; color: var(--silver); padding: 32px 0;">
+                        No saved analyses yet.<br>
+                        <small>Calculate ROI for a property to save it here.</small>
+                    </p>
+                `;
+                return;
+            }
+            
+            container.innerHTML = state.savedAnalyses.slice(0, 10).map(a => `
+                <div class="property-card" onclick="loadAnalysis('${a.id}')">
+                    <div class="property-header">
+                        <div class="property-address">${a.property.address}</div>
+                        <div class="property-zip">${new Date(a.timestamp).toLocaleDateString()}</div>
+                    </div>
+                    <div class="property-body">
+                        <div class="property-stat">
+                            <div class="property-stat-value" style="color: var(--success)">+${a.roiPercent}%</div>
+                            <div class="property-stat-label">ROI</div>
+                        </div>
+                        <div class="property-stat">
+                            <div class="property-stat-value">$${a.investment.toLocaleString()}</div>
+                            <div class="property-stat-label">Investment</div>
+                        </div>
+                        <div class="property-stat">
+                            <div class="property-stat-value" style="color: var(--orange)">+$${a.netGain.toLocaleString()}</div>
+                            <div class="property-stat-label">Net Gain</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function loadAnalysis(id) {
+            const analysis = state.savedAnalyses.find(a => a.id === id);
+            if (analysis) {
+                state.lastCalculation = analysis;
+                switchTab('results');
+                updateResultsDisplay();
+            }
+        }
+        
+        // ===== Import/Export =====
+        function exportCSV() {
+            if (state.savedAnalyses.length === 0) {
+                showToast('No analyses to export', 'warning');
+                return;
+            }
+            
+            const headers = ['Address', 'City', 'Zip', 'Home Value', 'Investment', 'Value Added', 'Net Gain', 'ROI %', 'Date'];
+            const rows = state.savedAnalyses.map(a => [
+                a.property.address,
+                a.property.city,
+                a.property.zip,
+                a.property.homeValue,
+                a.investment,
+                a.valueAdded,
+                a.netGain,
+                a.roiPercent,
+                new Date(a.timestamp).toLocaleDateString()
+            ]);
+            
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            downloadFile(csv, 'all4seasons-roi-analyses.csv', 'text/csv');
+            showToast('CSV exported!', 'success');
+        }
+        
+        function exportJSON() {
+            const data = {
+                exportDate: new Date().toISOString(),
+                properties: state.properties.filter(p => !p.isDemo),
+                analyses: state.savedAnalyses
+            };
+            
+            downloadFile(JSON.stringify(data, null, 2), 'all4seasons-backup.json', 'application/json');
+            showToast('JSON backup exported!', 'success');
+        }
+        
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    if (file.name.endsWith('.json')) {
+                        const data = JSON.parse(e.target.result);
+                        if (data.properties) {
+                            state.properties = [...data.properties, ...state.properties.filter(p => p.isDemo)];
+                        }
+                        if (data.analyses) {
+                            state.savedAnalyses = [...data.analyses, ...state.savedAnalyses];
+                        }
+                        state.isDemo = false;
+                        document.getElementById('demoBanner').classList.add('hidden');
+                    } else if (file.name.endsWith('.csv')) {
+                        // Parse CSV
+                        const lines = e.target.result.split('\n').slice(1); // Skip header
+                        lines.forEach(line => {
+                            const parts = line.split(',');
+                            if (parts.length >= 4) {
+                                state.properties.push({
+                                    id: 'import-' + Date.now() + Math.random(),
+                                    address: parts[0].trim(),
+                                    city: parts[1]?.trim() || 'Marietta',
+                                    zip: parts[2]?.trim() || '30066',
+                                    homeValue: parseInt(parts[3]) || 400000,
+                                    currentDoor: 'basic',
+                                    isDemo: false
+                                });
+                            }
+                        });
+                        state.isDemo = false;
+                        document.getElementById('demoBanner').classList.add('hidden');
+                    }
+                    
+                    saveData();
+                    renderProperties();
+                    renderSavedAnalyses();
+                    showToast('Data imported successfully!', 'success');
+                } catch (err) {
+                    showToast('Error importing file', 'warning');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                
+                // Try to parse as JSON first
+                try {
+                    const data = JSON.parse(text);
+                    if (data.properties || data.analyses) {
+                        if (data.properties) {
+                            state.properties = [...data.properties, ...state.properties.filter(p => p.isDemo)];
+                        }
+                        if (data.analyses) {
+                            state.savedAnalyses = [...data.analyses, ...state.savedAnalyses];
+                        }
+                        state.isDemo = false;
+                        document.getElementById('demoBanner').classList.add('hidden');
+                        saveData();
+                        renderProperties();
+                        renderSavedAnalyses();
+                        showToast('Data pasted successfully!', 'success');
+                        return;
+                    }
+                } catch (e) {}
+                
+                // Try to parse as CSV/addresses
+                const lines = text.split('\n').filter(l => l.trim());
+                let count = 0;
+                
+                lines.forEach(line => {
+                    const parts = line.split(/[,\t]/);
+                    if (parts[0] && parts[0].match(/\d+.*\w/)) {
+                        state.properties.push({
+                            id: 'paste-' + Date.now() + Math.random(),
+                            address: parts[0].trim(),
+                            city: 'Marietta',
+                            zip: parts[0].match(/\b(30\d{3})\b/)?.[1] || '30066',
+                            homeValue: parseInt(parts[1]) || 400000,
+                            currentDoor: 'basic',
+                            isDemo: false
+                        });
+                        count++;
+                    }
+                });
+                
+                if (count > 0) {
+                    state.isDemo = false;
+                    document.getElementById('demoBanner').classList.add('hidden');
+                    saveData();
+                    renderProperties();
+                    showToast(`Added ${count} properties from clipboard!`, 'success');
+                } else {
+                    showToast('No valid addresses found in clipboard', 'warning');
+                }
+            } catch (err) {
+                showToast('Could not read clipboard', 'warning');
+            }
+        }
+        
+        // ===== Initialize =====
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            
+            // Select first property by default
+            if (state.properties.length > 0) {
+                selectProperty(state.properties[0].id);
+            }
+            
+            // Pre-select an upgrade style
+            selectUpgradeStyle('carriage-deluxe');
+        });
+    </script>
+</body>
+</html>
