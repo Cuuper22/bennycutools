@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cherokee Tire LifeGuard | Your Tire Health Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Playfair+Display:wght@600;700&family=Source+Serif+Pro:wght@400;600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --deep-navy: #1B3A5F;
+            --bright-red: #D32F2F;
+            --georgia-clay: #B85C38;
+            --clean-white: #FFFFFF;
+            --light-gray: #F5F5F5;
+            --tire-black: #2C2C2C;
+            --safety-green: #4CAF50;
+            --warning-amber: #FF9800;
+            --soft-shadow: 0 4px 20px rgba(27, 58, 95, 0.12);
+            --card-shadow: 0 2px 12px rgba(27, 58, 95, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Source Serif Pro', Georgia, serif;
+            background: var(--light-gray);
+            color: var(--tire-black);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, var(--georgia-clay), var(--bright-red));
+            color: white;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+        }
+
+        .demo-banner span {
+            flex: 1;
+        }
+
+        .demo-banner button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        /* Header */
+        .header {
+            background: var(--deep-navy);
+            color: white;
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .header-logo svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .header-tagline {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+
+        .header-meta {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Tabs */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--clean-white);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--deep-navy);
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .card-subtitle {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* Health Score Ring */
+        .health-score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .health-ring {
+            position: relative;
+            width: 180px;
+            height: 180px;
+        }
+
+        .health-ring canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .health-ring-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .health-score-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+            line-height: 1;
+        }
+
+        .health-score-label {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .health-status {
+            margin-top: 16px;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .health-status.excellent {
+            background: rgba(76, 175, 80, 0.15);
+            color: var(--safety-green);
+        }
+
+        .health-status.good {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--safety-green);
+        }
+
+        .health-status.attention {
+            background: rgba(255, 152, 0, 0.15);
+            color: var(--warning-amber);
+        }
+
+        .health-status.urgent {
+            background: rgba(211, 47, 47, 0.15);
+            color: var(--bright-red);
+        }
+
+        /* Tire Grid */
+        .tire-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .tire-position {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .tire-position.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border: 2px solid var(--warning-amber);
+        }
+
+        .tire-position.danger {
+            background: rgba(211, 47, 47, 0.1);
+            border: 2px solid var(--bright-red);
+        }
+
+        .tire-position-label {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .tire-visual {
+            width: 50px;
+            height: 70px;
+            background: var(--tire-black);
+            border-radius: 8px;
+            margin: 0 auto 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tire-visual::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            background: #555;
+            border-radius: 50%;
+        }
+
+        .tire-tread-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            height: 6px;
+            background: #444;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .tire-tread-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .tire-depth {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .tire-depth span {
+            font-size: 0.75rem;
+            font-weight: 400;
+            color: #666;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--deep-navy);
+            margin-bottom: 8px;
+        }
+
+        .form-hint {
+            font-size: 0.75rem;
+            color: #888;
+            font-weight: 400;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            font-family: 'Source Serif Pro', serif;
+            font-size: 1rem;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            background: var(--clean-white);
+            color: var(--tire-black);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--deep-navy);
+            box-shadow: 0 0 0 4px rgba(27, 58, 95, 0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--bright-red);
+        }
+
+        .form-error {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            color: var(--bright-red);
+            margin-top: 6px;
+            display: none;
+        }
+
+        .form-input.error + .form-error {
+            display: block;
+        }
+
+        .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231B3A5F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 44px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px 24px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            min-height: 48px;
+            -webkit-appearance: none;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--deep-navy);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(27, 58, 95, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--deep-navy);
+        }
+
+        .btn-danger {
+            background: var(--bright-red);
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-sm {
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            min-height: 40px;
+        }
+
+        /* Bottom Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--clean-white);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            min-width: 64px;
+            min-height: 48px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        .tab-item.active {
+            color: var(--deep-navy);
+        }
+
+        .tab-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .tab-item span {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 4px;
+            bottom: 4px;
+            width: 2px;
+            background: #E0E0E0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -22px;
+            top: 4px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--deep-navy);
+            border: 3px solid var(--clean-white);
+            box-shadow: 0 0 0 2px var(--deep-navy);
+        }
+
+        .timeline-dot.upcoming {
+            background: var(--warning-amber);
+            box-shadow: 0 0 0 2px var(--warning-amber);
+        }
+
+        .timeline-dot.overdue {
+            background: var(--bright-red);
+            box-shadow: 0 0 0 2px var(--bright-red);
+        }
+
+        .timeline-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .timeline-title {
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            color: var(--deep-navy);
+            margin-bottom: 4px;
+        }
+
+        .timeline-desc {
+            font-size: 0.875rem;
+            color: #666;
+        }
+
+        /* Wear Pattern Guide */
+        .wear-patterns {
+            display: grid;
+            gap: 16px;
+        }
+
+        .wear-pattern {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            align-items: flex-start;
+        }
+
+        .wear-pattern-visual {
+            width: 60px;
+            height: 80px;
+            background: var(--tire-black);
+            border-radius: 6px;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wear-pattern-visual::after {
+            content: '';
+            position: absolute;
+            background: #888;
+        }
+
+        .wear-pattern-visual.center::after {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 100%;
+        }
+
+        .wear-pattern-visual.edge::after {
+            top: 0;
+            left: 0;
+            width: 15px;
+            height: 100%;
+            box-shadow: 45px 0 0 #888;
+        }
+
+        .wear-pattern-visual.one-side::after {
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 100%;
+        }
+
+        .wear-pattern-visual.patchy::after {
+            top: 10px;
+            left: 10px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            box-shadow: 25px 15px 0 #888, 10px 40px 0 #888, 30px 50px 0 #888;
+        }
+
+        .wear-pattern-content h4 {
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            color: var(--deep-navy);
+            margin-bottom: 4px;
+        }
+
+        .wear-pattern-content p {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .wear-pattern-action {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--georgia-clay);
+        }
+
+        /* TPMS Section */
+        .tpms-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .tpms-reading {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .tpms-reading.low {
+            background: rgba(211, 47, 47, 0.1);
+        }
+
+        .tpms-reading.high {
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .tpms-position {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .tpms-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .tpms-value span {
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+
+        .tpms-status {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .tpms-status.ok { color: var(--safety-green); }
+        .tpms-status.low { color: var(--bright-red); }
+        .tpms-status.high { color: var(--warning-amber); }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 16px;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
+        .info-box.tip {
+            background: rgba(27, 58, 95, 0.08);
+            border-left: 4px solid var(--deep-navy);
+        }
+
+        .info-box.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left: 4px solid var(--warning-amber);
+        }
+
+        .info-box.danger {
+            background: rgba(211, 47, 47, 0.1);
+            border-left: 4px solid var(--bright-red);
+        }
+
+        .info-box-title {
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .info-box p {
+            font-size: 0.875rem;
+            color: #555;
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th {
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            text-align: left;
+            padding: 12px 8px;
+            border-bottom: 2px solid var(--deep-navy);
+            color: var(--deep-navy);
+        }
+
+        .data-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--deep-navy);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            box-shadow: var(--soft-shadow);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 200;
+            max-width: calc(100% - 32px);
+            text-align: center;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            background: var(--safety-green);
+        }
+
+        .toast.warning {
+            background: var(--warning-amber);
+        }
+
+        .toast.error {
+            background: var(--bright-red);
+        }
+
+        /* Vehicle List */
+        .vehicle-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .vehicle-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--light-gray);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .vehicle-item:hover, .vehicle-item.selected {
+            background: rgba(27, 58, 95, 0.1);
+        }
+
+        .vehicle-item.selected {
+            border: 2px solid var(--deep-navy);
+        }
+
+        .vehicle-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--deep-navy);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vehicle-icon svg {
+            width: 28px;
+            height: 28px;
+            color: white;
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-name {
+            font-family: 'Work Sans', sans-serif;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .vehicle-meta {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .vehicle-health {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 1.125rem;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            height: 8px;
+            background: #E0E0E0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Driving Profile */
+        .driving-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .driving-chip {
+            padding: 8px 16px;
+            background: var(--light-gray);
+            border: 2px solid transparent;
+            border-radius: 20px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .driving-chip.selected {
+            background: rgba(27, 58, 95, 0.1);
+            border-color: var(--deep-navy);
+            color: var(--deep-navy);
+        }
+
+        /* Import/Export */
+        .import-export-btns {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .import-export-btns .btn {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            z-index: 300;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--clean-white);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--deep-navy);
+        }
+
+        .modal-close {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: var(--light-gray);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .stat-item {
+            background: var(--light-gray);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--deep-navy);
+        }
+
+        .stat-label {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 24px;
+            }
+
+            .tire-grid {
+                gap: 20px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            body {
+                padding-bottom: 0;
+            }
+
+            .tab-bar {
+                position: static;
+                background: var(--deep-navy);
+                justify-content: center;
+                gap: 8px;
+                padding: 12px;
+            }
+
+            .tab-item {
+                flex-direction: row;
+                color: rgba(255,255,255,0.7);
+                padding: 12px 24px;
+                border-radius: 8px;
+            }
+
+            .tab-item.active {
+                background: rgba(255,255,255,0.1);
+                color: white;
+            }
+
+            .tab-item span {
+                font-size: 0.875rem;
+            }
+
+            .main-content {
+                padding: 32px;
+            }
+        }
+
+        /* Hidden file input */
+        .file-input {
+            display: none;
+        }
+
+        /* Textarea */
+        .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--deep-navy);
+            box-shadow: 0 0 0 4px rgba(27, 58, 95, 0.1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            color: #CCC;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--deep-navy);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* Cherokee Tile Local */
+        .local-info {
+            background: linear-gradient(135deg, var(--deep-navy), #2a5a8f);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .local-info h3 {
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 12px;
+        }
+
+        .local-info p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: 12px;
+        }
+
+        .local-contact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .local-contact a {
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%231B3A5F'/%3E%3Ccircle cx='50' cy='50' r='20' fill='white'/%3E%3C/svg%3E">
+    <style>
+        @media print {
+            .demo-banner, .tab-bar, .btn, .modal-overlay, .toast { display: none !important; }
+            body { padding-bottom: 0; background: white; }
+            .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=1479286216;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+        document.addEventListener('contextmenu',e=>e.preventDefault());
+        document.addEventListener('keydown',e=>{if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.key==='u')){e.preventDefault();}});
+    </script>
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demoBanner">
+        <span>📊 Viewing demo data from Cherokee County customers</span>
+        <button onclick="dismissDemo()">Dismiss</button>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">
+            <svg viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="20" cy="20" r="8" fill="currentColor"/>
+                <path d="M20 2v6M20 32v6M2 20h6M32 20h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <div>
+                <h1>Cherokee Tire LifeGuard</h1>
+            </div>
+        </div>
+        <p class="header-tagline">Your Personal Tire Health Dashboard</p>
+        <p class="header-meta">Cherokee Tire Service • Canton, GA • Since 1978</p>
+    </header>
+
+    <!-- Tab Bar (Desktop position changes via CSS) -->
+    <nav class="tab-bar">
+        <button class="tab-item active" data-tab="dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/>
+                <rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+            </svg>
+            <span>Dashboard</span>
+        </button>
+        <button class="tab-item" data-tab="vehicles">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.6c-.4-.5-1-.9-1.6-.9H6c-.6 0-1.1.4-1.4.9L2 10"/>
+                <circle cx="7" cy="17" r="2"/>
+                <path d="M9 17h6"/>
+                <circle cx="17" cy="17" r="2"/>
+            </svg>
+            <span>Vehicles</span>
+        </button>
+        <button class="tab-item" data-tab="tpms">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 6v6l4 2"/>
+            </svg>
+            <span>TPMS</span>
+        </button>
+        <button class="tab-item" data-tab="learn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+            <span>Learn</span>
+        </button>
+        <button class="tab-item" data-tab="data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+            </svg>
+            <span>Data</span>
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="dashboard">
+            <!-- Local Info Card -->
+            <div class="local-info">
+                <h3>🏔️ Cherokee County Conditions</h3>
+                <p>Today's conditions: Humid, 78°F — Check tire pressure when cool. I-575 & Hickory Flat Hwy in good condition.</p>
+                <div class="local-contact">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                    <a href="tel:7704796588">(770) 479-6588</a>
+                </div>
+            </div>
+
+            <!-- Health Score Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Overall Tire Health</div>
+                        <div class="card-subtitle" id="vehicleName">2021 Ford F-150</div>
+                    </div>
+                </div>
+                <div class="health-score-container">
+                    <div class="health-ring">
+                        <canvas id="healthRing" width="180" height="180"></canvas>
+                        <div class="health-ring-center">
+                            <div class="health-score-value" id="healthScore">84</div>
+                            <div class="health-score-label">out of 100</div>
+                        </div>
+                    </div>
+                    <div class="health-status good" id="healthStatus">Good Condition</div>
+                </div>
+            </div>
+
+            <!-- Tire Positions -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <circle cx="12" cy="12" r="4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Tread Depth</div>
+                        <div class="card-subtitle">Minimum safe: 2/32" • New tire: 10/32"</div>
+                    </div>
+                </div>
+                <div class="tire-grid" id="tireGrid">
+                    <!-- Filled by JS -->
+                </div>
+                <div class="info-box tip">
+                    <div class="info-box-title">💡 Derek's Tip</div>
+                    <p>Rotate your tires every 5,000-7,500 miles to ensure even wear. With Cherokee County's mix of highway and rural roads, regular rotation is key.</p>
+                </div>
+            </div>
+
+            <!-- Upcoming Maintenance -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Maintenance Timeline</div>
+                        <div class="card-subtitle">Based on your driving patterns</div>
+                    </div>
+                </div>
+                <div class="timeline" id="timeline">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">At a Glance</div>
+                    </div>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicles Tab -->
+        <div class="tab-content" id="vehicles">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.6c-.4-.5-1-.9-1.6-.9H6c-.6 0-1.1.4-1.4.9L2 10"/>
+                            <circle cx="7" cy="17" r="2"/>
+                            <path d="M9 17h6"/>
+                            <circle cx="17" cy="17" r="2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Your Vehicles</div>
+                        <div class="card-subtitle">Select to view tire health</div>
+                    </div>
+                </div>
+                <div class="vehicle-list" id="vehicleList">
+                    <!-- Filled by JS -->
+                </div>
+                <button class="btn btn-primary btn-full" style="margin-top: 16px;" onclick="showAddVehicleModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Add Vehicle
+                </button>
+            </div>
+
+            <!-- Driving Profile -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Your Driving Profile</div>
+                        <div class="card-subtitle">Affects tire wear predictions</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Primary Driving Type</label>
+                    <div class="driving-chips" id="drivingType">
+                        <div class="driving-chip selected" data-value="mixed">Mixed</div>
+                        <div class="driving-chip" data-value="highway">Highway</div>
+                        <div class="driving-chip" data-value="city">City</div>
+                        <div class="driving-chip" data-value="rural">Rural</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Monthly Miles</label>
+                    <input type="number" class="form-input" id="monthlyMiles" value="1200" placeholder="e.g., 1200">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Common Routes</label>
+                    <div class="driving-chips" id="routes">
+                        <div class="driving-chip selected" data-value="i575">I-575</div>
+                        <div class="driving-chip selected" data-value="hickoryflat">Hickory Flat Hwy</div>
+                        <div class="driving-chip" data-value="i75">I-75</div>
+                        <div class="driving-chip" data-value="ballground">Ball Ground</div>
+                        <div class="driving-chip" data-value="hollysprings">Holly Springs</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="saveDrivingProfile()">Save Profile</button>
+            </div>
+        </div>
+
+        <!-- TPMS Tab -->
+        <div class="tab-content" id="tpms">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Tire Pressure Monitor</div>
+                        <div class="card-subtitle">Recommended: <span id="recommendedPsi">35</span> PSI</div>
+                    </div>
+                </div>
+                <div class="tpms-grid" id="tpmsGrid">
+                    <!-- Filled by JS -->
+                </div>
+                <div class="form-group" style="margin-top: 20px;">
+                    <label class="form-label">Update Readings</label>
+                    <div class="form-row">
+                        <input type="number" class="form-input" id="tpmsFl" placeholder="FL PSI">
+                        <input type="number" class="form-input" id="tpmsFr" placeholder="FR PSI">
+                    </div>
+                    <div class="form-row" style="margin-top: 12px;">
+                        <input type="number" class="form-input" id="tpmsRl" placeholder="RL PSI">
+                        <input type="number" class="form-input" id="tpmsRr" placeholder="RR PSI">
+                    </div>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="saveTpmsReadings()">Save Readings</button>
+            </div>
+
+            <!-- TPMS Education -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Understanding Your TPMS</div>
+                    </div>
+                </div>
+                <div class="info-box tip">
+                    <div class="info-box-title">What That Light Means</div>
+                    <p>The TPMS light appears when any tire drops 25% below recommended pressure. In Cherokee County's temperature swings, a 20°F change equals ~2 PSI change.</p>
+                </div>
+                <div class="info-box warning">
+                    <div class="info-box-title">Georgia Summer Tip</div>
+                    <p>Check pressure in the morning before driving. Hot asphalt can raise readings 4-6 PSI, masking a low tire.</p>
+                </div>
+                <div class="info-box tip">
+                    <div class="info-box-title">When to Worry</div>
+                    <p><strong>Don't panic:</strong> Small drops (2-3 PSI) on cold mornings are normal.<br>
+                    <strong>Take action:</strong> Consistent drops of 5+ PSI, or one tire losing pressure faster than others.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Learn Tab -->
+        <div class="tab-content" id="learn">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Tire Wear Patterns</div>
+                        <div class="card-subtitle">What your tires are telling you</div>
+                    </div>
+                </div>
+                <div class="wear-patterns">
+                    <div class="wear-pattern">
+                        <div class="wear-pattern-visual center"></div>
+                        <div class="wear-pattern-content">
+                            <h4>Center Wear</h4>
+                            <p>Worn in the middle, good on edges. Usually means over-inflation — too much air pressure.</p>
+                            <div class="wear-pattern-action">→ Reduce pressure to recommended PSI</div>
+                        </div>
+                    </div>
+                    <div class="wear-pattern">
+                        <div class="wear-pattern-visual edge"></div>
+                        <div class="wear-pattern-content">
+                            <h4>Edge Wear</h4>
+                            <p>Both edges worn, center looks good. Classic sign of under-inflation.</p>
+                            <div class="wear-pattern-action">→ Add air, check for slow leaks</div>
+                        </div>
+                    </div>
+                    <div class="wear-pattern">
+                        <div class="wear-pattern-visual one-side"></div>
+                        <div class="wear-pattern-content">
+                            <h4>One-Side Wear</h4>
+                            <p>Inside or outside edge worn. Your alignment needs attention — common after hitting Cherokee County potholes.</p>
+                            <div class="wear-pattern-action">→ Schedule alignment check</div>
+                        </div>
+                    </div>
+                    <div class="wear-pattern">
+                        <div class="wear-pattern-visual patchy"></div>
+                        <div class="wear-pattern-content">
+                            <h4>Cupping/Scalloping</h4>
+                            <p>Random smooth patches. Usually indicates worn suspension components or balance issues.</p>
+                            <div class="wear-pattern-action">→ Check shocks, struts & balance</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Rotation Schedule</div>
+                        <div class="card-subtitle">Maximize your tire investment</div>
+                    </div>
+                </div>
+                <div class="info-box tip">
+                    <div class="info-box-title">Every 5,000-7,500 Miles</div>
+                    <p>Regular rotation ensures even wear across all four tires. Front tires typically wear faster due to steering and braking forces.</p>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Vehicle Type</th>
+                            <th>Rotation Pattern</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Front-Wheel Drive</td>
+                            <td>Front to rear, rear crosses to front</td>
+                        </tr>
+                        <tr>
+                            <td>Rear-Wheel Drive</td>
+                            <td>Rear to front, front crosses to rear</td>
+                        </tr>
+                        <tr>
+                            <td>All-Wheel Drive</td>
+                            <td>X-pattern (all tires cross)</td>
+                        </tr>
+                        <tr>
+                            <td>Performance/Directional</td>
+                            <td>Front to rear, same side only</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Alignment Matters</div>
+                    </div>
+                </div>
+                <p style="margin-bottom: 16px;">Cherokee County roads can take a toll on alignment. Here's when to check:</p>
+                <ul style="padding-left: 20px; margin-bottom: 16px;">
+                    <li style="margin-bottom: 8px;">After hitting a significant pothole</li>
+                    <li style="margin-bottom: 8px;">Every 12,000-15,000 miles</li>
+                    <li style="margin-bottom: 8px;">When installing new tires</li>
+                    <li style="margin-bottom: 8px;">If steering pulls to one side</li>
+                    <li>Uneven tire wear visible</li>
+                </ul>
+                <div class="info-box warning">
+                    <div class="info-box-title">⚠️ Spring Pothole Season</div>
+                    <p>After Georgia's winter freeze-thaw cycle, spring is prime pothole season. Schedule an alignment check in March-April.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tab -->
+        <div class="tab-content" id="data">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Import Data</div>
+                        <div class="card-subtitle">Load your vehicle & tire information</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Import from CSV</label>
+                    <input type="file" class="file-input" id="csvImport" accept=".csv">
+                    <button class="btn btn-secondary btn-full" onclick="document.getElementById('csvImport').click()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        Choose CSV File
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Or Paste Data <span class="form-hint">(CSV format)</span></label>
+                    <textarea class="form-textarea" id="pasteData" placeholder="year,make,model,tire_brand,install_date,mileage&#10;2021,Ford,F-150,Michelin,2024-03-15,45230"></textarea>
+                    <button class="btn btn-secondary btn-full" style="margin-top: 12px;" onclick="importPastedData()">Import Pasted Data</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Export Data</div>
+                        <div class="card-subtitle">Backup your tire records</div>
+                    </div>
+                </div>
+                <div class="import-export-btns">
+                    <button class="btn btn-secondary" onclick="exportCSV()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        Export JSON
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: rgba(211, 47, 47, 0.1);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#D32F2F" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="card-title">Manage Data</div>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-full" onclick="clearAllData()">Clear All Data</button>
+                <p style="font-size: 0.75rem; color: #888; text-align: center; margin-top: 12px;">This cannot be undone. Export first!</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Add Vehicle Modal -->
+    <div class="modal-overlay" id="addVehicleModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add Vehicle</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <form id="addVehicleForm" onsubmit="addVehicle(event)">
+                <div class="form-group">
+                    <label class="form-label">Year</label>
+                    <input type="number" class="form-input" id="vehYear" min="1990" max="2027" required placeholder="e.g., 2021">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Make</label>
+                    <input type="text" class="form-input" id="vehMake" required placeholder="e.g., Ford">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-input" id="vehModel" required placeholder="e.g., F-150">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tire Brand</label>
+                    <select class="form-select" id="vehTireBrand">
+                        <option value="">Select brand...</option>
+                        <option value="Michelin">Michelin</option>
+                        <option value="BFGoodrich">BFGoodrich</option>
+                        <option value="Goodyear">Goodyear</option>
+                        <option value="Bridgestone">Bridgestone</option>
+                        <option value="Uniroyal">Uniroyal</option>
+                        <option value="Kelly">Kelly Tires</option>
+                        <option value="Toyo">Toyo</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tire Size</label>
+                    <input type="text" class="form-input" id="vehTireSize" placeholder="e.g., 275/55R20">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Install Date</label>
+                    <input type="date" class="form-input" id="vehInstallDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Current Odometer</label>
+                    <input type="number" class="form-input" id="vehOdometer" placeholder="e.g., 45230">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Recommended PSI</label>
+                    <input type="number" class="form-input" id="vehPsi" placeholder="e.g., 35" min="20" max="60">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Add Vehicle</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Update Tread Modal -->
+    <div class="modal-overlay" id="treadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Update Tread Depth</h3>
+                <button class="modal-close" onclick="closeModal()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <p style="margin-bottom: 20px; font-size: 0.875rem; color: #666;">Use a tread depth gauge or the penny test. Insert Lincoln's head — if you see all of his head, it's time for new tires.</p>
+            <div class="form-group">
+                <label class="form-label">Front Left (32nds inch)</label>
+                <input type="number" class="form-input" id="treadFl" min="0" max="12" step="0.5" placeholder="e.g., 6">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Front Right (32nds inch)</label>
+                <input type="number" class="form-input" id="treadFr" min="0" max="12" step="0.5" placeholder="e.g., 6">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rear Left (32nds inch)</label>
+                <input type="number" class="form-input" id="treadRl" min="0" max="12" step="0.5" placeholder="e.g., 7">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Rear Right (32nds inch)</label>
+                <input type="number" class="form-input" id="treadRr" min="0" max="12" step="0.5" placeholder="e.g., 7">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveTreadDepth()">Save Tread Measurements</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== DATA LAYER ====================
+        const DB_NAME = 'CherokeeTireLifeGuard';
+        const DB_VERSION = 1;
+        let db = null;
+
+        const DEMO_DATA = {
+            isDemo: true,
+            vehicles: [
+                {
+                    id: 1,
+                    year: 2021,
+                    make: 'Ford',
+                    model: 'F-150',
+                    tireBrand: 'BFGoodrich',
+                    tireSize: '275/55R20',
+                    installDate: '2024-03-15',
+                    odometer: 45230,
+                    odometerAtInstall: 32100,
+                    psi: 35,
+                    tread: { fl: 6.5, fr: 6, rl: 7, rr: 7.5 },
+                    tpms: { fl: 34, fr: 35, rl: 36, rr: 35 },
+                    lastRotation: '2025-01-10',
+                    lastAlignment: '2024-03-15'
+                },
+                {
+                    id: 2,
+                    year: 2019,
+                    make: 'Honda',
+                    model: 'Pilot',
+                    tireBrand: 'Michelin',
+                    tireSize: '245/60R18',
+                    installDate: '2023-08-20',
+                    odometer: 78500,
+                    odometerAtInstall: 52000,
+                    psi: 33,
+                    tread: { fl: 4, fr: 4.5, rl: 5.5, rr: 5 },
+                    tpms: { fl: 32, fr: 33, rl: 34, rr: 33 },
+                    lastRotation: '2024-11-05',
+                    lastAlignment: '2024-06-12'
+                },
+                {
+                    id: 3,
+                    year: 2023,
+                    make: 'Toyota',
+                    model: 'Camry',
+                    tireBrand: 'Goodyear',
+                    tireSize: '215/55R17',
+                    installDate: '2025-01-08',
+                    odometer: 12400,
+                    odometerAtInstall: 11800,
+                    psi: 32,
+                    tread: { fl: 9.5, fr: 9.5, rl: 10, rr: 10 },
+                    tpms: { fl: 32, fr: 32, rl: 32, rr: 31 },
+                    lastRotation: null,
+                    lastAlignment: '2025-01-08'
+                },
+                {
+                    id: 4,
+                    year: 2017,
+                    make: 'Chevrolet',
+                    model: 'Silverado',
+                    tireBrand: 'Toyo',
+                    tireSize: '265/70R17',
+                    installDate: '2024-06-01',
+                    odometer: 98200,
+                    odometerAtInstall: 85000,
+                    psi: 35,
+                    tread: { fl: 5, fr: 3.5, rl: 6, rr: 6.5 },
+                    tpms: { fl: 34, fr: 33, rl: 35, rr: 36 },
+                    lastRotation: '2024-12-15',
+                    lastAlignment: '2024-06-01'
+                }
+            ],
+            drivingProfile: {
+                type: 'mixed',
+                monthlyMiles: 1200,
+                routes: ['i575', 'hickoryflat']
+            },
+            selectedVehicleId: 1
+        };
+
+        let appData = null;
+
+        // IndexedDB initialization
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => {
+                    console.warn('IndexedDB failed, using localStorage');
+                    resolve(null);
+                };
+                
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains('appData')) {
+                        database.createObjectStore('appData', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function loadData() {
+            if (db) {
+                return new Promise((resolve) => {
+                    const tx = db.transaction('appData', 'readonly');
+                    const store = tx.objectStore('appData');
+                    const request = store.get('main');
+                    
+                    request.onsuccess = () => {
+                        if (request.result) {
+                            appData = request.result.data;
+                            resolve(appData);
+                        } else {
+                            appData = JSON.parse(JSON.stringify(DEMO_DATA));
+                            resolve(appData);
+                        }
+                    };
+                    
+                    request.onerror = () => {
+                        appData = JSON.parse(JSON.stringify(DEMO_DATA));
+                        resolve(appData);
+                    };
+                });
+            } else {
+                const stored = localStorage.getItem('cherokeeTireData');
+                if (stored) {
+                    appData = JSON.parse(stored);
+                } else {
+                    appData = JSON.parse(JSON.stringify(DEMO_DATA));
+                }
+                return appData;
+            }
+        }
+
+        async function saveData() {
+            if (db) {
+                return new Promise((resolve) => {
+                    const tx = db.transaction('appData', 'readwrite');
+                    const store = tx.objectStore('appData');
+                    store.put({ id: 'main', data: appData });
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => {
+                        localStorage.setItem('cherokeeTireData', JSON.stringify(appData));
+                        resolve(true);
+                    };
+                });
+            } else {
+                localStorage.setItem('cherokeeTireData', JSON.stringify(appData));
+                return true;
+            }
+        }
+
+        // ==================== UI HELPERS ====================
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function showAddVehicleModal() {
+            document.getElementById('addVehicleModal').classList.add('show');
+        }
+
+        function showTreadModal() {
+            const vehicle = getSelectedVehicle();
+            if (vehicle) {
+                document.getElementById('treadFl').value = vehicle.tread.fl || '';
+                document.getElementById('treadFr').value = vehicle.tread.fr || '';
+                document.getElementById('treadRl').value = vehicle.tread.rl || '';
+                document.getElementById('treadRr').value = vehicle.tread.rr || '';
+            }
+            document.getElementById('treadModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('show'));
+        }
+
+        function getSelectedVehicle() {
+            return appData.vehicles.find(v => v.id === appData.selectedVehicleId);
+        }
+
+        // ==================== TAB NAVIGATION ====================
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ==================== DRIVING CHIPS ====================
+        document.querySelectorAll('.driving-chips').forEach(container => {
+            container.querySelectorAll('.driving-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const isMulti = container.id === 'routes';
+                    if (isMulti) {
+                        chip.classList.toggle('selected');
+                    } else {
+                        container.querySelectorAll('.driving-chip').forEach(c => c.classList.remove('selected'));
+                        chip.classList.add('selected');
+                    }
+                });
+            });
+        });
+
+        // ==================== DEMO BANNER ====================
+        function dismissDemo() {
+            document.getElementById('demoBanner').style.display = 'none';
+            appData.isDemo = false;
+            saveData();
+        }
+
+        // ==================== RENDER FUNCTIONS ====================
+        function renderHealthRing() {
+            const canvas = document.getElementById('healthRing');
+            const ctx = canvas.getContext('2d');
+            const vehicle = getSelectedVehicle();
+            
+            if (!vehicle) return;
+            
+            const score = calculateHealthScore(vehicle);
+            const scoreEl = document.getElementById('healthScore');
+            const statusEl = document.getElementById('healthStatus');
+            
+            scoreEl.textContent = score;
+            
+            // Determine status
+            let status, statusClass;
+            if (score >= 85) {
+                status = 'Excellent Condition';
+                statusClass = 'excellent';
+            } else if (score >= 70) {
+                status = 'Good Condition';
+                statusClass = 'good';
+            } else if (score >= 50) {
+                status = 'Needs Attention';
+                statusClass = 'attention';
+            } else {
+                status = 'Service Recommended';
+                statusClass = 'urgent';
+            }
+            
+            statusEl.textContent = status;
+            statusEl.className = 'health-status ' + statusClass;
+            
+            // Draw ring
+            ctx.clearRect(0, 0, 180, 180);
+            
+            // Background ring
+            ctx.beginPath();
+            ctx.arc(90, 90, 75, 0, Math.PI * 2);
+            ctx.strokeStyle = '#E0E0E0';
+            ctx.lineWidth = 12;
+            ctx.stroke();
+            
+            // Score ring
+            ctx.beginPath();
+            ctx.arc(90, 90, 75, -Math.PI / 2, (-Math.PI / 2) + (Math.PI * 2 * score / 100));
+            ctx.strokeStyle = score >= 70 ? '#4CAF50' : score >= 50 ? '#FF9800' : '#D32F2F';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        function calculateHealthScore(vehicle) {
+            const tread = vehicle.tread;
+            const avgTread = (tread.fl + tread.fr + tread.rl + tread.rr) / 4;
+            
+            // Tread contributes 60% (10/32 = 100%, 2/32 = 0%)
+            const treadScore = Math.max(0, Math.min(100, (avgTread - 2) / 8 * 100)) * 0.6;
+            
+            // Pressure contributes 25%
+            const tpms = vehicle.tpms;
+            const avgPressure = (tpms.fl + tpms.fr + tpms.rl + tpms.rr) / 4;
+            const pressureDiff = Math.abs(avgPressure - vehicle.psi);
+            const pressureScore = Math.max(0, 100 - pressureDiff * 10) * 0.25;
+            
+            // Age/mileage contributes 15%
+            const milesSinceInstall = vehicle.odometer - vehicle.odometerAtInstall;
+            const ageScore = Math.max(0, 100 - milesSinceInstall / 500) * 0.15;
+            
+            return Math.round(treadScore + pressureScore + ageScore);
+        }
+
+        function renderTireGrid() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            const grid = document.getElementById('tireGrid');
+            const positions = [
+                { key: 'fl', label: 'Front Left' },
+                { key: 'fr', label: 'Front Right' },
+                { key: 'rl', label: 'Rear Left' },
+                { key: 'rr', label: 'Rear Right' }
+            ];
+            
+            grid.innerHTML = positions.map(pos => {
+                const depth = vehicle.tread[pos.key];
+                const pct = Math.min(100, Math.max(0, (depth / 10) * 100));
+                let cls = '';
+                let color = '#4CAF50';
+                
+                if (depth <= 2) {
+                    cls = 'danger';
+                    color = '#D32F2F';
+                } else if (depth <= 4) {
+                    cls = 'warning';
+                    color = '#FF9800';
+                }
+                
+                return `
+                    <div class="tire-position ${cls}" onclick="showTreadModal()">
+                        <div class="tire-position-label">${pos.label}</div>
+                        <div class="tire-visual">
+                            <div class="tire-tread-bar">
+                                <div class="tire-tread-fill" style="width: ${pct}%; background: ${color};"></div>
+                            </div>
+                        </div>
+                        <div class="tire-depth">${depth}<span>/32"</span></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTimeline() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            const timeline = document.getElementById('timeline');
+            const today = new Date();
+            const events = [];
+            
+            // Calculate next rotation
+            const milesSinceInstall = vehicle.odometer - vehicle.odometerAtInstall;
+            const milesPerMonth = appData.drivingProfile.monthlyMiles || 1000;
+            const milesSinceRotation = vehicle.lastRotation 
+                ? vehicle.odometer - (vehicle.odometerAtInstall + (milesSinceInstall - 5000))
+                : milesSinceInstall;
+            
+            const milesUntilRotation = 6000 - milesSinceRotation;
+            const monthsUntilRotation = Math.max(0, milesUntilRotation / milesPerMonth);
+            const rotationDate = new Date(today);
+            rotationDate.setMonth(rotationDate.getMonth() + Math.floor(monthsUntilRotation));
+            
+            events.push({
+                date: rotationDate,
+                title: 'Tire Rotation Due',
+                desc: `Every 5,000-7,500 miles for even wear`,
+                status: monthsUntilRotation < 1 ? 'upcoming' : ''
+            });
+            
+            // Alignment check (every 12 months or 15k miles)
+            const lastAlign = vehicle.lastAlignment ? new Date(vehicle.lastAlignment) : new Date(vehicle.installDate);
+            const nextAlign = new Date(lastAlign);
+            nextAlign.setFullYear(nextAlign.getFullYear() + 1);
+            
+            events.push({
+                date: nextAlign,
+                title: 'Alignment Check',
+                desc: 'Annual check recommended for Cherokee County roads',
+                status: nextAlign < new Date(today.getTime() + 30*24*60*60*1000) ? 'upcoming' : ''
+            });
+            
+            // Tire replacement estimate
+            const avgTread = (vehicle.tread.fl + vehicle.tread.fr + vehicle.tread.rl + vehicle.tread.rr) / 4;
+            const treadLeft = avgTread - 2; // 2/32 minimum
+            const wearPerMonth = 0.3; // rough estimate
+            const monthsUntilReplacement = treadLeft / wearPerMonth;
+            const replaceDate = new Date(today);
+            replaceDate.setMonth(replaceDate.getMonth() + Math.floor(monthsUntilReplacement));
+            
+            events.push({
+                date: replaceDate,
+                title: 'Estimated Tire Replacement',
+                desc: `Based on current wear rate and driving habits`,
+                status: monthsUntilReplacement < 3 ? 'overdue' : ''
+            });
+            
+            // Sort by date
+            events.sort((a, b) => a.date - b.date);
+            
+            timeline.innerHTML = events.map(e => `
+                <div class="timeline-item">
+                    <div class="timeline-dot ${e.status}"></div>
+                    <div class="timeline-date">${e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</div>
+                    <div class="timeline-title">${e.title}</div>
+                    <div class="timeline-desc">${e.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderStats() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            const grid = document.getElementById('statsGrid');
+            const milesSinceInstall = vehicle.odometer - vehicle.odometerAtInstall;
+            const avgTread = ((vehicle.tread.fl + vehicle.tread.fr + vehicle.tread.rl + vehicle.tread.rr) / 4).toFixed(1);
+            const installDate = new Date(vehicle.installDate);
+            const monthsOld = Math.floor((new Date() - installDate) / (30 * 24 * 60 * 60 * 1000));
+            
+            grid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-value">${milesSinceInstall.toLocaleString()}</div>
+                    <div class="stat-label">Miles on Tires</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${avgTread}"</div>
+                    <div class="stat-label">Avg Tread Depth</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${monthsOld}</div>
+                    <div class="stat-label">Months Old</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">${vehicle.tireBrand}</div>
+                    <div class="stat-label">Tire Brand</div>
+                </div>
+            `;
+        }
+
+        function renderVehicleList() {
+            const list = document.getElementById('vehicleList');
+            
+            list.innerHTML = appData.vehicles.map(v => {
+                const score = calculateHealthScore(v);
+                let scoreColor = score >= 70 ? 'var(--safety-green)' : score >= 50 ? 'var(--warning-amber)' : 'var(--bright-red)';
+                const isSelected = v.id === appData.selectedVehicleId;
+                
+                return `
+                    <div class="vehicle-item ${isSelected ? 'selected' : ''}" onclick="selectVehicle(${v.id})">
+                        <div class="vehicle-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.6c-.4-.5-1-.9-1.6-.9H6c-.6 0-1.1.4-1.4.9L2 10"/>
+                                <circle cx="7" cy="17" r="2"/>
+                                <path d="M9 17h6"/>
+                                <circle cx="17" cy="17" r="2"/>
+                            </svg>
+                        </div>
+                        <div class="vehicle-info">
+                            <div class="vehicle-name">${v.year} ${v.make} ${v.model}</div>
+                            <div class="vehicle-meta">${v.tireBrand} ${v.tireSize}</div>
+                        </div>
+                        <div class="vehicle-health" style="color: ${scoreColor}">${score}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderTPMS() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            const grid = document.getElementById('tpmsGrid');
+            const rec = vehicle.psi;
+            document.getElementById('recommendedPsi').textContent = rec;
+            
+            const positions = [
+                { key: 'fl', label: 'Front Left' },
+                { key: 'fr', label: 'Front Right' },
+                { key: 'rl', label: 'Rear Left' },
+                { key: 'rr', label: 'Rear Right' }
+            ];
+            
+            grid.innerHTML = positions.map(pos => {
+                const psi = vehicle.tpms[pos.key];
+                let status = 'ok';
+                let statusText = 'Good';
+                let cls = '';
+                
+                if (psi < rec - 4) {
+                    status = 'low';
+                    statusText = 'Low';
+                    cls = 'low';
+                } else if (psi > rec + 4) {
+                    status = 'high';
+                    statusText = 'High';
+                    cls = 'high';
+                }
+                
+                return `
+                    <div class="tpms-reading ${cls}">
+                        <div class="tpms-position">${pos.label}</div>
+                        <div class="tpms-value">${psi}<span> PSI</span></div>
+                        <div class="tpms-status ${status}">${statusText}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderDrivingProfile() {
+            const profile = appData.drivingProfile;
+            
+            // Set driving type
+            document.querySelectorAll('#drivingType .driving-chip').forEach(chip => {
+                chip.classList.toggle('selected', chip.dataset.value === profile.type);
+            });
+            
+            // Set monthly miles
+            document.getElementById('monthlyMiles').value = profile.monthlyMiles;
+            
+            // Set routes
+            document.querySelectorAll('#routes .driving-chip').forEach(chip => {
+                chip.classList.toggle('selected', profile.routes.includes(chip.dataset.value));
+            });
+        }
+
+        // ==================== ACTION HANDLERS ====================
+        function selectVehicle(id) {
+            appData.selectedVehicleId = id;
+            saveData();
+            
+            const vehicle = getSelectedVehicle();
+            document.getElementById('vehicleName').textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+            
+            renderVehicleList();
+            renderHealthRing();
+            renderTireGrid();
+            renderTimeline();
+            renderStats();
+            renderTPMS();
+            
+            showToast(`Switched to ${vehicle.year} ${vehicle.make} ${vehicle.model}`);
+        }
+
+        async function addVehicle(e) {
+            e.preventDefault();
+            
+            const newId = Math.max(...appData.vehicles.map(v => v.id), 0) + 1;
+            const odometer = parseInt(document.getElementById('vehOdometer').value) || 0;
+            
+            const vehicle = {
+                id: newId,
+                year: parseInt(document.getElementById('vehYear').value),
+                make: document.getElementById('vehMake').value,
+                model: document.getElementById('vehModel').value,
+                tireBrand: document.getElementById('vehTireBrand').value || 'Unknown',
+                tireSize: document.getElementById('vehTireSize').value || '',
+                installDate: document.getElementById('vehInstallDate').value || new Date().toISOString().split('T')[0],
+                odometer: odometer,
+                odometerAtInstall: odometer,
+                psi: parseInt(document.getElementById('vehPsi').value) || 35,
+                tread: { fl: 10, fr: 10, rl: 10, rr: 10 },
+                tpms: { fl: 35, fr: 35, rl: 35, rr: 35 },
+                lastRotation: null,
+                lastAlignment: document.getElementById('vehInstallDate').value || null
+            };
+            
+            appData.vehicles.push(vehicle);
+            appData.isDemo = false;
+            await saveData();
+            
+            closeModal();
+            document.getElementById('addVehicleForm').reset();
+            document.getElementById('demoBanner').style.display = 'none';
+            
+            selectVehicle(newId);
+            showToast('Vehicle added successfully!');
+        }
+
+        async function saveTreadDepth() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            vehicle.tread = {
+                fl: parseFloat(document.getElementById('treadFl').value) || vehicle.tread.fl,
+                fr: parseFloat(document.getElementById('treadFr').value) || vehicle.tread.fr,
+                rl: parseFloat(document.getElementById('treadRl').value) || vehicle.tread.rl,
+                rr: parseFloat(document.getElementById('treadRr').value) || vehicle.tread.rr
+            };
+            
+            appData.isDemo = false;
+            await saveData();
+            closeModal();
+            
+            renderHealthRing();
+            renderTireGrid();
+            renderStats();
+            renderVehicleList();
+            
+            showToast('Tread measurements saved!');
+        }
+
+        async function saveTpmsReadings() {
+            const vehicle = getSelectedVehicle();
+            if (!vehicle) return;
+            
+            const fl = parseFloat(document.getElementById('tpmsFl').value);
+            const fr = parseFloat(document.getElementById('tpmsFr').value);
+            const rl = parseFloat(document.getElementById('tpmsRl').value);
+            const rr = parseFloat(document.getElementById('tpmsRr').value);
+            
+            if (fl) vehicle.tpms.fl = fl;
+            if (fr) vehicle.tpms.fr = fr;
+            if (rl) vehicle.tpms.rl = rl;
+            if (rr) vehicle.tpms.rr = rr;
+            
+            appData.isDemo = false;
+            await saveData();
+            
+            renderTPMS();
+            renderHealthRing();
+            renderVehicleList();
+            
+            // Clear inputs
+            ['tpmsFl', 'tpmsFr', 'tpmsRl', 'tpmsRr'].forEach(id => document.getElementById(id).value = '');
+            
+            showToast('Pressure readings saved!');
+        }
+
+        async function saveDrivingProfile() {
+            const type = document.querySelector('#drivingType .driving-chip.selected')?.dataset.value || 'mixed';
+            const monthlyMiles = parseInt(document.getElementById('monthlyMiles').value) || 1000;
+            const routes = Array.from(document.querySelectorAll('#routes .driving-chip.selected')).map(c => c.dataset.value);
+            
+            appData.drivingProfile = { type, monthlyMiles, routes };
+            appData.isDemo = false;
+            await saveData();
+            
+            renderTimeline();
+            showToast('Driving profile saved!');
+        }
+
+        // ==================== IMPORT / EXPORT ====================
+        document.getElementById('csvImport').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const text = await file.text();
+            parseAndImportCSV(text);
+        });
+
+        function parseAndImportCSV(text) {
+            try {
+                const lines = text.trim().split('\n');
+                const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+                
+                const newVehicles = [];
+                let maxId = Math.max(...appData.vehicles.map(v => v.id), 0);
+                
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+                    const row = {};
+                    headers.forEach((h, idx) => row[h] = values[idx]);
+                    
+                    maxId++;
+                    newVehicles.push({
+                        id: maxId,
+                        year: parseInt(row.year) || 2020,
+                        make: row.make || 'Unknown',
+                        model: row.model || 'Unknown',
+                        tireBrand: row.tire_brand || row.tirebrand || 'Unknown',
+                        tireSize: row.tire_size || row.tiresize || '',
+                        installDate: row.install_date || row.installdate || new Date().toISOString().split('T')[0],
+                        odometer: parseInt(row.odometer || row.mileage) || 0,
+                        odometerAtInstall: parseInt(row.odometer || row.mileage) || 0,
+                        psi: parseInt(row.psi) || 35,
+                        tread: { fl: 10, fr: 10, rl: 10, rr: 10 },
+                        tpms: { fl: 35, fr: 35, rl: 35, rr: 35 },
+                        lastRotation: null,
+                        lastAlignment: null
+                    });
+                }
+                
+                appData.vehicles = [...appData.vehicles, ...newVehicles];
+                appData.isDemo = false;
+                saveData();
+                
+                renderVehicleList();
+                showToast(`Imported ${newVehicles.length} vehicle(s)!`);
+            } catch (err) {
+                showToast('Error parsing CSV. Check format.', 'error');
+            }
+        }
+
+        function importPastedData() {
+            const text = document.getElementById('pasteData').value;
+            if (!text.trim()) {
+                showToast('No data to import', 'warning');
+                return;
+            }
+            parseAndImportCSV(text);
+            document.getElementById('pasteData').value = '';
+        }
+
+        function exportCSV() {
+            const headers = 'year,make,model,tire_brand,tire_size,install_date,odometer,psi,tread_fl,tread_fr,tread_rl,tread_rr';
+            const rows = appData.vehicles.map(v => 
+                `${v.year},${v.make},${v.model},${v.tireBrand},${v.tireSize},${v.installDate},${v.odometer},${v.psi},${v.tread.fl},${v.tread.fr},${v.tread.rl},${v.tread.rr}`
+            );
+            
+            const csv = [headers, ...rows].join('\n');
+            downloadFile(csv, 'cherokee-tire-export.csv', 'text/csv');
+            showToast('CSV exported!');
+        }
+
+        function exportJSON() {
+            const json = JSON.stringify(appData, null, 2);
+            downloadFile(json, 'cherokee-tire-backup.json', 'application/json');
+            showToast('JSON backup exported!');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function clearAllData() {
+            if (!confirm('Are you sure you want to delete all data? This cannot be undone.')) return;
+            
+            appData = JSON.parse(JSON.stringify(DEMO_DATA));
+            await saveData();
+            
+            document.getElementById('demoBanner').style.display = 'flex';
+            renderAll();
+            showToast('All data cleared. Demo data restored.', 'warning');
+        }
+
+        // ==================== INITIALIZATION ====================
+        function renderAll() {
+            const vehicle = getSelectedVehicle();
+            if (vehicle) {
+                document.getElementById('vehicleName').textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+            }
+            
+            renderHealthRing();
+            renderTireGrid();
+            renderTimeline();
+            renderStats();
+            renderVehicleList();
+            renderTPMS();
+            renderDrivingProfile();
+            
+            // Hide demo banner if not demo
+            if (!appData.isDemo) {
+                document.getElementById('demoBanner').style.display = 'none';
+            }
+        }
+
+        // Modal close on outside click
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeModal();
+            });
+        });
+
+        // Init
+        (async function init() {
+            await initDB();
+            await loadData();
+            renderAll();
+        })();
+    </script>
+</body>
+</html>
