@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Storm Command Center — The Good Tree Company</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%236A961F'/%3E%3Cpath d='M50 20 L60 45 L85 45 L65 60 L72 85 L50 70 L28 85 L35 60 L15 45 L40 45 Z' fill='white'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: {
+                            dark: '#102300',
+                            green: '#183900',
+                            DEFAULT: '#183900'
+                        },
+                        brand: {
+                            green: '#6A961F',
+                            deep: '#5F821C'
+                        },
+                        cream: '#E9E8DB',
+                        alert: {
+                            orange: '#FF5E14',
+                            deep: '#D44D0E'
+                        },
+                        navy: '#1C262F'
+                    },
+                    fontFamily: {
+                        poppins: ['Poppins', 'sans-serif'],
+                        roboto: ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { font-family: 'Roboto', sans-serif; background: #102300; }
+        
+        /* Prevent text selection on structural elements (NOT inputs/textareas) */
+        header, nav, .job-card, .toast, button, .severity-ring, .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        input, textarea, [contenteditable] {
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #183900; }
+        ::-webkit-scrollbar-thumb { background: #6A961F; border-radius: 3px; }
+        
+        /* Priority badges */
+        .priority-critical { background: linear-gradient(135deg, #FF5E14 0%, #D44D0E 100%); animation: pulse-critical 2s infinite; }
+        .priority-high { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); }
+        .priority-medium { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
+        .priority-low { background: linear-gradient(135deg, #6A961F 0%, #5F821C 100%); }
+        
+        @keyframes pulse-critical {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 94, 20, 0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(255, 94, 20, 0); }
+        }
+        
+        /* Card animations */
+        .job-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .job-card:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+        .job-card.dragging { opacity: 0.5; transform: scale(1.02); }
+        
+        /* Toast */
+        .toast { animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-in 4.7s; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        
+        /* Shake animation */
+        .shake { animation: shake 0.5s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        /* Tab bar mobile */
+        .tab-active { color: #6A961F; }
+        .tab-active svg { stroke: #6A961F; }
+        
+        /* Severity indicator */
+        .severity-ring { 
+            background: conic-gradient(
+                var(--severity-color) calc(var(--severity) * 36deg),
+                rgba(255,255,255,0.1) calc(var(--severity) * 36deg)
+            );
+        }
+        
+        /* Status badges */
+        .status-pending { background: #F59E0B; color: #1C262F; }
+        .status-dispatched { background: #3B82F6; color: white; }
+        .status-enroute { background: #8B5CF6; color: white; }
+        .status-onsite { background: #6A961F; color: white; }
+        .status-complete { background: #10B981; color: white; }
+        .status-hold { background: #EF4444; color: white; }
+        
+        /* Print styles */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .job-card { break-inside: avoid; border: 1px solid #ccc !important; }
+        }
+        
+        /* Glowing button */
+        .glow-button {
+            box-shadow: 0 0 20px rgba(106, 150, 31, 0.4);
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 30px rgba(106, 150, 31, 0.6);
+            transform: scale(1.02);
+        }
+        
+        /* Storm mode header */
+        .storm-active {
+            background: linear-gradient(90deg, #FF5E14, #D44D0E, #FF5E14);
+            background-size: 200% 100%;
+            animation: stormPulse 3s ease infinite;
+        }
+        @keyframes stormPulse {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-forest-dark text-white" x-data="stormCommand()" x-init="init()">
+    
+    <!-- Demo Banner -->
+    <div x-show="showDemoBanner" x-transition class="bg-alert-orange text-white px-4 py-3 text-center font-poppins text-sm fixed top-0 left-0 right-0 z-50 no-print">
+        <span class="font-medium">📋 Showing sample data.</span>
+        <button @click="clearDemoData()" class="underline ml-2 font-semibold hover:text-cream">Tap to clear and start fresh.</button>
+        <button @click="showDemoBanner = false" class="ml-4 opacity-70 hover:opacity-100">✕</button>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 no-print"></div>
+    
+    <!-- Main Container -->
+    <div class="pb-20 lg:pb-0" :class="showDemoBanner ? 'pt-14' : 'pt-0'">
+        
+        <!-- Desktop Header -->
+        <header class="hidden lg:flex items-center justify-between px-6 py-4 bg-forest-green border-b border-brand-green/30">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-brand-green flex items-center justify-center">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-poppins font-bold text-xl text-cream">Storm Command Center</h1>
+                    <p class="text-sm text-brand-green">The Good Tree Company</p>
+                </div>
+            </div>
+            
+            <nav class="flex items-center gap-2">
+                <button @click="currentView = 'dashboard'" 
+                    :class="currentView === 'dashboard' ? 'bg-brand-green text-white' : 'text-cream hover:bg-forest-dark'"
+                    class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all">
+                    Dashboard
+                </button>
+                <button @click="currentView = 'requests'" 
+                    :class="currentView === 'requests' ? 'bg-brand-green text-white' : 'text-cream hover:bg-forest-dark'"
+                    class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all flex items-center gap-2">
+                    Requests
+                    <span x-show="pendingCount > 0" class="bg-alert-orange text-white text-xs px-2 py-0.5 rounded-full" x-text="pendingCount"></span>
+                </button>
+                <button @click="currentView = 'crews'" 
+                    :class="currentView === 'crews' ? 'bg-brand-green text-white' : 'text-cream hover:bg-forest-dark'"
+                    class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all">
+                    Crews
+                </button>
+                <button @click="currentView = 'archive'" 
+                    :class="currentView === 'archive' ? 'bg-brand-green text-white' : 'text-cream hover:bg-forest-dark'"
+                    class="px-4 py-2 rounded-lg font-poppins font-medium text-sm transition-all">
+                    Archive
+                </button>
+            </nav>
+            
+            <div class="flex items-center gap-4">
+                <button @click="toggleStormMode()" 
+                    :class="stormMode ? 'storm-active text-white' : 'bg-forest-dark text-alert-orange border border-alert-orange'"
+                    class="px-4 py-2 rounded-lg font-poppins font-semibold text-sm flex items-center gap-2 transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span x-text="stormMode ? 'STORM MODE ON' : 'Storm Mode'"></span>
+                </button>
+                <button @click="showSettings = true" class="p-2 rounded-lg hover:bg-forest-dark text-cream transition-all">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Mobile Header -->
+        <header class="lg:hidden flex items-center justify-between px-4 py-3 bg-forest-green">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-brand-green flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-poppins font-bold text-lg text-cream">Storm Command</h1>
+                </div>
+            </div>
+            
+            <button @click="toggleStormMode()" 
+                :class="stormMode ? 'storm-active' : 'bg-forest-dark border border-alert-orange'"
+                class="p-2.5 rounded-lg transition-all">
+                <svg class="w-6 h-6" :class="stormMode ? 'text-white' : 'text-alert-orange'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </button>
+        </header>
+        
+        <!-- Empty State -->
+        <template x-if="jobs.length === 0 && currentView !== 'crews'">
+            <div class="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+                <div class="w-24 h-24 rounded-full bg-forest-green flex items-center justify-center mb-6">
+                    <svg class="w-12 h-12 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <h2 class="font-poppins font-bold text-2xl text-cream mb-3">Ready for Storm Season</h2>
+                <p class="text-brand-green mb-8 max-w-md">
+                    Triage emergency requests, dispatch crews, and keep customers informed — all from one command center.
+                </p>
+                <button @click="showNewRequest = true" class="glow-button bg-brand-green hover:bg-brand-deep text-white font-poppins font-semibold px-8 py-4 rounded-xl text-lg flex items-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    New Emergency Request
+                </button>
+                <button @click="showImport = true" class="mt-4 text-brand-green hover:text-cream underline text-sm">
+                    or import existing data
+                </button>
+                <button @click="loadDemoData()" class="mt-2 text-cream/50 hover:text-cream text-xs">
+                    Load sample data to explore
+                </button>
+            </div>
+        </template>
+        
+        <!-- Dashboard View -->
+        <template x-if="jobs.length > 0 && currentView === 'dashboard'">
+            <div class="p-4 lg:p-6">
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+                    <div class="bg-forest-green rounded-xl p-4 border border-brand-green/20">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-brand-green text-sm">Pending</span>
+                            <div class="w-8 h-8 rounded-full bg-alert-orange/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-alert-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="font-poppins font-bold text-3xl text-cream" x-text="pendingCount"></p>
+                    </div>
+                    <div class="bg-forest-green rounded-xl p-4 border border-brand-green/20">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-brand-green text-sm">Active</span>
+                            <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="font-poppins font-bold text-3xl text-cream" x-text="activeCount"></p>
+                    </div>
+                    <div class="bg-forest-green rounded-xl p-4 border border-brand-green/20">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-brand-green text-sm">Completed</span>
+                            <div class="w-8 h-8 rounded-full bg-brand-green/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="font-poppins font-bold text-3xl text-cream" x-text="completedToday"></p>
+                    </div>
+                    <div class="bg-forest-green rounded-xl p-4 border border-brand-green/20">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-brand-green text-sm">Crews Active</span>
+                            <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <p class="font-poppins font-bold text-3xl text-cream" x-text="crews.filter(c => c.status === 'active').length"></p>
+                    </div>
+                </div>
+                
+                <!-- Priority Queue -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-poppins font-bold text-lg text-cream">Priority Queue</h2>
+                        <button @click="showNewRequest = true" class="bg-brand-green hover:bg-brand-deep text-white font-poppins font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            New Request
+                        </button>
+                    </div>
+                    
+                    <div id="priority-queue" class="space-y-3">
+                        <template x-for="job in sortedJobs.slice(0, 5)" :key="job.id">
+                            <div @click="selectJob(job)" class="job-card bg-forest-green rounded-xl p-4 border border-brand-green/20 cursor-pointer">
+                                <div class="flex items-start gap-4">
+                                    <!-- Severity Ring -->
+                                    <div class="relative w-14 h-14 flex-shrink-0">
+                                        <div class="absolute inset-0 rounded-full severity-ring" 
+                                            :style="'--severity: ' + job.severity + '; --severity-color: ' + getSeverityColor(job.severity)"></div>
+                                        <div class="absolute inset-1 rounded-full bg-forest-dark flex items-center justify-center">
+                                            <span class="font-poppins font-bold text-lg" :class="job.severity >= 8 ? 'text-alert-orange' : job.severity >= 5 ? 'text-yellow-400' : 'text-brand-green'" x-text="job.severity"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="'status-' + job.status" x-text="formatStatus(job.status)"></span>
+                                            <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">⚡ Power Lines</span>
+                                            <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">🏠 Structure</span>
+                                        </div>
+                                        <h3 class="font-poppins font-semibold text-cream truncate" x-text="job.customerName"></h3>
+                                        <p class="text-sm text-brand-green truncate" x-text="job.address"></p>
+                                        <p class="text-xs text-cream/60 mt-1" x-text="job.description.substring(0, 60) + (job.description.length > 60 ? '...' : '')"></p>
+                                    </div>
+                                    
+                                    <div class="text-right flex-shrink-0">
+                                        <p class="text-xs text-cream/60" x-text="formatTime(job.createdAt)"></p>
+                                        <p x-show="job.crew" class="text-xs text-brand-green mt-1" x-text="'Crew ' + job.crew"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <button x-show="sortedJobs.length > 5" @click="currentView = 'requests'" class="w-full mt-3 py-3 text-center text-brand-green hover:text-cream text-sm font-medium transition-colors">
+                        View all <span x-text="jobs.length"></span> requests →
+                    </button>
+                </div>
+                
+                <!-- Crew Status -->
+                <div>
+                    <h2 class="font-poppins font-bold text-lg text-cream mb-4">Crew Status</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <template x-for="crew in crews" :key="crew.id">
+                            <div class="bg-forest-green rounded-xl p-4 border border-brand-green/20">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-poppins font-bold" :style="'background:' + crew.color" x-text="crew.id"></div>
+                                        <div>
+                                            <h3 class="font-poppins font-semibold text-cream" x-text="crew.name"></h3>
+                                            <p class="text-xs text-brand-green" x-text="crew.lead"></p>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs px-2 py-1 rounded-full" :class="crew.status === 'active' ? 'bg-brand-green/20 text-brand-green' : 'bg-cream/10 text-cream/60'" x-text="crew.status === 'active' ? 'Active' : 'Off Duty'"></span>
+                                </div>
+                                <div x-show="crew.currentJob" class="bg-forest-dark rounded-lg p-3">
+                                    <p class="text-xs text-cream/60 mb-1">Current Job</p>
+                                    <p class="text-sm text-cream font-medium" x-text="getJobById(crew.currentJob)?.address || 'Unknown'"></p>
+                                </div>
+                                <div x-show="!crew.currentJob && crew.status === 'active'" class="bg-forest-dark rounded-lg p-3 text-center">
+                                    <p class="text-sm text-brand-green">Available for dispatch</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Requests View -->
+        <template x-if="jobs.length > 0 && currentView === 'requests'">
+            <div class="p-4 lg:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-poppins font-bold text-lg text-cream">All Requests</h2>
+                    <div class="flex items-center gap-2">
+                        <select x-model="filterStatus" class="bg-forest-green border border-brand-green/30 text-cream text-sm rounded-lg px-3 py-2">
+                            <option value="all">All Status</option>
+                            <option value="pending">Pending</option>
+                            <option value="dispatched">Dispatched</option>
+                            <option value="enroute">En Route</option>
+                            <option value="onsite">On Site</option>
+                            <option value="complete">Complete</option>
+                            <option value="hold">On Hold</option>
+                        </select>
+                        <button @click="showNewRequest = true" class="bg-brand-green hover:bg-brand-deep text-white p-2 rounded-lg transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <template x-for="job in filteredJobs" :key="job.id">
+                        <div @click="selectJob(job)" class="job-card bg-forest-green rounded-xl p-4 border border-brand-green/20 cursor-pointer">
+                            <div class="flex items-start gap-4">
+                                <div class="relative w-12 h-12 flex-shrink-0">
+                                    <div class="absolute inset-0 rounded-full severity-ring" 
+                                        :style="'--severity: ' + job.severity + '; --severity-color: ' + getSeverityColor(job.severity)"></div>
+                                    <div class="absolute inset-1 rounded-full bg-forest-dark flex items-center justify-center">
+                                        <span class="font-poppins font-bold" :class="job.severity >= 8 ? 'text-alert-orange' : job.severity >= 5 ? 'text-yellow-400' : 'text-brand-green'" x-text="job.severity"></span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="'status-' + job.status" x-text="formatStatus(job.status)"></span>
+                                        <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">⚡ Power</span>
+                                        <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">🏠 Struct</span>
+                                        <span x-show="job.blocked" class="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">🚗 Blocked</span>
+                                    </div>
+                                    <h3 class="font-poppins font-semibold text-cream" x-text="job.customerName"></h3>
+                                    <p class="text-sm text-brand-green" x-text="job.address"></p>
+                                    <p class="text-sm text-cream/70" x-text="job.phone"></p>
+                                </div>
+                                
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-xs text-cream/60" x-text="formatTime(job.createdAt)"></p>
+                                    <p x-show="job.crew" class="text-xs text-brand-green mt-1" x-text="'Crew ' + job.crew"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Crews View -->
+        <template x-if="currentView === 'crews'">
+            <div class="p-4 lg:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-poppins font-bold text-lg text-cream">Crew Management</h2>
+                    <button @click="showNewCrew = true" class="bg-brand-green hover:bg-brand-deep text-white font-poppins font-medium px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                        Add Crew
+                    </button>
+                </div>
+                
+                <template x-if="crews.length === 0">
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-forest-green flex items-center justify-center">
+                            <svg class="w-8 h-8 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-poppins font-semibold text-cream mb-2">No crews yet</h3>
+                        <p class="text-brand-green text-sm mb-4">Add your first crew to start dispatching</p>
+                        <button @click="showNewCrew = true" class="bg-brand-green text-white font-poppins font-medium px-6 py-3 rounded-lg">
+                            Add First Crew
+                        </button>
+                    </div>
+                </template>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <template x-for="crew in crews" :key="crew.id">
+                        <div class="bg-forest-green rounded-xl p-5 border border-brand-green/20">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-poppins font-bold text-xl" :style="'background:' + crew.color" x-text="crew.id"></div>
+                                    <div>
+                                        <h3 class="font-poppins font-bold text-xl text-cream" x-text="crew.name"></h3>
+                                        <p class="text-sm text-brand-green">Lead: <span x-text="crew.lead"></span></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <button @click="toggleCrewStatus(crew)" class="text-xs px-3 py-1.5 rounded-full transition-all" :class="crew.status === 'active' ? 'bg-brand-green text-white' : 'bg-cream/10 text-cream/60 hover:bg-cream/20'">
+                                        <span x-text="crew.status === 'active' ? 'Active' : 'Off Duty'"></span>
+                                    </button>
+                                    <button @click="deleteCrew(crew.id)" class="text-red-400 hover:text-red-300 p-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-3 mb-4">
+                                <div class="bg-forest-dark rounded-lg p-3 text-center">
+                                    <p class="text-xs text-cream/60 mb-1">Equipment</p>
+                                    <p class="text-sm text-cream" x-text="crew.equipment || 'Standard'"></p>
+                                </div>
+                                <div class="bg-forest-dark rounded-lg p-3 text-center">
+                                    <p class="text-xs text-cream/60 mb-1">Jobs Today</p>
+                                    <p class="text-sm text-cream font-semibold" x-text="getCrewJobsToday(crew.id)"></p>
+                                </div>
+                                <div class="bg-forest-dark rounded-lg p-3 text-center">
+                                    <p class="text-xs text-cream/60 mb-1">Phone</p>
+                                    <p class="text-sm text-cream" x-text="crew.phone || '—'"></p>
+                                </div>
+                            </div>
+                            
+                            <div x-show="crew.currentJob" class="bg-alert-orange/10 border border-alert-orange/30 rounded-lg p-3">
+                                <p class="text-xs text-alert-orange mb-1">🔧 Currently Working</p>
+                                <p class="text-sm text-cream font-medium" x-text="getJobById(crew.currentJob)?.customerName"></p>
+                                <p class="text-xs text-cream/60" x-text="getJobById(crew.currentJob)?.address"></p>
+                            </div>
+                            
+                            <div x-show="!crew.currentJob && crew.status === 'active'" class="bg-brand-green/10 border border-brand-green/30 rounded-lg p-3 text-center">
+                                <p class="text-sm text-brand-green font-medium">✓ Available for dispatch</p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+        
+        <!-- Archive View -->
+        <template x-if="currentView === 'archive'">
+            <div class="p-4 lg:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-poppins font-bold text-lg text-cream">Completed Jobs</h2>
+                    <div class="flex items-center gap-2">
+                        <button @click="exportCSV()" class="bg-forest-green hover:bg-forest-dark border border-brand-green/30 text-cream px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button @click="exportJSON()" class="bg-forest-green hover:bg-forest-dark border border-brand-green/30 text-cream px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                            </svg>
+                            Backup JSON
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <template x-for="job in jobs.filter(j => j.status === 'complete')" :key="job.id">
+                        <div class="bg-forest-green/50 rounded-xl p-4 border border-brand-green/10">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="font-poppins font-semibold text-cream" x-text="job.customerName"></h3>
+                                    <p class="text-sm text-brand-green" x-text="job.address"></p>
+                                    <p class="text-xs text-cream/60 mt-1" x-text="'Completed: ' + formatDate(job.completedAt)"></p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-xs bg-brand-green/20 text-brand-green px-2 py-1 rounded-full">Completed</span>
+                                    <p x-show="job.crew" class="text-xs text-cream/60 mt-2" x-text="'Crew ' + job.crew"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    
+                    <template x-if="jobs.filter(j => j.status === 'complete').length === 0">
+                        <div class="text-center py-12">
+                            <p class="text-brand-green">No completed jobs yet</p>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
+    </div>
+    
+    <!-- Mobile Tab Bar -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-forest-green border-t border-brand-green/30 flex justify-around py-2 no-print z-40">
+        <button @click="currentView = 'dashboard'" class="flex flex-col items-center py-2 px-4 min-w-[64px]" :class="currentView === 'dashboard' ? 'tab-active' : 'text-cream/60'">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+            </svg>
+            <span class="text-xs mt-1">Home</span>
+        </button>
+        <button @click="currentView = 'requests'" class="flex flex-col items-center py-2 px-4 min-w-[64px] relative" :class="currentView === 'requests' ? 'tab-active' : 'text-cream/60'">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span class="text-xs mt-1">Requests</span>
+            <span x-show="pendingCount > 0" class="absolute -top-1 right-2 bg-alert-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center" x-text="pendingCount > 9 ? '9+' : pendingCount"></span>
+        </button>
+        <button @click="showNewRequest = true" class="flex flex-col items-center py-2 px-4 min-w-[64px]">
+            <div class="w-12 h-12 -mt-6 bg-brand-green rounded-full flex items-center justify-center shadow-lg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+            </div>
+        </button>
+        <button @click="currentView = 'crews'" class="flex flex-col items-center py-2 px-4 min-w-[64px]" :class="currentView === 'crews' ? 'tab-active' : 'text-cream/60'">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-xs mt-1">Crews</span>
+        </button>
+        <button @click="showSettings = true" class="flex flex-col items-center py-2 px-4 min-w-[64px]" :class="showSettings ? 'tab-active' : 'text-cream/60'">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="text-xs mt-1">Settings</span>
+        </button>
+    </nav>
+    
+    <!-- New Request Modal -->
+    <div x-show="showNewRequest" x-cloak class="fixed inset-0 z-50 flex items-end lg:items-center justify-center" @keydown.escape.window="showNewRequest = false">
+        <div class="absolute inset-0 bg-black/60" @click="showNewRequest = false"></div>
+        <div class="relative bg-forest-green w-full lg:max-w-lg lg:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full lg:translate-y-0 lg:scale-95 lg:opacity-0" x-transition:enter-end="translate-y-0 lg:scale-100 lg:opacity-100">
+            <div class="sticky top-0 bg-forest-green border-b border-brand-green/30 px-5 py-4 flex items-center justify-between z-10">
+                <h2 class="font-poppins font-bold text-lg text-cream">New Emergency Request</h2>
+                <button @click="showNewRequest = false" class="text-cream/60 hover:text-cream p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="saveNewRequest()" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Customer Name *</label>
+                    <input type="text" x-model="newRequest.customerName" required class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="e.g. John Smith">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Phone Number *</label>
+                    <input type="tel" x-model="newRequest.phone" required class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="(615) 555-0123">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Address *</label>
+                    <input type="text" x-model="newRequest.address" required class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="123 Main St, Nashville, TN">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Description *</label>
+                    <textarea x-model="newRequest.description" required rows="3" class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base resize-none" placeholder="Describe the tree emergency..."></textarea>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.powerLines ? 'border-red-500 bg-red-900/20' : ''">
+                        <input type="checkbox" x-model="newRequest.powerLines" class="w-5 h-5 rounded border-brand-green/30 text-alert-orange focus:ring-alert-orange">
+                        <span class="text-sm text-cream">⚡ Power Lines</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.structuralDamage ? 'border-red-500 bg-red-900/20' : ''">
+                        <input type="checkbox" x-model="newRequest.structuralDamage" class="w-5 h-5 rounded border-brand-green/30 text-alert-orange focus:ring-alert-orange">
+                        <span class="text-sm text-cream">🏠 Structure Hit</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.blocked ? 'border-purple-500 bg-purple-900/20' : ''">
+                        <input type="checkbox" x-model="newRequest.blocked" class="w-5 h-5 rounded border-brand-green/30 text-purple-400 focus:ring-purple-400">
+                        <span class="text-sm text-cream">🚗 Access Blocked</span>
+                    </label>
+                    <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.injured ? 'border-red-500 bg-red-900/20' : ''">
+                        <input type="checkbox" x-model="newRequest.injured" class="w-5 h-5 rounded border-brand-green/30 text-red-500 focus:ring-red-500">
+                        <span class="text-sm text-cream">🚨 Injury</span>
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-2">Severity Override (auto-calculated if empty)</label>
+                    <div class="flex items-center gap-2">
+                        <template x-for="n in 10" :key="n">
+                            <button type="button" @click="newRequest.severityOverride = newRequest.severityOverride === n ? null : n" 
+                                class="w-9 h-9 rounded-lg font-poppins font-bold text-sm transition-all"
+                                :class="newRequest.severityOverride === n ? (n >= 8 ? 'bg-alert-orange text-white' : n >= 5 ? 'bg-yellow-500 text-forest-dark' : 'bg-brand-green text-white') : 'bg-forest-dark text-cream/60 hover:bg-forest-dark/50'"
+                                x-text="n">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-brand-green hover:bg-brand-deep text-white font-poppins font-semibold py-4 rounded-xl text-lg transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Add to Queue
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Job Detail Modal -->
+    <div x-show="selectedJob" x-cloak class="fixed inset-0 z-50 flex items-end lg:items-center justify-center" @keydown.escape.window="selectedJob = null">
+        <div class="absolute inset-0 bg-black/60" @click="selectedJob = null"></div>
+        <div class="relative bg-forest-green w-full lg:max-w-2xl lg:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto" x-transition>
+            <template x-if="selectedJob">
+                <div>
+                    <div class="sticky top-0 bg-forest-green border-b border-brand-green/30 px-5 py-4 flex items-center justify-between z-10">
+                        <div class="flex items-center gap-3">
+                            <div class="relative w-12 h-12">
+                                <div class="absolute inset-0 rounded-full severity-ring" 
+                                    :style="'--severity: ' + selectedJob.severity + '; --severity-color: ' + getSeverityColor(selectedJob.severity)"></div>
+                                <div class="absolute inset-1 rounded-full bg-forest-dark flex items-center justify-center">
+                                    <span class="font-poppins font-bold" :class="selectedJob.severity >= 8 ? 'text-alert-orange' : selectedJob.severity >= 5 ? 'text-yellow-400' : 'text-brand-green'" x-text="selectedJob.severity"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <h2 class="font-poppins font-bold text-lg text-cream" x-text="selectedJob.customerName"></h2>
+                                <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="'status-' + selectedJob.status" x-text="formatStatus(selectedJob.status)"></span>
+                            </div>
+                        </div>
+                        <button @click="selectedJob = null" class="text-cream/60 hover:text-cream p-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <div class="p-5 space-y-5">
+                        <!-- Contact Info -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <a :href="'tel:' + selectedJob.phone" class="bg-forest-dark rounded-xl p-4 flex items-center gap-3 hover:bg-forest-dark/70 transition-colors">
+                                <div class="w-10 h-10 rounded-full bg-brand-green/20 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-brand-green">Phone</p>
+                                    <p class="text-cream font-medium" x-text="selectedJob.phone"></p>
+                                </div>
+                            </a>
+                            <a :href="'https://maps.google.com/?q=' + encodeURIComponent(selectedJob.address)" target="_blank" class="bg-forest-dark rounded-xl p-4 flex items-center gap-3 hover:bg-forest-dark/70 transition-colors">
+                                <div class="w-10 h-10 rounded-full bg-brand-green/20 flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs text-brand-green">Address</p>
+                                    <p class="text-cream font-medium truncate" x-text="selectedJob.address"></p>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <!-- Flags -->
+                        <div class="flex flex-wrap gap-2" x-show="selectedJob.powerLines || selectedJob.structuralDamage || selectedJob.blocked || selectedJob.injured">
+                            <span x-show="selectedJob.powerLines" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">⚡ Power Lines Involved</span>
+                            <span x-show="selectedJob.structuralDamage" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">🏠 Structural Damage</span>
+                            <span x-show="selectedJob.blocked" class="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">🚗 Access Blocked</span>
+                            <span x-show="selectedJob.injured" class="bg-red-800 text-white px-3 py-1.5 rounded-full text-sm font-medium">🚨 Injury Reported</span>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="bg-forest-dark rounded-xl p-4">
+                            <p class="text-xs text-brand-green mb-2">Description</p>
+                            <p class="text-cream" x-text="selectedJob.description"></p>
+                        </div>
+                        
+                        <!-- Crew Assignment -->
+                        <div>
+                            <label class="block text-sm text-brand-green mb-2">Assign Crew</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <template x-for="crew in crews.filter(c => c.status === 'active')" :key="crew.id">
+                                    <button type="button" @click="assignCrew(selectedJob, crew.id)" 
+                                        class="p-3 rounded-xl border-2 transition-all flex flex-col items-center"
+                                        :class="selectedJob.crew === crew.id ? 'border-brand-green bg-brand-green/20' : 'border-brand-green/30 hover:border-brand-green/60'">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-poppins font-bold mb-1" :style="'background:' + crew.color" x-text="crew.id"></div>
+                                        <span class="text-xs text-cream" x-text="crew.name"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Actions -->
+                        <div>
+                            <label class="block text-sm text-brand-green mb-2">Update Status</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button @click="updateJobStatus(selectedJob, 'pending')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'pending' ? 'status-pending' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">Pending</button>
+                                <button @click="updateJobStatus(selectedJob, 'dispatched')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'dispatched' ? 'status-dispatched' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">Dispatched</button>
+                                <button @click="updateJobStatus(selectedJob, 'enroute')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'enroute' ? 'status-enroute' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">En Route</button>
+                                <button @click="updateJobStatus(selectedJob, 'onsite')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'onsite' ? 'status-onsite' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">On Site</button>
+                                <button @click="updateJobStatus(selectedJob, 'complete')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'complete' ? 'status-complete' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">Complete</button>
+                                <button @click="updateJobStatus(selectedJob, 'hold')" class="py-2.5 px-3 rounded-lg text-sm font-medium transition-all" :class="selectedJob.status === 'hold' ? 'status-hold' : 'bg-forest-dark text-cream hover:bg-forest-dark/70'">On Hold</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button @click="sendETAUpdate(selectedJob)" class="bg-brand-green hover:bg-brand-deep text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                                </svg>
+                                Send ETA
+                            </button>
+                            <button @click="deleteJob(selectedJob.id)" class="bg-red-600 hover:bg-red-700 text-white font-medium py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Delete
+                            </button>
+                        </div>
+                        
+                        <!-- Notes -->
+                        <div>
+                            <label class="block text-sm text-brand-green mb-2">Notes</label>
+                            <textarea x-model="selectedJob.notes" @change="saveJobs()" rows="3" class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base resize-none" placeholder="Add internal notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    
+    <!-- New Crew Modal -->
+    <div x-show="showNewCrew" x-cloak class="fixed inset-0 z-50 flex items-end lg:items-center justify-center" @keydown.escape.window="showNewCrew = false">
+        <div class="absolute inset-0 bg-black/60" @click="showNewCrew = false"></div>
+        <div class="relative bg-forest-green w-full lg:max-w-md lg:rounded-2xl rounded-t-2xl" x-transition>
+            <div class="border-b border-brand-green/30 px-5 py-4 flex items-center justify-between">
+                <h2 class="font-poppins font-bold text-lg text-cream">Add New Crew</h2>
+                <button @click="showNewCrew = false" class="text-cream/60 hover:text-cream p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form @submit.prevent="saveNewCrew()" class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Crew Name *</label>
+                    <input type="text" x-model="newCrew.name" required class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="e.g. Alpha Team">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Crew Lead *</label>
+                    <input type="text" x-model="newCrew.lead" required class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="e.g. Casey Johnson">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Phone</label>
+                    <input type="tel" x-model="newCrew.phone" class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-base" placeholder="(615) 555-0123">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-1.5">Equipment</label>
+                    <select x-model="newCrew.equipment" class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream focus:border-brand-green focus:outline-none text-base">
+                        <option value="Standard">Standard</option>
+                        <option value="Crane">Crane Unit</option>
+                        <option value="Stump">Stump Grinder</option>
+                        <option value="Emergency">Emergency Kit</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-brand-green mb-2">Color</label>
+                    <div class="flex gap-2">
+                        <template x-for="color in ['#6A961F', '#3B82F6', '#8B5CF6', '#EF4444', '#F59E0B', '#EC4899']" :key="color">
+                            <button type="button" @click="newCrew.color = color" 
+                                class="w-10 h-10 rounded-full transition-all"
+                                :class="newCrew.color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-forest-green' : ''"
+                                :style="'background:' + color">
+                            </button>
+                        </template>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-brand-green hover:bg-brand-deep text-white font-poppins font-semibold py-4 rounded-xl text-lg transition-all">
+                    Add Crew
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div x-show="showSettings" x-cloak class="fixed inset-0 z-50 flex items-end lg:items-center justify-center" @keydown.escape.window="showSettings = false">
+        <div class="absolute inset-0 bg-black/60" @click="showSettings = false"></div>
+        <div class="relative bg-forest-green w-full lg:max-w-md lg:rounded-2xl rounded-t-2xl max-h-[90vh] overflow-y-auto" x-transition>
+            <div class="sticky top-0 bg-forest-green border-b border-brand-green/30 px-5 py-4 flex items-center justify-between z-10">
+                <h2 class="font-poppins font-bold text-lg text-cream">Settings</h2>
+                <button @click="showSettings = false" class="text-cream/60 hover:text-cream p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-6">
+                <!-- Import/Export -->
+                <div>
+                    <h3 class="font-poppins font-semibold text-cream mb-3">Data Management</h3>
+                    <div class="space-y-3">
+                        <button @click="showImport = true; showSettings = false" class="w-full bg-forest-dark hover:bg-forest-dark/70 border border-brand-green/30 text-cream py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            Import Data
+                        </button>
+                        <button @click="exportCSV()" class="w-full bg-forest-dark hover:bg-forest-dark/70 border border-brand-green/30 text-cream py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Export CSV
+                        </button>
+                        <button @click="exportJSON()" class="w-full bg-forest-dark hover:bg-forest-dark/70 border border-brand-green/30 text-cream py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                            </svg>
+                            Full Backup (JSON)
+                        </button>
+                        <button @click="restoreJSON()" class="w-full bg-forest-dark hover:bg-forest-dark/70 border border-brand-green/30 text-cream py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Restore from Backup
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Danger Zone -->
+                <div class="border-t border-brand-green/30 pt-6">
+                    <h3 class="font-poppins font-semibold text-red-400 mb-3">Danger Zone</h3>
+                    <button @click="confirmClearAll()" class="w-full bg-red-900/30 hover:bg-red-900/50 border border-red-600/50 text-red-400 py-3 rounded-xl flex items-center justify-center gap-2 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Clear All Data
+                    </button>
+                </div>
+                
+                <!-- About -->
+                <div class="border-t border-brand-green/30 pt-6">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-brand-green flex items-center justify-center">
+                            <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-poppins font-bold text-cream">Storm Command Center</h4>
+                        <p class="text-sm text-brand-green">Built for The Good Tree Company</p>
+                        <p class="text-xs text-cream/40 mt-2">Nashville, TN</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Import Modal -->
+    <div x-show="showImport" x-cloak class="fixed inset-0 z-50 flex items-end lg:items-center justify-center" @keydown.escape.window="showImport = false">
+        <div class="absolute inset-0 bg-black/60" @click="showImport = false"></div>
+        <div class="relative bg-forest-green w-full lg:max-w-md lg:rounded-2xl rounded-t-2xl" x-transition>
+            <div class="border-b border-brand-green/30 px-5 py-4 flex items-center justify-between">
+                <h2 class="font-poppins font-bold text-lg text-cream">Import Data</h2>
+                <button @click="showImport = false" class="text-cream/60 hover:text-cream p-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-sm text-brand-green mb-2">Upload CSV File</label>
+                    <input type="file" accept=".csv" @change="importCSV($event)" class="w-full text-cream file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-green file:text-white file:font-medium hover:file:bg-brand-deep file:cursor-pointer">
+                </div>
+                
+                <div class="text-center text-cream/40 text-sm">or</div>
+                
+                <!-- Clipboard Paste -->
+                <div>
+                    <label class="block text-sm text-brand-green mb-2">Paste CSV Data</label>
+                    <textarea id="csv-paste" rows="6" class="w-full bg-forest-dark border border-brand-green/30 rounded-lg px-4 py-3 text-cream placeholder-cream/40 focus:border-brand-green focus:outline-none text-sm font-mono resize-none" placeholder="customerName,phone,address,description&#10;John Smith,(615) 555-0123,123 Main St,Tree on roof..."></textarea>
+                </div>
+                
+                <button @click="importFromPaste()" class="w-full bg-brand-green hover:bg-brand-deep text-white font-poppins font-semibold py-3 rounded-xl transition-all">
+                    Import Pasted Data
+                </button>
+                
+                <p class="text-xs text-cream/40 text-center">
+                    Expected columns: customerName, phone, address, description
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Access Key Gate
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=1104693149;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){
+            document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+            throw new Error('Invalid key');
+        }
+        
+        // Security: Prevent right-click
+        document.addEventListener('contextmenu',e=>e.preventDefault());
+        
+        // Security: Block F12/Ctrl+Shift+I/Ctrl+U/Ctrl+S
+        document.addEventListener('keydown',e=>{
+            if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.key==='u')||(e.ctrlKey&&e.key==='s')){
+                e.preventDefault();
+            }
+        });
+        
+        // IndexedDB Setup
+        const DB_NAME = 'GoodTreeStormCommand';
+        const DB_VERSION = 1;
+        let db = null;
+        
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains('jobs')) {
+                        database.createObjectStore('jobs', { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains('crews')) {
+                        database.createObjectStore('crews', { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains('settings')) {
+                        database.createObjectStore('settings', { keyPath: 'key' });
+                    }
+                };
+            });
+        }
+        
+        async function dbGet(storeName) {
+            if (!db) return [];
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        async function dbPut(storeName, data) {
+            if (!db) return;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.put(data);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        
+        async function dbDelete(storeName, id) {
+            if (!db) return;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.delete(id);
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        
+        async function dbClear(storeName) {
+            if (!db) return;
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                store.clear();
+                tx.oncomplete = () => resolve();
+                tx.onerror = () => reject(tx.error);
+            });
+        }
+        
+        // Alpine Component
+        function stormCommand() {
+            return {
+                // State
+                jobs: [],
+                crews: [],
+                currentView: 'dashboard',
+                selectedJob: null,
+                showNewRequest: false,
+                showNewCrew: false,
+                showSettings: false,
+                showImport: false,
+                showDemoBanner: false,
+                stormMode: false,
+                filterStatus: 'all',
+                undoData: null,
+                undoTimeout: null,
+                
+                // New request form
+                newRequest: {
+                    customerName: '',
+                    phone: '',
+                    address: '',
+                    description: '',
+                    powerLines: false,
+                    structuralDamage: false,
+                    blocked: false,
+                    injured: false,
+                    severityOverride: null
+                },
+                
+                // New crew form
+                newCrew: {
+                    name: '',
+                    lead: '',
+                    phone: '',
+                    equipment: 'Standard',
+                    color: '#6A961F'
+                },
+                
+                // Computed
+                get sortedJobs() {
+                    return [...this.jobs]
+                        .filter(j => j.status !== 'complete')
+                        .sort((a, b) => b.severity - a.severity);
+                },
+                
+                get filteredJobs() {
+                    if (this.filterStatus === 'all') return this.sortedJobs;
+                    return this.sortedJobs.filter(j => j.status === this.filterStatus);
+                },
+                
+                get pendingCount() {
+                    return this.jobs.filter(j => j.status === 'pending').length;
+                },
+                
+                get activeCount() {
+                    return this.jobs.filter(j => ['dispatched', 'enroute', 'onsite'].includes(j.status)).length;
+                },
+                
+                get completedToday() {
+                    const today = new Date().toDateString();
+                    return this.jobs.filter(j => j.status === 'complete' && new Date(j.completedAt).toDateString() === today).length;
+                },
+                
+                // Init
+                async init() {
+                    try {
+                        await initDB();
+                        this.jobs = await dbGet('jobs');
+                        this.crews = await dbGet('crews');
+                        
+                        // Check for demo data
+                        this.showDemoBanner = this.jobs.some(j => j.isDemo);
+                    } catch (e) {
+                        console.error('DB init failed, using localStorage fallback', e);
+                        this.jobs = JSON.parse(localStorage.getItem('goodtree_jobs') || '[]');
+                        this.crews = JSON.parse(localStorage.getItem('goodtree_crews') || '[]');
+                        this.showDemoBanner = this.jobs.some(j => j.isDemo);
+                    }
+                },
+                
+                // Methods
+                generateId() {
+                    return 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                },
+                
+                calculateSeverity(req) {
+                    if (req.severityOverride) return req.severityOverride;
+                    let score = 3;
+                    if (req.injured) score = 10;
+                    else if (req.powerLines) score += 4;
+                    if (req.structuralDamage) score += 3;
+                    if (req.blocked) score += 1;
+                    return Math.min(score, 10);
+                },
+                
+                getSeverityColor(severity) {
+                    if (severity >= 8) return '#FF5E14';
+                    if (severity >= 5) return '#F59E0B';
+                    return '#6A961F';
+                },
+                
+                formatStatus(status) {
+                    const map = {
+                        pending: 'Pending',
+                        dispatched: 'Dispatched',
+                        enroute: 'En Route',
+                        onsite: 'On Site',
+                        complete: 'Complete',
+                        hold: 'On Hold'
+                    };
+                    return map[status] || status;
+                },
+                
+                formatTime(date) {
+                    if (!date) return '';
+                    const d = new Date(date);
+                    const now = new Date();
+                    const diffMs = now - d;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    
+                    if (diffMins < 1) return 'Just now';
+                    if (diffMins < 60) return `${diffMins}m ago`;
+                    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+                    return d.toLocaleDateString();
+                },
+                
+                formatDate(date) {
+                    if (!date) return '';
+                    return new Date(date).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
+                    });
+                },
+                
+                getJobById(id) {
+                    return this.jobs.find(j => j.id === id);
+                },
+                
+                getCrewJobsToday(crewId) {
+                    const today = new Date().toDateString();
+                    return this.jobs.filter(j => 
+                        j.crew === crewId && 
+                        (j.status === 'complete' ? new Date(j.completedAt).toDateString() === today : true)
+                    ).length;
+                },
+                
+                async saveJobs() {
+                    try {
+                        for (const job of this.jobs) {
+                            await dbPut('jobs', job);
+                        }
+                    } catch (e) {
+                        localStorage.setItem('goodtree_jobs', JSON.stringify(this.jobs));
+                    }
+                },
+                
+                async saveCrews() {
+                    try {
+                        for (const crew of this.crews) {
+                            await dbPut('crews', crew);
+                        }
+                    } catch (e) {
+                        localStorage.setItem('goodtree_crews', JSON.stringify(this.crews));
+                    }
+                },
+                
+                async saveNewRequest() {
+                    const job = {
+                        id: this.generateId(),
+                        customerName: this.newRequest.customerName,
+                        phone: this.newRequest.phone,
+                        address: this.newRequest.address,
+                        description: this.newRequest.description,
+                        powerLines: this.newRequest.powerLines,
+                        structuralDamage: this.newRequest.structuralDamage,
+                        blocked: this.newRequest.blocked,
+                        injured: this.newRequest.injured,
+                        severity: this.calculateSeverity(this.newRequest),
+                        status: 'pending',
+                        crew: null,
+                        notes: '',
+                        createdAt: new Date().toISOString(),
+                        isDemo: false
+                    };
+                    
+                    this.jobs.push(job);
+                    await this.saveJobs();
+                    
+                    // Reset form
+                    this.newRequest = {
+                        customerName: '',
+                        phone: '',
+                        address: '',
+                        description: '',
+                        powerLines: false,
+                        structuralDamage: false,
+                        blocked: false,
+                        injured: false,
+                        severityOverride: null
+                    };
+                    
+                    this.showNewRequest = false;
+                    this.showToast('Request added to queue', 'success');
+                },
+                
+                async saveNewCrew() {
+                    const crew = {
+                        id: this.crews.length + 1,
+                        name: this.newCrew.name,
+                        lead: this.newCrew.lead,
+                        phone: this.newCrew.phone,
+                        equipment: this.newCrew.equipment,
+                        color: this.newCrew.color,
+                        status: 'active',
+                        currentJob: null
+                    };
+                    
+                    this.crews.push(crew);
+                    await this.saveCrews();
+                    
+                    this.newCrew = { name: '', lead: '', phone: '', equipment: 'Standard', color: '#6A961F' };
+                    this.showNewCrew = false;
+                    this.showToast('Crew added', 'success');
+                },
+                
+                selectJob(job) {
+                    this.selectedJob = job;
+                },
+                
+                async assignCrew(job, crewId) {
+                    // Unassign from previous crew
+                    if (job.crew) {
+                        const prevCrew = this.crews.find(c => c.id === job.crew);
+                        if (prevCrew && prevCrew.currentJob === job.id) {
+                            prevCrew.currentJob = null;
+                        }
+                    }
+                    
+                    // Assign to new crew
+                    job.crew = crewId;
+                    if (job.status === 'pending') {
+                        job.status = 'dispatched';
+                    }
+                    
+                    const crew = this.crews.find(c => c.id === crewId);
+                    if (crew) {
+                        crew.currentJob = job.id;
+                    }
+                    
+                    await this.saveJobs();
+                    await this.saveCrews();
+                    this.showToast(`Assigned to Crew ${crewId}`, 'success');
+                },
+                
+                async updateJobStatus(job, status) {
+                    job.status = status;
+                    
+                    if (status === 'complete') {
+                        job.completedAt = new Date().toISOString();
+                        // Free up crew
+                        if (job.crew) {
+                            const crew = this.crews.find(c => c.id === job.crew);
+                            if (crew) crew.currentJob = null;
+                            await this.saveCrews();
+                        }
+                    }
+                    
+                    await this.saveJobs();
+                    this.showToast(`Status: ${this.formatStatus(status)}`, 'success');
+                },
+                
+                async deleteJob(id) {
+                    const job = this.jobs.find(j => j.id === id);
+                    if (!job) return;
+                    
+                    // Save for undo
+                    this.undoData = { type: 'job', data: {...job} };
+                    
+                    // Free up crew
+                    if (job.crew) {
+                        const crew = this.crews.find(c => c.id === job.crew);
+                        if (crew) crew.currentJob = null;
+                    }
+                    
+                    this.jobs = this.jobs.filter(j => j.id !== id);
+                    await this.saveJobs();
+                    await this.saveCrews();
+                    
+                    this.selectedJob = null;
+                    this.showUndoToast('Request deleted');
+                },
+                
+                async deleteCrew(id) {
+                    this.undoData = { type: 'crew', data: {...this.crews.find(c => c.id === id)} };
+                    this.crews = this.crews.filter(c => c.id !== id);
+                    
+                    // Unassign jobs
+                    this.jobs.forEach(j => {
+                        if (j.crew === id) j.crew = null;
+                    });
+                    
+                    await this.saveCrews();
+                    await this.saveJobs();
+                    this.showUndoToast('Crew deleted');
+                },
+                
+                async toggleCrewStatus(crew) {
+                    crew.status = crew.status === 'active' ? 'off' : 'active';
+                    await this.saveCrews();
+                    this.showToast(`Crew ${crew.status === 'active' ? 'activated' : 'set off duty'}`, 'success');
+                },
+                
+                toggleStormMode() {
+                    this.stormMode = !this.stormMode;
+                    this.showToast(this.stormMode ? '⚡ Storm Mode Activated' : 'Storm Mode Off', 'success');
+                },
+                
+                sendETAUpdate(job) {
+                    const message = `Hi ${job.customerName.split(' ')[0]}, this is The Good Tree Company. Our crew is on the way and should arrive within 2 hours. We'll update you when we're 15 minutes out. Thank you for your patience!`;
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(message).then(() => {
+                        this.showToast('ETA message copied to clipboard', 'success');
+                    });
+                },
+                
+                showToast(message, type = 'info') {
+                    const container = document.getElementById('toast-container');
+                    const toast = document.createElement('div');
+                    toast.className = `toast px-6 py-3 rounded-xl shadow-lg font-medium text-sm ${type === 'success' ? 'bg-brand-green text-white' : type === 'error' ? 'bg-red-600 text-white' : 'bg-forest-green text-cream border border-brand-green/30'}`;
+                    toast.textContent = message;
+                    container.appendChild(toast);
+                    
+                    setTimeout(() => toast.remove(), 5000);
+                },
+                
+                showUndoToast(message) {
+                    const container = document.getElementById('toast-container');
+                    const toast = document.createElement('div');
+                    toast.className = 'toast px-4 py-3 rounded-xl shadow-lg font-medium text-sm bg-forest-green text-cream border border-brand-green/30 flex items-center gap-4';
+                    toast.innerHTML = `
+                        <span>${message}</span>
+                        <button class="bg-brand-green hover:bg-brand-deep text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all" onclick="window.dispatchEvent(new CustomEvent('undo'))">Undo</button>
+                    `;
+                    container.appendChild(toast);
+                    
+                    if (this.undoTimeout) clearTimeout(this.undoTimeout);
+                    this.undoTimeout = setTimeout(() => {
+                        toast.remove();
+                        this.undoData = null;
+                    }, 5000);
+                    
+                    window.addEventListener('undo', async () => {
+                        if (this.undoData) {
+                            if (this.undoData.type === 'job') {
+                                this.jobs.push(this.undoData.data);
+                                await this.saveJobs();
+                            } else if (this.undoData.type === 'crew') {
+                                this.crews.push(this.undoData.data);
+                                await this.saveCrews();
+                            }
+                            this.undoData = null;
+                            toast.remove();
+                            this.showToast('Restored', 'success');
+                        }
+                    }, { once: true });
+                },
+                
+                async loadDemoData() {
+                    const demoJobs = [
+                        {
+                            id: 'demo_1',
+                            customerName: 'Margaret Henderson',
+                            phone: '(615) 555-0147',
+                            address: '4521 Tyne Blvd, Belle Meade, TN 37205',
+                            description: 'Large oak tree leaning against child\'s bedroom window. Tree appears to have split at the main trunk during the ice storm. Need immediate assessment.',
+                            powerLines: false,
+                            structuralDamage: true,
+                            blocked: false,
+                            injured: false,
+                            severity: 9,
+                            status: 'pending',
+                            crew: null,
+                            notes: '',
+                            createdAt: new Date(Date.now() - 1800000).toISOString(),
+                            isDemo: true
+                        },
+                        {
+                            id: 'demo_2',
+                            customerName: 'Raj Patel',
+                            phone: '(615) 555-0298',
+                            address: '8903 Concord Rd, Brentwood, TN 37027',
+                            description: 'Tulip poplar fell across driveway, completely blocking access. Need to get to dialysis appointment this afternoon.',
+                            powerLines: false,
+                            structuralDamage: false,
+                            blocked: true,
+                            injured: false,
+                            severity: 7,
+                            status: 'dispatched',
+                            crew: 1,
+                            notes: 'Medical urgency - prioritize',
+                            createdAt: new Date(Date.now() - 3600000).toISOString(),
+                            isDemo: true
+                        },
+                        {
+                            id: 'demo_3',
+                            customerName: 'The Johnson Family',
+                            phone: '(615) 555-0412',
+                            address: '2156 Chickering Ln, Forest Hills, TN 37215',
+                            description: 'Multiple branches down across backyard, one large limb tangled in power lines near garage. NES has been notified.',
+                            powerLines: true,
+                            structuralDamage: false,
+                            blocked: false,
+                            injured: false,
+                            severity: 8,
+                            status: 'hold',
+                            crew: null,
+                            notes: 'Waiting for NES to clear power lines before we can work',
+                            createdAt: new Date(Date.now() - 7200000).toISOString(),
+                            isDemo: true
+                        },
+                        {
+                            id: 'demo_4',
+                            customerName: 'David & Susan Wright',
+                            phone: '(615) 555-0876',
+                            address: '6234 Hillsboro Pike, Green Hills, TN 37215',
+                            description: 'Ice storm damage to two mature sweetgum trees. Several large limbs hanging dangerously. Need assessment and cleanup.',
+                            powerLines: false,
+                            structuralDamage: false,
+                            blocked: false,
+                            injured: false,
+                            severity: 5,
+                            status: 'pending',
+                            crew: null,
+                            notes: '',
+                            createdAt: new Date(Date.now() - 10800000).toISOString(),
+                            isDemo: true
+                        },
+                        {
+                            id: 'demo_5',
+                            customerName: 'First Baptist Church',
+                            phone: '(615) 555-0333',
+                            address: '108 7th Ave S, Nashville, TN 37203',
+                            description: 'Historic oak in parking lot has significant ice damage. Concerned about Sunday services. Need assessment for possible removal.',
+                            powerLines: false,
+                            structuralDamage: false,
+                            blocked: false,
+                            injured: false,
+                            severity: 4,
+                            status: 'pending',
+                            crew: null,
+                            notes: '',
+                            createdAt: new Date(Date.now() - 14400000).toISOString(),
+                            isDemo: true
+                        }
+                    ];
+                    
+                    const demoCrews = [
+                        { id: 1, name: 'Alpha Team', lead: 'Casey Johnson', phone: '(615) 555-1001', equipment: 'Standard', color: '#6A961F', status: 'active', currentJob: 'demo_2' },
+                        { id: 2, name: 'Bravo Team', lead: 'Joseph Williams', phone: '(615) 555-1002', equipment: 'Crane', color: '#3B82F6', status: 'active', currentJob: null },
+                        { id: 3, name: 'Charlie Team', lead: 'Marcus Thompson', phone: '(615) 555-1003', equipment: 'Stump', color: '#8B5CF6', status: 'off', currentJob: null }
+                    ];
+                    
+                    this.jobs = demoJobs;
+                    this.crews = demoCrews;
+                    await this.saveJobs();
+                    await this.saveCrews();
+                    
+                    this.showDemoBanner = true;
+                    this.showToast('Demo data loaded', 'success');
+                },
+                
+                async clearDemoData() {
+                    this.jobs = this.jobs.filter(j => !j.isDemo);
+                    this.crews = [];
+                    
+                    try {
+                        await dbClear('jobs');
+                        await dbClear('crews');
+                        for (const job of this.jobs) {
+                            await dbPut('jobs', job);
+                        }
+                    } catch (e) {
+                        localStorage.setItem('goodtree_jobs', JSON.stringify(this.jobs));
+                        localStorage.setItem('goodtree_crews', JSON.stringify(this.crews));
+                    }
+                    
+                    this.showDemoBanner = false;
+                    this.showToast('Demo data cleared', 'success');
+                },
+                
+                async confirmClearAll() {
+                    if (confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
+                        this.jobs = [];
+                        this.crews = [];
+                        
+                        try {
+                            await dbClear('jobs');
+                            await dbClear('crews');
+                        } catch (e) {
+                            localStorage.removeItem('goodtree_jobs');
+                            localStorage.removeItem('goodtree_crews');
+                        }
+                        
+                        this.showDemoBanner = false;
+                        this.showSettings = false;
+                        this.showToast('All data cleared', 'success');
+                    }
+                },
+                
+                exportCSV() {
+                    const headers = ['customerName', 'phone', 'address', 'description', 'severity', 'status', 'crew', 'powerLines', 'structuralDamage', 'blocked', 'createdAt'];
+                    const rows = this.jobs.map(j => headers.map(h => JSON.stringify(j[h] || '')).join(','));
+                    const csv = [headers.join(','), ...rows].join('\n');
+                    
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `good-tree-jobs-${new Date().toISOString().split('T')[0]}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    this.showToast('CSV exported', 'success');
+                },
+                
+                exportJSON() {
+                    const data = { jobs: this.jobs, crews: this.crews, exportedAt: new Date().toISOString() };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `good-tree-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    this.showToast('Backup exported', 'success');
+                },
+                
+                restoreJSON() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json';
+                    input.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        const text = await file.text();
+                        try {
+                            const data = JSON.parse(text);
+                            if (data.jobs) this.jobs = data.jobs;
+                            if (data.crews) this.crews = data.crews;
+                            await this.saveJobs();
+                            await this.saveCrews();
+                            this.showDemoBanner = this.jobs.some(j => j.isDemo);
+                            this.showToast('Backup restored', 'success');
+                        } catch (err) {
+                            this.showToast('Invalid backup file', 'error');
+                        }
+                    };
+                    input.click();
+                },
+                
+                async importCSV(event) {
+                    const file = event.target.files[0];
+                    if (!file) return;
+                    
+                    const text = await file.text();
+                    this.parseAndImportCSV(text);
+                    this.showImport = false;
+                },
+                
+                importFromPaste() {
+                    const text = document.getElementById('csv-paste').value;
+                    if (!text.trim()) {
+                        this.showToast('Please paste CSV data first', 'error');
+                        return;
+                    }
+                    this.parseAndImportCSV(text);
+                    this.showImport = false;
+                },
+                
+                async parseAndImportCSV(text) {
+                    const lines = text.trim().split('\n');
+                    if (lines.length < 2) {
+                        this.showToast('No data found', 'error');
+                        return;
+                    }
+                    
+                    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    let imported = 0;
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                        const row = {};
+                        headers.forEach((h, idx) => row[h] = values[idx] || '');
+                        
+                        if (row.customerName && row.address) {
+                            const job = {
+                                id: this.generateId(),
+                                customerName: row.customerName,
+                                phone: row.phone || '',
+                                address: row.address,
+                                description: row.description || '',
+                                powerLines: row.powerLines === 'true',
+                                structuralDamage: row.structuralDamage === 'true',
+                                blocked: row.blocked === 'true',
+                                injured: false,
+                                severity: parseInt(row.severity) || 5,
+                                status: 'pending',
+                                crew: null,
+                                notes: '',
+                                createdAt: new Date().toISOString(),
+                                isDemo: false
+                            };
+                            this.jobs.push(job);
+                            imported++;
+                        }
+                    }
+                    
+                    await this.saveJobs();
+                    this.showToast(`Imported ${imported} requests`, 'success');
+                }
+            };
+        }
+    </script>
+</body>
+</html>
