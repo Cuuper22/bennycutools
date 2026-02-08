@@ -1,0 +1,3073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tow Log Pro — Roadside Rescue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --primary: oklch(0.75 0.18 65);
+      --primary-dark: oklch(0.60 0.18 65);
+      --primary-light: oklch(0.85 0.12 65);
+      --bg-dark: oklch(0.15 0.01 250);
+      --bg-card: oklch(0.20 0.01 250);
+      --bg-card-hover: oklch(0.25 0.01 250);
+      --text-primary: oklch(0.95 0 0);
+      --text-secondary: oklch(0.70 0 0);
+      --text-muted: oklch(0.50 0 0);
+      --success: oklch(0.70 0.18 145);
+      --error: oklch(0.65 0.20 25);
+      --border: oklch(0.30 0.01 250);
+      --shadow-sm: 0 2px 4px oklch(0 0 0 / 0.2), 0 1px 2px oklch(0 0 0 / 0.15);
+      --shadow-md: 0 4px 12px oklch(0 0 0 / 0.25), 0 2px 4px oklch(0 0 0 / 0.2);
+      --shadow-lg: 0 8px 24px oklch(0 0 0 / 0.3), 0 4px 8px oklch(0 0 0 / 0.25);
+      --shadow-glow: 0 0 20px oklch(0.75 0.18 65 / 0.3);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-sans: 'Outfit', system-ui, sans-serif;
+      --font-display: 'Libre Baskerville', serif;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    html { font-size: 16px; }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      padding-bottom: 130px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Floating background elements */
+    .bg-float {
+      position: fixed;
+      border-radius: 50%;
+      background: var(--primary);
+      opacity: 0.05;
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bg-float-1 { width: 400px; height: 400px; top: -100px; right: -100px; animation: float 8s ease-in-out infinite; }
+    .bg-float-2 { width: 300px; height: 300px; bottom: 20%; left: -80px; animation: float 10s ease-in-out infinite reverse; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    /* Access Gate */
+    #gate {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .gate-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes bounceIn {
+      0% { opacity: 0; transform: scale(0.3); }
+      50% { transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes drawCheck {
+      0% { stroke-dashoffset: 100; }
+      100% { stroke-dashoffset: 0; }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .gate-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: var(--shadow-glow); }
+      50% { box-shadow: 0 0 30px oklch(0.75 0.18 65 / 0.5); }
+    }
+
+    .gate-logo svg { width: 48px; height: 48px; color: var(--bg-dark); }
+
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+
+    .gate-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      font-size: 0.95rem;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 16px;
+      font-size: 1rem;
+      font-family: var(--font-sans);
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      text-align: center;
+      letter-spacing: 2px;
+      transition: all 0.2s ease;
+    }
+
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px oklch(0.75 0.18 65 / 0.15);
+    }
+
+    .gate-input.shake {
+      animation: shake 0.4s ease;
+      border-color: var(--error);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--bg-dark);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .gate-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .gate-btn:active { transform: scale(0.97); }
+    .gate-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    /* Main App */
+    #app { display: none; position: relative; z-index: 1; }
+    #app.visible { display: block; }
+
+    /* Header */
+    .header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      animation: fadeDown 0.5s ease;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg { width: 24px; height: 24px; color: var(--bg-dark); }
+
+    .brand-text h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--bg-dark);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:hover { 
+      color: var(--primary); 
+      border-color: var(--primary); 
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px oklch(0.75 0.18 65 / 0.2);
+    }
+    .icon-btn:active { transform: translateY(0) scale(0.95); }
+    .icon-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .icon-btn svg { width: 20px; height: 20px; transition: transform 0.2s ease; }
+    .icon-btn:hover svg { transform: scale(1.1); }
+
+    /* Demo Banner */
+    .demo-banner {
+      background: linear-gradient(90deg, var(--primary-dark), var(--primary), var(--primary-dark));
+      background-size: 200% 100%;
+      color: var(--bg-dark);
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      animation: fadeIn 0.5s ease 0.2s both, gradientShift 3s ease infinite;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    .demo-banner button {
+      background: var(--bg-dark);
+      color: var(--primary);
+      border: none;
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .demo-banner button:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .demo-banner button:active { transform: scale(0.98); }
+    .demo-banner button:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+
+    /* Content */
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* New Job CTA */
+    .new-job-cta {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-card-hover));
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius-lg);
+      padding: 36px 28px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      animation: slideUp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    .new-job-cta::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, var(--primary), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .new-job-cta::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: conic-gradient(from 0deg, transparent, var(--primary), transparent 30%);
+      opacity: 0;
+      animation: rotate 4s linear infinite;
+      transition: opacity 0.4s ease;
+    }
+
+    .new-job-cta:hover::before { opacity: 0.15; }
+    .new-job-cta:hover::after { opacity: 0.03; }
+    .new-job-cta:hover { 
+      border-color: var(--primary-light); 
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: var(--shadow-lg), 0 0 40px oklch(0.75 0.18 65 / 0.2);
+    }
+    .new-job-cta:active { transform: translateY(-2px) scale(0.98); }
+    .new-job-cta:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .cta-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 20px oklch(0.75 0.18 65 / 0.4);
+      z-index: 1;
+    }
+
+    .cta-icon svg { width: 36px; height: 36px; color: var(--bg-dark); }
+
+    .cta-title {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--primary);
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Section Title */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      animation: slideUp 0.5s ease 0.4s both;
+    }
+
+    .section-title h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .section-title .count {
+      background: var(--bg-card);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Job Cards */
+    .jobs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .job-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      position: relative;
+    }
+
+    .job-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, var(--primary) 50%, transparent 60%);
+      background-size: 200% 200%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      border-radius: var(--radius-md);
+    }
+
+    .job-card:hover::before {
+      opacity: 0.05;
+      animation: shimmer 2s ease-in-out infinite;
+    }
+
+    .job-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-lg), 0 0 30px oklch(0.75 0.18 65 / 0.15);
+      transform: translateY(-6px) rotateX(3deg) rotateY(-2deg);
+    }
+
+    .job-card:active {
+      transform: translateY(-2px) scale(0.98);
+      transition: all 0.1s ease;
+    }
+
+    .job-card:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .job-card-header {
+      padding: 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .job-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .job-status.complete { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .job-status.pending { background: var(--primary); animation: pulse 1.5s ease-in-out infinite; }
+
+    .job-info { flex: 1; min-width: 0; }
+
+    .job-vehicle {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .job-customer {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 8px;
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .job-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .job-meta svg { width: 14px; height: 14px; }
+
+    .job-photos {
+      display: flex;
+      gap: 4px;
+      padding: 0 16px 16px;
+      overflow-x: auto;
+    }
+
+    .job-photo {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 2px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .job-photo:hover { border-color: var(--primary); transform: scale(1.05); }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      animation: fadeIn 0.6s ease 0.4s both;
+    }
+
+    .empty-illustration {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 24px;
+      opacity: 0.6;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .empty-state h3 {
+      font-size: 1.35rem;
+      margin-bottom: 12px;
+      animation: slideDown 0.5s ease 0.6s both;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      font-size: 1rem;
+      animation: slideDown 0.5s ease 0.7s both;
+    }
+
+    .empty-cta {
+      animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s both;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    /* Screens */
+    .screen {
+      display: none;
+      animation: slideUp 0.4s ease;
+    }
+
+    .screen.active { display: block; }
+
+    /* Camera Screen */
+    .camera-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+
+    .camera-screen.active { display: flex; }
+
+    .camera-header {
+      background: var(--bg-card);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .camera-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .camera-title h2 { font-size: 1.1rem; font-weight: 600; }
+
+    .photo-progress {
+      display: flex;
+      gap: 8px;
+    }
+
+    .photo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: all 0.3s ease;
+    }
+
+    .photo-dot.filled { background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+    .photo-dot.active { background: var(--primary); animation: pulse 1s ease-in-out infinite; }
+
+    .camera-view {
+      flex: 1;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .camera-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 350px;
+      aspect-ratio: 16/9;
+      border: 2px solid var(--primary);
+      border-radius: var(--radius-md);
+      opacity: 0.6;
+    }
+
+    .camera-label {
+      position: absolute;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .camera-label svg { width: 20px; height: 20px; color: var(--primary); }
+
+    .camera-controls {
+      background: var(--bg-card);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      border-top: 1px solid var(--border);
+    }
+
+    .capture-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border: 4px solid var(--text-primary);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 30px oklch(0.75 0.18 65 / 0.4);
+    }
+
+    .capture-btn::before {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      opacity: 0.3;
+      animation: pulseRing 2s ease-out infinite;
+    }
+
+    @keyframes pulseRing {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.3); opacity: 0; }
+    }
+
+    .capture-btn:hover { transform: scale(1.08); box-shadow: 0 0 40px oklch(0.75 0.18 65 / 0.6); }
+    .capture-btn:active { transform: scale(0.92); background: var(--primary-dark); }
+    .capture-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+    .capture-btn svg { width: 32px; height: 32px; color: var(--bg-dark); }
+
+    .capture-btn.capturing {
+      animation: captureFlash 0.4s ease;
+    }
+
+    @keyframes captureFlash {
+      0% { transform: scale(1); }
+      30% { transform: scale(0.85); background: var(--text-primary); }
+      100% { transform: scale(1); }
+    }
+
+    /* Photo Preview Grid */
+    .photo-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding: 16px;
+      background: var(--bg-dark);
+    }
+
+    .preview-slot {
+      aspect-ratio: 4/3;
+      background: var(--bg-card);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .preview-slot.filled {
+      border: none;
+    }
+
+    .preview-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .preview-slot svg { width: 24px; height: 24px; }
+
+    .preview-slot .retake-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-dark);
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .preview-slot:hover .retake-btn { opacity: 1; }
+    .preview-slot .retake-btn svg { width: 14px; height: 14px; }
+
+    /* Annotation Canvas */
+    .annotation-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      z-index: 250;
+      display: none;
+      flex-direction: column;
+    }
+
+    .annotation-screen.active { display: flex; }
+
+    .annotation-canvas-wrap {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .annotation-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+
+    .annotation-tools {
+      background: var(--bg-card);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .color-picker {
+      display: flex;
+      gap: 8px;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .color-swatch:hover { transform: scale(1.1); }
+    .color-swatch.active { border-color: var(--text-primary); }
+    .color-swatch:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    /* Signature Screen */
+    .signature-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+    }
+
+    .signature-screen.active { display: flex; }
+
+    .signature-header {
+      background: var(--bg-card);
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .signature-header h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 4px; }
+    .signature-header p { color: var(--text-secondary); font-size: 0.875rem; }
+
+    .waiver-text {
+      padding: 20px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .signature-pad-wrap {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .signature-pad-container {
+      flex: 1;
+      background: var(--text-primary);
+      border-radius: var(--radius-md);
+      position: relative;
+      min-height: 200px;
+    }
+
+    .signature-canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius-md);
+    }
+
+    .signature-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 1rem;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .signature-pad-container.has-signature .signature-placeholder { opacity: 0; }
+
+    .signature-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+      animation: slideUp 0.5s ease both;
+    }
+
+    .form-group:nth-child(1) { animation-delay: 0.1s; }
+    .form-group:nth-child(2) { animation-delay: 0.15s; }
+    .form-group:nth-child(3) { animation-delay: 0.2s; }
+    .form-group:nth-child(4) { animation-delay: 0.25s; }
+    .form-group:nth-child(5) { animation-delay: 0.3s; }
+    .form-group:nth-child(6) { animation-delay: 0.35s; }
+    .form-group:nth-child(7) { animation-delay: 0.4s; }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+      transition: color 0.2s ease;
+    }
+
+    .form-group:focus-within .form-label {
+      color: var(--primary);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-family: var(--font-sans);
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px oklch(0.75 0.18 65 / 0.15), 0 0 20px oklch(0.75 0.18 65 / 0.1);
+      transform: translateY(-1px);
+    }
+
+    .form-input::placeholder { color: var(--text-muted); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent, rgba(255,255,255,0.2), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn:hover::before { opacity: 1; }
+
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--bg-dark);
+      box-shadow: 0 4px 15px oklch(0.75 0.18 65 / 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) { 
+      transform: translateY(-3px); 
+      box-shadow: 0 8px 25px oklch(0.75 0.18 65 / 0.4);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(-1px) scale(0.97); }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover:not(:disabled) { 
+      border-color: var(--primary); 
+      color: var(--primary); 
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+    .btn-secondary:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 8px 16px;
+    }
+
+    .btn-ghost:hover { color: var(--primary); transform: translateX(-2px); }
+
+    .btn-full { width: 100%; }
+
+    .btn svg { width: 20px; height: 20px; transition: transform 0.2s ease; }
+    .btn:hover svg { transform: translateX(2px); }
+    .btn-secondary:hover svg { transform: translateX(2px); }
+
+    /* Ripple effect for buttons */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(0);
+      animation: rippleEffect 0.6s linear;
+      pointer-events: none;
+    }
+
+    @keyframes rippleEffect {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* Summary Screen */
+    .summary-screen {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .summary-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 20px;
+      animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .summary-header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: var(--bg-dark);
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    .summary-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+      animation: bounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+    }
+
+    .summary-header p { 
+      opacity: 0.9; 
+      position: relative;
+      z-index: 1;
+      font-weight: 500;
+    }
+
+    /* Success Checkmark Animation */
+    .success-check {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 16px;
+      background: var(--bg-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+    }
+
+    .success-check svg {
+      width: 32px;
+      height: 32px;
+      color: var(--success);
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawCheck 0.8s ease forwards 0.4s;
+    }
+
+    /* Confetti Canvas */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .summary-body { padding: 24px; }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .summary-row:last-child { border-bottom: none; }
+
+    .summary-label { color: var(--text-secondary); }
+    .summary-value { font-weight: 500; text-align: right; }
+
+    .summary-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .summary-photo {
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+    }
+
+    .summary-signature {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .summary-signature img {
+      max-width: 200px;
+      height: auto;
+      background: var(--text-primary);
+      border-radius: var(--radius-sm);
+    }
+
+    .summary-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Job Details Screen */
+    .details-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-dark);
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .details-screen.active { display: flex; }
+
+    .details-header {
+      background: var(--bg-card);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .details-content {
+      padding: 20px;
+      padding-bottom: 100px;
+    }
+
+    .details-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .details-photo {
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-md);
+      object-fit: cover;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .details-photo:hover { transform: scale(1.02); }
+
+    .details-info {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .details-info h3 {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .details-info p {
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .details-signature {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .details-signature img {
+      max-width: 100%;
+      background: var(--text-primary);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-lg), 0 0 30px oklch(0 0 0 / 0.3);
+      animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), toastOut 0.3s ease 2.7s forwards;
+      pointer-events: auto;
+      min-width: 280px;
+      backdrop-filter: blur(12px);
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translate(-50%, 20px) scale(0.9); }
+      to { opacity: 1; transform: translate(0, 0) scale(1); }
+    }
+
+    @keyframes toastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-10px) scale(0.95); }
+    }
+
+    .toast svg { width: 22px; height: 22px; flex-shrink: 0; }
+    .toast.success svg { color: var(--success); animation: pop 0.4s ease; }
+    .toast.error svg { color: var(--error); animation: pop 0.4s ease; }
+
+    /* Upsell Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 400;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-backdrop.active { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      max-width: 400px;
+      width: 100%;
+      padding: 32px 24px;
+      text-align: center;
+      animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-icon svg { width: 32px; height: 32px; color: var(--bg-dark); }
+
+    .modal h3 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .modal p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px 12px;
+      display: flex;
+      justify-content: space-around;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      animation: slideUp 0.5s ease 0.1s both;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.7rem;
+      font-weight: 500;
+      border-radius: var(--radius-sm);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--primary);
+      opacity: 0;
+      border-radius: var(--radius-sm);
+      transform: scale(0.8);
+      transition: all 0.3s ease;
+    }
+
+    .nav-item svg { width: 24px; height: 24px; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; z-index: 1; }
+
+    .nav-item:hover { color: var(--text-secondary); }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active::before { opacity: 0.1; transform: scale(1); }
+    .nav-item.active svg { transform: scale(1.15); filter: drop-shadow(0 0 8px oklch(0.75 0.18 65 / 0.5)); }
+    .nav-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .nav-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .nav-item.disabled::after {
+      content: 'Pro';
+      font-size: 0.6rem;
+      background: var(--primary);
+      color: var(--bg-dark);
+      padding: 1px 4px;
+      border-radius: 2px;
+      margin-top: 2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Print Styles */
+    @media print {
+      body { background: white; color: black; padding: 0; }
+      .header, .bottom-nav, .demo-banner, #bct-demo-disclaimer, .bg-float { display: none !important; }
+      .summary-card { box-shadow: none; border: 1px solid #ccc; }
+      .summary-header { background: #f5a623 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    /* Desktop adjustments */
+    @media (min-width: 768px) {
+      .content { padding: 32px; }
+      .jobs-list { gap: 20px; }
+      .summary-photos { grid-template-columns: repeat(4, 1fr); }
+      .details-photos { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Floats -->
+  <div class="bg-float bg-float-1" aria-hidden="true"></div>
+  <div class="bg-float bg-float-2" aria-hidden="true"></div>
+
+  <!-- Access Gate -->
+  <div id="gate" role="dialog" aria-labelledby="gate-title" aria-modal="true">
+    <div class="gate-card">
+      <div class="gate-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><polygon points="12 15 17 21 7 21 12 15"/></svg>
+      </div>
+      <h1 id="gate-title" class="gate-title">Tow Log Pro</h1>
+      <p class="gate-subtitle">Enter your access key to continue</p>
+      <input type="text" id="gateKey" class="gate-input" placeholder="Enter key" autocomplete="off" aria-label="Access key" maxlength="20">
+      <button type="button" id="gateSubmit" class="gate-btn">Unlock</button>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1"/><polygon points="12 15 17 21 7 21 12 15"/></svg>
+          </div>
+          <div class="brand-text">
+            <h1>Tow Log Pro</h1>
+            <span>Roadside Rescue</span>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="icon-btn" id="exportBtn" aria-label="Export data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="settingsBtn" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Demo Banner -->
+    <div id="demoBanner" class="demo-banner" style="display: flex;">
+      Sample data for Augusta, GA. Clear it to add your own tows.
+      <button type="button" id="clearDemoBtn">Clear &amp; Start Fresh</button>
+    </div>
+
+    <!-- Main Screen (Jobs List) -->
+    <main class="screen active" id="mainScreen">
+      <div class="content">
+        <!-- New Job CTA -->
+        <button type="button" class="new-job-cta" id="newJobBtn" aria-label="Start new tow documentation">
+          <div class="cta-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div class="cta-title">Document New Tow</div>
+          <div class="cta-subtitle">Photos + GPS + Signature in 45 seconds</div>
+        </button>
+
+        <!-- Recent Jobs -->
+        <div class="section-title">
+          <h2>Recent Jobs</h2>
+          <span class="count" id="jobCount">3</span>
+        </div>
+
+        <div id="jobsList" class="jobs-list" aria-label="Recent tow jobs">
+          <!-- Demo Jobs - Static for screenshots -->
+          <article class="job-card" tabindex="0" data-id="demo1" role="button" aria-label="View job RR-847" style="animation-delay: 0s">
+            <div class="job-card-header">
+              <div class="job-status pending" aria-label="Pending signature"></div>
+              <div class="job-info">
+                <div class="job-vehicle">2023 BMW X5</div>
+                <div class="job-customer">Michael Thompson</div>
+                <div class="job-meta">
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                    2145 Washington Rd
+                  </span>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    2h ago
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="job-card" tabindex="0" data-id="demo2" role="button" aria-label="View job RR-846" style="animation-delay: 0.12s">
+            <div class="job-card-header">
+              <div class="job-status pending" aria-label="Pending signature"></div>
+              <div class="job-info">
+                <div class="job-vehicle">2021 Ford F-150</div>
+                <div class="job-customer">Sarah Mitchell</div>
+                <div class="job-meta">
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                    Riverwatch Pkwy
+                  </span>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    18h ago
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+          <article class="job-card" tabindex="0" data-id="demo3" role="button" aria-label="View job RR-845" style="animation-delay: 0.24s">
+            <div class="job-card-header">
+              <div class="job-status complete" aria-label="Signed"></div>
+              <div class="job-info">
+                <div class="job-vehicle">2019 Honda Accord</div>
+                <div class="job-customer">James Wilson</div>
+                <div class="job-meta">
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                    1460 Broad St
+                  </span>
+                  <span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    2d ago
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none !important;">
+          <svg class="empty-illustration" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="20" y="50" width="80" height="45" rx="4" stroke="currentColor" stroke-width="2"/>
+            <circle cx="35" cy="95" r="8" stroke="currentColor" stroke-width="2"/>
+            <circle cx="85" cy="95" r="8" stroke="currentColor" stroke-width="2"/>
+            <path d="M20 65L35 40H85L100 65" stroke="currentColor" stroke-width="2"/>
+            <rect x="45" y="45" width="30" height="20" rx="2" fill="currentColor" opacity="0.2"/>
+            <path d="M60 25V35M55 30H65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <h3>No tows logged yet</h3>
+          <p>Tap "Document New Tow" to protect yourself from damage claims.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Customer Info Screen -->
+    <div class="screen" id="customerScreen">
+      <div class="content">
+        <div style="margin-bottom: 24px;">
+          <button type="button" class="btn btn-ghost" id="backToMainBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back
+          </button>
+        </div>
+        
+        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">New Tow Job</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 32px;">Enter vehicle and customer info</p>
+
+        <form id="customerForm">
+          <div class="form-group">
+            <label class="form-label" for="vehicleYear">Vehicle Year</label>
+            <input type="text" id="vehicleYear" class="form-input" placeholder="2023" inputmode="numeric" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vehicleMake">Make</label>
+            <input type="text" id="vehicleMake" class="form-input" placeholder="BMW" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vehicleModel">Model</label>
+            <input type="text" id="vehicleModel" class="form-input" placeholder="X5" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="vehicleColor">Color</label>
+            <input type="text" id="vehicleColor" class="form-input" placeholder="Black">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customerName">Customer Name</label>
+            <input type="text" id="customerName" class="form-input" placeholder="John Smith" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customerPhone">Customer Phone</label>
+            <input type="tel" id="customerPhone" class="form-input" placeholder="(706) 555-1234">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pickupLocation">Pickup Location</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="pickupLocation" class="form-input" placeholder="1234 Main St, Augusta" style="flex: 1;">
+              <button type="button" class="btn btn-secondary" id="gpsBtn" aria-label="Get current location" style="padding: 14px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dropoffLocation">Dropoff Location</label>
+            <input type="text" id="dropoffLocation" class="form-input" placeholder="ABC Auto Repair, Evans">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="jobNotes">Notes (optional)</label>
+            <textarea id="jobNotes" class="form-input" rows="3" placeholder="Flat tire, customer waiting..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="continueToPhotosBtn">
+            Continue to Photos
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Camera Screen -->
+    <div class="camera-screen" id="cameraScreen">
+      <div class="camera-header">
+        <div class="camera-title">
+          <button type="button" class="icon-btn" id="closeCameraBtn" aria-label="Close camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <h2>Take Photos</h2>
+        </div>
+        <div class="photo-progress" aria-label="Photo progress">
+          <div class="photo-dot" data-index="0" aria-label="Front photo"></div>
+          <div class="photo-dot" data-index="1" aria-label="Rear photo"></div>
+          <div class="photo-dot" data-index="2" aria-label="Left side photo"></div>
+          <div class="photo-dot" data-index="3" aria-label="Right side photo"></div>
+        </div>
+      </div>
+      
+      <div class="camera-view">
+        <video id="cameraVideo" class="camera-video" autoplay playsinline></video>
+        <div class="camera-overlay">
+          <div class="camera-guide"></div>
+          <div class="camera-label" id="cameraLabel">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path d="M9 12l2 2 4-4"/></svg>
+            <span id="cameraLabelText">Front of Vehicle</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="photo-preview-grid" id="photoPreviewGrid">
+        <div class="preview-slot" data-index="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          <span>Front</span>
+        </div>
+        <div class="preview-slot" data-index="1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          <span>Rear</span>
+        </div>
+        <div class="preview-slot" data-index="2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          <span>Left</span>
+        </div>
+        <div class="preview-slot" data-index="3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          <span>Right</span>
+        </div>
+      </div>
+
+      <div class="camera-controls">
+        <button type="button" class="btn btn-secondary" id="skipPhotosBtn">Skip</button>
+        <button type="button" class="capture-btn" id="captureBtn" aria-label="Take photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+        <button type="button" class="btn btn-primary" id="donePhotosBtn" disabled>Done</button>
+      </div>
+    </div>
+
+    <!-- Annotation Screen -->
+    <div class="annotation-screen" id="annotationScreen">
+      <div class="camera-header">
+        <div class="camera-title">
+          <button type="button" class="icon-btn" id="closeAnnotationBtn" aria-label="Cancel annotation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          <h2>Mark Any Damage</h2>
+        </div>
+      </div>
+      
+      <div class="annotation-canvas-wrap">
+        <canvas id="annotationCanvas" class="annotation-canvas"></canvas>
+      </div>
+
+      <div class="annotation-tools">
+        <div class="color-picker">
+          <button type="button" class="color-swatch active" style="background: #ef4444;" data-color="#ef4444" aria-label="Red marker"></button>
+          <button type="button" class="color-swatch" style="background: #f59e0b;" data-color="#f59e0b" aria-label="Orange marker"></button>
+          <button type="button" class="color-swatch" style="background: #22c55e;" data-color="#22c55e" aria-label="Green marker"></button>
+          <button type="button" class="color-swatch" style="background: #3b82f6;" data-color="#3b82f6" aria-label="Blue marker"></button>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" class="btn btn-secondary" id="clearAnnotationBtn">Clear</button>
+          <button type="button" class="btn btn-primary" id="saveAnnotationBtn">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signature Screen -->
+    <div class="signature-screen" id="signatureScreen">
+      <div class="signature-header">
+        <h2>Customer Signature</h2>
+        <p>Ask the customer to sign below acknowledging vehicle condition</p>
+      </div>
+      
+      <div class="waiver-text">
+        <strong>Pre-Tow Condition Acknowledgment</strong><br><br>
+        I acknowledge that Roadside Rescue has documented the current condition of my vehicle before towing. The photos taken represent the vehicle's condition at pickup. I understand that any pre-existing damage has been photographed and will not be attributed to the towing service.
+      </div>
+
+      <div class="signature-pad-wrap">
+        <div class="signature-pad-container" id="signaturePadContainer">
+          <canvas id="signatureCanvas" class="signature-canvas"></canvas>
+          <div class="signature-placeholder">Sign here with your finger</div>
+        </div>
+        <div class="signature-actions">
+          <button type="button" class="btn btn-secondary" id="clearSignatureBtn" style="flex: 1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            Clear
+          </button>
+          <button type="button" class="btn btn-primary" id="completeJobBtn" style="flex: 2;" disabled>
+            Complete Job
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Screen -->
+    <div class="screen" id="summaryScreen">
+      <div class="summary-screen">
+        <div class="summary-card">
+          <div class="summary-header">
+            <div class="success-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h2>Job Logged!</h2>
+            <p id="summaryJobNumber">Job #RR-001</p>
+          </div>
+          <div class="summary-body">
+            <div class="summary-row">
+              <span class="summary-label">Vehicle</span>
+              <span class="summary-value" id="summaryVehicle">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Customer</span>
+              <span class="summary-value" id="summaryCustomer">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Pickup</span>
+              <span class="summary-value" id="summaryPickup">—</span>
+            </div>
+            <div class="summary-row">
+              <span class="summary-label">Time</span>
+              <span class="summary-value" id="summaryTime">—</span>
+            </div>
+            
+            <div class="summary-photos" id="summaryPhotos"></div>
+            
+            <div class="summary-signature">
+              <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 8px;">Customer Signature</p>
+              <img id="summarySignature" alt="Customer signature">
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-actions">
+          <button type="button" class="btn btn-primary btn-full" id="shareSummaryBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share with Customer
+          </button>
+          <button type="button" class="btn btn-secondary btn-full" id="downloadPdfBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF Report
+          </button>
+          <button type="button" class="btn btn-ghost btn-full" id="backToJobsBtn">Back to Jobs</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Job Details Screen -->
+    <div class="details-screen" id="detailsScreen">
+      <div class="details-header">
+        <button type="button" class="icon-btn" id="closeDetailsBtn" aria-label="Close details">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h2 id="detailsTitle">Job Details</h2>
+      </div>
+      <div class="details-content">
+        <div class="details-photos" id="detailsPhotos"></div>
+        
+        <div class="details-info">
+          <h3>Vehicle</h3>
+          <p id="detailsVehicle">—</p>
+        </div>
+        
+        <div class="details-info">
+          <h3>Customer</h3>
+          <p id="detailsCustomer">—</p>
+          <p id="detailsPhone" style="color: var(--text-muted);">—</p>
+        </div>
+        
+        <div class="details-info">
+          <h3>Locations</h3>
+          <p><strong>From:</strong> <span id="detailsPickup">—</span></p>
+          <p><strong>To:</strong> <span id="detailsDropoff">—</span></p>
+        </div>
+        
+        <div class="details-info" id="detailsNotesSection" style="display: none;">
+          <h3>Notes</h3>
+          <p id="detailsNotes">—</p>
+        </div>
+        
+        <div class="details-signature">
+          <h3 style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Customer Signature</h3>
+          <img id="detailsSignature" alt="Customer signature">
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 12px;">
+          <button type="button" class="btn btn-secondary" id="detailsShareBtn" style="flex: 1;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+          <button type="button" class="btn btn-secondary" id="detailsDeleteBtn" style="flex: 1; color: var(--error);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upsell Modal -->
+    <div class="modal-backdrop" id="upsellModal" role="dialog" aria-labelledby="upsell-title" aria-modal="true">
+      <div class="modal">
+        <div class="modal-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <h3 id="upsell-title">Full Version Available</h3>
+        <p>This demo includes the core features. The full version adds cloud backup, team sharing, and monthly reports.</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary btn-full" id="upsellContactBtn">Get Full Version</button>
+          <button type="button" class="btn btn-ghost btn-full" id="closeUpsellBtn">Maybe Later</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button type="button" class="nav-item active" data-screen="mainScreen" aria-label="Jobs list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Jobs
+      </button>
+      <button type="button" class="nav-item disabled" id="navReports" aria-label="Reports (Pro feature)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Reports
+      </button>
+      <button type="button" class="nav-item disabled" id="navSync" aria-label="Sync (Pro feature)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Sync
+      </button>
+    </nav>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- DEMO DISCLAIMER - Legal Notice -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Roadside Rescue. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Roadside%20Rescue&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+
+  <script>
+    // ===== Constants =====
+    const VALID_HASH = -1701561966;
+    const DB_NAME = 'towlogpro_db';
+    const STORE_NAME = 'jobs';
+    const PHOTO_LABELS = ['Front', 'Rear', 'Left Side', 'Right Side'];
+
+    // ===== State =====
+    let db = null;
+    let currentJob = null;
+    let photos = [null, null, null, null];
+    let currentPhotoIndex = 0;
+    let signaturePad = null;
+    let annotationCtx = null;
+    let annotationColor = '#ef4444';
+    let annotationImage = null;
+    let isDrawing = false;
+    let stream = null;
+
+    // ===== Confetti Effect =====
+    function fireConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      const particles = [];
+      const colors = ['#f5a623', '#ff6b35', '#4ade80', '#60a5fa', '#ffffff'];
+      
+      for (let i = 0; i < 80; i++) {
+        particles.push({
+          x: window.innerWidth / 2,
+          y: window.innerHeight / 2,
+          vx: (Math.random() - 0.5) * 15,
+          vy: (Math.random() - 0.5) * 15 - 5,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 10,
+          opacity: 1
+        });
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let activeParticles = 0;
+        
+        particles.forEach(p => {
+          if (p.opacity <= 0) return;
+          activeParticles++;
+          
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.3; // gravity
+          p.rotation += p.rotationSpeed;
+          p.opacity -= 0.015;
+          
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+        
+        if (activeParticles > 0) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      
+      animate();
+    }
+
+    // ===== Ripple Effect =====
+    function createRipple(e, btn) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const rect = btn.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }
+
+    // ===== Utilities =====
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    function generateJobNumber() {
+      const count = Math.floor(Math.random() * 900) + 100;
+      return `RR-${count}`;
+    }
+
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+    }
+
+    function formatTimeAgo(date) {
+      const now = new Date();
+      const diff = now - new Date(date);
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(hours / 24);
+      
+      if (days > 0) return `${days}d ago`;
+      if (hours > 0) return `${hours}h ago`;
+      return 'Just now';
+    }
+
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        ${type === 'success' 
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+        }
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ===== IndexedDB =====
+    async function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (event) => {
+          const db = event.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+            store.createIndex('createdAt', 'createdAt', { unique: false });
+            store.createIndex('isDemo', 'isDemo', { unique: false });
+          }
+        };
+      });
+    }
+
+    async function getAllJobs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+          const jobs = request.result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          resolve(jobs);
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveJob(job) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.add(job);
+        
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function deleteJob(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function clearDemoJobs() {
+      const jobs = await getAllJobs();
+      const demoJobs = jobs.filter(j => j.isDemo);
+      for (const job of demoJobs) {
+        await deleteJob(job.id);
+      }
+    }
+
+    // Demo data for display
+    const DEMO_JOBS = [
+      {
+        id: 1,
+        jobNumber: 'RR-847',
+        vehicle: { year: '2023', make: 'BMW', model: 'X5', color: 'Black' },
+        customer: { name: 'Michael Thompson', phone: '(706) 555-8847' },
+        pickup: '2145 Washington Rd, Augusta GA',
+        dropoff: 'Elite Auto Service, Martinez',
+        notes: 'Customer locked keys inside. No damage.',
+        photos: [],
+        signature: null,
+        gps: { lat: 33.4735, lng: -82.0105 },
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        isDemo: true
+      },
+      {
+        id: 2,
+        jobNumber: 'RR-846',
+        vehicle: { year: '2021', make: 'Ford', model: 'F-150', color: 'Silver' },
+        customer: { name: 'Sarah Mitchell', phone: '(706) 555-2234' },
+        pickup: 'Riverwatch Pkwy & I-20, Augusta GA',
+        dropoff: 'Pep Boys, Gordon Highway',
+        notes: 'Flat tire on highway shoulder. Customer stayed in vehicle.',
+        photos: [],
+        signature: null,
+        gps: { lat: 33.4612, lng: -82.0341 },
+        createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString(),
+        isDemo: true
+      },
+      {
+        id: 3,
+        jobNumber: 'RR-845',
+        vehicle: { year: '2019', make: 'Honda', model: 'Accord', color: 'White' },
+        customer: { name: 'James Wilson', phone: '(803) 555-9921' },
+        pickup: '1460 Broad St, Augusta GA',
+        dropoff: 'Wilson Auto Repair, Aiken SC',
+        notes: 'Battery dead. Jump start attempted but alternator failed.',
+        photos: [],
+        signature: null,
+        gps: { lat: 33.4734, lng: -81.9646 },
+        createdAt: new Date(Date.now() - 42 * 60 * 60 * 1000).toISOString(),
+        isDemo: true
+      }
+    ];
+
+    async function loadDemoData() {
+      for (const job of DEMO_JOBS) {
+        try {
+          await saveJob(job);
+        } catch (e) {
+          console.log('Demo job save skipped');
+        }
+      }
+    }
+
+    function renderDemoJobsDirectly() {
+      const listEl = document.getElementById('jobsList');
+      const countEl = document.getElementById('jobCount');
+      const emptyEl = document.getElementById('emptyState');
+      const demoBanner = document.getElementById('demoBanner');
+
+      countEl.textContent = DEMO_JOBS.length;
+      demoBanner.style.display = 'flex';
+      emptyEl.style.display = 'none';
+
+      listEl.innerHTML = DEMO_JOBS.map((job, idx) => `
+        <article class="job-card" tabindex="0" data-id="${job.id}" role="button" aria-label="View job ${job.jobNumber}" style="animation-delay: ${idx * 0.12}s">
+          <div class="job-card-header">
+            <div class="job-status ${job.signature ? 'complete' : 'pending'}" aria-label="${job.signature ? 'Signed' : 'Pending signature'}"></div>
+            <div class="job-info">
+              <div class="job-vehicle">${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model}</div>
+              <div class="job-customer">${job.customer.name}</div>
+              <div class="job-meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                  ${job.pickup.split(',')[0]}
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${formatTimeAgo(job.createdAt)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    // ===== UI Functions =====
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const screen = document.getElementById(screenId);
+      if (screen) screen.classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.toggle('active', n.dataset.screen === screenId);
+      });
+    }
+
+    async function renderJobs() {
+      const jobs = await getAllJobs();
+      const listEl = document.getElementById('jobsList');
+      const countEl = document.getElementById('jobCount');
+      const emptyEl = document.getElementById('emptyState');
+      const demoBanner = document.getElementById('demoBanner');
+
+      countEl.textContent = jobs.length;
+      
+      const hasDemo = jobs.some(j => j.isDemo);
+      demoBanner.style.display = hasDemo ? 'flex' : 'none';
+
+      if (jobs.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      emptyEl.style.display = 'none';
+      
+      listEl.innerHTML = jobs.map((job, idx) => `
+        <article class="job-card" tabindex="0" data-id="${job.id}" role="button" aria-label="View job ${job.jobNumber}" style="animation-delay: ${idx * 0.08}s">
+          <div class="job-card-header">
+            <div class="job-status ${job.signature ? 'complete' : 'pending'}" aria-label="${job.signature ? 'Signed' : 'Pending signature'}"></div>
+            <div class="job-info">
+              <div class="job-vehicle">${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model}</div>
+              <div class="job-customer">${job.customer.name}</div>
+              <div class="job-meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/></svg>
+                  ${job.pickup.split(',')[0]}
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  ${formatTimeAgo(job.createdAt)}
+                </span>
+              </div>
+            </div>
+          </div>
+          ${job.photos && job.photos.length > 0 ? `
+            <div class="job-photos">
+              ${job.photos.slice(0, 4).map(p => `<img class="job-photo" src="${p}" alt="Vehicle photo">`).join('')}
+            </div>
+          ` : ''}
+        </article>
+      `).join('');
+
+      // Add click handlers
+      listEl.querySelectorAll('.job-card').forEach(card => {
+        card.addEventListener('click', () => openJobDetails(parseInt(card.dataset.id)));
+        card.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openJobDetails(parseInt(card.dataset.id));
+          }
+        });
+      });
+    }
+
+    async function openJobDetails(id) {
+      const jobs = await getAllJobs();
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+
+      currentJob = job;
+
+      document.getElementById('detailsTitle').textContent = job.jobNumber;
+      document.getElementById('detailsVehicle').textContent = `${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model} (${job.vehicle.color || 'N/A'})`;
+      document.getElementById('detailsCustomer').textContent = job.customer.name;
+      document.getElementById('detailsPhone').textContent = job.customer.phone || 'No phone';
+      document.getElementById('detailsPickup').textContent = job.pickup || '—';
+      document.getElementById('detailsDropoff').textContent = job.dropoff || '—';
+      
+      if (job.notes) {
+        document.getElementById('detailsNotesSection').style.display = 'block';
+        document.getElementById('detailsNotes').textContent = job.notes;
+      } else {
+        document.getElementById('detailsNotesSection').style.display = 'none';
+      }
+
+      const photosEl = document.getElementById('detailsPhotos');
+      if (job.photos && job.photos.length > 0) {
+        photosEl.innerHTML = job.photos.map(p => `<img class="details-photo" src="${p}" alt="Vehicle condition photo">`).join('');
+      } else {
+        photosEl.innerHTML = '<p style="color: var(--text-muted); padding: 20px; text-align: center;">No photos taken</p>';
+      }
+
+      const sigImg = document.getElementById('detailsSignature');
+      if (job.signature) {
+        sigImg.src = job.signature;
+        sigImg.style.display = 'block';
+      } else {
+        sigImg.style.display = 'none';
+      }
+
+      document.getElementById('detailsScreen').classList.add('active');
+    }
+
+    // ===== Camera Functions =====
+    async function startCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+        document.getElementById('cameraVideo').srcObject = stream;
+        document.getElementById('cameraScreen').classList.add('active');
+        updatePhotoProgress();
+      } catch (err) {
+        console.error('Camera error:', err);
+        showToast('Could not access camera. Please allow camera access.', 'error');
+        // Allow continuing without photos
+        document.getElementById('signatureScreen').classList.add('active');
+      }
+    }
+
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+      document.getElementById('cameraScreen').classList.remove('active');
+    }
+
+    function updatePhotoProgress() {
+      const dots = document.querySelectorAll('.photo-dot');
+      const labelText = document.getElementById('cameraLabelText');
+      const doneBtn = document.getElementById('donePhotosBtn');
+      
+      dots.forEach((dot, i) => {
+        dot.classList.remove('filled', 'active');
+        if (photos[i]) dot.classList.add('filled');
+        if (i === currentPhotoIndex && !photos[i]) dot.classList.add('active');
+      });
+
+      labelText.textContent = PHOTO_LABELS[currentPhotoIndex] || 'Additional';
+      doneBtn.disabled = !photos.some(p => p !== null);
+
+      // Update preview grid
+      const grid = document.getElementById('photoPreviewGrid');
+      grid.querySelectorAll('.preview-slot').forEach((slot, i) => {
+        if (photos[i]) {
+          slot.classList.add('filled');
+          slot.innerHTML = `
+            <img src="${photos[i]}" alt="${PHOTO_LABELS[i]} photo">
+            <button type="button" class="retake-btn" data-index="${i}" aria-label="Retake ${PHOTO_LABELS[i]} photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+            </button>
+          `;
+        }
+      });
+
+      // Add retake handlers
+      grid.querySelectorAll('.retake-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.index);
+          photos[idx] = null;
+          currentPhotoIndex = idx;
+          updatePhotoProgress();
+        });
+      });
+    }
+
+    function capturePhoto() {
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      
+      // Show annotation screen
+      openAnnotation(dataUrl, currentPhotoIndex);
+    }
+
+    function openAnnotation(imageData, photoIndex) {
+      annotationImage = new Image();
+      annotationImage.onload = () => {
+        const canvas = document.getElementById('annotationCanvas');
+        const wrap = canvas.parentElement;
+        
+        // Set canvas size
+        const maxW = wrap.clientWidth;
+        const maxH = wrap.clientHeight;
+        const scale = Math.min(maxW / annotationImage.width, maxH / annotationImage.height);
+        
+        canvas.width = annotationImage.width * scale;
+        canvas.height = annotationImage.height * scale;
+        
+        annotationCtx = canvas.getContext('2d');
+        annotationCtx.drawImage(annotationImage, 0, 0, canvas.width, canvas.height);
+        
+        document.getElementById('annotationScreen').classList.add('active');
+      };
+      annotationImage.src = imageData;
+      annotationImage._photoIndex = photoIndex;
+    }
+
+    function setupAnnotationDrawing() {
+      const canvas = document.getElementById('annotationCanvas');
+      
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        };
+      };
+
+      const startDraw = (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getPos(e);
+        annotationCtx.beginPath();
+        annotationCtx.moveTo(pos.x, pos.y);
+      };
+
+      const draw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        annotationCtx.lineTo(pos.x, pos.y);
+        annotationCtx.strokeStyle = annotationColor;
+        annotationCtx.lineWidth = 4;
+        annotationCtx.lineCap = 'round';
+        annotationCtx.stroke();
+      };
+
+      const endDraw = () => {
+        isDrawing = false;
+      };
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+      
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    // ===== Signature Functions =====
+    function initSignaturePad() {
+      const canvas = document.getElementById('signatureCanvas');
+      const container = document.getElementById('signaturePadContainer');
+      
+      // Size canvas
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      signaturePad = new SignaturePad(canvas, {
+        backgroundColor: 'rgb(255, 255, 255)',
+        penColor: 'rgb(0, 0, 0)'
+      });
+
+      signaturePad.addEventListener('beginStroke', () => {
+        container.classList.add('has-signature');
+        document.getElementById('completeJobBtn').disabled = false;
+      });
+    }
+
+    // ===== Job Workflow =====
+    function startNewJob() {
+      currentJob = {
+        jobNumber: generateJobNumber(),
+        vehicle: {},
+        customer: {},
+        photos: [],
+        signature: null,
+        gps: null,
+        createdAt: new Date().toISOString(),
+        isDemo: false
+      };
+      photos = [null, null, null, null];
+      currentPhotoIndex = 0;
+
+      // Reset form
+      document.getElementById('customerForm').reset();
+      showScreen('customerScreen');
+    }
+
+    async function completeJob() {
+      // Get signature
+      if (signaturePad && !signaturePad.isEmpty()) {
+        currentJob.signature = signaturePad.toDataURL();
+      }
+
+      // Save photos
+      currentJob.photos = photos.filter(p => p !== null);
+
+      // Save to DB
+      await saveJob(currentJob);
+      
+      // Show summary
+      showSummary(currentJob);
+      showToast('Job logged successfully!');
+    }
+
+    function showSummary(job) {
+      document.getElementById('summaryJobNumber').textContent = job.jobNumber;
+      document.getElementById('summaryVehicle').textContent = `${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model}`;
+      document.getElementById('summaryCustomer').textContent = job.customer.name;
+      document.getElementById('summaryPickup').textContent = job.pickup || '—';
+      document.getElementById('summaryTime').textContent = formatDate(job.createdAt);
+
+      const photosEl = document.getElementById('summaryPhotos');
+      photosEl.innerHTML = job.photos.map((p, i) => `<img class="summary-photo" src="${p}" alt="Vehicle photo" style="animation: scaleIn 0.4s ease ${i * 0.1}s both;">`).join('');
+
+      const sigImg = document.getElementById('summarySignature');
+      if (job.signature) {
+        sigImg.src = job.signature;
+        sigImg.style.display = 'block';
+      } else {
+        sigImg.style.display = 'none';
+      }
+
+      // Close other screens
+      document.getElementById('signatureScreen').classList.remove('active');
+      document.getElementById('cameraScreen').classList.remove('active');
+      
+      showScreen('summaryScreen');
+      
+      // Fire confetti animation
+      fireConfetti();
+    }
+
+    // ===== PDF Generation =====
+    async function generatePDF(job) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFillColor(245, 166, 35);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Tow Log Pro', 20, 20);
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Roadside Rescue - Augusta, GA', 20, 30);
+      doc.text(job.jobNumber, 190, 20, { align: 'right' });
+      
+      // Content
+      let y = 55;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('VEHICLE INFORMATION', 20, y);
+      
+      y += 10;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(14);
+      doc.text(`${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model}`, 20, y);
+      
+      y += 8;
+      doc.setFontSize(11);
+      doc.text(`Color: ${job.vehicle.color || 'Not specified'}`, 20, y);
+      
+      y += 15;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('CUSTOMER', 20, y);
+      
+      y += 8;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(12);
+      doc.text(job.customer.name, 20, y);
+      doc.text(job.customer.phone || '', 20, y + 6);
+      
+      y += 20;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('PICKUP LOCATION', 20, y);
+      
+      y += 8;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(11);
+      doc.text(job.pickup || 'Not specified', 20, y);
+      
+      y += 12;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('DROPOFF LOCATION', 20, y);
+      
+      y += 8;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(11);
+      doc.text(job.dropoff || 'Not specified', 20, y);
+      
+      y += 12;
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(10);
+      doc.text('DATE & TIME', 20, y);
+      
+      y += 8;
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(11);
+      doc.text(formatDate(job.createdAt), 20, y);
+      
+      // Signature
+      if (job.signature) {
+        y += 20;
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(10);
+        doc.text('CUSTOMER SIGNATURE', 20, y);
+        
+        y += 5;
+        doc.addImage(job.signature, 'PNG', 20, y, 80, 30);
+      }
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Pre-tow condition documented by Roadside Rescue. Photos available on request.', 105, 280, { align: 'center' });
+      
+      return doc;
+    }
+
+    // ===== Share Functions =====
+    async function shareJob(job) {
+      const shareData = {
+        title: `Tow Documentation - ${job.jobNumber}`,
+        text: `Tow Log for ${job.vehicle.year} ${job.vehicle.make} ${job.vehicle.model}\n` +
+              `Customer: ${job.customer.name}\n` +
+              `Pickup: ${job.pickup}\n` +
+              `Date: ${formatDate(job.createdAt)}\n` +
+              `\nDocumented by Roadside Rescue`
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showToast('Shared successfully!');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyToClipboard(shareData.text);
+          }
+        }
+      } else {
+        copyToClipboard(shareData.text);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(() => {
+        showToast('Could not copy', 'error');
+      });
+    }
+
+    // ===== GPS =====
+    function getGPS() {
+      if (!navigator.geolocation) {
+        showToast('GPS not available', 'error');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          currentJob.gps = { lat: latitude, lng: longitude };
+          
+          // Try to reverse geocode
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+            const data = await response.json();
+            if (data.display_name) {
+              document.getElementById('pickupLocation').value = data.display_name.split(',').slice(0, 3).join(',');
+            }
+          } catch (e) {
+            document.getElementById('pickupLocation').value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+          }
+          
+          showToast('Location captured!');
+        },
+        (err) => {
+          showToast('Could not get location', 'error');
+        },
+        { enableHighAccuracy: true }
+      );
+    }
+
+    // ===== Export =====
+    async function exportData() {
+      const jobs = await getAllJobs();
+      const data = JSON.stringify(jobs, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `towlogpro-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      showToast('Backup downloaded!');
+    }
+
+    // ===== Event Listeners =====
+    function setupEventListeners() {
+      // Add ripple effect to all buttons
+      document.querySelectorAll('.btn, .icon-btn, .nav-item, .capture-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => createRipple(e, btn));
+      });
+
+      // Gate
+      document.getElementById('gateSubmit').addEventListener('click', () => {
+        const key = document.getElementById('gateKey').value.trim();
+        if (hashKey(key) === VALID_HASH) {
+          localStorage.setItem('tlp_auth', 'true');
+          document.getElementById('gate').style.display = 'none';
+          document.getElementById('app').classList.add('visible');
+        } else {
+          document.getElementById('gateKey').classList.add('shake');
+          setTimeout(() => document.getElementById('gateKey').classList.remove('shake'), 400);
+        }
+      });
+
+      document.getElementById('gateKey').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('gateSubmit').click();
+      });
+
+      // New Job
+      document.getElementById('newJobBtn').addEventListener('click', startNewJob);
+
+      // Customer Form
+      document.getElementById('backToMainBtn').addEventListener('click', () => {
+        showScreen('mainScreen');
+      });
+
+      document.getElementById('customerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        currentJob.vehicle = {
+          year: document.getElementById('vehicleYear').value,
+          make: document.getElementById('vehicleMake').value,
+          model: document.getElementById('vehicleModel').value,
+          color: document.getElementById('vehicleColor').value
+        };
+        
+        currentJob.customer = {
+          name: document.getElementById('customerName').value,
+          phone: document.getElementById('customerPhone').value
+        };
+        
+        currentJob.pickup = document.getElementById('pickupLocation').value;
+        currentJob.dropoff = document.getElementById('dropoffLocation').value;
+        currentJob.notes = document.getElementById('jobNotes').value;
+        
+        startCamera();
+      });
+
+      document.getElementById('gpsBtn').addEventListener('click', getGPS);
+
+      // Camera
+      document.getElementById('closeCameraBtn').addEventListener('click', () => {
+        stopCamera();
+        showScreen('customerScreen');
+      });
+
+      document.getElementById('captureBtn').addEventListener('click', () => {
+        const btn = document.getElementById('captureBtn');
+        btn.classList.add('capturing');
+        setTimeout(() => btn.classList.remove('capturing'), 300);
+        capturePhoto();
+      });
+
+      document.getElementById('skipPhotosBtn').addEventListener('click', () => {
+        stopCamera();
+        initSignaturePad();
+        document.getElementById('signatureScreen').classList.add('active');
+      });
+
+      document.getElementById('donePhotosBtn').addEventListener('click', () => {
+        stopCamera();
+        initSignaturePad();
+        document.getElementById('signatureScreen').classList.add('active');
+      });
+
+      // Annotation
+      document.getElementById('closeAnnotationBtn').addEventListener('click', () => {
+        document.getElementById('annotationScreen').classList.remove('active');
+      });
+
+      document.querySelectorAll('.color-swatch').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          annotationColor = btn.dataset.color;
+        });
+      });
+
+      document.getElementById('clearAnnotationBtn').addEventListener('click', () => {
+        const canvas = document.getElementById('annotationCanvas');
+        annotationCtx.clearRect(0, 0, canvas.width, canvas.height);
+        annotationCtx.drawImage(annotationImage, 0, 0, canvas.width, canvas.height);
+      });
+
+      document.getElementById('saveAnnotationBtn').addEventListener('click', () => {
+        const canvas = document.getElementById('annotationCanvas');
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        
+        photos[annotationImage._photoIndex] = dataUrl;
+        
+        // Move to next photo
+        currentPhotoIndex = photos.findIndex((p, i) => p === null && i > annotationImage._photoIndex);
+        if (currentPhotoIndex === -1) currentPhotoIndex = photos.findIndex(p => p === null);
+        if (currentPhotoIndex === -1) currentPhotoIndex = photos.length;
+        
+        document.getElementById('annotationScreen').classList.remove('active');
+        updatePhotoProgress();
+        showToast(`${PHOTO_LABELS[annotationImage._photoIndex]} saved`);
+      });
+
+      setupAnnotationDrawing();
+
+      // Signature
+      document.getElementById('clearSignatureBtn').addEventListener('click', () => {
+        if (signaturePad) {
+          signaturePad.clear();
+          document.getElementById('signaturePadContainer').classList.remove('has-signature');
+          document.getElementById('completeJobBtn').disabled = true;
+        }
+      });
+
+      document.getElementById('completeJobBtn').addEventListener('click', completeJob);
+
+      // Summary
+      document.getElementById('shareSummaryBtn').addEventListener('click', () => shareJob(currentJob));
+      
+      document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+        const doc = await generatePDF(currentJob);
+        doc.save(`tow-log-${currentJob.jobNumber}.pdf`);
+        showToast('PDF downloaded!');
+      });
+
+      document.getElementById('backToJobsBtn').addEventListener('click', async () => {
+        await renderJobs();
+        showScreen('mainScreen');
+      });
+
+      // Details
+      document.getElementById('closeDetailsBtn').addEventListener('click', () => {
+        document.getElementById('detailsScreen').classList.remove('active');
+      });
+
+      document.getElementById('detailsShareBtn').addEventListener('click', () => {
+        if (currentJob) shareJob(currentJob);
+      });
+
+      document.getElementById('detailsDeleteBtn').addEventListener('click', async () => {
+        if (currentJob && confirm('Delete this job? This cannot be undone.')) {
+          await deleteJob(currentJob.id);
+          document.getElementById('detailsScreen').classList.remove('active');
+          await renderJobs();
+          showToast('Job deleted');
+        }
+      });
+
+      // Demo banner
+      document.getElementById('clearDemoBtn').addEventListener('click', async () => {
+        await clearDemoJobs();
+        localStorage.setItem('tlp_cleared_demo', 'true');
+        await renderJobs();
+        showToast('Demo data cleared!');
+      });
+
+      // Header actions
+      document.getElementById('exportBtn').addEventListener('click', exportData);
+      
+      document.getElementById('settingsBtn').addEventListener('click', () => {
+        document.getElementById('upsellModal').classList.add('active');
+      });
+
+      // Nav
+      document.querySelectorAll('.nav-item:not(.disabled)').forEach(item => {
+        item.addEventListener('click', () => {
+          if (item.dataset.screen) {
+            showScreen(item.dataset.screen);
+          }
+        });
+      });
+
+      // Upsell triggers
+      document.querySelectorAll('.nav-item.disabled').forEach(item => {
+        item.addEventListener('click', () => {
+          document.getElementById('upsellModal').classList.add('active');
+        });
+      });
+
+      document.getElementById('closeUpsellBtn').addEventListener('click', () => {
+        document.getElementById('upsellModal').classList.remove('active');
+      });
+
+      document.getElementById('upsellContactBtn').addEventListener('click', () => {
+        window.location.href = 'mailto:cuuper225@gmail.com?subject=Tow%20Log%20Pro%20Full%20Version&body=I%27m%20interested%20in%20the%20full%20version%20of%20Tow%20Log%20Pro.';
+      });
+
+      // Close modal on backdrop click
+      document.getElementById('upsellModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('upsellModal')) {
+          document.getElementById('upsellModal').classList.remove('active');
+        }
+      });
+    }
+
+    // ===== Init =====
+    async function init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlKey = urlParams.get('key');
+      const useDirectDemo = urlParams.get('demo') === 'true';
+      
+      // Check URL key first
+      if (urlKey && hashKey(urlKey) === VALID_HASH) {
+        localStorage.setItem('tlp_auth', 'true');
+      }
+      
+      // Show app if auth passed or demo mode
+      if (localStorage.getItem('tlp_auth') === 'true' || useDirectDemo) {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').classList.add('visible');
+      }
+
+      try {
+        await initDB();
+      } catch (e) {
+        console.log('IndexedDB init failed, using demo mode');
+      }
+      
+      setupEventListeners();
+      
+      // For demo screenshots - render jobs directly
+      if (useDirectDemo) {
+        renderDemoJobsDirectly();
+        return;
+      }
+
+      // Load demo data on first visit
+      try {
+        const jobs = await getAllJobs();
+        const clearedDemo = localStorage.getItem('tlp_cleared_demo');
+        
+        if (jobs.length === 0 && !clearedDemo) {
+          await loadDemoData();
+        }
+        await renderJobs();
+      } catch (e) {
+        console.log('Render failed, using direct demo');
+        renderDemoJobsDirectly();
+      }
+    }
+
+    // Start app
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
