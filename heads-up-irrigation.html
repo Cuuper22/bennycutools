@@ -1,0 +1,2279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Zone Calculator | Heads Up Irrigation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ffd505;
+            --primary-dark: #e6c000;
+            --secondary: #1955ff;
+            --dark: #000000;
+            --dark-soft: #131518;
+            --light-bg: #f2f3f4;
+            --text-body: #626262;
+            --text-muted: #9a9a9a;
+            --white: #ffffff;
+            --success: #5acb65;
+            --warning: #ff9500;
+            --danger: #ff3b30;
+            --border: #e0e0e0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            font-family: 'Kanit', sans-serif;
+            background: var(--light-bg);
+            color: var(--dark-soft);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Header */
+        .app-header {
+            background: var(--dark);
+            color: var(--white);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-logo svg {
+            width: 20px;
+            height: 20px;
+            color: var(--dark);
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .header-subtitle {
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+
+        .header-action {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            color: var(--white);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-action:active {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 16px;
+            padding-bottom: 100px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--dark);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: var(--text-body);
+            font-weight: 300;
+        }
+
+        .section-body {
+            padding: 16px;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--dark-soft);
+            margin-bottom: 8px;
+        }
+
+        .form-label-hint {
+            font-weight: 300;
+            color: var(--text-body);
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Kanit', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--dark-soft);
+            background: var(--white);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 213, 5, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-row .form-group {
+            flex: 1;
+        }
+
+        .input-with-unit {
+            position: relative;
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .input-with-unit .form-input {
+            padding-right: 50px;
+        }
+
+        /* Select */
+        .form-select {
+            width: 100%;
+            height: 48px;
+            padding: 0 40px 0 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Kanit', sans-serif;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--dark-soft);
+            background: var(--white);
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23626262' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 18px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 213, 5, 0.2);
+        }
+
+        /* Toggle Options */
+        .toggle-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .toggle-option {
+            position: relative;
+        }
+
+        .toggle-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .toggle-option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 48px;
+            padding: 0 12px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--text-body);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-option label svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+
+        .toggle-option input:checked + label {
+            border-color: var(--primary);
+            background: rgba(255, 213, 5, 0.1);
+            color: var(--dark-soft);
+        }
+
+        .toggle-option label:active {
+            transform: scale(0.98);
+        }
+
+        /* Checkbox Options */
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox-option {
+            position: relative;
+        }
+
+        .checkbox-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .checkbox-option label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 48px;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-option label svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+            color: var(--text-body);
+        }
+
+        .checkbox-option input:checked + label {
+            border-color: var(--primary);
+            background: rgba(255, 213, 5, 0.1);
+        }
+
+        .checkbox-option input:checked + label svg {
+            color: var(--dark);
+        }
+
+        .checkbox-text {
+            flex: 1;
+        }
+
+        .checkbox-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-soft);
+        }
+
+        .checkbox-desc {
+            font-size: 12px;
+            color: var(--text-body);
+            font-weight: 300;
+        }
+
+        .checkbox-indicator {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .checkbox-indicator svg {
+            width: 14px;
+            height: 14px;
+            color: var(--white);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .checkbox-option input:checked + label .checkbox-indicator {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .checkbox-option input:checked + label .checkbox-indicator svg {
+            opacity: 1;
+            color: var(--dark);
+        }
+
+        /* Results Card */
+        .results-card {
+            background: linear-gradient(135deg, var(--dark) 0%, #1a1a1a 100%);
+            color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .results-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .results-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .results-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--dark);
+        }
+
+        .results-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .results-subtitle {
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 400;
+        }
+
+        .results-badge {
+            background: var(--success);
+            color: var(--white);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .results-body {
+            padding: 16px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .result-stat {
+            background: rgba(255,255,255,0.05);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .result-stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .result-stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 300;
+        }
+
+        .result-stat.highlight {
+            background: var(--primary);
+            grid-column: span 2;
+        }
+
+        .result-stat.highlight .result-stat-value {
+            color: var(--dark);
+            font-size: 32px;
+        }
+
+        .result-stat.highlight .result-stat-label {
+            color: var(--dark);
+            font-weight: 400;
+        }
+
+        .results-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+            margin: 16px 0;
+        }
+
+        .results-detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .results-detail-label {
+            font-size: 13px;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .results-detail-label svg {
+            width: 16px;
+            height: 16px;
+            color: var(--primary);
+        }
+
+        .results-detail-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Hunter Recommendation */
+        .hunter-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin-top: 16px;
+        }
+
+        .hunter-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hunter-badge {
+            background: var(--secondary);
+            color: var(--white);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hunter-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .hunter-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        /* Buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 52px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Kanit', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--white);
+            color: var(--dark-soft);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+        }
+
+        .btn-dark {
+            background: var(--dark);
+            color: var(--white);
+        }
+
+        .btn-dark:hover {
+            background: var(--dark-soft);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        /* Cost Breakdown */
+        .cost-breakdown {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .cost-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cost-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--success);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cost-icon svg {
+            width: 22px;
+            height: 22px;
+            color: var(--white);
+        }
+
+        .cost-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .cost-subtitle {
+            font-size: 12px;
+            color: var(--text-body);
+            font-weight: 300;
+        }
+
+        .cost-body {
+            padding: 16px;
+        }
+
+        .cost-range {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin-bottom: 16px;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .cost-tier {
+            flex: 1;
+            padding: 16px 12px;
+            text-align: center;
+        }
+
+        .cost-tier.low {
+            background: #e8f5e9;
+        }
+
+        .cost-tier.mid {
+            background: #fff3e0;
+        }
+
+        .cost-tier.high {
+            background: #fce4ec;
+        }
+
+        .cost-tier-label {
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+            opacity: 0.7;
+        }
+
+        .cost-tier.low .cost-tier-label { color: #2e7d32; }
+        .cost-tier.mid .cost-tier-label { color: #ef6c00; }
+        .cost-tier.high .cost-tier-label { color: #c2185b; }
+
+        .cost-tier-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .cost-tier.low .cost-tier-value { color: #2e7d32; }
+        .cost-tier.mid .cost-tier-value { color: #ef6c00; }
+        .cost-tier.high .cost-tier-value { color: #c2185b; }
+
+        .cost-disclaimer {
+            font-size: 12px;
+            color: var(--text-body);
+            text-align: center;
+            font-weight: 300;
+            line-height: 1.5;
+        }
+
+        /* Water Usage Card */
+        .water-card {
+            background: linear-gradient(135deg, #1955ff 0%, #0040cc 100%);
+            color: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .water-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .water-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .water-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .water-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .water-value {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .water-label {
+            font-size: 13px;
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .water-footer {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .water-stat {
+            flex: 1;
+        }
+
+        .water-stat-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .water-stat-label {
+            font-size: 11px;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            min-width: 64px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-body);
+            transition: color 0.2s;
+        }
+
+        .tab-item svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .tab-item span {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .tab-item.active {
+            color: var(--primary);
+        }
+
+        .tab-item.active svg {
+            color: var(--dark);
+        }
+
+        /* Views */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Saved Projects */
+        .project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .project-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .project-card:active {
+            transform: scale(0.98);
+        }
+
+        .project-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--light-bg);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .project-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-body);
+        }
+
+        .project-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .project-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .project-meta {
+            font-size: 12px;
+            color: var(--text-body);
+            font-weight: 300;
+        }
+
+        .project-arrow {
+            color: var(--text-muted);
+        }
+
+        .project-arrow svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .empty-state-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background: var(--light-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .empty-state-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-desc {
+            font-size: 14px;
+            color: var(--text-body);
+            font-weight: 300;
+            max-width: 280px;
+            margin: 0 auto 24px;
+            line-height: 1.5;
+        }
+
+        /* Contact Card */
+        .contact-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .contact-header {
+            background: var(--primary);
+            padding: 20px 16px;
+            text-align: center;
+        }
+
+        .contact-logo {
+            width: 64px;
+            height: 64px;
+            background: var(--dark);
+            border-radius: 12px;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .contact-logo svg {
+            width: 36px;
+            height: 36px;
+            color: var(--primary);
+        }
+
+        .contact-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .contact-tagline {
+            font-size: 13px;
+            color: var(--dark);
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .contact-body {
+            padding: 16px;
+        }
+
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .contact-row:last-child {
+            border-bottom: none;
+        }
+
+        .contact-row-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--light-bg);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .contact-row-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--dark);
+        }
+
+        .contact-row-text {
+            flex: 1;
+        }
+
+        .contact-row-label {
+            font-size: 12px;
+            color: var(--text-body);
+            font-weight: 300;
+        }
+
+        .contact-row-value {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .contact-row a {
+            color: var(--secondary);
+            text-decoration: none;
+        }
+
+        /* Info Card */
+        .info-card {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius);
+            padding: 14px;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .info-card-icon {
+            flex-shrink: 0;
+            color: #d97706;
+        }
+
+        .info-card-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .info-card-text {
+            flex: 1;
+            font-size: 13px;
+            color: #92400e;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--white);
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            border-radius: var(--radius) var(--radius) 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s;
+            overflow: hidden;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--light-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .modal-close svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-body);
+        }
+
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            max-height: calc(90vh - 130px);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--dark);
+            color: var(--white);
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 300;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast svg {
+            width: 20px;
+            height: 20px;
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 24px;
+                padding-bottom: 120px;
+            }
+
+            .results-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .result-stat.highlight {
+                grid-column: span 4;
+            }
+
+            .toggle-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .tab-bar {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+                border-radius: var(--radius) var(--radius) 0 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-brand">
+            <div class="header-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2v6"/>
+                    <path d="M12 8c-4 4-6 8-6 10a6 6 0 1012 0c0-2-2-6-6-10z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="header-title">Heads Up Irrigation</div>
+                <div class="header-subtitle">Zone Calculator</div>
+            </div>
+        </div>
+        <button class="header-action" onclick="showSaveModal()" aria-label="Save project">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Calculator View -->
+    <div id="view-calculator" class="view active">
+        <main class="main-content">
+            <!-- Property Size -->
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                            <path d="M9 21V9"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-title">Property Size</div>
+                        <div class="section-subtitle">Enter your lawn dimensions</div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="input-row">
+                        <div class="form-group">
+                            <label class="form-label">Width</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="lawn-width" class="form-input" placeholder="0" min="0">
+                                <span class="input-unit">ft</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Length</label>
+                            <div class="input-with-unit">
+                                <input type="number" id="lawn-length" class="form-input" placeholder="0" min="0">
+                                <span class="input-unit">ft</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Area <span class="form-label-hint">(auto-calculated)</span></label>
+                        <div class="input-with-unit">
+                            <input type="text" id="lawn-area" class="form-input" placeholder="Enter dimensions above" readonly>
+                            <span class="input-unit">sq ft</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Water Pressure -->
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-title">Water Pressure</div>
+                        <div class="section-subtitle">Check your outdoor spigot</div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="form-group">
+                        <label class="form-label">Static Pressure <span class="form-label-hint">(PSI)</span></label>
+                        <select id="water-pressure" class="form-select">
+                            <option value="">Select pressure range</option>
+                            <option value="30">Low (25-35 PSI)</option>
+                            <option value="45">Medium (40-50 PSI)</option>
+                            <option value="60">High (55-65 PSI)</option>
+                            <option value="75">Very High (70+ PSI)</option>
+                        </select>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                        </div>
+                        <div class="info-card-text">
+                            Typical Columbia SC municipal water pressure is 45-60 PSI. A pressure gauge at your outdoor spigot will give you an exact reading.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Soil Type -->
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 22h20"/>
+                            <path d="M6.5 22v-4a2 2 0 012-2h7a2 2 0 012 2v4"/>
+                            <path d="M6 12a4 4 0 014-4h4a4 4 0 014 4v4H6v-4z"/>
+                            <path d="M12 4v4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-title">Soil Type</div>
+                        <div class="section-subtitle">Affects water absorption rate</div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="toggle-grid">
+                        <div class="toggle-option">
+                            <input type="radio" name="soil" id="soil-clay" value="clay">
+                            <label for="soil-clay">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                </svg>
+                                Clay
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <input type="radio" name="soil" id="soil-loam" value="loam">
+                            <label for="soil-loam">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="8"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                Loam
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <input type="radio" name="soil" id="soil-sandy" value="sandy">
+                            <label for="soil-sandy">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="6" cy="18" r="2"/>
+                                    <circle cx="12" cy="18" r="2"/>
+                                    <circle cx="18" cy="18" r="2"/>
+                                    <circle cx="9" cy="12" r="2"/>
+                                    <circle cx="15" cy="12" r="2"/>
+                                </svg>
+                                Sandy
+                            </label>
+                        </div>
+                        <div class="toggle-option">
+                            <input type="radio" name="soil" id="soil-mixed" value="mixed" checked>
+                            <label for="soil-mixed">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 4h6v6H4z"/>
+                                    <circle cx="17" cy="7" r="3"/>
+                                    <path d="M14 14h6v6h-6z"/>
+                                    <circle cx="7" cy="17" r="3"/>
+                                </svg>
+                                Mixed
+                            </label>
+                        </div>
+                    </div>
+                    <div class="info-card" style="margin-top: 16px;">
+                        <div class="info-card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                        </div>
+                        <div class="info-card-text">
+                            Most of Lexington and Irmo areas have heavy clay soil, which requires slower watering cycles to prevent runoff.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Special Conditions -->
+            <section class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="section-title">Property Features</div>
+                        <div class="section-subtitle">Check all that apply</div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    <div class="checkbox-list">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="feature-slope" value="slope">
+                            <label for="feature-slope">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 20L21 4"/>
+                                    <path d="M3 20h18v-16"/>
+                                </svg>
+                                <div class="checkbox-text">
+                                    <div class="checkbox-title">Sloped Areas</div>
+                                    <div class="checkbox-desc">Hills or grades over 10%</div>
+                                </div>
+                                <div class="checkbox-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="feature-shade" value="shade">
+                            <label for="feature-shade">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v2"/>
+                                    <path d="M12 20v2"/>
+                                    <path d="M4.93 4.93l1.41 1.41"/>
+                                    <path d="M17.66 17.66l1.41 1.41"/>
+                                    <path d="M2 12h2"/>
+                                    <path d="M20 12h2"/>
+                                    <path d="M6.34 17.66l-1.41 1.41"/>
+                                    <path d="M19.07 4.93l-1.41 1.41"/>
+                                    <circle cx="12" cy="12" r="4"/>
+                                </svg>
+                                <div class="checkbox-text">
+                                    <div class="checkbox-title">Shaded Sections</div>
+                                    <div class="checkbox-desc">Under trees or structures</div>
+                                </div>
+                                <div class="checkbox-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="feature-beds" value="beds">
+                            <label for="feature-beds">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 10c-2 0-4 1-4 4h8c0-3-2-4-4-4z"/>
+                                    <path d="M4 14v5"/>
+                                    <path d="M20 14v5"/>
+                                    <path d="M2 19h20"/>
+                                    <path d="M12 3v3"/>
+                                    <path d="M9 6l3-3 3 3"/>
+                                </svg>
+                                <div class="checkbox-text">
+                                    <div class="checkbox-title">Flower/Shrub Beds</div>
+                                    <div class="checkbox-desc">Separate watering needs</div>
+                                </div>
+                                <div class="checkbox-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="feature-narrow" value="narrow">
+                            <label for="feature-narrow">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M8 3v18"/>
+                                    <path d="M16 3v18"/>
+                                    <path d="M4 12h4"/>
+                                    <path d="M16 12h4"/>
+                                </svg>
+                                <div class="checkbox-text">
+                                    <div class="checkbox-title">Narrow Strips</div>
+                                    <div class="checkbox-desc">Side yards under 8ft wide</div>
+                                </div>
+                                <div class="checkbox-indicator">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Calculate Button -->
+            <button class="btn btn-primary" onclick="calculate()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                    <line x1="8" y1="6" x2="16" y2="6"/>
+                    <line x1="8" y1="10" x2="16" y2="10"/>
+                    <line x1="8" y1="14" x2="12" y2="14"/>
+                    <line x1="8" y1="18" x2="10" y2="18"/>
+                </svg>
+                Calculate Zones
+            </button>
+
+            <!-- Results (hidden until calculated) -->
+            <div id="results-section" style="display: none; margin-top: 24px;">
+                <div class="results-card">
+                    <div class="results-header">
+                        <div class="results-header-left">
+                            <div class="results-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2v6"/>
+                                    <path d="M12 8c-4 4-6 8-6 10a6 6 0 1012 0c0-2-2-6-6-10z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="results-title">Your Estimate</div>
+                                <div class="results-subtitle">Columbia SC Area</div>
+                            </div>
+                        </div>
+                        <span class="results-badge">Complete</span>
+                    </div>
+                    <div class="results-body">
+                        <div class="results-grid">
+                            <div class="result-stat">
+                                <div class="result-stat-value" id="result-zones">-</div>
+                                <div class="result-stat-label">Zones Needed</div>
+                            </div>
+                            <div class="result-stat">
+                                <div class="result-stat-value" id="result-heads">-</div>
+                                <div class="result-stat-label">Sprinkler Heads</div>
+                            </div>
+                            <div class="result-stat highlight">
+                                <div class="result-stat-value" id="result-area">-</div>
+                                <div class="result-stat-label">Total Coverage Area (sq ft)</div>
+                            </div>
+                        </div>
+                        
+                        <div class="results-divider"></div>
+                        
+                        <div class="results-detail-row">
+                            <div class="results-detail-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Controller Size
+                            </div>
+                            <div class="results-detail-value" id="result-controller">-</div>
+                        </div>
+                        <div class="results-detail-row">
+                            <div class="results-detail-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                Run Time per Zone
+                            </div>
+                            <div class="results-detail-value" id="result-runtime">-</div>
+                        </div>
+                        <div class="results-detail-row">
+                            <div class="results-detail-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                                </svg>
+                                Head Type
+                            </div>
+                            <div class="results-detail-value" id="result-headtype">-</div>
+                        </div>
+
+                        <div class="hunter-card">
+                            <div class="hunter-header">
+                                <span class="hunter-badge">Recommended</span>
+                                <span class="hunter-title">Hunter Products</span>
+                            </div>
+                            <div class="hunter-desc" id="hunter-recommendation">
+                                Based on your property, we recommend Hunter PGP-ADJ rotors for optimal coverage. These are the same professional-grade heads we install on all our systems.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Breakdown -->
+                <div class="cost-breakdown">
+                    <div class="cost-header">
+                        <div class="cost-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="1" x2="12" y2="23"/>
+                                <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="cost-title">Estimated Cost Range</div>
+                            <div class="cost-subtitle">Professional installation</div>
+                        </div>
+                    </div>
+                    <div class="cost-body">
+                        <div class="cost-range">
+                            <div class="cost-tier low">
+                                <div class="cost-tier-label">Economy</div>
+                                <div class="cost-tier-value" id="cost-low">$-</div>
+                            </div>
+                            <div class="cost-tier mid">
+                                <div class="cost-tier-label">Standard</div>
+                                <div class="cost-tier-value" id="cost-mid">$-</div>
+                            </div>
+                            <div class="cost-tier high">
+                                <div class="cost-tier-label">Premium</div>
+                                <div class="cost-tier-value" id="cost-high">$-</div>
+                            </div>
+                        </div>
+                        <div class="cost-disclaimer">
+                            This is a rough estimate only. Actual pricing depends on site conditions, access, and specific requirements. Contact Chris for an accurate quote.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Water Usage -->
+                <div class="water-card">
+                    <div class="water-header">
+                        <div class="water-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v6"/>
+                                <path d="M12 8c-4 4-6 8-6 10a6 6 0 1012 0c0-2-2-6-6-10z"/>
+                            </svg>
+                        </div>
+                        <div class="water-title">Weekly Water Usage</div>
+                    </div>
+                    <div class="water-value" id="water-gallons">- gal</div>
+                    <div class="water-label">Estimated for SC summer schedule (3x weekly)</div>
+                    <div class="water-footer">
+                        <div class="water-stat">
+                            <div class="water-stat-value" id="water-monthly">-</div>
+                            <div class="water-stat-label">Monthly gallons</div>
+                        </div>
+                        <div class="water-stat">
+                            <div class="water-stat-value" id="water-cost">-</div>
+                            <div class="water-stat-label">Est. monthly cost</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="showSaveModal()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Save
+                    </button>
+                    <button class="btn btn-dark" onclick="requestQuote()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                        </svg>
+                        Get Quote
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Projects View -->
+    <div id="view-projects" class="view">
+        <main class="main-content">
+            <div id="projects-list" class="project-list">
+                <!-- Empty state shown when no projects -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Contact View -->
+    <div id="view-contact" class="view">
+        <main class="main-content">
+            <div class="contact-card">
+                <div class="contact-header">
+                    <div class="contact-logo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v6"/>
+                            <path d="M12 8c-4 4-6 8-6 10a6 6 0 1012 0c0-2-2-6-6-10z"/>
+                        </svg>
+                    </div>
+                    <div class="contact-name">Heads Up Irrigation</div>
+                    <div class="contact-tagline">Columbia's Trusted Irrigation Experts</div>
+                </div>
+                <div class="contact-body">
+                    <div class="contact-row">
+                        <div class="contact-row-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                            </svg>
+                        </div>
+                        <div class="contact-row-text">
+                            <div class="contact-row-label">Phone</div>
+                            <div class="contact-row-value">
+                                <a href="tel:803-360-1260">803-360-1260</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-row-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                        </div>
+                        <div class="contact-row-text">
+                            <div class="contact-row-label">Address</div>
+                            <div class="contact-row-value">3093 Kennerly Road<br>Irmo, SC 29063</div>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-row-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="contact-row-text">
+                            <div class="contact-row-label">Hours</div>
+                            <div class="contact-row-value">Mon - Fri: 8:00 AM - 5:00 PM</div>
+                        </div>
+                    </div>
+                    <div class="contact-row">
+                        <div class="contact-row-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                            </svg>
+                        </div>
+                        <div class="contact-row-text">
+                            <div class="contact-row-label">Website</div>
+                            <div class="contact-row-value">
+                                <a href="https://headsupirrigationsc.com" target="_blank">headsupirrigationsc.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="info-card-text">
+                    Family owned and operated since 2005. We serve Columbia, Lexington, Irmo, and the greater Midlands area. Ask about our trenchless installation!
+                </div>
+            </div>
+
+            <a href="tel:803-360-1260" class="btn btn-primary" style="text-decoration: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                </svg>
+                Call 803-360-1260
+            </a>
+        </main>
+    </div>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+        <button class="tab-item active" onclick="switchView('calculator')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="16" height="20" rx="2"/>
+                <line x1="8" y1="6" x2="16" y2="6"/>
+                <line x1="8" y1="10" x2="16" y2="10"/>
+                <line x1="8" y1="14" x2="12" y2="14"/>
+                <line x1="8" y1="18" x2="10" y2="18"/>
+            </svg>
+            <span>Calculator</span>
+        </button>
+        <button class="tab-item" onclick="switchView('projects')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+            </svg>
+            <span>Projects</span>
+        </button>
+        <button class="tab-item" onclick="switchView('contact')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+                </svg>
+            <span>Contact</span>
+        </button>
+    </nav>
+
+    <!-- Save Modal -->
+    <div id="save-modal" class="modal-overlay" onclick="closeSaveModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">Save Project</div>
+                <button class="modal-close" onclick="closeSaveModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" id="project-name" class="form-input" placeholder="e.g., Front Yard Renovation">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address <span class="form-label-hint">(optional)</span></label>
+                    <input type="text" id="project-address" class="form-input" placeholder="e.g., 123 Main St, Irmo SC">
+                </div>
+                <button class="btn btn-primary" onclick="saveProject()" style="margin-top: 8px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Save Project
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span id="toast-message">Project saved</span>
+    </div>
+
+    <script>
+        // Security Layer
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=440276216;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+          throw new Error('Invalid key');
+        }
+
+        // Block context menu and dev tools
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+          if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['I','J','C'].includes(e.key))||(e.ctrlKey&&e.key==='u')){
+            e.preventDefault();
+          }
+        });
+
+        // Database
+        let db;
+        const DB_NAME = 'HeadsUpIrrigation';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'projects';
+
+        // Initialize IndexedDB
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        // Calculate area automatically
+        document.getElementById('lawn-width').addEventListener('input', updateArea);
+        document.getElementById('lawn-length').addEventListener('input', updateArea);
+
+        function updateArea() {
+            const width = parseFloat(document.getElementById('lawn-width').value) || 0;
+            const length = parseFloat(document.getElementById('lawn-length').value) || 0;
+            const area = width * length;
+            document.getElementById('lawn-area').value = area > 0 ? area.toLocaleString() : '';
+        }
+
+        // Main calculation function
+        function calculate() {
+            const width = parseFloat(document.getElementById('lawn-width').value) || 0;
+            const length = parseFloat(document.getElementById('lawn-length').value) || 0;
+            const area = width * length;
+            const pressure = parseInt(document.getElementById('water-pressure').value) || 45;
+            const soil = document.querySelector('input[name="soil"]:checked')?.value || 'mixed';
+            
+            const features = {
+                slope: document.getElementById('feature-slope').checked,
+                shade: document.getElementById('feature-shade').checked,
+                beds: document.getElementById('feature-beds').checked,
+                narrow: document.getElementById('feature-narrow').checked
+            };
+
+            if (area < 100) {
+                showToast('Please enter valid lawn dimensions');
+                return;
+            }
+
+            // Calculate zones based on area and pressure
+            // Typical zone covers 800-1500 sq ft depending on pressure
+            let sqftPerZone = 1000;
+            if (pressure <= 35) sqftPerZone = 700;
+            else if (pressure <= 50) sqftPerZone = 1000;
+            else if (pressure <= 65) sqftPerZone = 1200;
+            else sqftPerZone = 1400;
+
+            let zones = Math.ceil(area / sqftPerZone);
+            
+            // Add zones for features
+            if (features.slope) zones += 1;
+            if (features.beds) zones += 1;
+            if (features.narrow) zones += 1;
+            
+            zones = Math.max(2, zones); // Minimum 2 zones
+
+            // Calculate heads (1 head per 200-300 sq ft for rotors)
+            const headsPerZone = Math.ceil(sqftPerZone / 250);
+            const totalHeads = zones * headsPerZone;
+
+            // Determine head type
+            let headType = 'Rotors (PGP-ADJ)';
+            let hunterRec = 'Based on your property, we recommend Hunter PGP-ADJ rotors for optimal coverage. These professional-grade heads are adjustable from 40° to 360° arc with a 22-52ft throw radius.';
+            
+            if (area < 2000 || features.narrow) {
+                headType = 'Mixed (Rotors + Spray)';
+                hunterRec = 'Your property would benefit from a mix of Hunter PGP-ADJ rotors for open areas and Hunter Pro-Spray bodies with MP Rotator nozzles for narrow strips and tight corners.';
+            }
+
+            // Calculate run time based on soil type
+            let runTime = 20;
+            if (soil === 'clay') runTime = 35;
+            else if (soil === 'loam') runTime = 25;
+            else if (soil === 'sandy') runTime = 15;
+            else runTime = 25; // mixed
+
+            // Calculate controller size
+            let controllerSize = zones <= 4 ? '4-zone' : zones <= 6 ? '6-zone' : zones <= 8 ? '8-zone' : '12-zone';
+
+            // Calculate costs (Columbia SC market rates)
+            const baseCostPerZone = 450;
+            const headCost = 35;
+            const controllerCost = zones <= 4 ? 150 : zones <= 6 ? 200 : zones <= 8 ? 280 : 350;
+            const laborMultiplier = features.slope ? 1.25 : 1;
+            
+            const lowCost = Math.round((zones * baseCostPerZone * 0.85 + totalHeads * headCost * 0.9 + controllerCost) * laborMultiplier);
+            const midCost = Math.round((zones * baseCostPerZone + totalHeads * headCost + controllerCost) * laborMultiplier);
+            const highCost = Math.round((zones * baseCostPerZone * 1.2 + totalHeads * headCost * 1.1 + controllerCost * 1.3) * laborMultiplier);
+
+            // Calculate water usage
+            // Average: 0.6 GPM per head, 3 waterings per week in SC summer
+            const gpmPerHead = 0.6;
+            const weeklyWaterings = 3;
+            const weeklyGallons = Math.round(totalHeads * gpmPerHead * runTime * weeklyWaterings);
+            const monthlyGallons = weeklyGallons * 4;
+            const waterCostPerGallon = 0.006; // ~$6 per 1000 gallons
+            const monthlyCost = Math.round(monthlyGallons * waterCostPerGallon);
+
+            // Update DOM
+            document.getElementById('result-zones').textContent = zones;
+            document.getElementById('result-heads').textContent = totalHeads;
+            document.getElementById('result-area').textContent = area.toLocaleString();
+            document.getElementById('result-controller').textContent = controllerSize;
+            document.getElementById('result-runtime').textContent = runTime + ' minutes';
+            document.getElementById('result-headtype').textContent = headType;
+            document.getElementById('hunter-recommendation').textContent = hunterRec;
+            
+            document.getElementById('cost-low').textContent = '$' + lowCost.toLocaleString();
+            document.getElementById('cost-mid').textContent = '$' + midCost.toLocaleString();
+            document.getElementById('cost-high').textContent = '$' + highCost.toLocaleString();
+            
+            document.getElementById('water-gallons').textContent = weeklyGallons.toLocaleString() + ' gal';
+            document.getElementById('water-monthly').textContent = monthlyGallons.toLocaleString() + ' gal';
+            document.getElementById('water-cost').textContent = '$' + monthlyCost;
+
+            // Show results
+            document.getElementById('results-section').style.display = 'block';
+            document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Store current calculation for saving
+            window.currentCalculation = {
+                width, length, area, pressure, soil, features,
+                zones, totalHeads, headType, runTime, controllerSize,
+                costs: { low: lowCost, mid: midCost, high: highCost },
+                water: { weekly: weeklyGallons, monthly: monthlyGallons, cost: monthlyCost }
+            };
+        }
+
+        // View switching
+        function switchView(view) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById('view-' + view).classList.add('active');
+            document.querySelector(`.tab-item:nth-child(${view === 'calculator' ? 1 : view === 'projects' ? 2 : 3})`).classList.add('active');
+            
+            if (view === 'projects') {
+                loadProjects();
+            }
+        }
+
+        // Projects
+        async function loadProjects() {
+            const container = document.getElementById('projects-list');
+            
+            try {
+                const projects = await getAllProjects();
+                
+                if (projects.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+                                </svg>
+                            </div>
+                            <div class="empty-state-title">No Saved Projects</div>
+                            <div class="empty-state-desc">Use the calculator to estimate your irrigation zones, then save your projects here for later.</div>
+                            <button class="btn btn-primary" onclick="switchView('calculator')" style="max-width: 200px; margin: 0 auto;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                New Calculation
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = projects.map(p => `
+                    <div class="project-card" onclick="loadProject(${p.id})">
+                        <div class="project-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                        </div>
+                        <div class="project-info">
+                            <div class="project-name">${p.name}</div>
+                            <div class="project-meta">${p.data.zones} zones | ${p.data.area.toLocaleString()} sq ft | ${new Date(p.date).toLocaleDateString()}</div>
+                        </div>
+                        <div class="project-arrow">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error('Error loading projects:', e);
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-title">Could not load projects</div></div>';
+            }
+        }
+
+        function getAllProjects() {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    // Fallback to localStorage
+                    const saved = localStorage.getItem('headsup_projects');
+                    resolve(saved ? JSON.parse(saved) : []);
+                    return;
+                }
+                
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadProject(id) {
+            try {
+                const projects = await getAllProjects();
+                const project = projects.find(p => p.id === id);
+                
+                if (!project) return;
+
+                // Populate form
+                document.getElementById('lawn-width').value = project.data.width;
+                document.getElementById('lawn-length').value = project.data.length;
+                updateArea();
+                document.getElementById('water-pressure').value = project.data.pressure;
+                
+                document.querySelectorAll('input[name="soil"]').forEach(r => {
+                    r.checked = r.value === project.data.soil;
+                });
+                
+                document.getElementById('feature-slope').checked = project.data.features?.slope || false;
+                document.getElementById('feature-shade').checked = project.data.features?.shade || false;
+                document.getElementById('feature-beds').checked = project.data.features?.beds || false;
+                document.getElementById('feature-narrow').checked = project.data.features?.narrow || false;
+
+                // Switch to calculator and recalculate
+                switchView('calculator');
+                calculate();
+                
+                showToast('Project loaded');
+            } catch (e) {
+                console.error('Error loading project:', e);
+            }
+        }
+
+        // Save modal
+        function showSaveModal() {
+            if (!window.currentCalculation) {
+                showToast('Calculate zones first');
+                return;
+            }
+            document.getElementById('save-modal').classList.add('active');
+        }
+
+        function closeSaveModal(event) {
+            if (!event || event.target === event.currentTarget) {
+                document.getElementById('save-modal').classList.remove('active');
+            }
+        }
+
+        async function saveProject() {
+            const name = document.getElementById('project-name').value.trim();
+            const address = document.getElementById('project-address').value.trim();
+            
+            if (!name) {
+                showToast('Please enter a project name');
+                return;
+            }
+
+            const project = {
+                name,
+                address,
+                date: new Date().toISOString(),
+                data: window.currentCalculation
+            };
+
+            try {
+                if (db) {
+                    const transaction = db.transaction([STORE_NAME], 'readwrite');
+                    const store = transaction.objectStore(STORE_NAME);
+                    store.add(project);
+                } else {
+                    // Fallback to localStorage
+                    const saved = localStorage.getItem('headsup_projects');
+                    const projects = saved ? JSON.parse(saved) : [];
+                    project.id = Date.now();
+                    projects.push(project);
+                    localStorage.setItem('headsup_projects', JSON.stringify(projects));
+                }
+
+                closeSaveModal();
+                document.getElementById('project-name').value = '';
+                document.getElementById('project-address').value = '';
+                showToast('Project saved');
+            } catch (e) {
+                console.error('Error saving project:', e);
+                showToast('Could not save project');
+            }
+        }
+
+        // Request quote
+        function requestQuote() {
+            if (window.currentCalculation) {
+                const calc = window.currentCalculation;
+                const message = `Hi, I used your Zone Calculator and got an estimate of ${calc.zones} zones for my ${calc.area.toLocaleString()} sq ft lawn. I'd like to schedule a site visit for an accurate quote.`;
+                window.location.href = `tel:803-360-1260`;
+            } else {
+                window.location.href = 'tel:803-360-1260';
+            }
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 3000);
+        }
+
+        // Demo data
+        function loadDemoData() {
+            const demos = [
+                { id: 1, name: 'Lake Murray Residence', address: '145 Marina Dr, Irmo SC', date: '2026-02-01', data: { width: 80, length: 120, area: 9600, pressure: 60, soil: 'clay', features: { slope: false, shade: true, beds: true, narrow: false }, zones: 8, totalHeads: 32, headType: 'Mixed (Rotors + Spray)', runTime: 35, controllerSize: '8-zone', costs: { low: 3800, mid: 4500, high: 5400 }, water: { weekly: 2016, monthly: 8064, cost: 48 } } },
+                { id: 2, name: 'Lexington New Build', address: '892 Sunset Blvd, Lexington SC', date: '2026-01-28', data: { width: 60, length: 80, area: 4800, pressure: 45, soil: 'mixed', features: { slope: false, shade: false, beds: false, narrow: true }, zones: 5, totalHeads: 20, headType: 'Mixed (Rotors + Spray)', runTime: 25, controllerSize: '6-zone', costs: { low: 2200, mid: 2600, high: 3100 }, water: { weekly: 900, monthly: 3600, cost: 22 } } },
+                { id: 3, name: 'Chapin Estate', address: '2100 Country Club Rd, Chapin SC', date: '2026-01-15', data: { width: 150, length: 200, area: 30000, pressure: 75, soil: 'loam', features: { slope: true, shade: true, beds: true, narrow: false }, zones: 18, totalHeads: 72, headType: 'Rotors (PGP-ADJ)', runTime: 25, controllerSize: '12-zone', costs: { low: 9500, mid: 11200, high: 13400 }, water: { weekly: 3240, monthly: 12960, cost: 78 } } }
+            ];
+
+            localStorage.setItem('headsup_projects', JSON.stringify(demos));
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initDB();
+            } catch (e) {
+                console.log('IndexedDB not available, using localStorage fallback');
+            }
+
+            // Load demo data if no projects exist
+            const saved = localStorage.getItem('headsup_projects');
+            if (!saved) {
+                loadDemoData();
+            }
+        });
+    </script>
+</body>
+</html>
