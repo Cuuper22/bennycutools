@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WellDepth Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --well-blue: oklch(0.35 0.08 240);
+      --aquifer-teal: oklch(0.58 0.12 175);
+      --dust-brown: oklch(0.55 0.06 55);
+      --paper-white: oklch(0.98 0.005 90);
+      --alert-rust: oklch(0.55 0.15 30);
+      --water-blue: oklch(0.62 0.15 230);
+      --text-dark: oklch(0.25 0.02 240);
+      --text-muted: oklch(0.50 0.02 240);
+      --border-light: oklch(0.88 0.01 90);
+      --shadow-sm: 0 1px 3px oklch(0.25 0.02 240 / 0.1);
+      --shadow-md: 0 4px 12px oklch(0.25 0.02 240 / 0.12);
+      --shadow-lg: 0 8px 24px oklch(0.25 0.02 240 / 0.15);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+    }
+    
+    html { font-size: 16px; }
+    
+    body {
+      font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--paper-white);
+      color: var(--text-dark);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 80px !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Entrance Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .form-section,
+    .canvas-container,
+    .calc-card,
+    .record-card {
+      animation: fadeInUp 0.4s ease-out forwards;
+      opacity: 0;
+    }
+    
+    .form-section:nth-child(1) { animation-delay: 0.05s; }
+    .form-section:nth-child(2) { animation-delay: 0.1s; }
+    .canvas-container { animation-delay: 0.15s; }
+    .form-section:nth-child(4) { animation-delay: 0.2s; }
+    .form-section:nth-child(5) { animation-delay: 0.25s; }
+    .btn-row { animation: fadeInUp 0.4s ease-out 0.3s forwards; opacity: 0; }
+    .watermark-notice { animation: fadeInUp 0.4s ease-out 0.35s forwards; opacity: 0; }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .form-section,
+      .canvas-container,
+      .calc-card,
+      .record-card,
+      .btn-row,
+      .watermark-notice {
+        animation: none;
+        opacity: 1;
+      }
+      
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 700; }
+    
+    /* Auth Screen */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: linear-gradient(145deg, var(--well-blue) 0%, oklch(0.28 0.06 240) 100%);
+    }
+    
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--paper-white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .auth-title {
+      color: var(--paper-white);
+      font-size: 2rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    
+    .auth-subtitle {
+      color: oklch(0.85 0.02 240);
+      font-size: 1rem;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    
+    .auth-form {
+      width: 100%;
+      max-width: 320px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid oklch(0.5 0.04 240);
+      border-radius: var(--radius-md);
+      background: oklch(0.3 0.05 240);
+      color: var(--paper-white);
+      margin-bottom: 16px;
+      transition: border-color 0.15s ease;
+    }
+    
+    .auth-input::placeholder { color: oklch(0.65 0.03 240); }
+    .auth-input:focus { outline: none; border-color: var(--aquifer-teal); }
+    
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--aquifer-teal);
+      color: var(--paper-white);
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    
+    .auth-btn:hover { box-shadow: var(--shadow-md); }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:focus-visible { outline: 3px solid var(--paper-white); outline-offset: 2px; }
+    
+    .auth-error {
+      color: oklch(0.75 0.12 30);
+      font-size: 0.875rem;
+      text-align: center;
+      margin-top: 12px;
+      min-height: 20px;
+    }
+    
+    /* App Container */
+    #app { display: none; }
+    #app.active { display: block; }
+    #auth-screen.hidden { display: none; }
+    
+    /* Header */
+    .app-header {
+      background: var(--well-blue);
+      color: var(--paper-white);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .header-title {
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: oklch(0.4 0.06 240);
+      color: var(--paper-white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .icon-btn:hover { background: oklch(0.45 0.07 240); }
+    .icon-btn:active { transform: scale(0.95); }
+    .icon-btn:focus-visible { outline: 2px solid var(--paper-white); outline-offset: 2px; }
+    
+    .icon-btn svg { width: 22px; height: 22px; }
+    
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      background: oklch(0.32 0.06 240);
+      padding: 0 8px;
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      background: transparent;
+      color: oklch(0.75 0.03 240);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+    
+    .tab-btn:hover { color: var(--paper-white); }
+    .tab-btn.active { color: var(--paper-white); border-bottom-color: var(--aquifer-teal); }
+    .tab-btn:focus-visible { outline: 2px solid var(--aquifer-teal); outline-offset: -2px; }
+    
+    .tab-btn.locked {
+      color: oklch(0.55 0.02 240);
+      cursor: not-allowed;
+    }
+    
+    .tab-btn .lock-icon { margin-left: 4px; opacity: 0.7; }
+    
+    /* Tab Panels */
+    .tab-panel { display: none; padding: 20px; }
+    .tab-panel.active { display: block; }
+    
+    /* Well Builder Form */
+    .form-section {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .section-title {
+      font-size: 1rem;
+      color: var(--well-blue);
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--border-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .form-group { margin-bottom: 0; }
+    .form-group.full { grid-column: 1 / -1; }
+    
+    .form-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 6px;
+    }
+    
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      background: var(--paper-white);
+      color: var(--text-dark);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--aquifer-teal);
+      box-shadow: 0 0 0 3px oklch(0.58 0.12 175 / 0.15);
+    }
+    
+    .form-input::placeholder { color: oklch(0.65 0.02 240); }
+    
+    .unit-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    
+    /* GPS Button */
+    .gps-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    
+    .gps-row .form-group { flex: 1; }
+    
+    .gps-btn {
+      height: 46px;
+      padding: 0 16px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 2px solid var(--aquifer-teal);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--aquifer-teal);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    
+    .gps-btn:hover { background: var(--aquifer-teal); color: white; }
+    .gps-btn:focus-visible { outline: 2px solid var(--aquifer-teal); outline-offset: 2px; }
+    .gps-btn svg { width: 18px; height: 18px; }
+    
+    /* Canvas Container */
+    .canvas-container {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .canvas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .canvas-title {
+      font-size: 1rem;
+      color: var(--well-blue);
+    }
+    
+    #well-canvas {
+      width: 100%;
+      height: 320px;
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(180deg, oklch(0.92 0.02 80) 0%, oklch(0.75 0.06 55) 100%);
+    }
+    
+    /* Calculations Panel */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .calc-card {
+      background: var(--paper-white);
+      border: 2px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      text-align: center;
+    }
+    
+    .calc-card.highlight {
+      border-color: var(--aquifer-teal);
+      background: oklch(0.96 0.02 175);
+    }
+    
+    .calc-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+    }
+    
+    .calc-value {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--well-blue);
+    }
+    
+    .calc-unit {
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    
+    /* Primary Action Button */
+    .primary-btn {
+      width: 100%;
+      padding: 16px 24px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--aquifer-teal);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    
+    .primary-btn:hover { box-shadow: var(--shadow-lg); }
+    .primary-btn:active { transform: scale(0.98); }
+    .primary-btn:focus-visible { outline: 3px solid var(--well-blue); outline-offset: 2px; }
+    .primary-btn svg { width: 20px; height: 20px; }
+    
+    .secondary-btn {
+      width: 100%;
+      padding: 14px 20px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 2px solid var(--well-blue);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--well-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    
+    .secondary-btn:hover { background: var(--well-blue); color: white; }
+    .secondary-btn:focus-visible { outline: 2px solid var(--well-blue); outline-offset: 2px; }
+    
+    /* Button Row */
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .btn-row > * { flex: 1; }
+    
+    /* Well Records List */
+    .records-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .record-card {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--aquifer-teal);
+      cursor: pointer;
+      transition: box-shadow 0.15s ease, transform 0.1s ease;
+    }
+    
+    .record-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .record-card:focus-visible { outline: 2px solid var(--aquifer-teal); outline-offset: 2px; }
+    
+    .record-card.emergency { border-left-color: var(--alert-rust); }
+    .record-card.in-progress { border-left-color: oklch(0.7 0.15 85); }
+    
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .record-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+    
+    .record-status {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: oklch(0.92 0.02 175);
+      color: var(--aquifer-teal);
+    }
+    
+    .record-status.emergency {
+      background: oklch(0.92 0.04 30);
+      color: var(--alert-rust);
+    }
+    
+    .record-status.in-progress {
+      background: oklch(0.92 0.06 85);
+      color: oklch(0.5 0.12 85);
+    }
+    
+    .record-location {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    
+    .record-specs {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .spec-item {
+      font-size: 0.8rem;
+      color: var(--text-dark);
+    }
+    
+    .spec-label {
+      color: var(--text-muted);
+      margin-right: 4px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      opacity: 0.4;
+    }
+    
+    .empty-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.25rem;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    
+    .empty-text {
+      font-size: 0.9rem;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, oklch(0.35 0.08 240) 0%, oklch(0.42 0.1 200) 100%);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+      color: white;
+    }
+    
+    .upsell-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    
+    .upsell-text {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-bottom: 12px;
+    }
+    
+    .upsell-features {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 16px;
+    }
+    
+    .upsell-features li {
+      margin-bottom: 4px;
+      padding-left: 16px;
+      position: relative;
+    }
+    
+    .upsell-features li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      background: var(--aquifer-teal);
+      border-radius: 50%;
+    }
+    
+    .upsell-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 2px solid white;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    
+    .upsell-btn:hover { background: oklch(1 0 0 / 0.15); }
+    
+    /* Record Count */
+    .record-count {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      padding: 16px;
+      border-top: 1px solid var(--border-light);
+      margin-top: 16px;
+    }
+    
+    .record-limit { color: var(--alert-rust); font-weight: 600; }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text-dark);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    .toast.success { background: var(--aquifer-teal); }
+    .toast.error { background: var(--alert-rust); }
+    
+    /* PDF Watermark Notice */
+    .watermark-notice {
+      background: oklch(0.95 0.02 85);
+      border: 1px solid oklch(0.85 0.06 85);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: oklch(0.45 0.08 85);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .watermark-notice svg { flex-shrink: 0; }
+    
+    /* Responsive */
+    @media (min-width: 480px) {
+      .form-grid { gap: 16px; }
+      .calc-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    
+    @media (min-width: 768px) {
+      .tab-panel { padding: 24px; max-width: 600px; margin: 0 auto; }
+    }
+    
+    /* Focus visible */
+    :focus:not(:focus-visible) { outline: none; }
+    
+    /* Visually hidden for screen readers */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .form-input {
+        border-width: 3px;
+      }
+      .icon-btn,
+      .tab-btn,
+      .auth-btn,
+      .primary-btn,
+      .secondary-btn {
+        border: 2px solid currentColor;
+      }
+    }
+    
+    /* Print styles */
+    @media print {
+      body { padding-bottom: 0 !important; }
+      #bct-demo-disclaimer { display: none !important; }
+    }
+    
+    /* Demo disclaimer */
+    #bct-demo-disclaimer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      padding: 10px 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #666;
+      z-index: 99999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 16px;
+      text-align: center;
+    }
+    
+    #bct-demo-disclaimer p { margin: 0; max-width: 700px; }
+    #bct-demo-disclaimer strong { color: #333; }
+    
+    #bct-demo-disclaimer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <div class="auth-logo">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+        <rect x="16" y="4" width="8" height="32" rx="2" fill="#1E3A5F"/>
+        <rect x="14" y="8" width="12" height="4" fill="#2A9D8F"/>
+        <rect x="17" y="16" width="6" height="6" rx="1" fill="#4A90E2"/>
+        <path d="M14 36h12v2c0 1-1 2-2 2h-8c-1 0-2-1-2-2v-2z" fill="#8B7355"/>
+      </svg>
+    </div>
+    <h1 class="auth-title">WellDepth Pro</h1>
+    <p class="auth-subtitle">Well depth calculator for working drillers</p>
+    <form class="auth-form" id="auth-form">
+      <label for="access-key" class="visually-hidden">Access Key</label>
+      <input type="password" id="access-key" class="auth-input" placeholder="Enter access key" autocomplete="off" required>
+      <button type="submit" class="auth-btn">Unlock Tool</button>
+      <p class="auth-error" id="auth-error" role="alert" aria-live="polite"></p>
+    </form>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <header class="app-header">
+      <div class="header-row">
+        <h1 class="header-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="10" y="2" width="4" height="20" rx="1" fill="currentColor"/>
+            <rect x="9" y="5" width="6" height="2" fill="#2A9D8F"/>
+            <rect x="10.5" y="10" width="3" height="3" rx="0.5" fill="#4A90E2"/>
+          </svg>
+          WellDepth Pro
+        </h1>
+        <div class="header-actions">
+          <button type="button" class="icon-btn" id="new-well-btn" aria-label="Create new well profile">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-profile" id="tab-profile">Profile</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-records" id="tab-records">Records</button>
+        <button type="button" class="tab-btn locked" role="tab" aria-selected="false" aria-controls="panel-sync" id="tab-sync" aria-disabled="true">
+          Sync
+          <svg class="lock-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-9h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6-5a3 3 0 013 3v2H9V6a3 3 0 013-3z"/>
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <!-- Profile Tab -->
+    <main id="panel-profile" class="tab-panel active" role="tabpanel" aria-labelledby="tab-profile">
+      <section class="form-section">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aquifer-teal)" stroke-width="2" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Job Site
+        </h2>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label" for="customer-name">Customer Name</label>
+            <input type="text" id="customer-name" class="form-input" placeholder="Johnson, Robert">
+          </div>
+          <div class="form-group full">
+            <label class="form-label" for="location">Location</label>
+            <input type="text" id="location" class="form-input" placeholder="Rural Weatherford, OK">
+          </div>
+          <div class="form-group full gps-row">
+            <div class="form-group">
+              <label class="form-label" for="gps-coords">GPS Coordinates</label>
+              <input type="text" id="gps-coords" class="form-input" placeholder="35.5284, -98.7076" readonly>
+            </div>
+            <button type="button" class="gps-btn" id="gps-btn" aria-label="Get current GPS location">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+              </svg>
+              GPS
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aquifer-teal)" stroke-width="2" aria-hidden="true">
+            <path d="M12 2v20M2 12h20"/>
+            <rect x="8" y="6" width="8" height="12" rx="1"/>
+          </svg>
+          Well Specs
+        </h2>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="total-depth">Total Depth</label>
+            <input type="number" id="total-depth" class="form-input" placeholder="180" min="0" step="1">
+            <span class="unit-label">feet</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="casing-depth">Casing Depth</label>
+            <input type="number" id="casing-depth" class="form-input" placeholder="60" min="0" step="1">
+            <span class="unit-label">feet</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="static-water">Static Water Level</label>
+            <input type="number" id="static-water" class="form-input" placeholder="40" min="0" step="1">
+            <span class="unit-label">feet below surface</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pump-depth">Pump Depth</label>
+            <input type="number" id="pump-depth" class="form-input" placeholder="150" min="0" step="1">
+            <span class="unit-label">feet</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pump-size">Pump Size</label>
+            <input type="number" id="pump-size" class="form-input" placeholder="1.5" min="0" step="0.5">
+            <span class="unit-label">HP</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="yield-gpm">Yield (GPM)</label>
+            <input type="number" id="yield-gpm" class="form-input" placeholder="15" min="0" step="0.5">
+            <span class="unit-label">gallons per minute</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas-container">
+        <div class="canvas-header">
+          <h2 class="canvas-title">Well Cross-Section</h2>
+        </div>
+        <canvas id="well-canvas" aria-label="Visual cross-section diagram of the well showing depth, water level, and pump position"></canvas>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aquifer-teal)" stroke-width="2" aria-hidden="true">
+            <path d="M4 19h16M4 15h16M4 11h8"/>
+          </svg>
+          Calculated Specs
+        </h2>
+        <div class="calc-grid">
+          <div class="calc-card highlight">
+            <div class="calc-label">Water Column</div>
+            <div class="calc-value" id="calc-water-column">--</div>
+            <span class="calc-unit">ft</span>
+          </div>
+          <div class="calc-card">
+            <div class="calc-label">Pump Submergence</div>
+            <div class="calc-value" id="calc-submergence">--</div>
+            <span class="calc-unit">ft</span>
+          </div>
+          <div class="calc-card">
+            <div class="calc-label">Total Dynamic Head</div>
+            <div class="calc-value" id="calc-tdh">--</div>
+            <span class="calc-unit">ft</span>
+          </div>
+          <div class="calc-card">
+            <div class="calc-label">Recommended HP</div>
+            <div class="calc-value" id="calc-hp">--</div>
+            <span class="calc-unit">HP</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--aquifer-teal)" stroke-width="2" aria-hidden="true">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+          </svg>
+          Estimate
+        </h2>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label class="form-label" for="estimate-amount">Repair/Service Estimate</label>
+            <input type="number" id="estimate-amount" class="form-input" placeholder="1850" min="0" step="50">
+            <span class="unit-label">dollars</span>
+          </div>
+          <div class="form-group full">
+            <label class="form-label" for="estimate-notes">Notes</label>
+            <textarea id="estimate-notes" class="form-input" rows="3" placeholder="Replace pump, wire, pitless adapter..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <div class="btn-row">
+        <button type="button" class="secondary-btn" id="save-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+            <polyline points="17,21 17,13 7,13 7,21"/>
+            <polyline points="7,3 7,8 15,8"/>
+          </svg>
+          Save
+        </button>
+        <button type="button" class="primary-btn" id="pdf-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Generate PDF
+        </button>
+      </div>
+      
+      <div class="watermark-notice">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="oklch(0.45 0.08 85)" aria-hidden="true">
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zm0-14v4m0 4h.01"/>
+        </svg>
+        <span>Free version PDFs include a small watermark. <button type="button" class="upsell-link" style="background:none;border:none;color:var(--aquifer-teal);cursor:pointer;text-decoration:underline;font:inherit;">Upgrade for clean reports</button></span>
+      </div>
+    </main>
+
+    <!-- Records Tab -->
+    <section id="panel-records" class="tab-panel" role="tabpanel" aria-labelledby="tab-records" hidden>
+      <div class="upsell-banner">
+        <h3 class="upsell-title">Cloud Backup</h3>
+        <p class="upsell-text">Your records on any device. Never lose a well log again.</p>
+        <ul class="upsell-features">
+          <li>Unlimited well records</li>
+          <li>Cloud backup and sync</li>
+          <li>PDFs with your logo</li>
+          <li>Track yield over time</li>
+        </ul>
+        <button type="button" class="upsell-btn">
+          Upgrade - $200 Lifetime
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="records-list" id="records-list">
+        <!-- Records populated by JS -->
+      </div>
+      
+      <div class="record-count" id="record-count">
+        <span id="current-count">0</span> of 10 records used
+        <span class="record-limit">(Free limit)</span>
+      </div>
+    </section>
+
+    <!-- Sync Tab (Locked) -->
+    <section id="panel-sync" class="tab-panel" role="tabpanel" aria-labelledby="tab-sync" hidden>
+      <div class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24" fill="var(--text-muted)" aria-hidden="true">
+          <path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-9h-1V6a5 5 0 00-10 0v2H6a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V10a2 2 0 00-2-2zm-6-5a3 3 0 013 3v2H9V6a3 3 0 013-3z"/>
+        </svg>
+        <h3 class="empty-title">Cloud Backup - Paid Feature</h3>
+        <p class="empty-text">Backup your records online. Access them from any phone or tablet.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+    <p><strong>DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Alex Ewbank Water Well Drilling LLC of Weatherford, OK. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Alex%20Ewbank%20Water%20Well%20Drilling&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo.">Request Permanent Deletion</a>
+  </div>
+
+  <!-- Anti-Scrape Protection -->
+  <script>
+    // Block right-click context menu
+    document.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      return false;
+    });
+    
+    // Block common dev tools shortcuts
+    document.addEventListener('keydown', function(e) {
+      // F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+Shift+I / Cmd+Option+I (Inspect)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+Shift+J / Cmd+Option+J (Console)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+Shift+C / Cmd+Option+C (Inspect element)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        return false;
+      }
+      // Ctrl+U / Cmd+U (View source)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+        e.preventDefault();
+        return false;
+      }
+    });
+    
+    // Detect dev tools open and redirect
+    let devtoolsOpen = false;
+    setInterval(function() {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      if (widthThreshold || heightThreshold) {
+        if (!devtoolsOpen) {
+          devtoolsOpen = true;
+          console.clear();
+          console.log('%cStop!', 'color:red;font-size:40px;font-weight:bold;');
+          console.log('%cThis is a browser feature intended for developers.', 'font-size:16px;');
+        }
+      } else {
+        devtoolsOpen = false;
+      }
+    }, 500);
+  </script>
+
+  <script>
+    // ===== Configuration =====
+    const ACCESS_KEY_HASH = 1271883173;
+    const DB_NAME = 'WellDepthProDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'wells';
+    const MAX_FREE_RECORDS = 10;
+
+    // ===== State =====
+    let db = null;
+    let currentWellId = null;
+    let wells = [];
+
+    // ===== Utility Functions =====
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
+    }
+
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ===== IndexedDB =====
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains(STORE_NAME)) {
+            database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          }
+        };
+      });
+    }
+
+    function getAllWells() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function saveWell(well) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(well);
+        request.onsuccess = () => resolve(well);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function deleteWell(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // ===== Demo Data =====
+    const DEMO_WELLS = [
+      {
+        id: 'demo-weatherford-180',
+        customerName: 'Johnson, Robert',
+        location: 'Rural Weatherford, OK',
+        gps: '35.5284, -98.7076',
+        totalDepth: 180,
+        casingDepth: 60,
+        staticWater: 40,
+        pumpDepth: 150,
+        pumpSize: 1.5,
+        yieldGpm: 18,
+        estimateAmount: 1850,
+        estimateNotes: 'New pump, wire, pitless. Well is running strong.',
+        status: 'completed',
+        createdAt: new Date(2026, 0, 15).toISOString(),
+        updatedAt: new Date(2026, 0, 15).toISOString()
+      },
+      {
+        id: 'demo-clinton-240',
+        customerName: 'Miller Farm Partnership',
+        location: '12 mi NE of Clinton, OK',
+        gps: '35.5891, -98.8843',
+        totalDepth: 240,
+        casingDepth: 80,
+        staticWater: 65,
+        pumpDepth: 200,
+        pumpSize: 2,
+        yieldGpm: 22,
+        estimateAmount: 3500,
+        estimateNotes: 'Irrigation well for pivot. 2HP VFD pump upgrade.',
+        status: 'in-progress',
+        createdAt: new Date(2026, 1, 2).toISOString(),
+        updatedAt: new Date(2026, 1, 5).toISOString()
+      },
+      {
+        id: 'demo-elkcity-120',
+        customerName: 'Carter, Billy',
+        location: 'Stock Tank Road, Elk City, OK',
+        gps: '35.3963, -99.4287',
+        totalDepth: 120,
+        casingDepth: 40,
+        staticWater: 25,
+        pumpDepth: 90,
+        pumpSize: 0.75,
+        yieldGpm: 8,
+        estimateAmount: 2200,
+        estimateNotes: 'URGENT - Stock tank well down. Pump stuck at 90ft. Cattle need water.',
+        status: 'emergency',
+        createdAt: new Date(2026, 1, 7).toISOString(),
+        updatedAt: new Date(2026, 1, 7).toISOString()
+      }
+    ];
+
+    async function loadDemoData() {
+      const existing = await getAllWells();
+      if (existing.length === 0) {
+        for (const well of DEMO_WELLS) {
+          await saveWell(well);
+        }
+        wells = [...DEMO_WELLS];
+        showToast('Sample wells loaded', 'success');
+      } else {
+        wells = existing;
+      }
+    }
+
+    // ===== Auth =====
+    function checkAuth() {
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && hashKey(urlKey) === ACCESS_KEY_HASH) {
+        showApp();
+        return true;
+      }
+      
+      const storedAuth = localStorage.getItem('welldepth_auth');
+      if (storedAuth === 'true') {
+        showApp();
+        return true;
+      }
+      return false;
+    }
+
+    function showApp() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app').classList.add('active');
+      initApp();
+    }
+
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('access-key').value;
+      if (hashKey(key) === ACCESS_KEY_HASH) {
+        localStorage.setItem('welldepth_auth', 'true');
+        showApp();
+      } else {
+        document.getElementById('auth-error').textContent = 'Invalid access key';
+      }
+    });
+
+    // ===== Canvas Drawing =====
+    function drawWellDiagram() {
+      const canvas = document.getElementById('well-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set actual canvas size for high DPI
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      ctx.scale(dpr, dpr);
+      
+      const width = rect.width;
+      const height = rect.height;
+      
+      // Get values
+      const totalDepth = parseFloat(document.getElementById('total-depth').value) || 180;
+      const casingDepth = parseFloat(document.getElementById('casing-depth').value) || 60;
+      const staticWater = parseFloat(document.getElementById('static-water').value) || 40;
+      const pumpDepth = parseFloat(document.getElementById('pump-depth').value) || 150;
+      
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // Dimensions
+      const margin = { top: 20, bottom: 30, left: 60, right: 60 };
+      const wellWidth = 60;
+      const centerX = width / 2;
+      const drawHeight = height - margin.top - margin.bottom;
+      const scale = drawHeight / totalDepth;
+      
+      // Background gradient (soil layers)
+      const gradient = ctx.createLinearGradient(0, margin.top, 0, height - margin.bottom);
+      gradient.addColorStop(0, '#C4A77D');
+      gradient.addColorStop(0.2, '#A67C52');
+      gradient.addColorStop(0.5, '#8B6914');
+      gradient.addColorStop(0.8, '#5D4E37');
+      gradient.addColorStop(1, '#3D352B');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(margin.left, margin.top, width - margin.left - margin.right, drawHeight);
+      
+      // Well bore
+      ctx.fillStyle = '#1E3A5F';
+      ctx.fillRect(centerX - wellWidth/2, margin.top, wellWidth, drawHeight);
+      
+      // Casing (steel pipe)
+      const casingY = margin.top + casingDepth * scale;
+      ctx.fillStyle = '#666';
+      ctx.fillRect(centerX - wellWidth/2 - 4, margin.top, 4, casingDepth * scale);
+      ctx.fillRect(centerX + wellWidth/2, margin.top, 4, casingDepth * scale);
+      
+      // Casing label
+      ctx.fillStyle = '#fff';
+      ctx.font = '11px Source Sans Pro';
+      ctx.textAlign = 'right';
+      ctx.fillText('Casing', centerX - wellWidth/2 - 10, margin.top + casingDepth * scale / 2);
+      ctx.fillText(casingDepth + 'ft', centerX - wellWidth/2 - 10, margin.top + casingDepth * scale / 2 + 14);
+      
+      // Water level
+      const waterY = margin.top + staticWater * scale;
+      ctx.fillStyle = 'rgba(74, 144, 226, 0.6)';
+      ctx.fillRect(centerX - wellWidth/2 + 4, waterY, wellWidth - 8, drawHeight - (staticWater * scale));
+      
+      // Water line
+      ctx.strokeStyle = '#4A90E2';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(centerX - wellWidth/2 - 20, waterY);
+      ctx.lineTo(centerX + wellWidth/2 + 20, waterY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      
+      // Water label
+      ctx.fillStyle = '#4A90E2';
+      ctx.textAlign = 'left';
+      ctx.fillText('Water Level', centerX + wellWidth/2 + 10, waterY - 4);
+      ctx.fillText(staticWater + 'ft', centerX + wellWidth/2 + 10, waterY + 10);
+      
+      // Pump
+      const pumpY = margin.top + pumpDepth * scale;
+      ctx.fillStyle = '#2A9D8F';
+      ctx.beginPath();
+      ctx.roundRect(centerX - 15, pumpY - 20, 30, 40, 4);
+      ctx.fill();
+      
+      // Pump label
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 10px Source Sans Pro';
+      ctx.fillText('PUMP', centerX, pumpY + 4);
+      
+      // Pump depth label
+      ctx.fillStyle = '#2A9D8F';
+      ctx.textAlign = 'left';
+      ctx.font = '11px Source Sans Pro';
+      ctx.fillText('Pump: ' + pumpDepth + 'ft', centerX + wellWidth/2 + 10, pumpY);
+      
+      // Drop pipe (from surface to pump)
+      ctx.strokeStyle = '#444';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(centerX, margin.top);
+      ctx.lineTo(centerX, pumpY - 20);
+      ctx.stroke();
+      
+      // Surface/ground level
+      ctx.fillStyle = '#4A7C59';
+      ctx.fillRect(0, margin.top - 10, width, 12);
+      
+      // Wellhead
+      ctx.fillStyle = '#555';
+      ctx.fillRect(centerX - 20, margin.top - 18, 40, 10);
+      
+      // Total depth label
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.font = 'bold 12px Oswald';
+      ctx.fillText('TOTAL DEPTH: ' + totalDepth + ' FT', centerX, height - 8);
+      
+      // Depth scale on left
+      ctx.fillStyle = '#333';
+      ctx.textAlign = 'right';
+      ctx.font = '10px Source Sans Pro';
+      for (let d = 0; d <= totalDepth; d += 50) {
+        const y = margin.top + d * scale;
+        ctx.fillText(d + "'", margin.left - 8, y + 4);
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(margin.left - 4, y);
+        ctx.lineTo(margin.left, y);
+        ctx.stroke();
+      }
+    }
+
+    // ===== Calculations =====
+    function updateCalculations() {
+      const totalDepth = parseFloat(document.getElementById('total-depth').value) || 0;
+      const staticWater = parseFloat(document.getElementById('static-water').value) || 0;
+      const pumpDepth = parseFloat(document.getElementById('pump-depth').value) || 0;
+      const yieldGpm = parseFloat(document.getElementById('yield-gpm').value) || 0;
+      
+      // Water column (from water level to bottom)
+      const waterColumn = totalDepth - staticWater;
+      document.getElementById('calc-water-column').textContent = waterColumn > 0 ? waterColumn.toFixed(0) : '--';
+      
+      // Pump submergence (how far pump is below water)
+      const submergence = pumpDepth - staticWater;
+      document.getElementById('calc-submergence').textContent = submergence > 0 ? submergence.toFixed(0) : '--';
+      
+      // Total Dynamic Head (simplified: pump depth + friction + pressure)
+      // Assume 20% friction loss and 40 psi surface pressure (92 ft)
+      const frictionLoss = pumpDepth * 0.2;
+      const pressureHead = 92; // 40 psi converted to feet
+      const tdh = pumpDepth + frictionLoss + pressureHead;
+      document.getElementById('calc-tdh').textContent = tdh > 0 ? Math.round(tdh) : '--';
+      
+      // Recommended HP based on GPM and TDH
+      // Formula: HP = (GPM * TDH) / (3960 * efficiency)
+      // Assume 50% efficiency for submersible pumps
+      if (yieldGpm > 0 && tdh > 0) {
+        const hp = (yieldGpm * tdh) / (3960 * 0.5);
+        // Round to common pump sizes
+        let recommendedHp = 0.5;
+        if (hp > 0.4) recommendedHp = 0.5;
+        if (hp > 0.6) recommendedHp = 0.75;
+        if (hp > 0.9) recommendedHp = 1;
+        if (hp > 1.2) recommendedHp = 1.5;
+        if (hp > 1.7) recommendedHp = 2;
+        if (hp > 2.5) recommendedHp = 3;
+        if (hp > 4) recommendedHp = 5;
+        document.getElementById('calc-hp').textContent = recommendedHp;
+      } else {
+        document.getElementById('calc-hp').textContent = '--';
+      }
+      
+      // Redraw canvas
+      drawWellDiagram();
+    }
+
+    // ===== Form Handling =====
+    function getFormData() {
+      return {
+        customerName: document.getElementById('customer-name').value,
+        location: document.getElementById('location').value,
+        gps: document.getElementById('gps-coords').value,
+        totalDepth: parseFloat(document.getElementById('total-depth').value) || 0,
+        casingDepth: parseFloat(document.getElementById('casing-depth').value) || 0,
+        staticWater: parseFloat(document.getElementById('static-water').value) || 0,
+        pumpDepth: parseFloat(document.getElementById('pump-depth').value) || 0,
+        pumpSize: parseFloat(document.getElementById('pump-size').value) || 0,
+        yieldGpm: parseFloat(document.getElementById('yield-gpm').value) || 0,
+        estimateAmount: parseFloat(document.getElementById('estimate-amount').value) || 0,
+        estimateNotes: document.getElementById('estimate-notes').value,
+        status: 'completed'
+      };
+    }
+
+    function setFormData(data) {
+      document.getElementById('customer-name').value = data.customerName || '';
+      document.getElementById('location').value = data.location || '';
+      document.getElementById('gps-coords').value = data.gps || '';
+      document.getElementById('total-depth').value = data.totalDepth || '';
+      document.getElementById('casing-depth').value = data.casingDepth || '';
+      document.getElementById('static-water').value = data.staticWater || '';
+      document.getElementById('pump-depth').value = data.pumpDepth || '';
+      document.getElementById('pump-size').value = data.pumpSize || '';
+      document.getElementById('yield-gpm').value = data.yieldGpm || '';
+      document.getElementById('estimate-amount').value = data.estimateAmount || '';
+      document.getElementById('estimate-notes').value = data.estimateNotes || '';
+      updateCalculations();
+    }
+
+    function clearForm() {
+      currentWellId = null;
+      document.querySelectorAll('#panel-profile input, #panel-profile textarea').forEach(el => el.value = '');
+      updateCalculations();
+    }
+
+    // ===== GPS =====
+    document.getElementById('gps-btn').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        showToast('GPS not supported on this device', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('gps-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg> Getting...';
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = pos.coords.latitude.toFixed(4) + ', ' + pos.coords.longitude.toFixed(4);
+          document.getElementById('gps-coords').value = coords;
+          btn.disabled = false;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> GPS';
+          showToast('GPS location captured', 'success');
+        },
+        (err) => {
+          btn.disabled = false;
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> GPS';
+          showToast('Could not get location', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+
+    // ===== Save =====
+    document.getElementById('save-btn').addEventListener('click', async () => {
+      const data = getFormData();
+      
+      if (!data.customerName || !data.totalDepth) {
+        showToast('Need customer name and well depth first', 'error');
+        return;
+      }
+      
+      // Check limit
+      if (!currentWellId && wells.length >= MAX_FREE_RECORDS) {
+        showToast('Free version: 10 well limit. Upgrade for more.', 'error');
+        return;
+      }
+      
+      const well = {
+        ...data,
+        id: currentWellId || generateId(),
+        createdAt: currentWellId ? (wells.find(w => w.id === currentWellId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      await saveWell(well);
+      wells = await getAllWells();
+      currentWellId = well.id;
+      
+      renderRecordsList();
+      showToast('Saved to records', 'success');
+    });
+
+    // ===== New Well =====
+    document.getElementById('new-well-btn').addEventListener('click', () => {
+      if (wells.length >= MAX_FREE_RECORDS) {
+        showToast('Free limit reached. Upgrade for unlimited records.', 'error');
+        return;
+      }
+      clearForm();
+      switchTab('tab-profile');
+      showToast('New well profile started', 'info');
+    });
+
+    // ===== PDF Generation =====
+    document.getElementById('pdf-btn').addEventListener('click', async () => {
+      const data = getFormData();
+      
+      if (!data.customerName || !data.totalDepth) {
+        showToast('Fill in customer name and well depth first', 'error');
+        return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
+      
+      // Header
+      doc.setFillColor(30, 58, 95);
+      doc.rect(0, 0, 220, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Well Diagnostic Report', 15, 22);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Generated by WellDepth Pro', 15, 30);
+      
+      // Date
+      doc.setTextColor(200, 200, 200);
+      doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), 195, 22, { align: 'right' });
+      
+      // Customer Info
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Customer Information', 15, 48);
+      doc.setDrawColor(42, 157, 143);
+      doc.setLineWidth(0.5);
+      doc.line(15, 51, 195, 51);
+      
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Name: ' + data.customerName, 15, 60);
+      doc.text('Location: ' + data.location, 15, 67);
+      if (data.gps) doc.text('GPS: ' + data.gps, 15, 74);
+      
+      // Well Specs
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Well Specifications', 15, 90);
+      doc.line(15, 93, 195, 93);
+      
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const specs = [
+        ['Total Depth:', data.totalDepth + ' ft'],
+        ['Casing Depth:', data.casingDepth + ' ft'],
+        ['Static Water Level:', data.staticWater + ' ft below surface'],
+        ['Pump Depth:', data.pumpDepth + ' ft'],
+        ['Pump Size:', data.pumpSize + ' HP'],
+        ['Yield:', data.yieldGpm + ' GPM']
+      ];
+      
+      let y = 102;
+      specs.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, 15, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, 60, y);
+        y += 7;
+      });
+      
+      // Calculated Values
+      const waterColumn = data.totalDepth - data.staticWater;
+      const submergence = data.pumpDepth - data.staticWater;
+      const tdh = Math.round(data.pumpDepth + data.pumpDepth * 0.2 + 92);
+      
+      doc.setTextColor(30, 58, 95);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Calculated Values', 115, 90);
+      
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+      
+      const calcs = [
+        ['Water Column:', waterColumn + ' ft'],
+        ['Pump Submergence:', submergence + ' ft'],
+        ['Total Dynamic Head:', tdh + ' ft']
+      ];
+      
+      y = 102;
+      calcs.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'bold');
+        doc.text(label, 115, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(value, 165, y);
+        y += 7;
+      });
+      
+      // Draw well diagram on PDF
+      const canvas = document.getElementById('well-canvas');
+      const canvasImg = canvas.toDataURL('image/png');
+      doc.addImage(canvasImg, 'PNG', 50, 150, 110, 90);
+      
+      // Estimate
+      if (data.estimateAmount > 0) {
+        doc.setFillColor(245, 245, 245);
+        doc.rect(15, 248, 180, 30, 'F');
+        doc.setTextColor(30, 58, 95);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Estimate', 20, 258);
+        doc.setFontSize(18);
+        doc.text('$' + data.estimateAmount.toLocaleString(), 20, 270);
+        
+        if (data.estimateNotes) {
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(80, 80, 80);
+          const notes = doc.splitTextToSize(data.estimateNotes, 130);
+          doc.text(notes, 60, 258);
+        }
+      }
+      
+      // Watermark (free version)
+      doc.setTextColor(180, 180, 180);
+      doc.setFontSize(8);
+      doc.text('Generated with WellDepth Pro Free Version', 105, 285, { align: 'center' });
+      
+      // Save PDF
+      const filename = 'well-report-' + data.customerName.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.pdf';
+      
+      // Try Web Share if available
+      if (navigator.share && navigator.canShare) {
+        try {
+          const blob = doc.output('blob');
+          const file = new File([blob], filename, { type: 'application/pdf' });
+          
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: 'Well Diagnostic Report',
+              text: 'Well report for ' + data.customerName
+            });
+            showToast('Report shared', 'success');
+            return;
+          }
+        } catch (err) {
+          // Fall back to download
+        }
+      }
+      
+      // Download
+      doc.save(filename);
+      showToast('PDF downloaded', 'success');
+    });
+
+    // ===== Records List =====
+    function renderRecordsList() {
+      const list = document.getElementById('records-list');
+      
+      if (wells.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" aria-hidden="true">
+              <rect x="10" y="2" width="4" height="20" rx="1"/>
+              <rect x="9" y="5" width="6" height="2"/>
+            </svg>
+            <h3 class="empty-title">No Well Records Yet</h3>
+            <p class="empty-text">Tap the + button to start your first well log.</p>
+          </div>
+        `;
+      } else {
+        list.innerHTML = wells.map(well => `
+          <article class="record-card ${well.status || ''}" tabindex="0" role="button" aria-label="View ${well.customerName} well record" data-id="${well.id}">
+            <div class="record-header">
+              <h3 class="record-name">${well.customerName}</h3>
+              <span class="record-status ${well.status || ''}">${formatStatus(well.status)}</span>
+            </div>
+            <p class="record-location">${well.location}</p>
+            <div class="record-specs">
+              <span class="spec-item"><span class="spec-label">Depth:</span>${well.totalDepth}ft</span>
+              <span class="spec-item"><span class="spec-label">Yield:</span>${well.yieldGpm}gpm</span>
+              <span class="spec-item"><span class="spec-label">Pump:</span>${well.pumpSize}HP</span>
+            </div>
+          </article>
+        `).join('');
+        
+        // Add click handlers
+        list.querySelectorAll('.record-card').forEach(card => {
+          card.addEventListener('click', () => loadWell(card.dataset.id));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              loadWell(card.dataset.id);
+            }
+          });
+        });
+      }
+      
+      document.getElementById('current-count').textContent = wells.length;
+    }
+
+    function formatStatus(status) {
+      switch (status) {
+        case 'emergency': return 'Emergency';
+        case 'in-progress': return 'In Progress';
+        case 'completed': return 'Completed';
+        default: return 'Completed';
+      }
+    }
+
+    function loadWell(id) {
+      const well = wells.find(w => w.id === id);
+      if (well) {
+        currentWellId = id;
+        setFormData(well);
+        switchTab('tab-profile');
+        showToast('Well record loaded', 'info');
+      }
+    }
+
+    // ===== Tabs =====
+    function switchTab(tabId) {
+      // Update tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.id === tabId;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive);
+      });
+      
+      // Update panels
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        const isActive = panel.id === 'panel-' + tabId.replace('tab-', '');
+        panel.classList.toggle('active', isActive);
+        panel.hidden = !isActive;
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('locked')) {
+          showToast('Cloud Sync is a premium feature', 'info');
+          return;
+        }
+        switchTab(btn.id);
+      });
+    });
+
+    // ===== Input Handlers =====
+    function setupInputListeners() {
+      const inputs = ['total-depth', 'casing-depth', 'static-water', 'pump-depth', 'pump-size', 'yield-gpm'];
+      inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateCalculations);
+      });
+    }
+
+    // ===== Canvas Resize =====
+    function handleResize() {
+      drawWellDiagram();
+    }
+
+    // ===== Init =====
+    async function initApp() {
+      await initDB();
+      await loadDemoData();
+      setupInputListeners();
+      renderRecordsList();
+      
+      // Load first demo well into form
+      if (wells.length > 0) {
+        const firstWell = wells[0];
+        currentWellId = firstWell.id;
+        setFormData(firstWell);
+      }
+      
+      window.addEventListener('resize', handleResize);
+    }
+
+    // Check auth on load
+    checkAuth();
+  </script>
+</body>
+</html>
