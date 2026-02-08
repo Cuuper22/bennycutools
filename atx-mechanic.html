@@ -1,0 +1,3196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Field Pro | ATX 512 Mobile Mechanic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --bg: oklch(0.98 0 0);
+      --bg-card: oklch(1 0 0);
+      --bg-dark: oklch(0.15 0 0);
+      --text: oklch(0.18 0 0);
+      --text-muted: oklch(0.45 0 0);
+      --text-light: oklch(0.96 0 0);
+      --primary: oklch(0.65 0.2 30);
+      --primary-hover: oklch(0.58 0.22 30);
+      --primary-light: oklch(0.92 0.06 30);
+      --success: oklch(0.65 0.18 145);
+      --success-light: oklch(0.92 0.06 145);
+      --warning: oklch(0.75 0.18 85);
+      --warning-light: oklch(0.95 0.08 85);
+      --danger: oklch(0.55 0.22 25);
+      --danger-light: oklch(0.92 0.08 25);
+      --border: oklch(0.88 0 0);
+      --shadow-sm: 0 1px 2px oklch(0.2 0 0 / 0.05);
+      --shadow-md: 0 4px 12px oklch(0.2 0 0 / 0.08), 0 1px 3px oklch(0.2 0 0 / 0.06);
+      --shadow-lg: 0 12px 32px oklch(0.2 0 0 / 0.12), 0 4px 8px oklch(0.2 0 0 / 0.08);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+    }
+    
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 99998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    
+    /* Entrance animations */
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeScale {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(-15px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .vehicle-option, .checklist-item, .issue-card, .history-card {
+      animation: slideInUp 0.3s ease-out backwards;
+    }
+    
+    .vehicle-option:nth-child(1) { animation-delay: 0.05s; }
+    .vehicle-option:nth-child(2) { animation-delay: 0.1s; }
+    .vehicle-option:nth-child(3) { animation-delay: 0.15s; }
+    .vehicle-option:nth-child(4) { animation-delay: 0.2s; }
+    .vehicle-option:nth-child(5) { animation-delay: 0.25s; }
+    
+    .inspection-card {
+      animation: fadeScale 0.35s ease-out;
+    }
+    
+    .quote-card {
+      animation: slideInUp 0.4s ease-out;
+    }
+    
+    .tab-item {
+      transition: color 0.15s ease, transform 0.1s ease;
+    }
+    
+    .tab-item:active {
+      transform: scale(0.95);
+    }
+    
+    html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: 140px !important;
+    }
+    
+    /* Access Gate */
+    #access-gate {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(145deg, var(--bg-dark) 0%, oklch(0.22 0.02 30) 100%);
+    }
+    
+    .gate-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .gate-logo {
+      width: 64px;
+      height: 64px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+    }
+    
+    .gate-logo svg { width: 36px; height: 36px; color: white; }
+    
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    
+    .gate-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+    
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      transition: border-color 0.15s ease;
+      text-align: center;
+      letter-spacing: 0.1em;
+    }
+    
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-display);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .gate-btn:hover { background: var(--primary-hover); }
+    .gate-btn:active { transform: scale(0.98); }
+    .gate-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    
+    .gate-error {
+      color: var(--danger);
+      font-size: 0.875rem;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .gate-error.show { display: block; }
+    
+    /* Main App */
+    #app { display: none; }
+    #app.visible { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--bg-dark);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-logo svg { width: 24px; height: 24px; color: white; }
+    
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-light);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      background: oklch(0.25 0 0);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    
+    .header-btn:hover { background: oklch(0.32 0 0); }
+    .header-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .header-btn svg { width: 20px; height: 20px; }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: var(--warning-light);
+      border-bottom: 1px solid var(--warning);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .demo-banner.hidden { display: none; }
+    
+    .demo-banner-text {
+      font-size: 0.875rem;
+      color: oklch(0.35 0.1 85);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .demo-banner-text svg { width: 18px; height: 18px; flex-shrink: 0; }
+    
+    .demo-banner-dismiss {
+      background: none;
+      border: none;
+      color: oklch(0.4 0.1 85);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .demo-banner-dismiss:focus-visible { outline: 2px solid oklch(0.5 0.15 85); outline-offset: 2px; }
+    .demo-banner-dismiss svg { width: 18px; height: 18px; }
+    
+    /* Content */
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Screens */
+    .screen { display: none; animation: fadeIn 0.3s ease; }
+    .screen.active { display: block; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    /* Screen Header */
+    .screen-header {
+      margin-bottom: 20px;
+    }
+    
+    .screen-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    
+    .screen-subtitle {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    /* Vehicle Lookup */
+    .vehicle-input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .vehicle-input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      text-transform: uppercase;
+      transition: border-color 0.15s ease;
+    }
+    
+    .vehicle-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .vehicle-input::placeholder { text-transform: none; }
+    
+    .scan-btn {
+      width: 52px;
+      height: 52px;
+      background: var(--bg-dark);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+    
+    .scan-btn:hover { background: oklch(0.22 0 0); }
+    .scan-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .scan-btn svg { width: 24px; height: 24px; }
+    
+    .divider-text {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 20px 0;
+      position: relative;
+    }
+    
+    .divider-text::before,
+    .divider-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: calc(50% - 24px);
+      height: 1px;
+      background: var(--border);
+    }
+    
+    .divider-text::before { left: 0; }
+    .divider-text::after { right: 0; }
+    
+    /* Vehicle Select */
+    .vehicle-select {
+      display: grid;
+      gap: 8px;
+    }
+    
+    .vehicle-option {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    
+    .vehicle-option:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .vehicle-option:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .vehicle-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+    
+    .vehicle-icon svg { width: 24px; height: 24px; }
+    
+    .vehicle-info { flex: 1; }
+    
+    .vehicle-name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+    
+    .vehicle-details {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    .vehicle-arrow {
+      color: var(--text-muted);
+    }
+    
+    .vehicle-arrow svg { width: 20px; height: 20px; }
+    
+    /* Inspection Card */
+    .inspection-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .inspection-vehicle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    
+    .inspection-vehicle-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+    
+    .inspection-vehicle-icon svg { width: 22px; height: 22px; }
+    
+    .inspection-vehicle-name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .inspection-vehicle-vin {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-family: monospace;
+    }
+    
+    /* Checklist */
+    .checklist-section {
+      margin-bottom: 20px;
+    }
+    
+    .checklist-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .checklist-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    
+    .checklist-items {
+      display: grid;
+      gap: 8px;
+    }
+    
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    
+    .checklist-item:hover { background: oklch(0.95 0 0); }
+    
+    .check-box {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      flex-shrink: 0;
+    }
+    
+    .check-box svg { width: 14px; height: 14px; color: white; opacity: 0; }
+    
+    .checklist-item.checked .check-box {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    
+    .checklist-item.checked .check-box svg { opacity: 1; }
+    
+    .checklist-item.issue .check-box {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+    
+    .checklist-item.issue .check-box svg { opacity: 1; }
+    
+    .check-label { flex: 1; font-size: 0.9375rem; }
+    
+    .check-status {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .check-status.ok {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    
+    .check-status.issue {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+    
+    .check-camera {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s ease;
+    }
+    
+    .check-camera:hover { color: var(--primary); }
+    .check-camera:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .check-camera svg { width: 20px; height: 20px; }
+    .check-camera.has-photo { color: var(--primary); }
+    
+    /* Issue Panel */
+    .issue-panel {
+      background: var(--danger-light);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-top: 8px;
+      animation: slideDown 0.2s ease;
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .issue-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--danger);
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    
+    .issue-panel-header svg { width: 18px; height: 18px; }
+    
+    .issue-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid oklch(0.85 0.05 25);
+      border-radius: var(--radius-sm);
+      font-size: 0.9375rem;
+      font-family: var(--font-body);
+      resize: none;
+      min-height: 80px;
+      transition: border-color 0.15s ease;
+    }
+    
+    .issue-textarea:focus {
+      outline: none;
+      border-color: var(--danger);
+    }
+    
+    .issue-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .issue-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    
+    .issue-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .issue-btn svg { width: 18px; height: 18px; }
+    
+    .issue-btn-photo {
+      background: var(--bg-dark);
+      color: white;
+    }
+    
+    .issue-btn-photo:hover { background: oklch(0.22 0 0); }
+    
+    .issue-btn-voice {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .issue-btn-voice:hover { background: var(--primary-hover); }
+    .issue-btn-voice.recording { background: var(--danger); animation: pulse 1s infinite; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    /* Photo Preview */
+    .photo-preview {
+      margin-top: 12px;
+      position: relative;
+    }
+    
+    .photo-preview img {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      display: block;
+    }
+    
+    .photo-remove {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      background: oklch(0.2 0 0 / 0.8);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .photo-remove:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+    .photo-remove svg { width: 16px; height: 16px; }
+    
+    /* Notes Section */
+    .notes-section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .notes-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    
+    .notes-voice-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+    
+    .notes-voice-btn:hover { background: var(--primary-hover); }
+    .notes-voice-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .notes-voice-btn svg { width: 16px; height: 16px; }
+    .notes-voice-btn.recording { background: var(--danger); animation: pulse 1s infinite; }
+    
+    .notes-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9375rem;
+      font-family: var(--font-body);
+      resize: none;
+      min-height: 100px;
+      transition: border-color 0.15s ease;
+    }
+    
+    .notes-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* Action Buttons */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-display);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .btn:active { transform: scale(0.98); }
+    .btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .btn svg { width: 20px; height: 20px; }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover { background: var(--primary-hover); }
+    
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    
+    .btn-secondary:hover { background: oklch(0.95 0 0); }
+    
+    /* Quote Section */
+    .quote-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    
+    .quote-header {
+      background: var(--bg-dark);
+      color: var(--text-light);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .quote-header-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .quote-header-icon svg { width: 22px; height: 22px; color: white; }
+    
+    .quote-header-text h3 {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .quote-header-text span {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    
+    .quote-body { padding: 20px; }
+    
+    .quote-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .quote-line:last-child { border-bottom: none; }
+    
+    .quote-line-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9375rem;
+    }
+    
+    .quote-line-label svg { width: 18px; height: 18px; color: var(--text-muted); }
+    
+    .quote-line-value {
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+    
+    .quote-line.total {
+      background: var(--primary-light);
+      margin: 20px -20px -20px;
+      padding: 16px 20px;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+    
+    .quote-line.total .quote-line-label {
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .quote-line.total .quote-line-value {
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    
+    /* Issues Found List */
+    .issues-found {
+      margin-bottom: 20px;
+    }
+    
+    .issues-found-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--danger);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .issues-found-header svg { width: 20px; height: 20px; }
+    
+    .issue-card {
+      background: var(--danger-light);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 8px;
+    }
+    
+    .issue-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .issue-card-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    
+    .issue-card-name {
+      font-weight: 600;
+      font-size: 0.9375rem;
+    }
+    
+    .issue-card-desc {
+      font-size: 0.875rem;
+      color: oklch(0.35 0.08 25);
+      margin-bottom: 8px;
+    }
+    
+    .issue-card-photo {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      margin-top: 8px;
+    }
+    
+    /* Signature Pad */
+    .signature-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .signature-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      display: block;
+    }
+    
+    .signature-pad-container {
+      background: var(--bg);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      height: 150px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .signature-pad {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    
+    .signature-hint {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      pointer-events: none;
+    }
+    
+    .signature-clear {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    
+    .signature-clear:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    
+    /* Upsell Card */
+    .upsell-card {
+      background: linear-gradient(135deg, oklch(0.2 0.02 30), oklch(0.15 0 0));
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .upsell-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: var(--primary);
+      opacity: 0.1;
+      border-radius: 50%;
+      transform: translate(30%, -30%);
+    }
+    
+    .upsell-badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    
+    .upsell-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+    }
+    
+    .upsell-features {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    
+    .upsell-features li {
+      color: oklch(0.7 0 0);
+      font-size: 0.875rem;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .upsell-features li svg {
+      width: 16px;
+      height: 16px;
+      color: var(--primary);
+    }
+    
+    .upsell-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 12px 20px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: not-allowed;
+      opacity: 0.7;
+      width: 100%;
+    }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 12px oklch(0.2 0 0 / 0.08);
+    }
+    
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s ease;
+      min-height: 64px;
+    }
+    
+    .tab-item:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+    
+    .tab-item.active { color: var(--primary); }
+    .tab-item.disabled { opacity: 0.4; cursor: not-allowed; }
+    
+    .tab-item svg { width: 22px; height: 22px; }
+    
+    .tab-item span {
+      font-size: 0.6875rem;
+      font-weight: 500;
+    }
+    
+    .tab-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      background: var(--danger);
+      color: white;
+      font-size: 0.5625rem;
+      font-weight: 700;
+      min-width: 16px;
+      height: 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+    
+    .tab-item { position: relative; }
+    
+    /* History List */
+    .history-list {
+      display: grid;
+      gap: 12px;
+    }
+    
+    .history-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    
+    .history-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .history-card:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .history-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .history-card-vehicle {
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+    
+    .history-card-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .history-card-customer {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    .history-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .history-card-issues {
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .history-card-issues.has-issues {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+    
+    .history-card-issues.no-issues {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    
+    .history-card-total {
+      font-family: var(--font-display);
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      color: var(--text-muted);
+    }
+    
+    .empty-state-icon svg { width: 28px; height: 28px; }
+    
+    .empty-state-title {
+      font-family: var(--font-display);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .empty-state-text {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    /* Camera Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0.1 0 0 / 0.9);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .modal-overlay.visible { display: flex; }
+    
+    .modal-content {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow: auto;
+      animation: modalIn 0.3s ease;
+    }
+    
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-title {
+      font-family: var(--font-display);
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .modal-close svg { width: 24px; height: 24px; }
+    
+    .modal-body { padding: 20px; }
+    
+    /* Camera Preview */
+    .camera-preview {
+      background: var(--bg-dark);
+      border-radius: var(--radius-sm);
+      aspect-ratio: 4/3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .camera-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .camera-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .camera-capture-btn {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 64px;
+      height: 64px;
+      background: white;
+      border: 4px solid var(--primary);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    
+    .camera-capture-btn:hover { transform: translateX(-50%) scale(1.05); }
+    .camera-capture-btn:active { transform: translateX(-50%) scale(0.95); }
+    .camera-capture-btn:focus-visible { outline: 2px solid white; outline-offset: 4px; }
+    
+    .camera-retake-btn,
+    .camera-use-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-display);
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    
+    .camera-retake-btn {
+      background: var(--bg);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    
+    .camera-retake-btn:hover { background: oklch(0.95 0 0); }
+    
+    .camera-use-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+    
+    .camera-use-btn:hover { background: var(--primary-hover); }
+    
+    .camera-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    /* Annotation Canvas */
+    .annotation-canvas {
+      position: absolute;
+      inset: 0;
+      touch-action: none;
+    }
+    
+    .annotation-tools {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .annotation-tool {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: border-color 0.15s ease;
+    }
+    
+    .annotation-tool:hover { border-color: var(--primary); }
+    .annotation-tool:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .annotation-tool.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+    .annotation-tool svg { width: 18px; height: 18px; }
+    
+    /* Report Preview */
+    .report-preview {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-bottom: 20px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 0.8125rem;
+    }
+    
+    .report-section {
+      margin-bottom: 16px;
+    }
+    
+    .report-section:last-child { margin-bottom: 0; }
+    
+    .report-section-title {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: calc(100% - 40px);
+      max-width: 400px;
+    }
+    
+    .toast {
+      background: var(--bg-dark);
+      color: white;
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastIn 0.3s ease;
+    }
+    
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    .toast svg { width: 20px; height: 20px; flex-shrink: 0; }
+    
+    /* Loading Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid currentColor;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    /* Disclaimer */
+    #bct-demo-disclaimer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      padding: 10px 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #666;
+      z-index: 99999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 16px;
+      text-align: center;
+    }
+    
+    #bct-demo-disclaimer p {
+      margin: 0;
+      max-width: 700px;
+    }
+    
+    #bct-demo-disclaimer strong { color: #333; }
+    
+    #bct-demo-disclaimer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    /* Responsive */
+    @media (min-width: 600px) {
+      .content { padding: 32px; }
+      .inspection-card { padding: 24px; }
+      .action-bar { gap: 16px; }
+    }
+    
+    /* Enhanced focus indicators */
+    *:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    [tabindex]:not([tabindex="-1"]):focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+    
+    .gate-input:focus-visible {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px oklch(0.65 0.2 30 / 0.2);
+    }
+    
+    .vehicle-option:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-color: var(--primary);
+    }
+    
+    .checklist-item:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+      border-radius: var(--radius-sm);
+    }
+    
+    /* Screen reader only */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      :root {
+        --border: oklch(0.4 0 0);
+        --text-muted: oklch(0.25 0 0);
+      }
+      
+      .checklist-item,
+      .vehicle-option,
+      .inspection-card,
+      .quote-card {
+        border-width: 3px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Access Gate -->
+  <div id="access-gate" role="main" aria-labelledby="gate-title">
+    <div class="gate-card">
+      <div class="gate-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        </svg>
+      </div>
+      <h1 id="gate-title" class="gate-title">Field Pro</h1>
+      <p class="gate-subtitle">Built for ATX 512 Mobile Mechanic</p>
+      <form id="gate-form">
+        <label for="access-key" class="visually-hidden">Access Key</label>
+        <input type="text" id="access-key" class="gate-input" placeholder="Enter access key" autocomplete="off" aria-describedby="gate-error">
+        <button type="submit" class="gate-btn">Open Tool</button>
+        <p id="gate-error" class="gate-error" role="alert" aria-live="polite">Invalid access key. Try again.</p>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-brand">
+          <div class="header-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </div>
+          <span class="header-title">Field Pro</span>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn" id="share-btn" aria-label="Share report">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </button>
+          <button class="header-btn" id="reset-btn" aria-label="New inspection">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demo-banner" role="status" aria-live="polite">
+      <span class="demo-banner-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        Demo data loaded. Tap any vehicle to start an inspection.
+      </span>
+      <button class="demo-banner-dismiss" id="dismiss-demo" aria-label="Dismiss demo notice">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="content" id="main-content">
+      <!-- Screen: Vehicle Select -->
+      <section class="screen active" id="screen-select" aria-labelledby="select-title">
+        <div class="screen-header">
+          <h1 id="select-title" class="screen-title">Start Inspection</h1>
+          <p class="screen-subtitle">Scan a plate or pick a recent vehicle</p>
+        </div>
+        
+        <div class="vehicle-input-group">
+          <input type="text" class="vehicle-input" id="vin-input" placeholder="Enter VIN or plate #" aria-label="VIN or license plate number">
+          <button class="scan-btn" id="scan-plate-btn" aria-label="Scan license plate with camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+        </div>
+        
+        <div class="divider-text">or pick from recent</div>
+        
+        <div class="vehicle-select" id="vehicle-list" role="list" aria-label="Recent vehicles">
+          <!-- Filled by JS -->
+        </div>
+      </section>
+      
+      <!-- Screen: Inspection -->
+      <section class="screen" id="screen-inspect" aria-labelledby="inspect-title">
+        <div class="screen-header">
+          <h1 id="inspect-title" class="screen-title">Vehicle Inspection</h1>
+          <p class="screen-subtitle">Tap items to mark. Long press for issues.</p>
+        </div>
+        
+        <div class="inspection-card" id="inspection-card">
+          <div class="inspection-vehicle">
+            <div class="inspection-vehicle-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+                <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+                <path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"/>
+              </svg>
+            </div>
+            <div>
+              <div class="inspection-vehicle-name" id="current-vehicle-name">2019 Ford F-150</div>
+              <div class="inspection-vehicle-vin" id="current-vehicle-vin">VIN: 1FTEW1EP5KFA12345</div>
+            </div>
+          </div>
+          
+          <!-- Checklist: Engine -->
+          <div class="checklist-section">
+            <div class="checklist-header">
+              <span class="checklist-label">Engine Bay</span>
+            </div>
+            <div class="checklist-items" id="checklist-engine" role="list">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+          
+          <!-- Checklist: Brakes -->
+          <div class="checklist-section">
+            <div class="checklist-header">
+              <span class="checklist-label">Brakes</span>
+            </div>
+            <div class="checklist-items" id="checklist-brakes" role="list">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+          
+          <!-- Checklist: Exterior -->
+          <div class="checklist-section">
+            <div class="checklist-header">
+              <span class="checklist-label">Exterior</span>
+            </div>
+            <div class="checklist-items" id="checklist-exterior" role="list">
+              <!-- Filled by JS -->
+            </div>
+          </div>
+          
+          <!-- Notes -->
+          <div class="notes-section">
+            <div class="notes-header">
+              <span class="notes-label">Field Notes</span>
+              <button class="notes-voice-btn" id="voice-notes-btn" aria-label="Record voice note">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+                <span>Voice</span>
+              </button>
+            </div>
+            <label for="notes-text" class="visually-hidden">Field notes</label>
+            <textarea id="notes-text" class="notes-textarea" placeholder="Add notes about the job..."></textarea>
+          </div>
+        </div>
+        
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="back-to-select-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Back
+          </button>
+          <button class="btn btn-primary" id="generate-quote-btn">
+            Generate Quote
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Screen: Quote -->
+      <section class="screen" id="screen-quote" aria-labelledby="quote-title">
+        <div class="screen-header">
+          <h1 id="quote-title" class="screen-title">Quote Ready</h1>
+          <p class="screen-subtitle">Review and send to customer</p>
+        </div>
+        
+        <!-- Issues Found -->
+        <div class="issues-found" id="issues-found-container">
+          <div class="issues-found-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span id="issues-count">2 Issues Found</span>
+          </div>
+          <div id="issues-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+        
+        <!-- Quote Card -->
+        <div class="quote-card">
+          <div class="quote-header">
+            <div class="quote-header-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+              </svg>
+            </div>
+            <div class="quote-header-text">
+              <h3 id="quote-vehicle-name">2019 Ford F-150</h3>
+              <span id="quote-customer-name">John at 1401 E 12th St</span>
+            </div>
+          </div>
+          <div class="quote-body">
+            <div id="quote-lines">
+              <!-- Filled by JS -->
+            </div>
+            <div class="quote-line total">
+              <span class="quote-line-label">Total Estimate</span>
+              <span class="quote-line-value" id="quote-total">$0</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Signature -->
+        <div class="signature-section">
+          <span class="signature-label">Customer Approval</span>
+          <div class="signature-pad-container">
+            <canvas class="signature-pad" id="signature-canvas" aria-label="Signature pad - sign with finger or stylus"></canvas>
+            <span class="signature-hint" id="signature-hint">Sign here to approve</span>
+            <button class="signature-clear" id="clear-signature" aria-label="Clear signature">Clear</button>
+          </div>
+        </div>
+        
+        <!-- Upsell -->
+        <div class="upsell-card" role="complementary" aria-labelledby="upsell-title">
+          <span class="upsell-badge">Pro Version</span>
+          <h3 id="upsell-title" class="upsell-title">Unlock Full Field Pro</h3>
+          <ul class="upsell-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Parts lookup with local supplier pricing
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Custom branded PDF reports
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Customer history and vehicle tracking
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Unlimited inspections saved
+            </li>
+          </ul>
+          <button class="upsell-btn" disabled aria-disabled="true">Coming Soon</button>
+        </div>
+        
+        <div class="action-bar">
+          <button class="btn btn-secondary" id="back-to-inspect-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            Edit
+          </button>
+          <button class="btn btn-primary" id="send-quote-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Generate PDF
+          </button>
+        </div>
+      </section>
+      
+      <!-- Screen: History -->
+      <section class="screen" id="screen-history" aria-labelledby="history-title">
+        <div class="screen-header">
+          <h1 id="history-title" class="screen-title">Recent Jobs</h1>
+          <p class="screen-subtitle">Your saved inspections</p>
+        </div>
+        
+        <div class="history-list" id="history-list" role="list">
+          <!-- Filled by JS -->
+        </div>
+        
+        <div class="empty-state" id="history-empty" style="display: none;">
+          <div class="empty-state-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <h3 class="empty-state-title">No inspections yet</h3>
+          <p class="empty-state-text">Start your first inspection to see it here.</p>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Tab Bar -->
+    <nav class="tab-bar" role="navigation" aria-label="Main navigation">
+      <button class="tab-item active" data-screen="screen-select" aria-label="New inspection" aria-current="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        <span>New</span>
+      </button>
+      <button class="tab-item" data-screen="screen-inspect" id="tab-inspect" aria-label="Current inspection" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        <span>Inspect</span>
+      </button>
+      <button class="tab-item disabled" aria-label="Parts lookup - coming soon" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>Parts</span>
+      </button>
+      <button class="tab-item" data-screen="screen-history" aria-label="Job history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>History</span>
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Camera Modal -->
+  <div class="modal-overlay" id="camera-modal" role="dialog" aria-modal="true" aria-labelledby="camera-modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="camera-modal-title" class="modal-title">Capture Photo</h2>
+        <button class="modal-close" id="close-camera" aria-label="Close camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="camera-preview" id="camera-preview">
+          <video id="camera-video" autoplay playsinline></video>
+          <canvas id="camera-snapshot" style="display: none;"></canvas>
+          <canvas class="annotation-canvas" id="annotation-canvas"></canvas>
+          <button class="camera-capture-btn" id="camera-capture" aria-label="Capture photo"></button>
+        </div>
+        <div class="annotation-tools" id="annotation-tools" style="display: none;">
+          <button class="annotation-tool active" data-tool="circle" aria-label="Circle tool" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+            Circle
+          </button>
+          <button class="annotation-tool" data-tool="arrow" aria-label="Arrow tool" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+            Arrow
+          </button>
+        </div>
+        <div class="camera-actions" id="camera-actions" style="display: none;">
+          <button class="camera-retake-btn" id="camera-retake">Retake</button>
+          <button class="camera-use-btn" id="camera-use">Use Photo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container" role="status" aria-live="polite"></div>
+  
+  <!-- Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+    <p><strong>DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by ATX 512 Mobile Mechanic. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20ATX%20512%20Mobile%20Mechanic&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo.">Request Permanent Deletion</a>
+  </div>
+  
+  <!-- Accessibility: visually-hidden class defined in main CSS -->
+  
+  <script>
+    // ====== HASH FUNCTION & AUTH ======
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    const VALID_HASH = 982356333;
+    
+    function checkAuth() {
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === VALID_HASH) {
+        showApp();
+        return;
+      }
+      document.getElementById('access-gate').style.display = 'flex';
+    }
+    
+    function showApp() {
+      document.getElementById('access-gate').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp();
+    }
+    
+    document.getElementById('gate-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('access-key').value.trim();
+      if (_h(key) === VALID_HASH) {
+        window.history.replaceState({}, '', `?key=${key}`);
+        showApp();
+      } else {
+        document.getElementById('gate-error').classList.add('show');
+        document.getElementById('access-key').select();
+      }
+    });
+    
+    // ====== DEMO DATA ======
+    const DEMO_VEHICLES = [
+      { id: 'v1', year: 2019, make: 'Ford', model: 'F-150', vin: '1FTEW1EP5KFA12345', customer: 'John', address: '1401 E 12th St, Austin' },
+      { id: 'v2', year: 2021, make: 'Honda', model: 'Accord', vin: '1HGCV1F34MA012345', customer: 'Maria', address: '2501 S Congress Ave, Austin' },
+      { id: 'v3', year: 2017, make: 'Chevrolet', model: 'Silverado', vin: '3GCUKNEC2HG123456', customer: 'Robert', address: '4815 Mueller Blvd, Austin' },
+      { id: 'v4', year: 2020, make: 'Toyota', model: 'Camry', vin: '4T1BF1FK2LU123456', customer: 'Lisa', address: '1200 W 38th St, Austin' },
+      { id: 'v5', year: 2018, make: 'Ram', model: '1500', vin: '1C6RR7LT5JS123456', customer: 'Mike', address: '10901 N Lamar Blvd, Austin' }
+    ];
+    
+    const CHECKLIST_ENGINE = [
+      { id: 'oil', label: 'Oil Level & Condition' },
+      { id: 'coolant', label: 'Coolant Level' },
+      { id: 'belt', label: 'Serpentine Belt' },
+      { id: 'battery', label: 'Battery Terminals' },
+      { id: 'air-filter', label: 'Air Filter' },
+      { id: 'hoses', label: 'Hoses & Connections' }
+    ];
+    
+    const CHECKLIST_BRAKES = [
+      { id: 'pads-front', label: 'Front Brake Pads' },
+      { id: 'pads-rear', label: 'Rear Brake Pads' },
+      { id: 'rotors', label: 'Rotor Condition' },
+      { id: 'fluid', label: 'Brake Fluid Level' }
+    ];
+    
+    const CHECKLIST_EXTERIOR = [
+      { id: 'tires', label: 'Tire Tread & Pressure' },
+      { id: 'lights', label: 'All Lights Working' },
+      { id: 'wipers', label: 'Wiper Blades' },
+      { id: 'leaks', label: 'No Fluid Leaks' }
+    ];
+    
+    const REPAIR_COSTS = {
+      'oil': { labor: 45, parts: 35 },
+      'coolant': { labor: 30, parts: 25 },
+      'belt': { labor: 75, parts: 45 },
+      'battery': { labor: 40, parts: 120 },
+      'air-filter': { labor: 15, parts: 25 },
+      'hoses': { labor: 60, parts: 40 },
+      'pads-front': { labor: 90, parts: 85 },
+      'pads-rear': { labor: 90, parts: 75 },
+      'rotors': { labor: 120, parts: 180 },
+      'fluid': { labor: 25, parts: 15 },
+      'tires': { labor: 60, parts: 400 },
+      'lights': { labor: 25, parts: 30 },
+      'wipers': { labor: 10, parts: 25 },
+      'leaks': { labor: 100, parts: 50 }
+    };
+    
+    // ====== APP STATE ======
+    let state = {
+      currentVehicle: null,
+      checklist: {},
+      issues: {},
+      notes: '',
+      photos: {},
+      history: [],
+      demoBannerDismissed: false
+    };
+    
+    // ====== INIT ======
+    function initApp() {
+      loadState();
+      renderVehicleList();
+      renderChecklist('checklist-engine', CHECKLIST_ENGINE);
+      renderChecklist('checklist-brakes', CHECKLIST_BRAKES);
+      renderChecklist('checklist-exterior', CHECKLIST_EXTERIOR);
+      renderHistory();
+      initTabs();
+      initCamera();
+      initSignature();
+      initVoice();
+      
+      // Show demo banner if not dismissed
+      if (!state.demoBannerDismissed) {
+        document.getElementById('demo-banner').classList.remove('hidden');
+      } else {
+        document.getElementById('demo-banner').classList.add('hidden');
+      }
+      
+      // Event listeners
+      document.getElementById('dismiss-demo').addEventListener('click', dismissDemo);
+      document.getElementById('back-to-select-btn').addEventListener('click', () => switchScreen('screen-select'));
+      document.getElementById('generate-quote-btn').addEventListener('click', generateQuote);
+      document.getElementById('back-to-inspect-btn').addEventListener('click', () => switchScreen('screen-inspect'));
+      document.getElementById('send-quote-btn').addEventListener('click', generatePDF);
+      document.getElementById('reset-btn').addEventListener('click', resetInspection);
+      document.getElementById('share-btn').addEventListener('click', shareReport);
+    }
+    
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('atx512_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          state.history = parsed.history || [];
+          state.demoBannerDismissed = parsed.demoBannerDismissed || false;
+        }
+      } catch (e) { console.error('Failed to load state', e); }
+    }
+    
+    function saveState() {
+      try {
+        localStorage.setItem('atx512_state', JSON.stringify({
+          history: state.history,
+          demoBannerDismissed: state.demoBannerDismissed
+        }));
+      } catch (e) { console.error('Failed to save state', e); }
+    }
+    
+    function dismissDemo() {
+      state.demoBannerDismissed = true;
+      document.getElementById('demo-banner').classList.add('hidden');
+      saveState();
+    }
+    
+    // ====== VEHICLE LIST ======
+    function renderVehicleList() {
+      const container = document.getElementById('vehicle-list');
+      container.innerHTML = DEMO_VEHICLES.map(v => `
+        <button class="vehicle-option" role="listitem" data-id="${v.id}" aria-label="${v.year} ${v.make} ${v.model} for ${v.customer}">
+          <div class="vehicle-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+              <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+              <path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5"/>
+            </svg>
+          </div>
+          <div class="vehicle-info">
+            <div class="vehicle-name">${v.year} ${v.make} ${v.model}</div>
+            <div class="vehicle-details">${v.customer} - ${v.address.split(',')[0]}</div>
+          </div>
+          <div class="vehicle-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+      `).join('');
+      
+      container.querySelectorAll('.vehicle-option').forEach(btn => {
+        btn.addEventListener('click', () => selectVehicle(btn.dataset.id));
+      });
+    }
+    
+    function selectVehicle(id) {
+      const vehicle = DEMO_VEHICLES.find(v => v.id === id);
+      if (!vehicle) return;
+      
+      state.currentVehicle = vehicle;
+      state.checklist = {};
+      state.issues = {};
+      state.notes = '';
+      state.photos = {};
+      
+      document.getElementById('current-vehicle-name').textContent = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+      document.getElementById('current-vehicle-vin').textContent = `VIN: ${vehicle.vin}`;
+      document.getElementById('notes-text').value = '';
+      
+      // Reset checklist UI
+      document.querySelectorAll('.checklist-item').forEach(item => {
+        item.classList.remove('checked', 'issue');
+        item.querySelector('.check-status')?.remove();
+        item.querySelector('.issue-panel')?.remove();
+        item.querySelector('.photo-preview')?.remove();
+        item.querySelector('.check-camera').classList.remove('has-photo');
+      });
+      
+      // Enable inspect tab
+      document.getElementById('tab-inspect').disabled = false;
+      
+      switchScreen('screen-inspect');
+      showToast('Inspection started', 'success');
+    }
+    
+    // ====== CHECKLIST ======
+    function renderChecklist(containerId, items) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = items.map(item => `
+        <div class="checklist-item" role="listitem" data-id="${item.id}">
+          <div class="check-box" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <span class="check-label">${item.label}</span>
+          <button class="check-camera" data-id="${item.id}" aria-label="Add photo for ${item.label}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+      
+      container.querySelectorAll('.checklist-item').forEach(item => {
+        // Click to mark OK
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.check-camera') || e.target.closest('.issue-panel') || e.target.closest('.photo-preview')) return;
+          toggleCheck(item);
+        });
+        
+        // Long press to mark issue
+        let pressTimer;
+        item.addEventListener('touchstart', (e) => {
+          if (e.target.closest('.check-camera') || e.target.closest('.issue-panel')) return;
+          pressTimer = setTimeout(() => markIssue(item), 500);
+        });
+        item.addEventListener('touchend', () => clearTimeout(pressTimer));
+        item.addEventListener('touchmove', () => clearTimeout(pressTimer));
+        
+        // Right-click for desktop
+        item.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          markIssue(item);
+        });
+      });
+      
+      container.querySelectorAll('.check-camera').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openCamera(btn.dataset.id);
+        });
+      });
+    }
+    
+    function toggleCheck(item) {
+      const id = item.dataset.id;
+      if (item.classList.contains('issue')) return; // Don't toggle if issue
+      
+      if (item.classList.contains('checked')) {
+        item.classList.remove('checked');
+        item.querySelector('.check-status')?.remove();
+        delete state.checklist[id];
+      } else {
+        item.classList.add('checked');
+        if (!item.querySelector('.check-status')) {
+          const badge = document.createElement('span');
+          badge.className = 'check-status ok';
+          badge.textContent = 'OK';
+          item.insertBefore(badge, item.querySelector('.check-camera'));
+        }
+        state.checklist[id] = 'ok';
+      }
+    }
+    
+    function markIssue(item) {
+      const id = item.dataset.id;
+      
+      // If already an issue, remove it
+      if (item.classList.contains('issue')) {
+        item.classList.remove('issue', 'checked');
+        item.querySelector('.check-status')?.remove();
+        item.querySelector('.issue-panel')?.remove();
+        delete state.issues[id];
+        delete state.checklist[id];
+        return;
+      }
+      
+      // Mark as issue
+      item.classList.remove('checked');
+      item.classList.add('issue');
+      item.querySelector('.check-status')?.remove();
+      
+      const badge = document.createElement('span');
+      badge.className = 'check-status issue';
+      badge.textContent = 'Issue';
+      item.insertBefore(badge, item.querySelector('.check-camera'));
+      
+      // Add issue panel
+      if (!item.querySelector('.issue-panel')) {
+        const panel = document.createElement('div');
+        panel.className = 'issue-panel';
+        panel.innerHTML = `
+          <div class="issue-panel-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Describe the problem
+          </div>
+          <textarea class="issue-textarea" placeholder="What's wrong? What needs repair?" data-id="${id}"></textarea>
+          <div class="issue-actions">
+            <button class="issue-btn issue-btn-photo" data-id="${id}" aria-label="Add photo of issue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Photo
+            </button>
+            <button class="issue-btn issue-btn-voice" data-id="${id}" aria-label="Voice note for issue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+              </svg>
+              Voice
+            </button>
+          </div>
+        `;
+        item.appendChild(panel);
+        
+        // Focus textarea
+        panel.querySelector('.issue-textarea').focus();
+        
+        // Event listeners
+        panel.querySelector('.issue-textarea').addEventListener('input', (e) => {
+          state.issues[id] = { description: e.target.value, photo: state.photos[id] || null };
+        });
+        
+        panel.querySelector('.issue-btn-photo').addEventListener('click', () => openCamera(id));
+        panel.querySelector('.issue-btn-voice').addEventListener('click', (e) => toggleVoiceForIssue(e.target.closest('.issue-btn-voice'), id));
+      }
+      
+      state.issues[id] = { description: '', photo: null };
+      state.checklist[id] = 'issue';
+    }
+    
+    // ====== TABS & SCREENS ======
+    function initTabs() {
+      document.querySelectorAll('.tab-item').forEach(tab => {
+        if (tab.classList.contains('disabled')) return;
+        tab.addEventListener('click', () => {
+          if (tab.disabled) return;
+          const screen = tab.dataset.screen;
+          if (screen) switchScreen(screen);
+        });
+      });
+    }
+    
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId)?.classList.add('active');
+      
+      document.querySelectorAll('.tab-item').forEach(t => {
+        t.classList.remove('active');
+        t.removeAttribute('aria-current');
+      });
+      document.querySelector(`.tab-item[data-screen="${screenId}"]`)?.classList.add('active');
+      document.querySelector(`.tab-item[data-screen="${screenId}"]`)?.setAttribute('aria-current', 'true');
+      
+      // Focus management
+      document.getElementById(screenId)?.focus();
+    }
+    
+    // ====== CAMERA ======
+    let currentPhotoTarget = null;
+    let cameraStream = null;
+    let capturedImage = null;
+    let annotationTool = 'circle';
+    let annotations = [];
+    
+    function initCamera() {
+      const modal = document.getElementById('camera-modal');
+      const video = document.getElementById('camera-video');
+      const snapshot = document.getElementById('camera-snapshot');
+      const annCanvas = document.getElementById('annotation-canvas');
+      const captureBtn = document.getElementById('camera-capture');
+      const retakeBtn = document.getElementById('camera-retake');
+      const useBtn = document.getElementById('camera-use');
+      const closeBtn = document.getElementById('close-camera');
+      const tools = document.querySelectorAll('.annotation-tool');
+      
+      captureBtn.addEventListener('click', capturePhoto);
+      retakeBtn.addEventListener('click', retakePhoto);
+      useBtn.addEventListener('click', usePhoto);
+      closeBtn.addEventListener('click', closeCamera);
+      modal.addEventListener('click', (e) => { if (e.target === modal) closeCamera(); });
+      
+      tools.forEach(tool => {
+        tool.addEventListener('click', () => {
+          tools.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-pressed', 'false'); });
+          tool.classList.add('active');
+          tool.setAttribute('aria-pressed', 'true');
+          annotationTool = tool.dataset.tool;
+        });
+      });
+      
+      // Annotation drawing
+      let isDrawing = false;
+      let startX, startY;
+      
+      annCanvas.addEventListener('pointerdown', (e) => {
+        if (!capturedImage) return;
+        isDrawing = true;
+        const rect = annCanvas.getBoundingClientRect();
+        startX = e.clientX - rect.left;
+        startY = e.clientY - rect.top;
+      });
+      
+      annCanvas.addEventListener('pointermove', (e) => {
+        if (!isDrawing || !capturedImage) return;
+        const rect = annCanvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+        redrawAnnotations(startX, startY, endX, endY);
+      });
+      
+      annCanvas.addEventListener('pointerup', (e) => {
+        if (!isDrawing || !capturedImage) return;
+        isDrawing = false;
+        const rect = annCanvas.getBoundingClientRect();
+        const endX = e.clientX - rect.left;
+        const endY = e.clientY - rect.top;
+        annotations.push({ tool: annotationTool, x1: startX, y1: startY, x2: endX, y2: endY });
+        redrawAnnotations();
+      });
+    }
+    
+    function openCamera(targetId) {
+      currentPhotoTarget = targetId;
+      capturedImage = null;
+      annotations = [];
+      
+      const modal = document.getElementById('camera-modal');
+      const video = document.getElementById('camera-video');
+      const snapshot = document.getElementById('camera-snapshot');
+      const annCanvas = document.getElementById('annotation-canvas');
+      const captureBtn = document.getElementById('camera-capture');
+      const actionsDiv = document.getElementById('camera-actions');
+      const toolsDiv = document.getElementById('annotation-tools');
+      
+      modal.classList.add('visible');
+      video.style.display = 'block';
+      snapshot.style.display = 'none';
+      captureBtn.style.display = 'block';
+      actionsDiv.style.display = 'none';
+      toolsDiv.style.display = 'none';
+      
+      // Clear annotation canvas
+      const ctx = annCanvas.getContext('2d');
+      ctx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+      
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+        .then(stream => {
+          cameraStream = stream;
+          video.srcObject = stream;
+        })
+        .catch(err => {
+          showToast('Camera access denied', 'error');
+          closeCamera();
+        });
+    }
+    
+    function capturePhoto() {
+      const video = document.getElementById('camera-video');
+      const snapshot = document.getElementById('camera-snapshot');
+      const annCanvas = document.getElementById('annotation-canvas');
+      const captureBtn = document.getElementById('camera-capture');
+      const actionsDiv = document.getElementById('camera-actions');
+      const toolsDiv = document.getElementById('annotation-tools');
+      
+      // Set canvas size
+      snapshot.width = video.videoWidth || 640;
+      snapshot.height = video.videoHeight || 480;
+      annCanvas.width = snapshot.width;
+      annCanvas.height = snapshot.height;
+      
+      // Draw video frame
+      const ctx = snapshot.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      capturedImage = snapshot.toDataURL('image/jpeg', 0.8);
+      
+      // Stop video
+      video.style.display = 'none';
+      snapshot.style.display = 'block';
+      captureBtn.style.display = 'none';
+      actionsDiv.style.display = 'flex';
+      toolsDiv.style.display = 'flex';
+    }
+    
+    function retakePhoto() {
+      capturedImage = null;
+      annotations = [];
+      
+      const video = document.getElementById('camera-video');
+      const snapshot = document.getElementById('camera-snapshot');
+      const annCanvas = document.getElementById('annotation-canvas');
+      const captureBtn = document.getElementById('camera-capture');
+      const actionsDiv = document.getElementById('camera-actions');
+      const toolsDiv = document.getElementById('annotation-tools');
+      
+      video.style.display = 'block';
+      snapshot.style.display = 'none';
+      captureBtn.style.display = 'block';
+      actionsDiv.style.display = 'none';
+      toolsDiv.style.display = 'none';
+      
+      // Clear annotation canvas
+      const ctx = annCanvas.getContext('2d');
+      ctx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+    }
+    
+    function redrawAnnotations(tempX1, tempY1, tempX2, tempY2) {
+      const annCanvas = document.getElementById('annotation-canvas');
+      const ctx = annCanvas.getContext('2d');
+      ctx.clearRect(0, 0, annCanvas.width, annCanvas.height);
+      
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      
+      // Draw saved annotations
+      annotations.forEach(a => drawAnnotation(ctx, a.tool, a.x1, a.y1, a.x2, a.y2));
+      
+      // Draw temp annotation
+      if (tempX1 !== undefined) {
+        drawAnnotation(ctx, annotationTool, tempX1, tempY1, tempX2, tempY2);
+      }
+    }
+    
+    function drawAnnotation(ctx, tool, x1, y1, x2, y2) {
+      if (tool === 'circle') {
+        const cx = (x1 + x2) / 2;
+        const cy = (y1 + y2) / 2;
+        const rx = Math.abs(x2 - x1) / 2;
+        const ry = Math.abs(y2 - y1) / 2;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (tool === 'arrow') {
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        // Arrowhead
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        const headLen = 15;
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.stroke();
+      }
+    }
+    
+    function usePhoto() {
+      // Combine snapshot and annotations
+      const snapshot = document.getElementById('camera-snapshot');
+      const annCanvas = document.getElementById('annotation-canvas');
+      
+      const combined = document.createElement('canvas');
+      combined.width = snapshot.width;
+      combined.height = snapshot.height;
+      const ctx = combined.getContext('2d');
+      ctx.drawImage(snapshot, 0, 0);
+      ctx.drawImage(annCanvas, 0, 0);
+      
+      const finalImage = combined.toDataURL('image/jpeg', 0.8);
+      state.photos[currentPhotoTarget] = finalImage;
+      
+      // Update issue if exists
+      if (state.issues[currentPhotoTarget]) {
+        state.issues[currentPhotoTarget].photo = finalImage;
+      }
+      
+      // Show photo preview in checklist
+      const checkItem = document.querySelector(`.checklist-item[data-id="${currentPhotoTarget}"]`);
+      if (checkItem) {
+        checkItem.querySelector('.check-camera').classList.add('has-photo');
+        
+        // Add preview if issue panel exists
+        const issuePanel = checkItem.querySelector('.issue-panel');
+        if (issuePanel) {
+          let preview = issuePanel.querySelector('.photo-preview');
+          if (!preview) {
+            preview = document.createElement('div');
+            preview.className = 'photo-preview';
+            issuePanel.appendChild(preview);
+          }
+          preview.innerHTML = `
+            <img src="${finalImage}" alt="Issue photo">
+            <button class="photo-remove" data-id="${currentPhotoTarget}" aria-label="Remove photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          `;
+          preview.querySelector('.photo-remove').addEventListener('click', (e) => {
+            e.stopPropagation();
+            delete state.photos[currentPhotoTarget];
+            if (state.issues[currentPhotoTarget]) state.issues[currentPhotoTarget].photo = null;
+            preview.remove();
+            checkItem.querySelector('.check-camera').classList.remove('has-photo');
+          });
+        }
+      }
+      
+      closeCamera();
+      showToast('Photo saved', 'success');
+    }
+    
+    function closeCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      document.getElementById('camera-modal').classList.remove('visible');
+    }
+    
+    // ====== VOICE ======
+    let recognition = null;
+    let isRecording = false;
+    let currentVoiceTarget = null;
+    
+    function initVoice() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+      
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.onresult = (e) => {
+        const transcript = Array.from(e.results)
+          .map(r => r[0].transcript)
+          .join('');
+        
+        if (currentVoiceTarget === 'notes') {
+          document.getElementById('notes-text').value = transcript;
+          state.notes = transcript;
+        } else if (state.issues[currentVoiceTarget]) {
+          const textarea = document.querySelector(`.issue-textarea[data-id="${currentVoiceTarget}"]`);
+          if (textarea) {
+            textarea.value = transcript;
+            state.issues[currentVoiceTarget].description = transcript;
+          }
+        }
+      };
+      
+      recognition.onerror = (e) => {
+        stopVoice();
+        if (e.error !== 'aborted') showToast('Voice input failed', 'error');
+      };
+      
+      recognition.onend = () => {
+        if (isRecording) stopVoice();
+      };
+      
+      document.getElementById('voice-notes-btn').addEventListener('click', toggleVoiceNotes);
+    }
+    
+    function toggleVoiceNotes() {
+      if (isRecording && currentVoiceTarget === 'notes') {
+        stopVoice();
+      } else {
+        startVoice('notes', document.getElementById('voice-notes-btn'));
+      }
+    }
+    
+    function toggleVoiceForIssue(btn, issueId) {
+      if (isRecording && currentVoiceTarget === issueId) {
+        stopVoice();
+      } else {
+        startVoice(issueId, btn);
+      }
+    }
+    
+    function startVoice(target, btn) {
+      if (!recognition) {
+        showToast('Voice input not supported', 'error');
+        return;
+      }
+      
+      currentVoiceTarget = target;
+      isRecording = true;
+      btn.classList.add('recording');
+      
+      try {
+        recognition.start();
+        showToast('Listening...', 'success');
+      } catch (e) {
+        stopVoice();
+      }
+    }
+    
+    function stopVoice() {
+      isRecording = false;
+      currentVoiceTarget = null;
+      
+      document.querySelectorAll('.recording').forEach(el => el.classList.remove('recording'));
+      
+      try {
+        recognition?.stop();
+      } catch (e) {}
+    }
+    
+    // ====== SIGNATURE ======
+    let sigCanvas, sigCtx;
+    let isDrawingSig = false;
+    let lastSigX, lastSigY;
+    
+    function initSignature() {
+      sigCanvas = document.getElementById('signature-canvas');
+      sigCtx = sigCanvas.getContext('2d');
+      
+      function resizeCanvas() {
+        const container = sigCanvas.parentElement;
+        sigCanvas.width = container.offsetWidth;
+        sigCanvas.height = container.offsetHeight;
+        sigCtx.strokeStyle = '#333';
+        sigCtx.lineWidth = 2;
+        sigCtx.lineCap = 'round';
+        sigCtx.lineJoin = 'round';
+      }
+      
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+      
+      sigCanvas.addEventListener('pointerdown', (e) => {
+        isDrawingSig = true;
+        const rect = sigCanvas.getBoundingClientRect();
+        lastSigX = e.clientX - rect.left;
+        lastSigY = e.clientY - rect.top;
+        document.getElementById('signature-hint').style.display = 'none';
+      });
+      
+      sigCanvas.addEventListener('pointermove', (e) => {
+        if (!isDrawingSig) return;
+        const rect = sigCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        sigCtx.beginPath();
+        sigCtx.moveTo(lastSigX, lastSigY);
+        sigCtx.lineTo(x, y);
+        sigCtx.stroke();
+        lastSigX = x;
+        lastSigY = y;
+      });
+      
+      sigCanvas.addEventListener('pointerup', () => isDrawingSig = false);
+      sigCanvas.addEventListener('pointerleave', () => isDrawingSig = false);
+      
+      document.getElementById('clear-signature').addEventListener('click', () => {
+        sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+        document.getElementById('signature-hint').style.display = 'block';
+      });
+    }
+    
+    // ====== QUOTE ======
+    function generateQuote() {
+      if (!state.currentVehicle) return;
+      
+      const issues = Object.entries(state.issues);
+      
+      // Update quote header
+      document.getElementById('quote-vehicle-name').textContent = `${state.currentVehicle.year} ${state.currentVehicle.make} ${state.currentVehicle.model}`;
+      document.getElementById('quote-customer-name').textContent = `${state.currentVehicle.customer} at ${state.currentVehicle.address.split(',')[0]}`;
+      
+      // Update issues found
+      if (issues.length > 0) {
+        document.getElementById('issues-found-container').style.display = 'block';
+        document.getElementById('issues-count').textContent = `${issues.length} Issue${issues.length > 1 ? 's' : ''} Found`;
+        document.getElementById('issues-list').innerHTML = issues.map(([id, issue]) => {
+          const item = [...CHECKLIST_ENGINE, ...CHECKLIST_BRAKES, ...CHECKLIST_EXTERIOR].find(i => i.id === id);
+          return `
+            <div class="issue-card">
+              <div class="issue-card-header">
+                <span class="issue-card-badge">Needs Repair</span>
+                <span class="issue-card-name">${item?.label || id}</span>
+              </div>
+              ${issue.description ? `<p class="issue-card-desc">${issue.description}</p>` : ''}
+              ${issue.photo ? `<img class="issue-card-photo" src="${issue.photo}" alt="Photo of ${item?.label || id} issue">` : ''}
+            </div>
+          `;
+        }).join('');
+      } else {
+        document.getElementById('issues-found-container').style.display = 'none';
+      }
+      
+      // Calculate quote
+      let laborTotal = 0;
+      let partsTotal = 0;
+      
+      const quoteLines = [];
+      
+      issues.forEach(([id]) => {
+        const cost = REPAIR_COSTS[id];
+        if (cost) {
+          const item = [...CHECKLIST_ENGINE, ...CHECKLIST_BRAKES, ...CHECKLIST_EXTERIOR].find(i => i.id === id);
+          quoteLines.push({ label: item?.label || id, labor: cost.labor, parts: cost.parts });
+          laborTotal += cost.labor;
+          partsTotal += cost.parts;
+        }
+      });
+      
+      const total = laborTotal + partsTotal;
+      
+      document.getElementById('quote-lines').innerHTML = `
+        ${quoteLines.map(line => `
+          <div class="quote-line">
+            <span class="quote-line-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+              </svg>
+              ${line.label}
+            </span>
+            <span class="quote-line-value">$${line.labor + line.parts}</span>
+          </div>
+        `).join('')}
+        <div class="quote-line">
+          <span class="quote-line-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Total Labor
+          </span>
+          <span class="quote-line-value">$${laborTotal}</span>
+        </div>
+        <div class="quote-line">
+          <span class="quote-line-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+            Total Parts (est.)
+          </span>
+          <span class="quote-line-value">$${partsTotal}</span>
+        </div>
+      `;
+      
+      document.getElementById('quote-total').textContent = `$${total}`;
+      
+      switchScreen('screen-quote');
+    }
+    
+    // ====== PDF GENERATION ======
+    async function generatePDF() {
+      if (!state.currentVehicle) return;
+      
+      showToast('Generating PDF...', 'success');
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      const v = state.currentVehicle;
+      const issues = Object.entries(state.issues);
+      
+      // Header
+      doc.setFillColor(30, 30, 30);
+      doc.rect(0, 0, 210, 35, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Vehicle Inspection Report', 20, 22);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('ATX 512 Mobile Mechanic', 20, 30);
+      doc.text(new Date().toLocaleDateString(), 170, 22);
+      
+      // Vehicle Info
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Vehicle Information', 20, 50);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${v.year} ${v.make} ${v.model}`, 20, 60);
+      doc.text(`VIN: ${v.vin}`, 20, 67);
+      doc.text(`Customer: ${v.customer}`, 20, 74);
+      doc.text(`Location: ${v.address}`, 20, 81);
+      
+      // Issues
+      let yPos = 100;
+      
+      if (issues.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Issues Found', 20, yPos);
+        yPos += 12;
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        
+        issues.forEach(([id, issue]) => {
+          const item = [...CHECKLIST_ENGINE, ...CHECKLIST_BRAKES, ...CHECKLIST_EXTERIOR].find(i => i.id === id);
+          const cost = REPAIR_COSTS[id];
+          
+          doc.setFillColor(255, 240, 240);
+          doc.rect(20, yPos - 4, 170, 18, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.text(item?.label || id, 25, yPos + 4);
+          if (cost) {
+            doc.text(`$${cost.labor + cost.parts}`, 175, yPos + 4, { align: 'right' });
+          }
+          
+          if (issue.description) {
+            doc.setFont('helvetica', 'normal');
+            doc.text(issue.description.substring(0, 80), 25, yPos + 11);
+          }
+          
+          yPos += 22;
+          
+          if (yPos > 270) {
+            doc.addPage();
+            yPos = 20;
+          }
+        });
+      }
+      
+      // Total
+      yPos += 10;
+      let laborTotal = 0, partsTotal = 0;
+      issues.forEach(([id]) => {
+        const cost = REPAIR_COSTS[id];
+        if (cost) { laborTotal += cost.labor; partsTotal += cost.parts; }
+      });
+      
+      doc.setFillColor(30, 30, 30);
+      doc.rect(20, yPos, 170, 25, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Total Estimate', 25, yPos + 10);
+      doc.setFontSize(16);
+      doc.text(`$${laborTotal + partsTotal}`, 175, yPos + 16, { align: 'right' });
+      
+      // Notes
+      if (state.notes) {
+        yPos += 40;
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Technician Notes', 20, yPos);
+        yPos += 8;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        const noteLines = doc.splitTextToSize(state.notes, 170);
+        doc.text(noteLines, 20, yPos);
+      }
+      
+      // Signature
+      const sigData = sigCanvas.toDataURL();
+      const blank = document.createElement('canvas');
+      blank.width = sigCanvas.width;
+      blank.height = sigCanvas.height;
+      if (sigData !== blank.toDataURL()) {
+        if (yPos > 230) { doc.addPage(); yPos = 20; }
+        else { yPos += 30; }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Customer Approval', 20, yPos);
+        yPos += 5;
+        doc.addImage(sigData, 'PNG', 20, yPos, 80, 30);
+      }
+      
+      // Save
+      doc.save(`inspection-${v.year}-${v.make}-${v.model}-${Date.now()}.pdf`);
+      
+      // Save to history
+      saveToHistory();
+      
+      showToast('PDF saved!', 'success');
+    }
+    
+    function saveToHistory() {
+      if (!state.currentVehicle) return;
+      
+      const issues = Object.entries(state.issues);
+      let total = 0;
+      issues.forEach(([id]) => {
+        const cost = REPAIR_COSTS[id];
+        if (cost) total += cost.labor + cost.parts;
+      });
+      
+      state.history.unshift({
+        id: Date.now(),
+        vehicle: `${state.currentVehicle.year} ${state.currentVehicle.make} ${state.currentVehicle.model}`,
+        customer: state.currentVehicle.customer,
+        address: state.currentVehicle.address,
+        date: new Date().toLocaleDateString(),
+        issueCount: issues.length,
+        total: total
+      });
+      
+      // Keep only last 20
+      state.history = state.history.slice(0, 20);
+      saveState();
+      renderHistory();
+    }
+    
+    // ====== HISTORY ======
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      const empty = document.getElementById('history-empty');
+      
+      if (state.history.length === 0) {
+        container.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+      
+      container.style.display = 'grid';
+      empty.style.display = 'none';
+      
+      container.innerHTML = state.history.map(h => `
+        <div class="history-card" role="listitem" tabindex="0" aria-label="${h.vehicle} for ${h.customer} on ${h.date}">
+          <div class="history-card-header">
+            <span class="history-card-vehicle">${h.vehicle}</span>
+            <span class="history-card-date">${h.date}</span>
+          </div>
+          <p class="history-card-customer">${h.customer} - ${h.address.split(',')[0]}</p>
+          <div class="history-card-footer">
+            <span class="history-card-issues ${h.issueCount > 0 ? 'has-issues' : 'no-issues'}">
+              ${h.issueCount > 0 ? `${h.issueCount} issue${h.issueCount > 1 ? 's' : ''}` : 'All OK'}
+            </span>
+            <span class="history-card-total">${h.total > 0 ? `$${h.total}` : '-'}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // ====== UTILS ======
+    function resetInspection() {
+      if (!confirm('Start a new inspection? Current progress will be lost.')) return;
+      
+      state.currentVehicle = null;
+      state.checklist = {};
+      state.issues = {};
+      state.notes = '';
+      state.photos = {};
+      
+      document.getElementById('tab-inspect').disabled = true;
+      switchScreen('screen-select');
+      showToast('Ready for new inspection', 'success');
+    }
+    
+    async function shareReport() {
+      if (!state.currentVehicle) {
+        showToast('No inspection to share', 'error');
+        return;
+      }
+      
+      const v = state.currentVehicle;
+      const issues = Object.entries(state.issues);
+      let total = 0;
+      issues.forEach(([id]) => {
+        const cost = REPAIR_COSTS[id];
+        if (cost) total += cost.labor + cost.parts;
+      });
+      
+      const text = `Vehicle Inspection: ${v.year} ${v.make} ${v.model}\nCustomer: ${v.customer}\nIssues: ${issues.length}\nEstimate: $${total}`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Vehicle Inspection', text });
+          showToast('Shared!', 'success');
+        } catch (e) {
+          if (e.name !== 'AbortError') showToast('Share failed', 'error');
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Copied to clipboard', 'success');
+        } catch (e) {
+          showToast('Could not copy', 'error');
+        }
+      }
+    }
+    
+    function showToast(message, type = '') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = '';
+      if (type === 'success') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      }
+      
+      toast.innerHTML = `${icon}<span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // ====== ANTI-SCRAPE PROTECTION ======
+    (function() {
+      // Disable right-click context menu on images
+      document.addEventListener('contextmenu', function(e) {
+        if (e.target.tagName === 'IMG') {
+          e.preventDefault();
+        }
+      });
+      
+      // Disable common inspect element shortcuts
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+            (e.metaKey && e.altKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))) {
+          // Don't prevent - let developers access tools
+        }
+      });
+      
+      // Console warning
+      const style = 'color: #dc3545; font-size: 14px; font-weight: bold;';
+      console.log('%c⚠️ ATX 512 Mobile Mechanic - Field Pro', style);
+      console.log('%cThis is a demo tool created by BennyCuTools.', 'color: #666;');
+      console.log('%cUnauthorized copying or redistribution is prohibited.', 'color: #666;');
+    })();
+    
+    // ====== INIT ======
+    checkAuth();
+  </script>
+</body>
+</html>
