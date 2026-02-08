@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Genesis Hardscape Estimator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #63b702;
+      --primary-dark: #015802;
+      --primary-light: #97eb36;
+      --bg-primary: #f8faf5;
+      --bg-card: #ffffff;
+      --bg-input: #f4f7f0;
+      --text-primary: #020402;
+      --text-secondary: #5a6b5e;
+      --text-muted: #7c9299;
+      --border: #d8e4da;
+      --success: #2d8a39;
+      --warning: #d4a72c;
+      --error: #c53030;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --transition: 0.2s ease;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Arimo', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg-primary); color: var(--text-primary); font-size: 16px; line-height: 1.5; }
+    .app-container { display: flex; flex-direction: column; height: 100%; max-width: 100%; }
+    /* Security: prevent selection on structural elements */
+    .header, .bottom-nav, .calc-tabs, .nav-item, .header-btn, .calc-tab, .action-btn, .calculate-btn { user-select: none; -webkit-user-select: none; }
+    .header { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); color: white; padding: 16px 20px; flex-shrink: 0; position: relative; overflow: hidden; }
+    .header::before { content: ''; position: absolute; top: -50%; right: -20%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); border-radius: 50%; }
+    .header-content { display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 1; }
+    .logo-section { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+    .logo-icon svg { width: 24px; height: 24px; stroke: white; }
+    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-subtitle { font-size: 11px; opacity: 0.85; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase; }
+    .header-actions { display: flex; gap: 8px; }
+    .header-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.15); border: none; border-radius: var(--radius-sm); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+    .header-btn:hover { background: rgba(255,255,255,0.25); }
+    .header-btn svg { width: 20px; height: 20px; stroke: currentColor; }
+    .main-content { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 80px; -webkit-overflow-scrolling: touch; }
+    .calc-tabs { display: flex; gap: 8px; padding: 16px 20px; overflow-x: auto; scrollbar-width: none; -ms-overflow-style: none; }
+    .calc-tabs::-webkit-scrollbar { display: none; }
+    .calc-tab { flex-shrink: 0; padding: 10px 16px; background: var(--bg-card); border: 2px solid var(--border); border-radius: 24px; font-size: 14px; font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; }
+    .calc-tab svg { width: 18px; height: 18px; stroke: currentColor; }
+    .calc-tab.active { background: var(--primary); border-color: var(--primary); color: white; }
+    .calc-tab:not(.active):hover { border-color: var(--primary); color: var(--primary); }
+    .calc-panel { display: none; padding: 0 20px 20px; animation: fadeIn 0.3s ease; }
+    .calc-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .form-section { background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+    .section-title { font-size: 14px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .section-title svg { width: 18px; height: 18px; stroke: var(--primary); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-grid.single { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .form-input { width: 100%; padding: 14px 16px; font-size: 16px; font-family: inherit; border: 2px solid var(--border); border-radius: var(--radius-md); background: var(--bg-input); color: var(--text-primary); transition: var(--transition); }
+    .form-input:focus { outline: none; border-color: var(--primary); background: white; }
+    .form-input.error { border-color: var(--error); animation: shake 0.4s ease; }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+    .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a6b5e' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+    .input-suffix { position: relative; }
+    .input-suffix input { padding-right: 48px; }
+    .input-suffix span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-muted); font-weight: 500; }
+    .option-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .option-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .option-item { position: relative; }
+    .option-item input { position: absolute; opacity: 0; pointer-events: none; }
+    .option-item label { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 14px 10px; background: var(--bg-input); border: 2px solid var(--border); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); text-align: center; }
+    .option-item label svg { width: 24px; height: 24px; stroke: var(--text-secondary); margin-bottom: 6px; }
+    .option-item label span { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+    .option-item input:checked + label { background: rgba(99, 183, 2, 0.1); border-color: var(--primary); }
+    .option-item input:checked + label svg { stroke: var(--primary); }
+    .option-item input:checked + label span { color: var(--primary-dark); }
+    .calculate-btn { width: 100%; padding: 18px; font-size: 16px; font-weight: 700; font-family: inherit; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: var(--shadow-md); }
+    .calculate-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .calculate-btn:active { transform: translateY(0); }
+    .calculate-btn svg { width: 20px; height: 20px; stroke: currentColor; }
+    .results-section { background: var(--bg-card); border-radius: var(--radius-lg); padding: 20px; margin-top: 20px; box-shadow: var(--shadow-md); border: 2px solid var(--primary); display: none; }
+    .results-section.visible { display: block; animation: slideUp 0.4s ease; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid var(--border); }
+    .results-title { font-size: 18px; font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+    .results-title svg { width: 24px; height: 24px; stroke: var(--primary); }
+    .results-total { font-size: 24px; font-weight: 700; color: var(--primary-dark); }
+    .results-grid { display: grid; gap: 12px; }
+    .result-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--bg-input); border-radius: var(--radius-sm); }
+    .result-row.subtotal { background: rgba(99, 183, 2, 0.1); border: 1px solid var(--primary); }
+    .result-label { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+    .result-label svg { width: 16px; height: 16px; stroke: var(--text-muted); }
+    .result-value { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+    .result-row.subtotal .result-value { color: var(--primary-dark); font-size: 16px; }
+    .results-actions { display: flex; gap: 12px; margin-top: 20px; }
+    .action-btn { flex: 1; padding: 14px; font-size: 14px; font-weight: 600; font-family: inherit; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .action-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+    .action-btn.primary { background: var(--primary); color: white; border: none; }
+    .action-btn.primary:hover { background: var(--primary-dark); }
+    .action-btn.secondary { background: transparent; color: var(--primary-dark); border: 2px solid var(--primary); }
+    .action-btn.secondary:hover { background: rgba(99, 183, 2, 0.1); }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); padding: 8px 16px; padding-bottom: max(8px, env(safe-area-inset-bottom)); display: flex; justify-content: space-around; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 100; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; transition: var(--transition); border-radius: var(--radius-sm); min-width: 64px; }
+    .nav-item svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; }
+    .nav-item span { font-size: 11px; font-weight: 600; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active svg { stroke-width: 2; }
+    .nav-item:hover:not(.active) { color: var(--text-secondary); }
+    .page { display: none; height: 100%; }
+    .page.active { display: flex; flex-direction: column; }
+    .estimates-list { padding: 20px; }
+    .estimate-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); cursor: pointer; transition: var(--transition); }
+    .estimate-card:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+    .estimate-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .estimate-type { display: flex; align-items: center; gap: 10px; }
+    .estimate-type-icon { width: 40px; height: 40px; background: rgba(99, 183, 2, 0.1); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+    .estimate-type-icon svg { width: 22px; height: 22px; stroke: var(--primary); }
+    .estimate-type-info h3 { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .estimate-type-info p { font-size: 12px; color: var(--text-muted); }
+    .estimate-amount { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
+    .estimate-details { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); }
+    .estimate-detail { display: flex; align-items: center; gap: 6px; }
+    .estimate-detail svg { width: 14px; height: 14px; stroke: var(--text-muted); }
+    .demo-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; background: var(--warning); color: white; border-radius: 4px; }
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 40px; text-align: center; }
+    .empty-illustration { width: 200px; height: 160px; margin-bottom: 24px; }
+    .empty-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+    .empty-description { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; max-width: 280px; line-height: 1.6; }
+    .empty-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 280px; }
+    .empty-btn-primary { width: 100%; padding: 16px; font-size: 15px; font-weight: 700; font-family: inherit; background: var(--primary); color: white; border: none; border-radius: var(--radius-md); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .empty-btn-primary svg { width: 20px; height: 20px; stroke: currentColor; }
+    .empty-btn-secondary { font-size: 14px; color: var(--primary); font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline; }
+    .settings-section { background: var(--bg-card); border-radius: var(--radius-lg); margin: 20px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+    .settings-title { font-size: 13px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 20px 8px; }
+    .settings-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .settings-item:last-child { border-bottom: none; }
+    .settings-item-info { display: flex; align-items: center; gap: 14px; }
+    .settings-item-icon { width: 40px; height: 40px; background: var(--bg-input); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+    .settings-item-icon svg { width: 20px; height: 20px; stroke: var(--text-secondary); }
+    .settings-item-text h4 { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .settings-item-text p { font-size: 12px; color: var(--text-muted); }
+    .settings-item button { padding: 10px 16px; font-size: 13px; font-weight: 600; font-family: inherit; background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition); }
+    .settings-item button:hover { border-color: var(--primary); color: var(--primary); }
+    .settings-item button.danger:hover { border-color: var(--error); color: var(--error); }
+    .toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--text-primary); color: white; padding: 14px 24px; border-radius: var(--radius-md); font-size: 14px; font-weight: 600; box-shadow: var(--shadow-lg); opacity: 0; transition: all 0.3s ease; z-index: 1000; display: flex; align-items: center; gap: 10px; max-width: calc(100% - 40px); }
+    .toast.visible { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast svg { width: 20px; height: 20px; stroke: currentColor; flex-shrink: 0; }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+    .toast-action { font-weight: 700; text-decoration: underline; cursor: pointer; margin-left: 8px; }
+    .demo-banner { background: linear-gradient(135deg, var(--warning) 0%, #c49520 100%); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
+    .demo-banner-text { display: flex; align-items: center; gap: 10px; }
+    .demo-banner-text svg { width: 18px; height: 18px; stroke: currentColor; }
+    .demo-banner-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700; cursor: pointer; transition: var(--transition); }
+    .demo-banner-btn:hover { background: rgba(255,255,255,0.3); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 200; }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: var(--bg-card); border-radius: var(--radius-lg); width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; animation: modalIn 0.3s ease; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-size: 18px; font-weight: 700; }
+    .modal-close { width: 36px; height: 36px; background: var(--bg-input); border: none; border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-close svg { width: 20px; height: 20px; stroke: var(--text-secondary); }
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+    .modal-btn { flex: 1; padding: 14px; font-size: 14px; font-weight: 600; font-family: inherit; border-radius: var(--radius-md); cursor: pointer; }
+    .modal-btn.cancel { background: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border); }
+    .modal-btn.confirm { background: var(--primary); color: white; border: none; }
+    .pricing-grid { display: grid; gap: 12px; }
+    .pricing-item { display: flex; align-items: center; gap: 12px; }
+    .pricing-item label { flex: 1; font-size: 14px; color: var(--text-secondary); }
+    .pricing-item input { width: 100px; padding: 10px 12px; font-size: 14px; font-family: inherit; border: 2px solid var(--border); border-radius: var(--radius-sm); text-align: right; }
+    .pricing-item input:focus { outline: none; border-color: var(--primary); }
+    @media print { .header, .bottom-nav, .calc-tabs, .calculate-btn, .results-actions, .demo-banner { display: none !important; } .main-content { padding: 0; overflow: visible; } .form-section { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; } .results-section { display: block !important; border: 2px solid #000; } body { background: white; color: black; } }
+    @media (min-width: 1024px) { .bottom-nav { display: none; } .main-content { padding-bottom: 40px; } .header { padding: 20px 40px; } .header-content { max-width: 1200px; margin: 0 auto; } .desktop-nav { display: flex; gap: 8px; } .desktop-nav-item { padding: 10px 20px; background: rgba(255,255,255,0.1); border: none; border-radius: var(--radius-sm); color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; transition: var(--transition); } .desktop-nav-item.active { background: rgba(255,255,255,0.25); color: white; } .desktop-nav-item:hover { background: rgba(255,255,255,0.2); } .calc-tabs { max-width: 1200px; margin: 0 auto; padding: 24px 40px; } .calc-panel { max-width: 800px; margin: 0 auto; padding: 0 40px 40px; } .form-grid { grid-template-columns: repeat(3, 1fr); } .option-grid { grid-template-columns: repeat(4, 1fr); } .estimates-list { max-width: 800px; margin: 0 auto; padding: 40px; } .settings-section { max-width: 600px; margin: 40px auto; } }
+    @media (max-width: 1023px) { .desktop-nav { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="demo-banner" id="demoBanner" style="display: none;">
+      <div class="demo-banner-text">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>Showing sample data for Genesis Landscaping</span>
+      </div>
+      <button class="demo-banner-btn" onclick="clearDemoData()">Clear & Start Fresh</button>
+    </div>
+
+    <!-- Calculator Page -->
+    <div class="page active" id="pageCalculator">
+      <header class="header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <div class="logo-text">Genesis Hardscape</div>
+              <div class="logo-subtitle">Material Estimator</div>
+            </div>
+          </div>
+          <nav class="desktop-nav">
+            <button class="desktop-nav-item active" onclick="showPage('calculator')">Calculator</button>
+            <button class="desktop-nav-item" onclick="showPage('estimates')">Estimates</button>
+            <button class="desktop-nav-item" onclick="showPage('settings')">Settings</button>
+          </nav>
+          <div class="header-actions">
+            <button class="header-btn" onclick="showPricingModal()" title="Pricing Settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <div class="calc-tabs">
+          <button class="calc-tab active" data-calc="paver" onclick="switchCalc('paver')">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Paver Patio
+          </button>
+          <button class="calc-tab" data-calc="wall" onclick="switchCalc('wall')">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            Retaining Wall
+          </button>
+          <button class="calc-tab" data-calc="walkway" onclick="switchCalc('walkway')">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 19l8-8 8 8M4 5l8 8 8-8"/></svg>
+            Stone Walkway
+          </button>
+          <button class="calc-tab" data-calc="firepit" onclick="switchCalc('firepit')">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 14c1.5 0 3-1.5 3-4-1 1-3 1-3 1s-2 0-3-1c0 2.5 1.5 4 3 4z"/></svg>
+            Firepit
+          </button>
+          <button class="calc-tab" data-calc="sod" onclick="switchCalc('sod')">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/><path d="M12 22V12M12 12L2 7M12 12l10-5"/></svg>
+            Sod
+          </button>
+        </div>
+
+        <!-- Paver Patio Calculator -->
+        <div class="calc-panel active" id="calcPaver">
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+              Patio Dimensions
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Length</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="paverLength" placeholder="20" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Width</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="paverWidth" placeholder="16" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              Paver Size
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="radio" name="paverSize" id="paver4x8" value="4x8" checked>
+                <label for="paver4x8"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="8" width="16" height="8" rx="1"/></svg><span>4" x 8"</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="paverSize" id="paver6x6" value="6x6">
+                <label for="paver6x6"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="6" y="6" width="12" height="12" rx="1"/></svg><span>6" x 6"</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="paverSize" id="paver6x9" value="6x9">
+                <label for="paver6x9"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="5" y="6" width="14" height="12" rx="1"/></svg><span>6" x 9"</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="paverSize" id="paver12x12" value="12x12">
+                <label for="paver12x12"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="1"/></svg><span>12" x 12"</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+              Pattern Style
+            </div>
+            <div class="option-grid three">
+              <div class="option-item">
+                <input type="radio" name="paverPattern" id="patternRunning" value="running" checked>
+                <label for="patternRunning"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="2" y="4" width="8" height="4"/><rect x="11" y="4" width="8" height="4"/><rect x="6" y="9" width="8" height="4"/><rect x="2" y="14" width="8" height="4"/><rect x="11" y="14" width="8" height="4"/></svg><span>Running Bond</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="paverPattern" id="patternHerring" value="herringbone">
+                <label for="patternHerring"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M6 12l6-6 6 6-6 6z"/></svg><span>Herringbone</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="paverPattern" id="patternBasket" value="basketweave">
+                <label for="patternBasket"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="4" width="6" height="3"/><rect x="4" y="8" width="6" height="3"/><rect x="11" y="4" width="3" height="6"/><rect x="15" y="4" width="3" height="6"/></svg><span>Basketweave</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Client Info (Optional)
+            </div>
+            <div class="form-grid single">
+              <div class="form-group">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-input" id="paverClientName" placeholder="e.g., Johnson Family">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" id="paverClientAddress" placeholder="e.g., 123 Oak Lane, Watkinsville">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" id="paverNotes" rows="2" placeholder="Special considerations, access issues, etc."></textarea>
+              </div>
+            </div>
+          </div>
+          <button class="calculate-btn" onclick="calculatePaver()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+            Calculate Materials
+          </button>
+          <div class="results-section" id="paverResults"></div>
+        </div>
+
+        <!-- Retaining Wall Calculator -->
+        <div class="calc-panel" id="calcWall">
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+              Wall Dimensions
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Total Length</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="wallLength" placeholder="35" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Height</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="wallHeight" placeholder="4" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="10" width="6" height="4"/><rect x="11" y="10" width="6" height="4"/></svg>
+              Block Type
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="radio" name="blockType" id="blockStandard" value="standard" checked>
+                <label for="blockStandard"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="8" width="16" height="8" rx="1"/></svg><span>Standard (12x4)</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="blockType" id="blockJumbo" value="jumbo">
+                <label for="blockJumbo"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="3" y="7" width="18" height="10" rx="1"/></svg><span>Jumbo (18x6)</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+              Soil Type (SE Georgia)
+            </div>
+            <div class="option-grid three">
+              <div class="option-item">
+                <input type="radio" name="soilType" id="soilSandy" value="sandy" checked>
+                <label for="soilSandy"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="6" cy="18" r="2"/><circle cx="12" cy="16" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Sandy</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="soilType" id="soilClay" value="clay">
+                <label for="soilClay"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><ellipse cx="12" cy="16" rx="8" ry="4"/></svg><span>Clay</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="soilType" id="soilMixed" value="mixed">
+                <label for="soilMixed"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 3c-4 4-6 8-6 12a6 6 0 1 0 12 0c0-4-2-8-6-12z"/></svg><span>Mixed</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Wall Features
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Number of Corners</label>
+                <input type="number" class="form-input" id="wallCorners" placeholder="0" min="0" value="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Steps/Transitions</label>
+                <input type="number" class="form-input" id="wallSteps" placeholder="0" min="0" value="0">
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Client Info (Optional)
+            </div>
+            <div class="form-grid single">
+              <div class="form-group">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-input" id="wallClientName" placeholder="e.g., Williams Property">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" id="wallClientAddress" placeholder="e.g., 456 Pine St, Baxley">
+              </div>
+            </div>
+          </div>
+          <button class="calculate-btn" onclick="calculateWall()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+            Calculate Materials
+          </button>
+          <div class="results-section" id="wallResults"></div>
+        </div>
+
+        <!-- Stone Walkway Calculator -->
+        <div class="calc-panel" id="calcWalkway">
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 19l8-8 8 8M4 5l8 8 8-8"/></svg>
+              Walkway Dimensions
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Path Length</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="walkwayLength" placeholder="40" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Path Width</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="walkwayWidth" placeholder="3" min="1" step="0.5">
+                  <span>ft</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+              Stone Type
+            </div>
+            <div class="option-grid three">
+              <div class="option-item">
+                <input type="radio" name="stoneType" id="stoneFlagstone" value="flagstone" checked>
+                <label for="stoneFlagstone"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><polygon points="5 4 12 2 19 4 22 12 19 20 12 22 5 20 2 12"/></svg><span>Flagstone</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="stoneType" id="stonePaver" value="paver">
+                <label for="stonePaver"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="5" y="5" width="14" height="14" rx="2"/></svg><span>Pavers</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="stoneType" id="stoneGravel" value="gravel">
+                <label for="stoneGravel"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="8" cy="16" r="3"/><circle cx="16" cy="14" r="2"/><circle cx="12" cy="8" r="2.5"/></svg><span>Gravel Path</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 21h18M9 8h6M12 5v3"/></svg>
+              Installation Method
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="radio" name="walkwayInstall" id="installDryLaid" value="dry" checked>
+                <label for="installDryLaid"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="14" width="16" height="4"/><circle cx="8" cy="10" r="2"/><circle cx="16" cy="10" r="2"/></svg><span>Dry-Laid</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="walkwayInstall" id="installMortared" value="mortared">
+                <label for="installMortared"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="12" width="16" height="6"/><path d="M8 12V8M16 12V8"/><rect x="6" y="4" width="4" height="4"/><rect x="14" y="4" width="4" height="4"/></svg><span>Mortared</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Client Info (Optional)
+            </div>
+            <div class="form-grid single">
+              <div class="form-group">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-input" id="walkwayClientName" placeholder="e.g., Parker Residence">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" id="walkwayClientAddress" placeholder="e.g., 789 Magnolia Ave, Athens">
+              </div>
+            </div>
+          </div>
+          <button class="calculate-btn" onclick="calculateWalkway()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+            Calculate Materials
+          </button>
+          <div class="results-section" id="walkwayResults"></div>
+        </div>
+
+        <!-- Firepit Calculator -->
+        <div class="calc-panel" id="calcFirepit">
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+              Firepit Dimensions
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Inner Diameter</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="firepitDiameter" placeholder="36" min="24" step="1">
+                  <span>in</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Wall Height</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="firepitHeight" placeholder="18" min="12" step="1">
+                  <span>in</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="8" width="16" height="8" rx="1"/></svg>
+              Block Style
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="radio" name="firepitStyle" id="firepitTrapezoidal" value="trapezoidal" checked>
+                <label for="firepitTrapezoidal"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M5 18l3-12h8l3 12H5z"/></svg><span>Trapezoidal</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="firepitStyle" id="firepitStandard" value="standard">
+                <label for="firepitStandard"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="6" width="16" height="12" rx="1"/></svg><span>Standard Block</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+              Features
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="checkbox" id="firepitCap" value="cap">
+                <label for="firepitCap"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M3 14h18"/><rect x="5" y="14" width="14" height="4" rx="1"/></svg><span>Cap Stones</span></label>
+              </div>
+              <div class="option-item">
+                <input type="checkbox" id="firepitFirebrick" value="firebrick" checked>
+                <label for="firepitFirebrick"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 2l-2 4h4l-2-4z"/><path d="M8 8l-2 4h12l-2-4z"/><path d="M4 14h16v6H4z"/></svg><span>Fire Brick Liner</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Client Info (Optional)
+            </div>
+            <div class="form-grid single">
+              <div class="form-group">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-input" id="firepitClientName" placeholder="e.g., Harris Family">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" id="firepitClientAddress" placeholder="e.g., 234 Live Oak Dr, Winterville">
+              </div>
+            </div>
+          </div>
+          <button class="calculate-btn" onclick="calculateFirepit()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+            Calculate Materials
+          </button>
+          <div class="results-section" id="firepitResults"></div>
+        </div>
+
+        <!-- Sod Calculator -->
+        <div class="calc-panel" id="calcSod">
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+              Lawn Area
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Length</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="sodLength" placeholder="60" min="1" step="1">
+                  <span>ft</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Width</label>
+                <div class="input-suffix">
+                  <input type="number" class="form-input" id="sodWidth" placeholder="40" min="1" step="1">
+                  <span>ft</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/></svg>
+              Grass Type (Zone 8b)
+            </div>
+            <div class="option-grid">
+              <div class="option-item">
+                <input type="radio" name="grassType" id="grassZoysia" value="zoysia" checked>
+                <label for="grassZoysia"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M7 20s2-3 5-3 5 3 5 3M12 17V4M8 8c2 0 4 2 4 4M16 8c-2 0-4 2-4 4"/></svg><span>Zoysia</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="grassType" id="grassBermuda" value="bermuda">
+                <label for="grassBermuda"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M6 20c3-3 6-3 6-3s3 0 6 3M12 17V6M9 10c1.5 0 3 1 3 2M15 10c-1.5 0-3 1-3 2"/></svg><span>Bermuda</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="grassType" id="grassStAugustine" value="staugustine">
+                <label for="grassStAugustine"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 20h16M6 20c1-4 2-8 6-14M18 20c-1-4-2-8-6-14"/></svg><span>St. Augustine</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="grassType" id="grassCentipede" value="centipede">
+                <label for="grassCentipede"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 18h16M8 18c0-6 4-12 4-12s4 6 4 12"/></svg><span>Centipede</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              Current Condition
+            </div>
+            <div class="option-grid three">
+              <div class="option-item">
+                <input type="radio" name="sodCondition" id="conditionGrass" value="grass" checked>
+                <label for="conditionGrass"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M4 20h16M6 20V14M10 20V12M14 20V14M18 20V16"/></svg><span>Existing Grass</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="sodCondition" id="conditionBare" value="bare">
+                <label for="conditionBare"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><rect x="4" y="14" width="16" height="6" rx="1"/><path d="M8 14v-2M16 14v-2"/></svg><span>Bare Soil</span></label>
+              </div>
+              <div class="option-item">
+                <input type="radio" name="sodCondition" id="conditionWeeds" value="weeds">
+                <label for="conditionWeeds"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><path d="M12 20v-8M12 12c-3-3-3-6 0-8M12 12c3-3 3-6 0-8"/></svg><span>Heavy Weeds</span></label>
+              </div>
+            </div>
+          </div>
+          <div class="form-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Client Info (Optional)
+            </div>
+            <div class="form-grid single">
+              <div class="form-group">
+                <label class="form-label">Client Name</label>
+                <input type="text" class="form-input" id="sodClientName" placeholder="e.g., Davis Property">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" id="sodClientAddress" placeholder="e.g., 567 Pecan Lane, Bogart">
+              </div>
+            </div>
+          </div>
+          <button class="calculate-btn" onclick="calculateSod()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M10 4v16"/></svg>
+            Calculate Materials
+          </button>
+          <div class="results-section" id="sodResults"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Estimates Page -->
+    <div class="page" id="pageEstimates">
+      <header class="header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <div class="logo-text">Saved Estimates</div>
+              <div class="logo-subtitle">Genesis Landscaping</div>
+            </div>
+          </div>
+          <nav class="desktop-nav">
+            <button class="desktop-nav-item" onclick="showPage('calculator')">Calculator</button>
+            <button class="desktop-nav-item active" onclick="showPage('estimates')">Estimates</button>
+            <button class="desktop-nav-item" onclick="showPage('settings')">Settings</button>
+          </nav>
+        </div>
+      </header>
+      <main class="main-content">
+        <div class="estimates-list" id="estimatesList"></div>
+      </main>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="page" id="pageSettings">
+      <header class="header">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </div>
+            <div>
+              <div class="logo-text">Settings</div>
+              <div class="logo-subtitle">Genesis Landscaping</div>
+            </div>
+          </div>
+          <nav class="desktop-nav">
+            <button class="desktop-nav-item" onclick="showPage('calculator')">Calculator</button>
+            <button class="desktop-nav-item" onclick="showPage('estimates')">Estimates</button>
+            <button class="desktop-nav-item active" onclick="showPage('settings')">Settings</button>
+          </nav>
+        </div>
+      </header>
+      <main class="main-content">
+        <div class="settings-section">
+          <div class="settings-title">Pricing</div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Material & Labor Rates</h4>
+                <p>Customize your pricing</p>
+              </div>
+            </div>
+            <button onclick="showPricingModal()">Edit</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Profit Margin</h4>
+                <p id="marginDisplay">25% markup on materials</p>
+              </div>
+            </div>
+            <button onclick="showMarginModal()">Edit</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">Data Management</div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Import Data</h4>
+                <p>CSV or JSON backup</p>
+              </div>
+            </div>
+            <button onclick="importData()">Import</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Export Backup</h4>
+                <p>Download all estimates as JSON</p>
+              </div>
+            </div>
+            <button onclick="exportData()">Export</button>
+          </div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Clear All Data</h4>
+                <p>Delete all estimates</p>
+              </div>
+            </div>
+            <button class="danger" onclick="confirmClearAll()">Clear</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">Demo</div>
+          <div class="settings-item">
+            <div class="settings-item-info">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+              </div>
+              <div class="settings-item-text">
+                <h4>Load Sample Data</h4>
+                <p>See example estimates</p>
+              </div>
+            </div>
+            <button onclick="loadDemoData()">Load</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="showPage('calculator')" data-page="calculator">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/><line x1="14" y1="18" x2="16" y2="18"/></svg>
+        <span>Calculate</span>
+      </button>
+      <button class="nav-item" onclick="showPage('estimates')" data-page="estimates">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Estimates</span>
+      </button>
+      <button class="nav-item" onclick="showPage('settings')" data-page="settings">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Pricing Modal -->
+    <div class="modal-overlay" id="pricingModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Pricing Settings</h2>
+          <button class="modal-close" onclick="closePricingModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="pricing-grid">
+            <div class="pricing-item"><label>Labor Rate ($/hr)</label><input type="number" id="priceLaborRate" value="65" min="0" step="5"></div>
+            <div class="pricing-item"><label>Pavers ($/sq ft)</label><input type="number" id="pricePaverSqft" value="4.50" min="0" step="0.25"></div>
+            <div class="pricing-item"><label>Base Material ($/ton)</label><input type="number" id="priceBaseTon" value="45" min="0" step="5"></div>
+            <div class="pricing-item"><label>Sand ($/cu yd)</label><input type="number" id="priceSandYard" value="35" min="0" step="5"></div>
+            <div class="pricing-item"><label>Wall Block ($/block)</label><input type="number" id="priceWallBlock" value="5.50" min="0" step="0.25"></div>
+            <div class="pricing-item"><label>Flagstone ($/sq ft)</label><input type="number" id="priceFlagstone" value="8" min="0" step="0.5"></div>
+            <div class="pricing-item"><label>Sod ($/sq ft)</label><input type="number" id="priceSodSqft" value="0.65" min="0" step="0.05"></div>
+            <div class="pricing-item"><label>Fire Brick ($/brick)</label><input type="number" id="priceFirebrick" value="3" min="0" step="0.25"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel" onclick="closePricingModal()">Cancel</button>
+          <button class="modal-btn confirm" onclick="savePricing()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Margin Modal -->
+    <div class="modal-overlay" id="marginModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Profit Margin</h2>
+          <button class="modal-close" onclick="closeMarginModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Material Markup (%)</label>
+            <input type="number" class="form-input" id="marginPercent" value="25" min="0" max="100" step="5">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel" onclick="closeMarginModal()">Cancel</button>
+          <button class="modal-btn confirm" onclick="saveMargin()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="importModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Import Data</h2>
+          <button class="modal-close" onclick="closeImportModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Upload JSON Backup</label>
+            <input type="file" class="form-input" id="importFile" accept=".json">
+          </div>
+          <p style="margin-top: 16px; font-size: 13px; color: var(--text-muted);">Or paste tab-delimited data from a spreadsheet:</p>
+          <div class="form-group" style="margin-top: 12px;">
+            <textarea class="form-input" id="importPaste" rows="4" placeholder="Paste data here..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn cancel" onclick="closeImportModal()">Cancel</button>
+          <button class="modal-btn confirm" onclick="processImport()">Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Security Layer - Access Control
+    function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+    const _V=1161685680;
+    const _k=new URLSearchParams(window.location.search).get('key');
+    if(!_k||_h(_k)!==_V){
+      document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+      throw new Error('Invalid key');
+    }
+    // Additional Security - Block context menu and dev tools
+    document.addEventListener('contextmenu',e=>e.preventDefault());
+    document.addEventListener('keydown',e=>{
+      if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.shiftKey&&e.key==='J')||(e.ctrlKey&&e.key==='u')){
+        e.preventDefault();
+      }
+    });
+    const DB_NAME = 'GenesisHardscapeDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'estimates';
+    let db = null;
+    const DEFAULT_PRICING = { laborRate: 65, paverSqft: 4.50, baseTon: 45, sandYard: 35, wallBlock: 5.50, flagstone: 8, sodSqft: 0.65, firebrick: 3, margin: 25 };
+    const PAVER_SIZES = { '4x8': { perSqFt: 4.5 }, '6x6': { perSqFt: 4 }, '6x9': { perSqFt: 2.67 }, '12x12': { perSqFt: 1 } };
+    const PATTERN_WASTE = { running: 1.10, herringbone: 1.15, basketweave: 1.12 };
+    const BLOCK_SIZES = { standard: { height: 4, length: 12 }, jumbo: { height: 6, length: 18 } };
+    const SOIL_FACTORS = { sandy: { mult: 0.8, gravel: 0.8 }, clay: { mult: 1.3, gravel: 1.2 }, mixed: { mult: 1.0, gravel: 1.0 } };
+    const GRASS_PRICES = { zoysia: 0.75, bermuda: 0.55, staugustine: 0.65, centipede: 0.60 };
+    let pricing = { ...DEFAULT_PRICING };
+    let estimates = [];
+    let pendingDelete = null;
+    let undoTimeout = null;
+
+    function initDB() {
+      return new Promise((resolve) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onerror = () => { loadFromLS(); resolve(); };
+        req.onsuccess = (e) => { db = e.target.result; loadFromDB().then(resolve); };
+        req.onupgradeneeded = (e) => { if (!e.target.result.objectStoreNames.contains(STORE_NAME)) e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' }); };
+      });
+    }
+
+    async function loadFromDB() {
+      return new Promise((resolve) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).getAll();
+        req.onsuccess = () => { estimates = req.result || []; checkDemo(); resolve(); };
+        req.onerror = () => { loadFromLS(); resolve(); };
+      });
+    }
+
+    function loadFromLS() {
+      try {
+        estimates = JSON.parse(localStorage.getItem('genesis_estimates') || '[]');
+        const p = localStorage.getItem('genesis_pricing');
+        if (p) pricing = { ...DEFAULT_PRICING, ...JSON.parse(p) };
+      } catch (e) { estimates = []; }
+      checkDemo();
+    }
+
+    function saveEstimate(est) {
+      estimates.push(est);
+      if (db) { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).add(est); }
+      localStorage.setItem('genesis_estimates', JSON.stringify(estimates));
+      checkDemo(); renderEstimatesList();
+    }
+
+    function deleteEstimate(id, perm = false) {
+      if (!perm) { pendingDelete = id; showToast('Estimate deleted', 'success', true); undoTimeout = setTimeout(() => { deleteEstimate(id, true); pendingDelete = null; }, 5000); return; }
+      estimates = estimates.filter(e => e.id !== id);
+      if (db) { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).delete(id); }
+      localStorage.setItem('genesis_estimates', JSON.stringify(estimates));
+      checkDemo(); renderEstimatesList();
+    }
+
+    function undoDelete() { if (undoTimeout) { clearTimeout(undoTimeout); undoTimeout = null; } pendingDelete = null; hideToast(); showToast('Restored', 'success'); }
+    function savePricingToStorage() { localStorage.setItem('genesis_pricing', JSON.stringify(pricing)); }
+    function checkDemo() { const has = estimates.some(e => e.isDemo); document.getElementById('demoBanner').style.display = has ? 'flex' : 'none'; }
+
+    function formatNumber(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+    function shakeInput(id) { const el = document.getElementById(id); el.classList.add('error'); setTimeout(() => el.classList.remove('error'), 400); el.focus(); }
+
+    function showToast(msg, type = '', hasUndo = false) {
+      const t = document.getElementById('toast');
+      t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${msg}${hasUndo ? '<span class="toast-action" onclick="undoDelete()">Undo</span>' : ''}`;
+      t.className = 'toast visible ' + type;
+      if (!hasUndo) setTimeout(hideToast, 3000);
+    }
+    function hideToast() { document.getElementById('toast').classList.remove('visible'); }
+
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === page));
+      document.querySelectorAll('.desktop-nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector(`.desktop-nav-item[onclick="showPage('${page}')"]`)?.classList.add('active');
+      if (page === 'estimates') renderEstimatesList();
+    }
+
+    function switchCalc(calc) {
+      document.querySelectorAll('.calc-tab').forEach(t => t.classList.toggle('active', t.dataset.calc === calc));
+      document.querySelectorAll('.calc-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('calc' + calc.charAt(0).toUpperCase() + calc.slice(1)).classList.add('active');
+    }
+
+    function calculatePaver() {
+      const l = parseFloat(document.getElementById('paverLength').value);
+      const w = parseFloat(document.getElementById('paverWidth').value);
+      if (!l || l <= 0) { shakeInput('paverLength'); return; }
+      if (!w || w <= 0) { shakeInput('paverWidth'); return; }
+      const sz = document.querySelector('input[name="paverSize"]:checked').value;
+      const pat = document.querySelector('input[name="paverPattern"]:checked').value;
+      const sqft = l * w;
+      const cnt = Math.ceil(sqft * PAVER_SIZES[sz].perSqFt * PATTERN_WASTE[pat]);
+      const base = (sqft * 0.33 * 1.5) / 27;
+      const sand = (sqft * 0.083) / 27;
+      const edge = 2 * (l + w);
+      const poly = Math.ceil(sqft / 80);
+      const labor = sqft * 0.15 + 4;
+      const matCost = sqft * pricing.paverSqft + base * pricing.baseTon + sand * pricing.sandYard + edge * 1.5 + poly * 25;
+      const labCost = labor * pricing.laborRate;
+      const mark = matCost * (pricing.margin / 100);
+      const total = matCost + labCost + mark;
+      const data = { sqft, cnt, sz, pat, base, sand, edge, poly, labor, matCost, labCost, mark, total, client: document.getElementById('paverClientName').value || 'Unnamed', addr: document.getElementById('paverClientAddress').value, notes: document.getElementById('paverNotes').value };
+      document.getElementById('paverResults').innerHTML = buildResults('Paver Patio', data, [
+        ['Total Area', `${formatNumber(sqft)} sq ft`], [`Pavers (${sz}, ${pat})`, `${formatNumber(cnt)} pcs`], ['Base Material', `${base.toFixed(1)} tons`],
+        ['Bedding Sand', `${sand.toFixed(2)} cu yd`], ['Edge Restraints', `${formatNumber(edge)} lin ft`], ['Polymeric Sand', `${poly} bags`], ['Est. Labor', `${labor.toFixed(1)} hrs`]
+      ], 'paver');
+      document.getElementById('paverResults').classList.add('visible');
+      document.getElementById('paverResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function calculateWall() {
+      const l = parseFloat(document.getElementById('wallLength').value);
+      const h = parseFloat(document.getElementById('wallHeight').value);
+      if (!l || l <= 0) { shakeInput('wallLength'); return; }
+      if (!h || h <= 0) { shakeInput('wallHeight'); return; }
+      const bt = document.querySelector('input[name="blockType"]:checked').value;
+      const st = document.querySelector('input[name="soilType"]:checked').value;
+      const corn = parseInt(document.getElementById('wallCorners').value) || 0;
+      const step = parseInt(document.getElementById('wallSteps').value) || 0;
+      const blk = BLOCK_SIZES[bt];
+      const soil = SOIL_FACTORS[st];
+      const face = l * h;
+      const rows = Math.ceil(h / (blk.height / 12));
+      let cnt = Math.ceil(l / (blk.length / 12)) * rows + corn * rows * 2;
+      cnt = Math.ceil(cnt * 1.10);
+      const caps = Math.ceil(l / (blk.length / 12)) + corn * 2;
+      const gravel = (l * h * 1 * soil.gravel) / 27 * 1.35;
+      const geo = h > 3 ? Math.ceil((h - 3) / 2) * l * 6 : 0;
+      const labor = (face * 0.25 + corn * 2 + step * 4) * soil.mult;
+      const matCost = cnt * pricing.wallBlock + caps * pricing.wallBlock * 1.5 + gravel * pricing.baseTon + geo * 0.35;
+      const labCost = labor * pricing.laborRate;
+      const mark = matCost * (pricing.margin / 100);
+      const total = matCost + labCost + mark;
+      const data = { l, h, face, bt, cnt, caps, gravel, geo, st, corn, step, labor, matCost, labCost, mark, total, client: document.getElementById('wallClientName').value || 'Unnamed', addr: document.getElementById('wallClientAddress').value };
+      document.getElementById('wallResults').innerHTML = buildResults('Retaining Wall', data, [
+        ['Wall Face Area', `${formatNumber(face)} sq ft`], [`Blocks (${bt})`, `${formatNumber(cnt)} pcs`], ['Cap Stones', `${caps} pcs`],
+        ['Drainage Gravel', `${gravel.toFixed(1)} tons`], ['Geogrid', geo > 0 ? `${formatNumber(geo)} sq ft` : 'Not needed'], ['Est. Labor', `${labor.toFixed(1)} hrs`]
+      ], 'wall');
+      document.getElementById('wallResults').classList.add('visible');
+      document.getElementById('wallResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function calculateWalkway() {
+      const l = parseFloat(document.getElementById('walkwayLength').value);
+      const w = parseFloat(document.getElementById('walkwayWidth').value);
+      if (!l || l <= 0) { shakeInput('walkwayLength'); return; }
+      if (!w || w <= 0) { shakeInput('walkwayWidth'); return; }
+      const type = document.querySelector('input[name="stoneType"]:checked').value;
+      const inst = document.querySelector('input[name="walkwayInstall"]:checked').value;
+      const sqft = l * w;
+      const waste = type === 'gravel' ? 1.05 : 1.12;
+      const stone = Math.ceil(sqft * waste);
+      const base = (sqft * 0.25) / 27 * 1.5;
+      const sand = type !== 'gravel' ? (sqft * 0.083) / 27 : 0;
+      const mortar = inst === 'mortared' ? Math.ceil(sqft / 30) : 0;
+      const labor = sqft * (type === 'gravel' ? 0.08 : 0.2) + (inst === 'mortared' ? 4 : 2);
+      const price = type === 'flagstone' ? pricing.flagstone : type === 'paver' ? pricing.paverSqft : 2;
+      const matCost = stone * price + base * pricing.baseTon + sand * pricing.sandYard + mortar * 15;
+      const labCost = labor * pricing.laborRate;
+      const mark = matCost * (pricing.margin / 100);
+      const total = matCost + labCost + mark;
+      const data = { sqft, type, inst, stone, base, sand, mortar, labor, matCost, labCost, mark, total, client: document.getElementById('walkwayClientName').value || 'Unnamed', addr: document.getElementById('walkwayClientAddress').value };
+      document.getElementById('walkwayResults').innerHTML = buildResults('Stone Walkway', data, [
+        ['Path Area', `${formatNumber(sqft)} sq ft`], [`${type.charAt(0).toUpperCase() + type.slice(1)}`, `${formatNumber(stone)} sq ft`],
+        ['Base Material', `${base.toFixed(1)} tons`], ['Sand', sand > 0 ? `${sand.toFixed(2)} cu yd` : 'N/A'], ['Mortar Bags', mortar > 0 ? `${mortar}` : 'N/A'], ['Est. Labor', `${labor.toFixed(1)} hrs`]
+      ], 'walkway');
+      document.getElementById('walkwayResults').classList.add('visible');
+      document.getElementById('walkwayResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function calculateFirepit() {
+      const d = parseFloat(document.getElementById('firepitDiameter').value);
+      const h = parseFloat(document.getElementById('firepitHeight').value);
+      if (!d || d < 24) { shakeInput('firepitDiameter'); return; }
+      if (!h || h < 12) { shakeInput('firepitHeight'); return; }
+      const style = document.querySelector('input[name="firepitStyle"]:checked').value;
+      const hasCap = document.getElementById('firepitCap').checked;
+      const hasFB = document.getElementById('firepitFirebrick').checked;
+      const circ = Math.PI * (d + 6) / 12;
+      const rows = Math.ceil(h / 4);
+      const blkPerRow = style === 'trapezoidal' ? Math.ceil(circ * 12 / 10) : Math.ceil(circ * 12 / 12);
+      let blocks = blkPerRow * rows;
+      blocks = Math.ceil(blocks * 1.1);
+      const caps = hasCap ? blkPerRow : 0;
+      const fb = hasFB ? Math.ceil(Math.PI * d * h / 32) : 0;
+      const gravel = 0.15;
+      const labor = 4 + (hasCap ? 1 : 0) + (hasFB ? 2 : 0);
+      const matCost = blocks * pricing.wallBlock + caps * pricing.wallBlock * 1.5 + fb * pricing.firebrick + gravel * pricing.baseTon * 27;
+      const labCost = labor * pricing.laborRate;
+      const mark = matCost * (pricing.margin / 100);
+      const total = matCost + labCost + mark;
+      const data = { d, h, style, blocks, caps, fb, gravel, labor, matCost, labCost, mark, total, client: document.getElementById('firepitClientName').value || 'Unnamed', addr: document.getElementById('firepitClientAddress').value };
+      document.getElementById('firepitResults').innerHTML = buildResults('Firepit', data, [
+        ['Diameter', `${d}" inner`], [`Blocks (${style})`, `${formatNumber(blocks)} pcs`], ['Cap Stones', caps > 0 ? `${caps} pcs` : 'None'],
+        ['Fire Bricks', fb > 0 ? `${fb} pcs` : 'None'], ['Gravel Base', `${gravel.toFixed(2)} cu yd`], ['Est. Labor', `${labor.toFixed(1)} hrs`]
+      ], 'firepit');
+      document.getElementById('firepitResults').classList.add('visible');
+      document.getElementById('firepitResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function calculateSod() {
+      const l = parseFloat(document.getElementById('sodLength').value);
+      const w = parseFloat(document.getElementById('sodWidth').value);
+      if (!l || l <= 0) { shakeInput('sodLength'); return; }
+      if (!w || w <= 0) { shakeInput('sodWidth'); return; }
+      const grass = document.querySelector('input[name="grassType"]:checked').value;
+      const cond = document.querySelector('input[name="sodCondition"]:checked').value;
+      const sqft = l * w;
+      const sod = Math.ceil(sqft * 1.05);
+      const prepMult = cond === 'weeds' ? 1.5 : cond === 'bare' ? 0.8 : 1;
+      const amend = cond === 'weeds' ? sqft * 0.02 : sqft * 0.01;
+      const labor = sqft * 0.02 * prepMult + 2;
+      const sodPrice = GRASS_PRICES[grass] || pricing.sodSqft;
+      const matCost = sod * sodPrice + amend * 25;
+      const labCost = labor * pricing.laborRate;
+      const mark = matCost * (pricing.margin / 100);
+      const total = matCost + labCost + mark;
+      const data = { sqft, grass, cond, sod, amend, labor, matCost, labCost, mark, total, client: document.getElementById('sodClientName').value || 'Unnamed', addr: document.getElementById('sodClientAddress').value };
+      document.getElementById('sodResults').innerHTML = buildResults('Sod Installation', data, [
+        ['Lawn Area', `${formatNumber(sqft)} sq ft`], [`${grass.charAt(0).toUpperCase() + grass.slice(1)} Sod`, `${formatNumber(sod)} sq ft`],
+        ['Soil Amendment', `${amend.toFixed(0)} lbs`], ['Prep Work', cond.charAt(0).toUpperCase() + cond.slice(1)], ['Est. Labor', `${labor.toFixed(1)} hrs`]
+      ], 'sod');
+      document.getElementById('sodResults').classList.add('visible');
+      document.getElementById('sodResults').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function buildResults(title, data, rows, type) {
+      const dataStr = JSON.stringify(data).replace(/"/g, '&quot;');
+      return `<div class="results-header"><div class="results-title"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${title} Estimate</div><div class="results-total">$${formatNumber(data.total)}</div></div>
+        <div class="results-grid">${rows.map(r => `<div class="result-row"><span class="result-label">${r[0]}</span><span class="result-value">${r[1]}</span></div>`).join('')}
+        <div class="result-row subtotal"><span class="result-label">Materials</span><span class="result-value">$${formatNumber(data.matCost)}</span></div>
+        <div class="result-row subtotal"><span class="result-label">Labor</span><span class="result-value">$${formatNumber(data.labCost)}</span></div>
+        <div class="result-row subtotal"><span class="result-label">Margin (${pricing.margin}%)</span><span class="result-value">$${formatNumber(data.mark)}</span></div></div>
+        <div class="results-actions"><button class="action-btn secondary" onclick='saveCurrentEstimate("${type}", ${dataStr})'><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save</button>
+        <button class="action-btn primary" onclick='generatePDF("${type}", ${dataStr})'><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>PDF Estimate</button></div>`;
+    }
+
+    function saveCurrentEstimate(type, data) {
+      const est = { id: Date.now().toString(), type, data, createdAt: new Date().toISOString(), isDemo: false };
+      saveEstimate(est);
+      showToast('Estimate saved', 'success');
+    }
+
+    function generatePDF(type, data) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFillColor(1, 88, 2);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text('Genesis Landscaping', 20, 20);
+      doc.setFontSize(12);
+      doc.text('Hardscape Material Estimate', 20, 30);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(14);
+      doc.text(`${type.charAt(0).toUpperCase() + type.slice(1)} Project Estimate`, 20, 55);
+      doc.setFontSize(11);
+      let y = 65;
+      if (data.client) { doc.text(`Client: ${data.client}`, 20, y); y += 7; }
+      if (data.addr) { doc.text(`Address: ${data.addr}`, 20, y); y += 7; }
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, y); y += 12;
+      doc.setFontSize(10);
+      doc.text('Materials & Labor', 20, y); y += 8;
+      doc.text(`Materials: $${formatNumber(data.matCost)}`, 25, y); y += 6;
+      doc.text(`Labor: $${formatNumber(data.labCost)}`, 25, y); y += 6;
+      doc.text(`Margin: $${formatNumber(data.mark)}`, 25, y); y += 10;
+      doc.setFontSize(14);
+      doc.setTextColor(1, 88, 2);
+      doc.text(`TOTAL: $${formatNumber(data.total)}`, 20, y);
+      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(8);
+      doc.text('Genesis Landscaping LLC | 706-614-7843 | Brycen.lee@genesislandscapedesign.com', 20, 280);
+      doc.save(`genesis-${type}-estimate-${Date.now()}.pdf`);
+      showToast('PDF downloaded', 'success');
+    }
+
+    function renderEstimatesList() {
+      const list = document.getElementById('estimatesList');
+      const visible = estimates.filter(e => e.id !== pendingDelete);
+      if (visible.length === 0) {
+        list.innerHTML = `<div class="empty-state"><svg class="empty-illustration" viewBox="0 0 200 160" fill="none"><rect x="40" y="30" width="120" height="100" rx="8" stroke="#d8e4da" stroke-width="2" fill="#f8faf5"/><rect x="55" y="50" width="90" height="8" rx="4" fill="#d8e4da"/><rect x="55" y="70" width="70" height="8" rx="4" fill="#d8e4da"/><rect x="55" y="90" width="80" height="8" rx="4" fill="#d8e4da"/><circle cx="100" cy="130" r="20" stroke="#63b702" stroke-width="2" fill="none"/><path d="M100 120v20M90 130h20" stroke="#63b702" stroke-width="2"/></svg><h2 class="empty-title">No Estimates Yet</h2><p class="empty-description">Calculate materials for your hardscape projects and save estimates for quick reference.</p><div class="empty-actions"><button class="empty-btn-primary" onclick="showPage('calculator')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Create First Estimate</button><button class="empty-btn-secondary" onclick="loadDemoData()">Load sample data</button></div></div>`;
+        return;
+      }
+      list.innerHTML = visible.map(e => {
+        const icons = { paver: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>', wall: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18"/>', walkway: '<path d="M4 19l8-8 8 8M4 5l8 8 8-8"/>', firepit: '<circle cx="12" cy="12" r="10"/>', sod: '<path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/>' };
+        const date = new Date(e.createdAt).toLocaleDateString();
+        return `<div class="estimate-card" onclick="deleteEstimate('${e.id}')"><div class="estimate-header"><div class="estimate-type"><div class="estimate-type-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2">${icons[e.type] || icons.paver}</svg></div><div class="estimate-type-info"><h3>${e.type.charAt(0).toUpperCase() + e.type.slice(1)} ${e.data.client !== 'Unnamed' ? '- ' + e.data.client : ''}</h3><p>${e.data.addr || date}</p></div></div><div class="estimate-amount">$${formatNumber(e.data.total)}${e.isDemo ? ' <span class="demo-badge">Demo</span>' : ''}</div></div></div>`;
+      }).join('');
+    }
+
+    function loadDemoData() {
+      const demos = [
+        { id: 'd1', type: 'paver', data: { sqft: 320, cnt: 1584, sz: '4x8', pat: 'herringbone', base: 5.9, sand: 0.98, edge: 72, poly: 4, labor: 52, matCost: 1820, labCost: 3380, mark: 455, total: 5655, client: 'Johnson Family', addr: '123 Oak Lane, Watkinsville, GA' }, createdAt: new Date().toISOString(), isDemo: true },
+        { id: 'd2', type: 'wall', data: { l: 35, h: 4, face: 140, bt: 'standard', cnt: 116, caps: 36, gravel: 2.8, geo: 0, st: 'sandy', corn: 2, step: 0, labor: 38, matCost: 978, labCost: 2470, mark: 244, total: 3692, client: 'Williams Property', addr: '456 Pine St, Baxley, GA' }, createdAt: new Date().toISOString(), isDemo: true },
+        { id: 'd3', type: 'firepit', data: { d: 36, h: 18, style: 'trapezoidal', blocks: 44, caps: 12, fb: 32, gravel: 0.15, labor: 7, matCost: 459, labCost: 455, mark: 115, total: 1029, client: 'Harris Family', addr: '234 Live Oak Dr, Winterville, GA' }, createdAt: new Date().toISOString(), isDemo: true }
+      ];
+      demos.forEach(d => { if (!estimates.find(e => e.id === d.id)) saveEstimate(d); });
+      showToast('Demo data loaded', 'success');
+      showPage('estimates');
+    }
+
+    function clearDemoData() { estimates = estimates.filter(e => !e.isDemo); if (db) { estimates.filter(e => e.isDemo).forEach(e => { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).delete(e.id); }); } localStorage.setItem('genesis_estimates', JSON.stringify(estimates)); checkDemo(); renderEstimatesList(); showToast('Demo data cleared', 'success'); }
+    function confirmClearAll() { if (confirm('Delete all estimates? This cannot be undone.')) { estimates = []; if (db) { const tx = db.transaction(STORE_NAME, 'readwrite'); tx.objectStore(STORE_NAME).clear(); } localStorage.removeItem('genesis_estimates'); checkDemo(); renderEstimatesList(); showToast('All data cleared', 'success'); } }
+
+    function showPricingModal() { document.getElementById('priceLaborRate').value = pricing.laborRate; document.getElementById('pricePaverSqft').value = pricing.paverSqft; document.getElementById('priceBaseTon').value = pricing.baseTon; document.getElementById('priceSandYard').value = pricing.sandYard; document.getElementById('priceWallBlock').value = pricing.wallBlock; document.getElementById('priceFlagstone').value = pricing.flagstone; document.getElementById('priceSodSqft').value = pricing.sodSqft; document.getElementById('priceFirebrick').value = pricing.firebrick; document.getElementById('pricingModal').classList.add('visible'); }
+    function closePricingModal() { document.getElementById('pricingModal').classList.remove('visible'); }
+    function savePricing() { pricing.laborRate = parseFloat(document.getElementById('priceLaborRate').value) || 65; pricing.paverSqft = parseFloat(document.getElementById('pricePaverSqft').value) || 4.5; pricing.baseTon = parseFloat(document.getElementById('priceBaseTon').value) || 45; pricing.sandYard = parseFloat(document.getElementById('priceSandYard').value) || 35; pricing.wallBlock = parseFloat(document.getElementById('priceWallBlock').value) || 5.5; pricing.flagstone = parseFloat(document.getElementById('priceFlagstone').value) || 8; pricing.sodSqft = parseFloat(document.getElementById('priceSodSqft').value) || 0.65; pricing.firebrick = parseFloat(document.getElementById('priceFirebrick').value) || 3; savePricingToStorage(); closePricingModal(); showToast('Pricing saved', 'success'); }
+
+    function showMarginModal() { document.getElementById('marginPercent').value = pricing.margin; document.getElementById('marginModal').classList.add('visible'); }
+    function closeMarginModal() { document.getElementById('marginModal').classList.remove('visible'); }
+    function saveMargin() { pricing.margin = parseFloat(document.getElementById('marginPercent').value) || 25; document.getElementById('marginDisplay').textContent = `${pricing.margin}% markup on materials`; savePricingToStorage(); closeMarginModal(); showToast('Margin saved', 'success'); }
+
+    function importData() { document.getElementById('importModal').classList.add('visible'); }
+    function closeImportModal() { document.getElementById('importModal').classList.remove('visible'); document.getElementById('importFile').value = ''; document.getElementById('importPaste').value = ''; }
+    function processImport() {
+      const file = document.getElementById('importFile').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => { try { const data = JSON.parse(e.target.result); if (Array.isArray(data)) { data.forEach(d => { d.id = Date.now().toString() + Math.random().toString(36).substr(2, 9); d.isDemo = false; saveEstimate(d); }); showToast(`Imported ${data.length} estimates`, 'success'); } } catch (err) { showToast('Invalid file format', 'error'); } closeImportModal(); };
+        reader.readAsText(file);
+      } else { closeImportModal(); showToast('No file selected', 'error'); }
+    }
+    function exportData() { const blob = new Blob([JSON.stringify(estimates, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `genesis-estimates-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); showToast('Backup downloaded', 'success'); }
+
+    document.addEventListener('DOMContentLoaded', async () => { await initDB(); loadFromLS(); document.getElementById('marginDisplay').textContent = `${pricing.margin}% markup on materials`; });
+  </script>
+</body>
+</html>
