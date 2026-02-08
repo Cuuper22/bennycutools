@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Paschal Detailing | Quote Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700&family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-elevated: #222222;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --accent-teal: #00c9a7;
+            --accent-teal-dark: #00a388;
+            --accent-teal-glow: rgba(0, 201, 167, 0.2);
+            --border-color: #2a2a2a;
+            --success: #00c9a7;
+            --warning: #f5a623;
+            --danger: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Security: Prevent selection on structural elements */
+        .app-container, .header, .tab-bar, .section-title, .vehicle-option, .condition-option, .service-tier, .addon-option, .quote-summary, .btn, .modal, .tab-btn, .toast {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Allow selection on inputs and textareas */
+        input, textarea, .form-input {
+            user-select: auto;
+            -webkit-user-select: auto;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+        }
+
+        /* Header */
+        .header {
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-teal-dark));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--bg-primary);
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-name {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-tagline {
+            font-size: 11px;
+            color: var(--accent-teal);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .header-action {
+            width: 44px;
+            height: 44px;
+            background: var(--bg-card);
+            border: none;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-action:active {
+            transform: scale(0.95);
+            background: var(--bg-elevated);
+        }
+
+        .header-action svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        /* Vehicle Type Grid */
+        .vehicle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .vehicle-option {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vehicle-option:active {
+            transform: scale(0.97);
+        }
+
+        .vehicle-option.selected {
+            border-color: var(--accent-teal);
+            background: var(--accent-teal-glow);
+        }
+
+        .vehicle-option svg {
+            width: 36px;
+            height: 36px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 1.5;
+            transition: stroke 0.2s;
+        }
+
+        .vehicle-option.selected svg {
+            stroke: var(--accent-teal);
+        }
+
+        .vehicle-option span {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .vehicle-option.selected span {
+            color: var(--accent-teal);
+        }
+
+        /* Condition Selector */
+        .condition-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .condition-option {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .condition-option:active {
+            transform: scale(0.98);
+        }
+
+        .condition-option.selected {
+            border-color: var(--accent-teal);
+            background: var(--accent-teal-glow);
+        }
+
+        .condition-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .condition-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .condition-icon.green { background: rgba(0, 201, 167, 0.15); color: var(--accent-teal); }
+        .condition-icon.yellow { background: rgba(245, 166, 35, 0.15); color: var(--warning); }
+        .condition-icon.orange { background: rgba(230, 126, 34, 0.15); color: #e67e22; }
+        .condition-icon.red { background: rgba(231, 76, 60, 0.15); color: var(--danger); }
+
+        .condition-text {
+            flex: 1;
+        }
+
+        .condition-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .condition-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .condition-multiplier {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-teal);
+            background: var(--accent-teal-glow);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Service Tiers */
+        .service-tiers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .service-tier {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .service-tier:active {
+            transform: scale(0.98);
+        }
+
+        .service-tier.selected {
+            border-color: var(--accent-teal);
+            background: var(--accent-teal-glow);
+        }
+
+        .service-tier-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .service-tier-name {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 17px;
+            color: var(--text-primary);
+        }
+
+        .service-tier-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        .service-tier-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .service-tier-badge {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 10px;
+        }
+
+        .badge-popular {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+        }
+
+        .badge-premium {
+            background: linear-gradient(135deg, #f5a623, #e67e22);
+            color: var(--bg-primary);
+        }
+
+        /* Add-ons */
+        .addons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .addon-option {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .addon-option:active {
+            transform: scale(0.97);
+        }
+
+        .addon-option.selected {
+            border-color: var(--accent-teal);
+            background: var(--accent-teal-glow);
+        }
+
+        .addon-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .addon-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .addon-icon svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .addon-option.selected .addon-icon {
+            background: var(--accent-teal);
+        }
+
+        .addon-option.selected .addon-icon svg {
+            stroke: var(--bg-primary);
+        }
+
+        .addon-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .addon-price {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        /* Quote Summary Card */
+        .quote-summary {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .quote-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .quote-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .quote-total {
+            font-family: 'Manrope', sans-serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-teal);
+            line-height: 1;
+        }
+
+        .quote-estimate {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .quote-breakdown {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .breakdown-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .breakdown-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .breakdown-item.total {
+            border-top: 1px solid var(--border-color);
+            margin-top: 8px;
+            padding-top: 16px;
+        }
+
+        .breakdown-item.total .breakdown-label,
+        .breakdown-item.total .breakdown-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 16px 24px;
+            border-radius: 14px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 52px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .btn-primary {
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-teal-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-teal);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        /* History Tab */
+        .history-empty {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .history-empty-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .history-empty-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .history-empty h3 {
+            font-family: 'Manrope', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .history-empty p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .quote-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 12px;
+        }
+
+        .quote-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .quote-card-vehicle {
+            font-family: 'Manrope', sans-serif;
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        .quote-card-date {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .quote-card-price {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        .quote-card-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .quote-card-tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 10px;
+            background: var(--bg-elevated);
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        .quote-card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .quote-card-actions .btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 13px;
+            min-height: 44px;
+        }
+
+        /* Photos Tab */
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .photo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .photo-placeholder {
+            aspect-ratio: 1;
+            background: var(--bg-elevated);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+
+        .photo-placeholder svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 1.5;
+        }
+
+        .photo-placeholder span {
+            font-size: 12px;
+        }
+
+        .photo-info {
+            padding: 12px;
+        }
+
+        .photo-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .photo-date {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .add-photo-btn {
+            aspect-ratio: 1;
+            background: var(--bg-card);
+            border: 2px dashed var(--border-color);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-photo-btn:hover {
+            border-color: var(--accent-teal);
+        }
+
+        .add-photo-btn svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--accent-teal);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .add-photo-btn span {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent-teal);
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, var(--accent-teal-glow), transparent);
+            border: 1px solid var(--accent-teal);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .demo-banner svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--accent-teal);
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        .demo-banner-text {
+            flex: 1;
+        }
+
+        .demo-banner-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-teal);
+        }
+
+        .demo-banner-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .demo-load-btn {
+            padding: 8px 14px;
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Bottom Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 0;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .tab-bar-inner {
+            display: flex;
+            gap: 8px;
+            max-width: 500px;
+            width: 100%;
+            padding: 0 16px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s;
+            min-height: 60px;
+        }
+
+        .tab-btn:active {
+            background: var(--bg-card);
+        }
+
+        .tab-btn svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--text-muted);
+            fill: none;
+            stroke-width: 2;
+            transition: stroke 0.2s;
+        }
+
+        .tab-btn span {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active svg {
+            stroke: var(--accent-teal);
+        }
+
+        .tab-btn.active span {
+            color: var(--accent-teal);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 200;
+            max-width: calc(100% - 40px);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-teal);
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 300;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal {
+            transform: translateY(0);
+        }
+
+        .modal-handle {
+            width: 40px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-title {
+            font-family: 'Manrope', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .share-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .share-option:active {
+            transform: scale(0.98);
+            background: var(--bg-elevated);
+        }
+
+        .share-option-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .share-option-icon svg {
+            width: 24px;
+            height: 24px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .share-option-icon.sms { background: #34c759; }
+        .share-option-icon.email { background: #007aff; }
+        .share-option-icon.copy { background: #8e8e93; }
+
+        .share-option-text {
+            flex: 1;
+        }
+
+        .share-option-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .share-option-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* Savings Banner */
+        .savings-banner {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #2a3a5a;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .savings-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-teal);
+            color: var(--bg-primary);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .savings-badge svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .savings-title {
+            font-family: 'Manrope', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .savings-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Input Fields */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent-teal);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--accent-teal);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .step-dot.completed {
+            background: var(--accent-teal);
+        }
+
+        /* Progress Bar for Quote */
+        .quote-progress {
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .quote-progress-bar {
+            height: 100%;
+            background: var(--accent-teal);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-4c-.4-.6-1-.9-1.7-.9H7.6c-.7 0-1.3.4-1.7.9L3.3 10l-2.5 1.1C.3 11.3 0 11.8 0 12.3V16c0 .6.4 1 1 1h2"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">Paschal Detailing</span>
+                    <span class="brand-tagline">More Than Cleaned  -  Redeemed</span>
+                </div>
+            </div>
+            <button class="header-action" onclick="callBusiness()">
+                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Calculator Tab -->
+            <div id="tab-calculator" class="tab-content active">
+                <!-- Progress -->
+                <div class="quote-progress">
+                    <div class="quote-progress-bar" id="progressBar" style="width: 25%"></div>
+                </div>
+
+                <!-- Step 1: Vehicle Type -->
+                <section class="section" id="step-vehicle">
+                    <h2 class="section-title">Select Vehicle Type</h2>
+                    <div class="vehicle-grid">
+                        <div class="vehicle-option" data-type="sedan" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M8 28h32M12 28v-6l4-8h16l4 8v6M12 22h24M8 32a4 4 0 1 0 8 0M32 32a4 4 0 1 0 8 0"/></svg>
+                            <span>Sedan</span>
+                        </div>
+                        <div class="vehicle-option" data-type="suv" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M6 30h36M10 30v-10l6-8h16l6 8v10M10 20h28M6 34a4 4 0 1 0 8 0M34 34a4 4 0 1 0 8 0M16 12v8M32 12v8"/></svg>
+                            <span>SUV</span>
+                        </div>
+                        <div class="vehicle-option" data-type="truck" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M4 28h28V16H8l-4 6v6zM32 28h12v-8l-4-4h-8v12zM4 32a4 4 0 1 0 8 0M32 32a4 4 0 1 0 8 0"/></svg>
+                            <span>Truck</span>
+                        </div>
+                        <div class="vehicle-option" data-type="van" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M4 30h40V14c0-2-2-4-4-4H8c-2 0-4 2-4 4v16zM4 34a4 4 0 1 0 8 0M36 34a4 4 0 1 0 8 0M16 10v10M28 10v10"/></svg>
+                            <span>Van</span>
+                        </div>
+                        <div class="vehicle-option" data-type="sports" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M6 28h36M10 28v-4l6-10h16l6 10v4M10 24h28M6 32a4 4 0 1 0 8 0M34 32a4 4 0 1 0 8 0"/></svg>
+                            <span>Sports Car</span>
+                        </div>
+                        <div class="vehicle-option" data-type="luxury" onclick="selectVehicle(this)">
+                            <svg viewBox="0 0 48 48"><path d="M6 28h36M10 28v-6l5-8h18l5 8v6M10 22h28M6 32a4 4 0 1 0 8 0M34 32a4 4 0 1 0 8 0"/><path d="M20 14h8M18 22v-4h12v4"/></svg>
+                            <span>Luxury</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 2: Condition -->
+                <section class="section" id="step-condition">
+                    <h2 class="section-title">Vehicle Condition</h2>
+                    <div class="condition-options">
+                        <div class="condition-option" data-condition="maintained" data-multiplier="1.0" onclick="selectCondition(this)">
+                            <div class="condition-icon green">
+                                <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </div>
+                            <div class="condition-text">
+                                <div class="condition-name">Well Maintained</div>
+                                <div class="condition-desc">Regular cleaning, minimal dirt</div>
+                            </div>
+                            <span class="condition-multiplier">1x</span>
+                        </div>
+                        <div class="condition-option" data-condition="attention" data-multiplier="1.2" onclick="selectCondition(this)">
+                            <div class="condition-icon yellow">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="condition-text">
+                                <div class="condition-name">Needs Attention</div>
+                                <div class="condition-desc">Some buildup, light stains</div>
+                            </div>
+                            <span class="condition-multiplier">1.2x</span>
+                        </div>
+                        <div class="condition-option" data-condition="neglected" data-multiplier="1.5" onclick="selectCondition(this)">
+                            <div class="condition-icon orange">
+                                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                            <div class="condition-text">
+                                <div class="condition-name">Neglected</div>
+                                <div class="condition-desc">Heavy dirt, stubborn stains</div>
+                            </div>
+                            <span class="condition-multiplier">1.5x</span>
+                        </div>
+                        <div class="condition-option" data-condition="severe" data-multiplier="2.0" onclick="selectCondition(this)">
+                            <div class="condition-icon red">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            </div>
+                            <div class="condition-text">
+                                <div class="condition-name">Severe</div>
+                                <div class="condition-desc">Deep cleaning required</div>
+                            </div>
+                            <span class="condition-multiplier">2x</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 3: Service Tier -->
+                <section class="section" id="step-service">
+                    <h2 class="section-title">Select Service</h2>
+                    <div class="service-tiers">
+                        <div class="service-tier" data-service="interior" onclick="selectService(this)">
+                            <div class="service-tier-header">
+                                <span class="service-tier-name">Interior Only</span>
+                                <span class="service-tier-price" id="price-interior">$120</span>
+                            </div>
+                            <p class="service-tier-desc">Deep vacuum, dashboard, console, door panels, windows, fabric/leather cleaning</p>
+                        </div>
+                        <div class="service-tier" data-service="exterior" onclick="selectService(this)">
+                            <div class="service-tier-header">
+                                <span class="service-tier-name">Exterior Only</span>
+                                <span class="service-tier-price" id="price-exterior">$100</span>
+                            </div>
+                            <p class="service-tier-desc">Hand wash, clay bar, tire shine, glass cleaning, spray wax protection</p>
+                        </div>
+                        <div class="service-tier" data-service="full" onclick="selectService(this)">
+                            <div class="service-tier-header">
+                                <span class="service-tier-name">Full Detail</span>
+                                <span class="service-tier-price" id="price-full">$200</span>
+                            </div>
+                            <p class="service-tier-desc">Complete interior and exterior transformation with premium products</p>
+                            <span class="service-tier-badge badge-popular">Most Popular</span>
+                        </div>
+                        <div class="service-tier" data-service="correction" onclick="selectService(this)">
+                            <div class="service-tier-header">
+                                <span class="service-tier-name">Paint Correction</span>
+                                <span class="service-tier-price" id="price-correction">$400</span>
+                            </div>
+                            <p class="service-tier-desc">Remove swirl marks, scratches, oxidation. Restore factory finish.</p>
+                        </div>
+                        <div class="service-tier" data-service="ceramic" onclick="selectService(this)">
+                            <div class="service-tier-header">
+                                <span class="service-tier-name">Ceramic Coating</span>
+                                <span class="service-tier-price" id="price-ceramic">$800</span>
+                            </div>
+                            <p class="service-tier-desc">Paint correction + 3-year ceramic protection. Ultimate shine and protection.</p>
+                            <span class="service-tier-badge badge-premium">Premium</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Step 4: Add-ons -->
+                <section class="section" id="step-addons">
+                    <h2 class="section-title">Add-Ons (Optional)</h2>
+                    <div class="addons-grid">
+                        <div class="addon-option" data-addon="engine" data-price="75" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 6V4M18 6V4M6 18v2M18 18v2M10 10h4M12 8v4"/></svg>
+                                </div>
+                                <span class="addon-name">Engine Bay</span>
+                            </div>
+                            <span class="addon-price">+$75</span>
+                        </div>
+                        <div class="addon-option" data-addon="headlights" data-price="60" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                                </div>
+                                <span class="addon-name">Headlight Restore</span>
+                            </div>
+                            <span class="addon-price">+$60</span>
+                        </div>
+                        <div class="addon-option" data-addon="leather" data-price="50" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                </div>
+                                <span class="addon-name">Leather Care</span>
+                            </div>
+                            <span class="addon-price">+$50</span>
+                        </div>
+                        <div class="addon-option" data-addon="pethair" data-price="45" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M12 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM5.5 8c.83 0 1.5-.67 1.5-1.5S6.33 5 5.5 5 4 5.67 4 6.5 4.67 8 5.5 8zM18.5 8c.83 0 1.5-.67 1.5-1.5S19.33 5 18.5 5 17 5.67 17 6.5 17.67 8 18.5 8zM8 11c.83 0 1.5-.67 1.5-1.5S8.83 8 8 8s-1.5.67-1.5 1.5S7.17 11 8 11zM16 11c.83 0 1.5-.67 1.5-1.5S16.83 8 16 8s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM12 18c2.21 0 4-1.79 4-4h-8c0 2.21 1.79 4 4 4z"/></svg>
+                                </div>
+                                <span class="addon-name">Pet Hair Removal</span>
+                            </div>
+                            <span class="addon-price">+$45</span>
+                        </div>
+                        <div class="addon-option" data-addon="odor" data-price="65" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                </div>
+                                <span class="addon-name">Odor Elimination</span>
+                            </div>
+                            <span class="addon-price">+$65</span>
+                        </div>
+                        <div class="addon-option" data-addon="wheels" data-price="40" onclick="toggleAddon(this)">
+                            <div class="addon-header">
+                                <div class="addon-icon">
+                                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+                                </div>
+                                <span class="addon-name">Wheel Detail</span>
+                            </div>
+                            <span class="addon-price">+$40</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quote Summary -->
+                <section class="section" id="quote-summary-section">
+                    <div class="quote-summary">
+                        <div class="quote-header">
+                            <div class="quote-label">Your Estimate</div>
+                            <div class="quote-total" id="totalPrice">$0</div>
+                            <div class="quote-estimate" id="timeEstimate">Select options above</div>
+                        </div>
+                        <div class="quote-breakdown" id="quoteBreakdown">
+                            <!-- Dynamic content -->
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="saveQuote()">
+                            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            Save Quote
+                        </button>
+                        <div class="btn-row">
+                            <button class="btn btn-secondary" onclick="shareQuote()">
+                                <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                                Share
+                            </button>
+                            <a href="tel:5619138999" class="btn btn-secondary">
+                                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                Call Now
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="savings-banner">
+                        <div class="savings-badge">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            No Monthly Fees
+                        </div>
+                        <div class="savings-title">Powered by Paschal Detailing</div>
+                        <div class="savings-desc">Premium mobile detailing. No subscription software costs passed to you.</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- History Tab -->
+            <div id="tab-history" class="tab-content">
+                <div class="demo-banner" id="demoBanner">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <div class="demo-banner-text">
+                        <div class="demo-banner-title">Demo Mode</div>
+                        <div class="demo-banner-desc">Load sample quotes from Palm Beach clients</div>
+                    </div>
+                    <button class="demo-load-btn" onclick="loadDemoData()">Load</button>
+                </div>
+                
+                <h2 class="section-title">Saved Quotes</h2>
+                <div id="historyList">
+                    <div class="history-empty">
+                        <div class="history-empty-icon">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        </div>
+                        <h3>No Quotes Yet</h3>
+                        <p>Create your first quote to see it here</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photos Tab -->
+            <div id="tab-photos" class="tab-content">
+                <h2 class="section-title">Before & After Photos</h2>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Document your vehicle's transformation</p>
+                
+                <div class="photos-grid" id="photosGrid">
+                    <div class="add-photo-btn" onclick="showToast('Photo capture coming soon!')">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>Add Photo</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h2 class="section-title">Recent Work</h2>
+                    <div class="photos-grid">
+                        <div class="photo-card">
+                            <div class="photo-placeholder">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                <span>Before</span>
+                            </div>
+                            <div class="photo-info">
+                                <div class="photo-label">2024 Tesla Model Y</div>
+                                <div class="photo-date">Full Detail - Wellington</div>
+                            </div>
+                        </div>
+                        <div class="photo-card">
+                            <div class="photo-placeholder" style="background: var(--accent-teal-glow);">
+                                <svg viewBox="0 0 24 24" style="stroke: var(--accent-teal);"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span style="color: var(--accent-teal);">After</span>
+                            </div>
+                            <div class="photo-info">
+                                <div class="photo-label">2024 Tesla Model Y</div>
+                                <div class="photo-date">Transformation Complete</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Tab Bar -->
+        <nav class="tab-bar">
+            <div class="tab-bar-inner">
+                <button class="tab-btn active" onclick="switchTab('calculator')">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="14" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="14" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg>
+                    <span>Quote</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('history')">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>History</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('photos')">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span>Photos</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Toast -->
+        <div class="toast" id="toast">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span class="toast-message" id="toastMessage">Quote saved!</span>
+        </div>
+
+        <!-- Share Modal -->
+        <div class="modal-overlay" id="shareModal" onclick="closeShareModal(event)">
+            <div class="modal" onclick="event.stopPropagation()">
+                <div class="modal-handle"></div>
+                <h3 class="modal-title">Share Quote</h3>
+                <div class="share-options">
+                    <div class="share-option" onclick="shareVia('sms')">
+                        <div class="share-option-icon sms">
+                            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <div class="share-option-text">
+                            <div class="share-option-name">Text Message</div>
+                            <div class="share-option-desc">Send quote details via SMS</div>
+                        </div>
+                    </div>
+                    <div class="share-option" onclick="shareVia('email')">
+                        <div class="share-option-icon email">
+                            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </div>
+                        <div class="share-option-text">
+                            <div class="share-option-name">Email</div>
+                            <div class="share-option-desc">Send a detailed quote email</div>
+                        </div>
+                    </div>
+                    <div class="share-option" onclick="shareVia('copy')">
+                        <div class="share-option-icon copy">
+                            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </div>
+                        <div class="share-option-text">
+                            <div class="share-option-name">Copy to Clipboard</div>
+                            <div class="share-option-desc">Copy quote text to paste anywhere</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Security: Access Key Validation
+        function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+        const _V=786353859;
+        const _k=new URLSearchParams(window.location.search).get('key');
+        if(!_k||_h(_k)!==_V){
+          document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+          throw new Error('Invalid key');
+        }
+
+        // Security: Disable Right-Click
+        document.addEventListener('contextmenu',e=>e.preventDefault());
+
+        // Security: Block Dev Tools Shortcuts
+        document.addEventListener('keydown',function(e){
+          if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&e.key==='I')||(e.ctrlKey&&e.key==='u')){
+            e.preventDefault();
+          }
+        });
+
+        // IndexedDB Setup
+        let db;
+        const DB_NAME = 'PaschalDetailingDB';
+        const DB_VERSION = 1;
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains('quotes')) {
+                        const store = database.createObjectStore('quotes', { keyPath: 'id', autoIncrement: true });
+                        store.createIndex('date', 'date', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Pricing Data
+        const basePrices = {
+            sedan: { interior: 120, exterior: 100, full: 200, correction: 400, ceramic: 800 },
+            suv: { interior: 150, exterior: 130, full: 260, correction: 500, ceramic: 950 },
+            truck: { interior: 140, exterior: 120, full: 240, correction: 450, ceramic: 900 },
+            van: { interior: 180, exterior: 160, full: 320, correction: 550, ceramic: 1000 },
+            sports: { interior: 130, exterior: 110, full: 220, correction: 450, ceramic: 900 },
+            luxury: { interior: 160, exterior: 140, full: 280, correction: 550, ceramic: 1100 }
+        };
+
+        const timeEstimates = {
+            interior: { base: 2, severe: 3.5 },
+            exterior: { base: 1.5, severe: 2.5 },
+            full: { base: 3.5, severe: 5 },
+            correction: { base: 5, severe: 8 },
+            ceramic: { base: 8, severe: 12 }
+        };
+
+        const vehicleNames = {
+            sedan: 'Sedan',
+            suv: 'SUV',
+            truck: 'Truck',
+            van: 'Van',
+            sports: 'Sports Car',
+            luxury: 'Luxury'
+        };
+
+        const conditionNames = {
+            maintained: 'Well Maintained',
+            attention: 'Needs Attention',
+            neglected: 'Neglected',
+            severe: 'Severe'
+        };
+
+        const serviceNames = {
+            interior: 'Interior Only',
+            exterior: 'Exterior Only',
+            full: 'Full Detail',
+            correction: 'Paint Correction',
+            ceramic: 'Ceramic Coating'
+        };
+
+        const addonNames = {
+            engine: 'Engine Bay',
+            headlights: 'Headlight Restoration',
+            leather: 'Leather Conditioning',
+            pethair: 'Pet Hair Removal',
+            odor: 'Odor Elimination',
+            wheels: 'Wheel Detail'
+        };
+
+        // State
+        let state = {
+            vehicle: null,
+            condition: null,
+            conditionMultiplier: 1.0,
+            service: null,
+            addons: []
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initDB();
+            loadQuotes();
+            updatePrices();
+        });
+
+        // Vehicle Selection
+        function selectVehicle(el) {
+            document.querySelectorAll('.vehicle-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            state.vehicle = el.dataset.type;
+            updatePrices();
+            updateProgress();
+            calculateTotal();
+        }
+
+        // Condition Selection
+        function selectCondition(el) {
+            document.querySelectorAll('.condition-option').forEach(opt => opt.classList.remove('selected'));
+            el.classList.add('selected');
+            state.condition = el.dataset.condition;
+            state.conditionMultiplier = parseFloat(el.dataset.multiplier);
+            updateProgress();
+            calculateTotal();
+        }
+
+        // Service Selection
+        function selectService(el) {
+            document.querySelectorAll('.service-tier').forEach(tier => tier.classList.remove('selected'));
+            el.classList.add('selected');
+            state.service = el.dataset.service;
+            updateProgress();
+            calculateTotal();
+        }
+
+        // Add-on Toggle
+        function toggleAddon(el) {
+            el.classList.toggle('selected');
+            const addon = el.dataset.addon;
+            const price = parseInt(el.dataset.price);
+            
+            if (el.classList.contains('selected')) {
+                state.addons.push({ name: addon, price: price });
+            } else {
+                state.addons = state.addons.filter(a => a.name !== addon);
+            }
+            
+            calculateTotal();
+        }
+
+        // Update Prices Display
+        function updatePrices() {
+            if (!state.vehicle) return;
+            
+            const prices = basePrices[state.vehicle];
+            document.getElementById('price-interior').textContent = `$${prices.interior}`;
+            document.getElementById('price-exterior').textContent = `$${prices.exterior}`;
+            document.getElementById('price-full').textContent = `$${prices.full}`;
+            document.getElementById('price-correction').textContent = `$${prices.correction}`;
+            document.getElementById('price-ceramic').textContent = `$${prices.ceramic}`;
+        }
+
+        // Update Progress Bar
+        function updateProgress() {
+            let progress = 25;
+            if (state.vehicle) progress = 40;
+            if (state.condition) progress = 60;
+            if (state.service) progress = 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        // Calculate Total
+        function calculateTotal() {
+            let breakdown = [];
+            let total = 0;
+            let timeHours = 0;
+
+            if (state.vehicle && state.service) {
+                const basePrice = basePrices[state.vehicle][state.service];
+                const adjustedPrice = Math.round(basePrice * state.conditionMultiplier);
+                total += adjustedPrice;
+                
+                breakdown.push({
+                    label: `${serviceNames[state.service]} (${vehicleNames[state.vehicle]})`,
+                    value: adjustedPrice
+                });
+
+                if (state.conditionMultiplier > 1.0) {
+                    breakdown.push({
+                        label: `Condition: ${conditionNames[state.condition]}`,
+                        value: `${state.conditionMultiplier}x`
+                    });
+                }
+
+                // Time estimate
+                const timeData = timeEstimates[state.service];
+                timeHours = state.conditionMultiplier >= 2.0 ? timeData.severe : timeData.base;
+            }
+
+            // Add-ons
+            state.addons.forEach(addon => {
+                total += addon.price;
+                breakdown.push({
+                    label: addonNames[addon.name],
+                    value: addon.price
+                });
+            });
+
+            // Update UI
+            document.getElementById('totalPrice').textContent = `$${total}`;
+            
+            if (total > 0 && timeHours > 0) {
+                document.getElementById('timeEstimate').textContent = `Estimated time: ${timeHours}-${timeHours + 1} hours`;
+            } else {
+                document.getElementById('timeEstimate').textContent = 'Select options above';
+            }
+
+            // Update breakdown
+            const breakdownEl = document.getElementById('quoteBreakdown');
+            breakdownEl.innerHTML = breakdown.map(item => `
+                <div class="breakdown-item">
+                    <span class="breakdown-label">${item.label}</span>
+                    <span class="breakdown-value">${typeof item.value === 'number' ? '$' + item.value : item.value}</span>
+                </div>
+            `).join('') + `
+                <div class="breakdown-item total">
+                    <span class="breakdown-label">Total</span>
+                    <span class="breakdown-value">$${total}</span>
+                </div>
+            `;
+        }
+
+        // Save Quote
+        async function saveQuote() {
+            if (!state.vehicle || !state.service) {
+                showToast('Please select vehicle and service first');
+                return;
+            }
+
+            const quote = {
+                vehicle: state.vehicle,
+                condition: state.condition,
+                conditionMultiplier: state.conditionMultiplier,
+                service: state.service,
+                addons: [...state.addons],
+                total: calculateQuoteTotal(),
+                date: new Date().toISOString()
+            };
+
+            try {
+                const transaction = db.transaction(['quotes'], 'readwrite');
+                const store = transaction.objectStore('quotes');
+                await new Promise((resolve, reject) => {
+                    const request = store.add(quote);
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+                
+                showToast('Quote saved successfully!');
+                loadQuotes();
+            } catch (error) {
+                console.error('Error saving quote:', error);
+                showToast('Error saving quote');
+            }
+        }
+
+        function calculateQuoteTotal() {
+            let total = 0;
+            if (state.vehicle && state.service) {
+                const basePrice = basePrices[state.vehicle][state.service];
+                total = Math.round(basePrice * state.conditionMultiplier);
+            }
+            state.addons.forEach(addon => total += addon.price);
+            return total;
+        }
+
+        // Load Quotes
+        async function loadQuotes() {
+            try {
+                const transaction = db.transaction(['quotes'], 'readonly');
+                const store = transaction.objectStore('quotes');
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    const quotes = request.result.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    renderQuotes(quotes);
+                };
+            } catch (error) {
+                console.error('Error loading quotes:', error);
+            }
+        }
+
+        // Render Quotes
+        function renderQuotes(quotes) {
+            const listEl = document.getElementById('historyList');
+            
+            if (quotes.length === 0) {
+                listEl.innerHTML = `
+                    <div class="history-empty">
+                        <div class="history-empty-icon">
+                            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        </div>
+                        <h3>No Quotes Yet</h3>
+                        <p>Create your first quote to see it here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = quotes.map(quote => {
+                const date = new Date(quote.date);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const services = [serviceNames[quote.service], ...quote.addons.map(a => addonNames[a.name])];
+                
+                return `
+                    <div class="quote-card" data-id="${quote.id}">
+                        <div class="quote-card-header">
+                            <div>
+                                <div class="quote-card-vehicle">${vehicleNames[quote.vehicle]}</div>
+                                <div class="quote-card-date">${dateStr}</div>
+                            </div>
+                            <div class="quote-card-price">$${quote.total}</div>
+                        </div>
+                        <div class="quote-card-services">
+                            ${services.map(s => `<span class="quote-card-tag">${s}</span>`).join('')}
+                        </div>
+                        <div class="quote-card-actions">
+                            <button class="btn btn-secondary" onclick="loadQuote(${quote.id})">
+                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                Reload
+                            </button>
+                            <button class="btn btn-secondary" onclick="deleteQuote(${quote.id})">
+                                <svg viewBox="0 0 24 24" style="width:16px;height:16px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load Quote into Calculator
+        async function loadQuote(id) {
+            try {
+                const transaction = db.transaction(['quotes'], 'readonly');
+                const store = transaction.objectStore('quotes');
+                const request = store.get(id);
+                
+                request.onsuccess = () => {
+                    const quote = request.result;
+                    if (quote) {
+                        // Reset selections
+                        document.querySelectorAll('.vehicle-option, .condition-option, .service-tier, .addon-option')
+                            .forEach(el => el.classList.remove('selected'));
+                        
+                        // Apply saved selections
+                        state = {
+                            vehicle: quote.vehicle,
+                            condition: quote.condition,
+                            conditionMultiplier: quote.conditionMultiplier,
+                            service: quote.service,
+                            addons: [...quote.addons]
+                        };
+
+                        document.querySelector(`.vehicle-option[data-type="${quote.vehicle}"]`)?.classList.add('selected');
+                        document.querySelector(`.condition-option[data-condition="${quote.condition}"]`)?.classList.add('selected');
+                        document.querySelector(`.service-tier[data-service="${quote.service}"]`)?.classList.add('selected');
+                        quote.addons.forEach(addon => {
+                            document.querySelector(`.addon-option[data-addon="${addon.name}"]`)?.classList.add('selected');
+                        });
+
+                        updatePrices();
+                        updateProgress();
+                        calculateTotal();
+                        switchTab('calculator');
+                        showToast('Quote loaded');
+                    }
+                };
+            } catch (error) {
+                console.error('Error loading quote:', error);
+            }
+        }
+
+        // Delete Quote
+        async function deleteQuote(id) {
+            try {
+                const transaction = db.transaction(['quotes'], 'readwrite');
+                const store = transaction.objectStore('quotes');
+                await new Promise((resolve, reject) => {
+                    const request = store.delete(id);
+                    request.onsuccess = resolve;
+                    request.onerror = reject;
+                });
+                loadQuotes();
+                showToast('Quote deleted');
+            } catch (error) {
+                console.error('Error deleting quote:', error);
+            }
+        }
+
+        // Demo Data
+        function loadDemoData() {
+            const demoQuotes = [
+                {
+                    vehicle: 'suv',
+                    condition: 'attention',
+                    conditionMultiplier: 1.2,
+                    service: 'full',
+                    addons: [{ name: 'pethair', price: 45 }],
+                    total: 357,
+                    date: new Date(Date.now() - 86400000).toISOString() // Yesterday
+                },
+                {
+                    vehicle: 'luxury',
+                    condition: 'maintained',
+                    conditionMultiplier: 1.0,
+                    service: 'ceramic',
+                    addons: [{ name: 'headlights', price: 60 }, { name: 'leather', price: 50 }],
+                    total: 1210,
+                    date: new Date(Date.now() - 172800000).toISOString() // 2 days ago
+                },
+                {
+                    vehicle: 'truck',
+                    condition: 'neglected',
+                    conditionMultiplier: 1.5,
+                    service: 'interior',
+                    addons: [{ name: 'odor', price: 65 }],
+                    total: 275,
+                    date: new Date(Date.now() - 259200000).toISOString() // 3 days ago
+                },
+                {
+                    vehicle: 'sedan',
+                    condition: 'maintained',
+                    conditionMultiplier: 1.0,
+                    service: 'exterior',
+                    addons: [{ name: 'wheels', price: 40 }],
+                    total: 140,
+                    date: new Date(Date.now() - 432000000).toISOString() // 5 days ago
+                },
+                {
+                    vehicle: 'sports',
+                    condition: 'attention',
+                    conditionMultiplier: 1.2,
+                    service: 'correction',
+                    addons: [],
+                    total: 540,
+                    date: new Date(Date.now() - 604800000).toISOString() // 1 week ago
+                }
+            ];
+
+            const transaction = db.transaction(['quotes'], 'readwrite');
+            const store = transaction.objectStore('quotes');
+            
+            demoQuotes.forEach(quote => store.add(quote));
+            
+            transaction.oncomplete = () => {
+                loadQuotes();
+                document.getElementById('demoBanner').style.display = 'none';
+                showToast('Demo quotes loaded!');
+            };
+        }
+
+        // Share Quote
+        function shareQuote() {
+            if (!state.vehicle || !state.service) {
+                showToast('Please create a quote first');
+                return;
+            }
+            document.getElementById('shareModal').classList.add('show');
+        }
+
+        function closeShareModal(event) {
+            if (event.target.id === 'shareModal') {
+                document.getElementById('shareModal').classList.remove('show');
+            }
+        }
+
+        function shareVia(method) {
+            const total = calculateQuoteTotal();
+            const services = [serviceNames[state.service], ...state.addons.map(a => addonNames[a.name])];
+            
+            const message = `Paschal Detailing Quote\n\nVehicle: ${vehicleNames[state.vehicle]}\nCondition: ${conditionNames[state.condition] || 'Standard'}\nServices: ${services.join(', ')}\n\nTotal: $${total}\n\nCall to book: 561-913-8999\npaschaldetailing.com`;
+
+            switch (method) {
+                case 'sms':
+                    window.location.href = `sms:?body=${encodeURIComponent(message)}`;
+                    break;
+                case 'email':
+                    window.location.href = `mailto:?subject=${encodeURIComponent('Paschal Detailing Quote')}&body=${encodeURIComponent(message)}`;
+                    break;
+                case 'copy':
+                    navigator.clipboard.writeText(message).then(() => {
+                        showToast('Quote copied to clipboard!');
+                    }).catch(() => {
+                        showToast('Could not copy');
+                    });
+                    break;
+            }
+
+            document.getElementById('shareModal').classList.remove('show');
+        }
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`).classList.add('active');
+        }
+
+        // Toast
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Call Business
+        function callBusiness() {
+            window.location.href = 'tel:5619138999';
+        }
+    </script>
+</body>
+</html>
