@@ -1,0 +1,2413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spa Service Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Condensed:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: oklch(0.65 0.12 200);
+      --primary-dark: oklch(0.55 0.14 200);
+      --primary-light: oklch(0.85 0.06 200);
+      --sand: oklch(0.92 0.03 85);
+      --sand-dark: oklch(0.75 0.05 75);
+      --white: #ffffff;
+      --gray-50: oklch(0.98 0 0);
+      --gray-100: oklch(0.96 0 0);
+      --gray-200: oklch(0.92 0 0);
+      --gray-300: oklch(0.86 0 0);
+      --gray-400: oklch(0.70 0 0);
+      --gray-500: oklch(0.55 0 0);
+      --gray-600: oklch(0.45 0 0);
+      --gray-700: oklch(0.35 0 0);
+      --gray-800: oklch(0.25 0 0);
+      --gray-900: oklch(0.15 0 0);
+      --success: oklch(0.65 0.15 145);
+      --warning: oklch(0.75 0.15 85);
+      --danger: oklch(0.60 0.20 25);
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-heading: 'Roboto Condensed', system-ui, sans-serif;
+      --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.08), 0 2px 4px -2px oklch(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.08), 0 4px 6px -4px oklch(0 0 0 / 0.05);
+      --shadow-xl: 0 20px 25px -5px oklch(0 0 0 / 0.1), 0 8px 10px -6px oklch(0 0 0 / 0.05);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 140px !important;
+    }
+
+    /* Auth Screen */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .auth-box {
+      background: var(--white);
+      padding: 48px 32px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+      max-width: 360px;
+      width: 90%;
+    }
+
+    .auth-box h1 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 0 0 8px;
+    }
+
+    .auth-box p {
+      color: var(--gray-500);
+      margin: 0 0 24px;
+      font-size: 14px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .auth-btn:hover { background: var(--primary-dark); }
+    .auth-btn:active { transform: scale(0.97); }
+    .auth-btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+
+    .auth-error {
+      color: var(--danger);
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* Main App */
+    #app {
+      display: none;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .app-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .app-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      animation: fadeSlideIn 0.3s ease-out;
+    }
+
+    .tab-content.active { display: block; }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tab-content, .card, .toast { animation: none; }
+      .btn, .card { transition: none; }
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0 12px;
+      z-index: 100;
+      box-shadow: 0 -4px 12px oklch(0 0 0 / 0.05);
+    }
+
+    .nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+      border-radius: var(--radius-sm);
+      min-width: 64px;
+    }
+
+    .nav-btn:hover { color: var(--gray-700); }
+    .nav-btn.active { color: var(--primary); }
+    .nav-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .nav-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 1.75;
+    }
+
+    .nav-btn.locked {
+      opacity: 0.5;
+      position: relative;
+    }
+
+    .nav-btn.locked::after {
+      content: 'FULL';
+      position: absolute;
+      top: 2px;
+      right: 8px;
+      background: var(--warning);
+      color: var(--gray-800);
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--gray-100);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary-light);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-dark);
+    }
+
+    .card-icon svg { width: 20px; height: 20px; stroke-width: 2; }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    .card-subtitle {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin: 0;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s, background 0.15s;
+      min-height: 48px;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+
+    .btn svg { width: 18px; height: 18px; stroke-width: 2; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+    .btn-primary:hover { background: var(--primary-dark); box-shadow: var(--shadow-md); }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+    .btn-secondary:hover { background: var(--gray-200); }
+
+    .btn-danger {
+      background: var(--danger);
+      color: var(--white);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: var(--white);
+    }
+
+    .btn-block { width: 100%; }
+
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 13px;
+      min-height: 36px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: var(--font-body);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    /* Quote Calculator */
+    .quote-total {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .quote-total-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .quote-total-amount {
+      font-family: var(--font-heading);
+      font-size: 48px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .quote-items {
+      margin-bottom: 20px;
+    }
+
+    .quote-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      border: 1px solid var(--gray-200);
+    }
+
+    .quote-item-info {
+      flex: 1;
+    }
+
+    .quote-item-name {
+      font-weight: 500;
+      color: var(--gray-800);
+    }
+
+    .quote-item-price {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .quote-item-qty {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .qty-btn {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--gray-300);
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .qty-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+    .qty-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .qty-btn svg { width: 16px; height: 16px; stroke-width: 2.5; }
+
+    .qty-value {
+      width: 32px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .quote-category {
+      margin-bottom: 24px;
+    }
+
+    .quote-category-title {
+      font-family: var(--font-heading);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-600);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    /* Customer List */
+    .customer-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      margin-bottom: 10px;
+      border: 1px solid var(--gray-200);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .customer-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .customer-item:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    .customer-avatar {
+      width: 48px;
+      height: 48px;
+      background: var(--sand);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--sand-dark);
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .customer-info { flex: 1; min-width: 0; }
+
+    .customer-name {
+      font-weight: 600;
+      color: var(--gray-900);
+      margin: 0 0 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .customer-address {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .customer-spa {
+      font-size: 12px;
+      color: var(--primary-dark);
+      font-weight: 500;
+    }
+
+    .customer-arrow { color: var(--gray-400); }
+    .customer-arrow svg { width: 20px; height: 20px; }
+
+    /* Customer Detail */
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .back-btn:hover { background: var(--gray-200); }
+    .back-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .back-btn svg { width: 20px; height: 20px; stroke-width: 2; }
+
+    .detail-title {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    .spa-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    .spa-badge svg { width: 16px; height: 16px; }
+
+    .visit-card {
+      background: var(--gray-50);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .visit-date {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .visit-work {
+      font-weight: 500;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+
+    .visit-notes {
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+
+    .visit-photos {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      overflow-x: auto;
+    }
+
+    .visit-photo {
+      width: 80px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    /* Parts Inventory */
+    .parts-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .part-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--gray-200);
+    }
+
+    .part-item.low-stock {
+      border-color: var(--warning);
+      background: oklch(0.98 0.02 85);
+    }
+
+    .part-item.out-of-stock {
+      border-color: var(--danger);
+      background: oklch(0.98 0.02 25);
+    }
+
+    .part-info { flex: 1; }
+
+    .part-name {
+      font-weight: 500;
+      color: var(--gray-800);
+    }
+
+    .part-stock {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .part-stock.low { color: var(--warning); font-weight: 500; }
+    .part-stock.out { color: var(--danger); font-weight: 500; }
+
+    .part-use-btn {
+      padding: 8px 16px;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .part-use-btn:hover { background: var(--primary-dark); }
+    .part-use-btn:active { transform: scale(0.97); }
+    .part-use-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .part-use-btn:focus-visible { outline: 2px solid var(--primary-light); outline-offset: 2px; }
+
+    /* Camera Section */
+    .camera-container {
+      position: relative;
+      background: var(--gray-900);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    #camera-video, #camera-canvas {
+      width: 100%;
+      display: block;
+      border-radius: var(--radius-lg);
+    }
+
+    #camera-canvas { display: none; }
+
+    .camera-controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .camera-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s;
+    }
+
+    .camera-btn:active { transform: scale(0.95); }
+    .camera-btn:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+
+    .camera-btn-capture {
+      background: var(--white);
+      box-shadow: 0 0 0 4px var(--gray-300);
+    }
+
+    .camera-btn-capture svg { color: var(--gray-800); width: 28px; height: 28px; }
+
+    .camera-btn-secondary {
+      background: var(--gray-700);
+    }
+
+    .camera-btn-secondary svg { color: var(--white); width: 24px; height: 24px; }
+
+    .camera-placeholder {
+      aspect-ratio: 4/3;
+      background: var(--gray-800);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+      gap: 12px;
+    }
+
+    .camera-placeholder svg { width: 48px; height: 48px; }
+
+    /* Annotation Canvas */
+    .annotation-mode {
+      background: var(--gray-100);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+
+    .annotation-tools {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .tool-btn {
+      padding: 8px 14px;
+      background: var(--white);
+      border: 2px solid var(--gray-300);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .tool-btn:hover { border-color: var(--primary); }
+    .tool-btn.active { border-color: var(--primary); background: var(--primary-light); }
+    .tool-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .tool-btn svg { width: 16px; height: 16px; }
+
+    .color-picker {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .color-dot:hover { transform: scale(1.1); }
+    .color-dot.active { border-color: var(--gray-800); box-shadow: 0 0 0 2px var(--white); }
+    .color-dot:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+    /* Search */
+    .search-container {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      font-size: 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      background: var(--white);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gray-400);
+    }
+
+    .search-icon svg { width: 20px; height: 20px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--gray-900);
+      color: var(--white);
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-xl);
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast svg { width: 18px; height: 18px; }
+
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+      animation: modalSlide 0.2s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-close:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    .modal-close svg { width: 18px; height: 18px; }
+
+    .modal-body { padding: 20px; }
+    .modal-footer { padding: 16px 20px; border-top: 1px solid var(--gray-200); display: flex; gap: 12px; }
+
+    /* Upsell Lock */
+    .locked-overlay {
+      position: relative;
+    }
+
+    .locked-content {
+      filter: blur(3px);
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .locked-badge {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--white);
+      padding: 24px 32px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+      z-index: 10;
+    }
+
+    .locked-badge h3 {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+
+    .locked-badge p {
+      color: var(--gray-600);
+      margin: 0 0 16px;
+      font-size: 14px;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 0;
+    }
+
+    /* Action Buttons Row */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .action-row .btn { flex: 1; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--gray-500);
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-family: var(--font-heading);
+      color: var(--gray-700);
+      margin: 0 0 8px;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+      margin: 0;
+    }
+
+    /* Grain texture overlay */
+    .texture-grain::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* Entrance animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-fade-up {
+      animation: fadeUp 0.4s ease-out forwards;
+    }
+
+    .delay-1 { animation-delay: 0.05s; }
+    .delay-2 { animation-delay: 0.1s; }
+    .delay-3 { animation-delay: 0.15s; }
+    .delay-4 { animation-delay: 0.2s; }
+    .delay-5 { animation-delay: 0.25s; }
+
+    /* Button press micro-interaction */
+    .btn-press {
+      transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-press:active {
+      transform: scale(0.96);
+    }
+
+    /* Quote total pulse on update */
+    @keyframes totalPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .total-updated {
+      animation: totalPulse 0.3s ease-out;
+    }
+
+    /* Card hover lift */
+    .card-lift {
+      transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+    }
+
+    .card-lift:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Anti-scrape protection */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Stagger animations */
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+
+    @keyframes cardEnter {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-enter {
+      animation: cardEnter 0.3s ease-out forwards;
+      opacity: 0;
+    }
+
+    /* Disclaimer Footer */
+    #bct-demo-disclaimer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      padding: 10px 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #666;
+      z-index: 99999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 16px;
+      text-align: center;
+    }
+
+    #bct-demo-disclaimer p {
+      margin: 0;
+      max-width: 700px;
+    }
+
+    #bct-demo-disclaimer strong { color: #333; }
+
+    .delete-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .delete-btn:hover { background: #c82333; }
+    .delete-btn:focus-visible { outline: 2px solid #dc3545; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <div class="auth-box">
+      <h1>Spa Service Pro</h1>
+      <p>Your access key unlocks this tool</p>
+      <input type="text" id="auth-key" class="auth-input" placeholder="Enter key" autocomplete="off" aria-label="Access key">
+      <button id="auth-submit" class="auth-btn">Get to Work</button>
+      <p id="auth-error" class="auth-error" role="alert">That key doesn't work. Check and try again.</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <header class="app-header">
+      <div class="header-content">
+        <div>
+          <h1 class="app-title">Spa Service Pro</h1>
+          <p class="header-subtitle">Built for hot tub repair techs</p>
+        </div>
+        <button id="add-customer-btn" class="btn btn-primary btn-sm" aria-label="Add new customer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New
+        </button>
+      </div>
+    </header>
+
+    <!-- Jobs Tab -->
+    <div id="tab-jobs" class="tab-content active">
+      <div class="section-header">
+        <h2 class="section-title">Customers</h2>
+      </div>
+      <div class="search-container">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </span>
+        <input type="search" id="customer-search" class="search-input" placeholder="Search by name or address" aria-label="Search customers">
+      </div>
+      <div id="customer-list" role="list" aria-label="Customer list"></div>
+    </div>
+
+    <!-- Customer Detail View (hidden by default) -->
+    <div id="customer-detail" class="tab-content">
+      <div class="detail-header">
+        <button id="back-to-list" class="back-btn" aria-label="Back to customer list">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h2 id="detail-name" class="detail-title">Customer Name</h2>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+
+    <!-- Quote Tab -->
+    <div id="tab-quote" class="tab-content">
+      <div class="quote-total" role="region" aria-label="Quote total">
+        <div class="quote-total-label">Quote Total</div>
+        <div id="quote-amount" class="quote-total-amount" aria-live="polite">$0</div>
+      </div>
+
+      <div class="quote-category card-enter stagger-1">
+        <div class="quote-category-title">Common Repairs</div>
+        <div id="quote-repairs" class="quote-items"></div>
+      </div>
+
+      <div class="quote-category card-enter stagger-2">
+        <div class="quote-category-title">Parts</div>
+        <div id="quote-parts" class="quote-items"></div>
+      </div>
+
+      <div class="quote-category card-enter stagger-3">
+        <div class="quote-category-title">Labor</div>
+        <div id="quote-labor" class="quote-items"></div>
+      </div>
+
+      <div class="action-row">
+        <button id="clear-quote" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Clear
+        </button>
+        <button id="share-quote" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Quote
+        </button>
+      </div>
+    </div>
+
+    <!-- Parts Tab -->
+    <div id="tab-parts" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">Van Inventory</h2>
+        <button id="add-part-btn" class="btn btn-secondary btn-sm" aria-label="Add new part">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
+        </button>
+      </div>
+      <div id="parts-list" class="parts-grid" role="list" aria-label="Parts inventory"></div>
+    </div>
+
+    <!-- Camera Tab -->
+    <div id="tab-camera" class="tab-content">
+      <div class="section-header">
+        <h2 class="section-title">Photo Documentation</h2>
+      </div>
+
+      <div id="camera-view">
+        <div class="camera-container">
+          <video id="camera-video" autoplay playsinline></video>
+          <canvas id="camera-canvas"></canvas>
+          <div id="camera-placeholder" class="camera-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Tap to start camera</span>
+          </div>
+        </div>
+
+        <div class="camera-controls">
+          <button id="camera-flip" class="camera-btn camera-btn-secondary" aria-label="Switch camera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+          </button>
+          <button id="camera-capture" class="camera-btn camera-btn-capture" aria-label="Take photo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+          </button>
+          <button id="camera-gallery" class="camera-btn camera-btn-secondary" aria-label="View captured photos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Annotation Mode -->
+      <div id="annotation-view" style="display: none;">
+        <div class="camera-container">
+          <canvas id="annotation-canvas"></canvas>
+        </div>
+
+        <div class="annotation-mode">
+          <div class="annotation-tools">
+            <button class="tool-btn active" data-tool="circle" aria-label="Circle tool" aria-pressed="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+              Circle
+            </button>
+            <button class="tool-btn" data-tool="arrow" aria-label="Arrow tool" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              Arrow
+            </button>
+            <button class="tool-btn" data-tool="text" aria-label="Text tool" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              Text
+            </button>
+          </div>
+          <div class="color-picker">
+            <button class="color-dot active" data-color="#ef4444" style="background: #ef4444;" aria-label="Red color" aria-pressed="true" tabindex="0"></button>
+            <button class="color-dot" data-color="#f59e0b" style="background: #f59e0b;" aria-label="Orange color" aria-pressed="false" tabindex="0"></button>
+            <button class="color-dot" data-color="#22c55e" style="background: #22c55e;" aria-label="Green color" aria-pressed="false" tabindex="0"></button>
+            <button class="color-dot" data-color="#3b82f6" style="background: #3b82f6;" aria-label="Blue color" aria-pressed="false" tabindex="0"></button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="annotation-cancel" class="btn btn-secondary">Cancel</button>
+          <button id="annotation-save" class="btn btn-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Save Photo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports Tab (Locked) -->
+    <div id="tab-reports" class="tab-content">
+      <div class="locked-overlay">
+        <div class="locked-content">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div>
+                <h3 class="card-title">Service Reports</h3>
+                <p class="card-subtitle">PDF reports with your logo</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              </div>
+              <div>
+                <h3 class="card-title">Route Planning</h3>
+                <p class="card-subtitle">Map your day's jobs</p>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17H2a3 3 0 003 3h14a3 3 0 003-3zm0-7l-3 7H5L2 10zm2-2H0"/><path d="M12 2L8 6h8l-4-4z"/></svg>
+              </div>
+              <div>
+                <h3 class="card-title">Follow-up Reminders</h3>
+                <p class="card-subtitle">Auto texts to customers</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="locked-badge">
+          <h3>Full Version</h3>
+          <p>Reports, route maps, and auto reminders</p>
+          <button class="btn btn-primary btn-block">Upgrade for $200</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-btn active" data-tab="jobs" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Customers</span>
+      </button>
+      <button class="nav-btn" data-tab="quote">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Quote</span>
+      </button>
+      <button class="nav-btn" data-tab="parts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+        <span>Parts</span>
+      </button>
+      <button class="nav-btn" data-tab="camera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span>Camera</span>
+      </button>
+      <button class="nav-btn locked" data-tab="reports" aria-label="Reports (requires full version)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Reports</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Add Customer Modal -->
+  <div id="customer-modal" class="modal-overlay" role="dialog" aria-labelledby="modal-customer-title" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-customer-title" class="modal-title">Add Customer</h2>
+        <button class="modal-close" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="customer-name-input" class="form-label">Customer Name</label>
+          <input type="text" id="customer-name-input" class="form-input" placeholder="John Smith">
+        </div>
+        <div class="form-group">
+          <label for="customer-address-input" class="form-label">Address</label>
+          <input type="text" id="customer-address-input" class="form-input" placeholder="123 Main St, Mesa, AZ">
+        </div>
+        <div class="form-group">
+          <label for="customer-phone-input" class="form-label">Phone (optional)</label>
+          <input type="tel" id="customer-phone-input" class="form-input" placeholder="(480) 555-1234">
+        </div>
+        <div class="form-group">
+          <label for="spa-brand-input" class="form-label">Spa Brand</label>
+          <select id="spa-brand-input" class="form-select">
+            <option value="">Select brand...</option>
+            <option value="Jacuzzi">Jacuzzi</option>
+            <option value="Hot Spring">Hot Spring</option>
+            <option value="Bullfrog">Bullfrog</option>
+            <option value="Sundance">Sundance</option>
+            <option value="Cal Spas">Cal Spas</option>
+            <option value="Master Spas">Master Spas</option>
+            <option value="Marquis">Marquis</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="spa-model-input" class="form-label">Model (optional)</label>
+          <input type="text" id="spa-model-input" class="form-input" placeholder="J-375, Envoy, A7L...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-customer" class="btn btn-secondary" style="flex:1;">Cancel</button>
+        <button id="save-customer" class="btn btn-primary" style="flex:1;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Annotation Modal -->
+  <div id="text-modal" class="modal-overlay" role="dialog" aria-labelledby="modal-text-title" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modal-text-title" class="modal-title">Add Note</h2>
+        <button class="modal-close" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="annotation-text-input" class="form-label">Annotation Text</label>
+          <input type="text" id="annotation-text-input" class="form-input" placeholder="Needs replacement">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-text" class="btn btn-secondary" style="flex:1;">Cancel</button>
+        <button id="add-text" class="btn btn-primary" style="flex:1;">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Disclaimer Footer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+    <p><strong>DEMO:</strong> This tool was built by BennyCuTools as a free demo for Ocean Spas Hot Tubs Sales &amp; Repair of Mesa, AZ. Not affiliated with or endorsed by the business.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Ocean%20Spas&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." class="delete-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Owner? Request Deletion
+    </a>
+  </div>
+
+  <script>
+    // Hash function for URL auth
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    // App state
+    const state = {
+      customers: [],
+      parts: [],
+      quote: {},
+      photos: [],
+      currentCustomer: null,
+      cameraStream: null,
+      facingMode: 'environment',
+      annotationTool: 'circle',
+      annotationColor: '#ef4444',
+      capturedImage: null
+    };
+
+    // Demo data - Mesa/Phoenix area customers
+    const DEMO_CUSTOMERS = [
+      {
+        id: 'demo-1',
+        name: 'Robert & Linda Chen',
+        address: '8742 E Shea Blvd, Scottsdale, AZ 85260',
+        phone: '(480) 555-2847',
+        spaBrand: 'Jacuzzi',
+        spaModel: 'J-375',
+        visits: [
+          {
+            date: '2026-01-15',
+            work: 'Heater element replacement',
+            notes: 'Heater was completely burned out. Replaced with new Balboa element. Tested at 104F, working great.',
+            photos: []
+          },
+          {
+            date: '2025-09-22',
+            work: 'Annual maintenance',
+            notes: 'Drained, cleaned filters, checked all jets. Water chemistry balanced.',
+            photos: []
+          }
+        ]
+      },
+      {
+        id: 'demo-2',
+        name: 'Marcus Thompson',
+        address: '1255 S Gilbert Rd, Gilbert, AZ 85296',
+        phone: '(480) 555-9134',
+        spaBrand: 'Hot Spring',
+        spaModel: 'Envoy',
+        visits: [
+          {
+            date: '2026-02-07',
+            work: 'Quote: Pump replacement',
+            notes: 'Circulation pump leaking from shaft seal. Quoted $485 for pump + labor. Customer will call back.',
+            photos: []
+          }
+        ]
+      },
+      {
+        id: 'demo-3',
+        name: 'Patricia Ruiz',
+        address: '4521 E Brown Rd, Mesa, AZ 85205',
+        phone: '(480) 555-6721',
+        spaBrand: 'Bullfrog',
+        spaModel: 'A7L',
+        visits: [
+          {
+            date: '2025-02-10',
+            work: 'Annual maintenance scheduled',
+            notes: 'Due for annual service. Customer prefers weekday mornings.',
+            photos: []
+          },
+          {
+            date: '2025-08-03',
+            work: 'Jet replacement x4',
+            notes: 'Four hydrojets had cracked housings. Replaced all with OEM parts.',
+            photos: []
+          }
+        ]
+      },
+      {
+        id: 'demo-4',
+        name: 'James & Carol Williams',
+        address: '15678 N Tatum Blvd, Phoenix, AZ 85032',
+        phone: '(602) 555-4092',
+        spaBrand: 'Sundance',
+        spaModel: 'Optima',
+        visits: [
+          {
+            date: '2026-01-28',
+            work: 'Circuit board diagnosis',
+            notes: 'Main board showing error codes. Corrosion on relay contacts. Needs full board replacement - quoted $650.',
+            photos: []
+          }
+        ]
+      }
+    ];
+
+    // Demo parts inventory
+    const DEMO_PARTS = [
+      { id: 'p1', name: 'Circulation Pump (Balboa)', stock: 2, minStock: 1 },
+      { id: 'p2', name: 'Heater Element 4kW', stock: 3, minStock: 2 },
+      { id: 'p3', name: 'Heater Element 5.5kW', stock: 1, minStock: 2 },
+      { id: 'p4', name: 'Topside Control Panel', stock: 1, minStock: 1 },
+      { id: 'p5', name: 'Filter Cartridge (standard)', stock: 8, minStock: 5 },
+      { id: 'p6', name: 'Jet Assembly (hydro)', stock: 12, minStock: 6 },
+      { id: 'p7', name: 'Jet Assembly (rotating)', stock: 4, minStock: 4 },
+      { id: 'p8', name: 'O-Ring Kit (universal)', stock: 6, minStock: 3 },
+      { id: 'p9', name: 'Pump Seal Kit', stock: 3, minStock: 2 },
+      { id: 'p10', name: 'Circuit Board (Balboa)', stock: 0, minStock: 1 },
+      { id: 'p11', name: 'Cover Lifter Arm', stock: 2, minStock: 1 },
+      { id: 'p12', name: 'LED Light Assembly', stock: 4, minStock: 2 }
+    ];
+
+    // Quote pricing
+    const QUOTE_ITEMS = {
+      repairs: [
+        { id: 'r1', name: 'Pump Replacement', price: 485 },
+        { id: 'r2', name: 'Heater Element', price: 295 },
+        { id: 'r3', name: 'Circuit Board', price: 650 },
+        { id: 'r4', name: 'Jet Replacement (each)', price: 45 },
+        { id: 'r5', name: 'Leak Repair (minor)', price: 175 },
+        { id: 'r6', name: 'Leak Repair (major)', price: 350 },
+        { id: 'r7', name: 'Filter Replacement', price: 85 }
+      ],
+      parts: [
+        { id: 'p1', name: 'Pump (Balboa)', price: 285 },
+        { id: 'p2', name: 'Heater Element', price: 125 },
+        { id: 'p3', name: 'Control Panel', price: 195 },
+        { id: 'p4', name: 'Jet Assembly', price: 28 },
+        { id: 'p5', name: 'Filter Cartridge', price: 35 },
+        { id: 'p6', name: 'Cover (standard)', price: 425 }
+      ],
+      labor: [
+        { id: 'l1', name: 'Service Call', price: 89 },
+        { id: 'l2', name: 'Labor (per hour)', price: 95 },
+        { id: 'l3', name: 'After-Hours Emergency', price: 150 },
+        { id: 'l4', name: 'Annual Maintenance', price: 175 }
+      ]
+    };
+
+    // DOM elements
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    // Initialize app
+    function init() {
+      // Check URL auth
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === -147083140) {
+        showApp();
+        return;
+      }
+
+      // Check localStorage
+      if (localStorage.getItem('spa-auth') === 'true') {
+        showApp();
+        return;
+      }
+
+      // Show auth screen
+      setupAuth();
+    }
+
+    function setupAuth() {
+      $('#auth-submit').addEventListener('click', tryAuth);
+      $('#auth-key').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') tryAuth();
+      });
+    }
+
+    function tryAuth() {
+      const key = $('#auth-key').value.trim();
+      if (_h(key) === -147083140) {
+        localStorage.setItem('spa-auth', 'true');
+        showApp();
+      } else {
+        $('#auth-error').style.display = 'block';
+        $('#auth-key').focus();
+      }
+    }
+
+    function showApp() {
+      $('#auth-screen').style.display = 'none';
+      $('#app').style.display = 'block';
+      loadData();
+      setupEventListeners();
+      renderCustomers();
+      renderQuote();
+      renderParts();
+    }
+
+    function loadData() {
+      // Load from IndexedDB/localStorage or use demo data
+      const savedCustomers = localStorage.getItem('spa-customers');
+      const savedParts = localStorage.getItem('spa-parts');
+
+      if (savedCustomers) {
+        state.customers = JSON.parse(savedCustomers);
+      } else {
+        // Auto-load demo data on first visit
+        state.customers = [...DEMO_CUSTOMERS];
+        saveCustomers();
+      }
+
+      if (savedParts) {
+        state.parts = JSON.parse(savedParts);
+      } else {
+        state.parts = [...DEMO_PARTS];
+        saveParts();
+      }
+
+      // Load saved quote
+      const savedQuote = localStorage.getItem('spa-quote');
+      if (savedQuote) {
+        state.quote = JSON.parse(savedQuote);
+      }
+    }
+
+    function saveCustomers() {
+      localStorage.setItem('spa-customers', JSON.stringify(state.customers));
+    }
+
+    function saveParts() {
+      localStorage.setItem('spa-parts', JSON.stringify(state.parts));
+    }
+
+    function saveQuote() {
+      localStorage.setItem('spa-quote', JSON.stringify(state.quote));
+    }
+
+    function setupEventListeners() {
+      // Tab navigation
+      $$('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.dataset.tab;
+          switchTab(tab);
+        });
+      });
+
+      // Customer search
+      $('#customer-search').addEventListener('input', (e) => {
+        renderCustomers(e.target.value);
+      });
+
+      // Back button in detail view
+      $('#back-to-list').addEventListener('click', () => {
+        $('#customer-detail').classList.remove('active');
+        $('#tab-jobs').classList.add('active');
+        state.currentCustomer = null;
+      });
+
+      // Add customer modal
+      $('#add-customer-btn').addEventListener('click', () => {
+        $('#customer-modal').classList.add('show');
+        $('#customer-name-input').focus();
+      });
+
+      $('#customer-modal .modal-close, #cancel-customer').forEach(el => {
+        if (el) el.addEventListener('click', () => {
+          $('#customer-modal').classList.remove('show');
+          clearCustomerForm();
+        });
+      });
+
+      $$('#customer-modal .modal-close, #cancel-customer').forEach(el => {
+        el.addEventListener('click', () => {
+          $('#customer-modal').classList.remove('show');
+          clearCustomerForm();
+        });
+      });
+
+      $('#save-customer').addEventListener('click', saveNewCustomer);
+
+      // Quote actions
+      $('#clear-quote').addEventListener('click', clearQuote);
+      $('#share-quote').addEventListener('click', shareQuote);
+
+      // Parts add button
+      $('#add-part-btn').addEventListener('click', () => {
+        showToast('Order parts in the full version', 'info');
+      });
+
+      // Camera setup
+      $('#camera-placeholder').addEventListener('click', startCamera);
+      $('#camera-capture').addEventListener('click', capturePhoto);
+      $('#camera-flip').addEventListener('click', flipCamera);
+      $('#camera-gallery').addEventListener('click', () => {
+        showToast('Photo gallery is in the full version');
+      });
+
+      // Annotation tools
+      $$('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          $$('.tool-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
+          state.annotationTool = btn.dataset.tool;
+        });
+      });
+
+      $$('.color-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+          $$('.color-dot').forEach(d => {
+            d.classList.remove('active');
+            d.setAttribute('aria-pressed', 'false');
+          });
+          dot.classList.add('active');
+          dot.setAttribute('aria-pressed', 'true');
+          state.annotationColor = dot.dataset.color;
+        });
+      });
+
+      $('#annotation-cancel').addEventListener('click', cancelAnnotation);
+      $('#annotation-save').addEventListener('click', saveAnnotatedPhoto);
+
+      // Text modal
+      $$('#text-modal .modal-close, #cancel-text').forEach(el => {
+        el.addEventListener('click', () => {
+          $('#text-modal').classList.remove('show');
+        });
+      });
+
+      $('#add-text').addEventListener('click', addTextAnnotation);
+    }
+
+    function switchTab(tab) {
+      // Stop camera when leaving camera tab
+      if (state.cameraStream && tab !== 'camera') {
+        // Keep stream but hide view
+      }
+
+      $$('.nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+        btn.setAttribute('aria-current', btn.dataset.tab === tab ? 'page' : 'false');
+      });
+
+      $$('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      $(`#tab-${tab}`).classList.add('active');
+
+      // Also hide customer detail if showing
+      $('#customer-detail').classList.remove('active');
+    }
+
+    // Customer functions
+    function renderCustomers(search = '') {
+      const container = $('#customer-list');
+      const searchLower = search.toLowerCase();
+
+      const filtered = state.customers.filter(c => 
+        c.name.toLowerCase().includes(searchLower) ||
+        c.address.toLowerCase().includes(searchLower)
+      );
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            <h3>${search ? 'Nobody matches that search' : 'No customers yet'}</h3>
+            <p>${search ? 'Try a different name or address' : 'Tap + to add your first customer'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map((c, i) => `
+        <div class="customer-item card-enter stagger-${Math.min(i + 1, 4)}" 
+             data-id="${c.id}" 
+             role="listitem"
+             tabindex="0"
+             aria-label="${c.name}, ${c.spaBrand} ${c.spaModel}">
+          <div class="customer-avatar">${getInitials(c.name)}</div>
+          <div class="customer-info">
+            <p class="customer-name">${c.name}</p>
+            <p class="customer-address">${c.address}</p>
+            <span class="customer-spa">${c.spaBrand} ${c.spaModel || ''}</span>
+          </div>
+          <div class="customer-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </div>
+      `).join('');
+
+      // Add click handlers
+      $$('.customer-item').forEach(item => {
+        item.addEventListener('click', () => showCustomerDetail(item.dataset.id));
+        item.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            showCustomerDetail(item.dataset.id);
+          }
+        });
+      });
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+    }
+
+    function showCustomerDetail(id) {
+      const customer = state.customers.find(c => c.id === id);
+      if (!customer) return;
+
+      state.currentCustomer = customer;
+      $('#detail-name').textContent = customer.name;
+
+      const content = $('#detail-content');
+      content.innerHTML = `
+        <div class="spa-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>
+          ${customer.spaBrand} ${customer.spaModel || ''}
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <p class="card-subtitle">${customer.address}</p>
+              <p class="card-subtitle">${customer.phone || 'No phone'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top: 24px;">
+          <h3 class="section-title">Service History</h3>
+          <button class="btn btn-primary btn-sm" onclick="addVisit('${customer.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Visit
+          </button>
+        </div>
+
+        ${customer.visits && customer.visits.length > 0 ? customer.visits.map(v => `
+          <div class="visit-card">
+            <div class="visit-date">${formatDate(v.date)}</div>
+            <div class="visit-work">${v.work}</div>
+            <div class="visit-notes">${v.notes}</div>
+            ${v.photos && v.photos.length > 0 ? `
+              <div class="visit-photos">
+                ${v.photos.map(p => `<img src="${p}" class="visit-photo" alt="Service photo">`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `).join('') : `
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <h3>No service history</h3>
+            <p>Add your first visit record</p>
+          </div>
+        `}
+
+        <div class="action-row" style="margin-top: 24px;">
+          <button class="btn btn-secondary" onclick="startQuoteForCustomer('${customer.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+            New Quote
+          </button>
+          <button class="btn btn-primary" onclick="openCameraForCustomer('${customer.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Take Photo
+          </button>
+        </div>
+      `;
+
+      $('#tab-jobs').classList.remove('active');
+      $('#customer-detail').classList.add('active');
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+    }
+
+    function saveNewCustomer() {
+      const name = $('#customer-name-input').value.trim();
+      const address = $('#customer-address-input').value.trim();
+      const phone = $('#customer-phone-input').value.trim();
+      const brand = $('#spa-brand-input').value;
+      const model = $('#spa-model-input').value.trim();
+
+      if (!name || !address || !brand) {
+        showToast('Need name, address, and spa brand', 'error');
+        return;
+      }
+
+      const newCustomer = {
+        id: 'c' + Date.now(),
+        name,
+        address,
+        phone,
+        spaBrand: brand,
+        spaModel: model,
+        visits: []
+      };
+
+      state.customers.unshift(newCustomer);
+      saveCustomers();
+      renderCustomers();
+      
+      $('#customer-modal').classList.remove('show');
+      clearCustomerForm();
+      showToast('Customer added', 'success');
+    }
+
+    function clearCustomerForm() {
+      $('#customer-name-input').value = '';
+      $('#customer-address-input').value = '';
+      $('#customer-phone-input').value = '';
+      $('#spa-brand-input').value = '';
+      $('#spa-model-input').value = '';
+    }
+
+    // Quote functions
+    function renderQuote() {
+      renderQuoteSection('quote-repairs', QUOTE_ITEMS.repairs);
+      renderQuoteSection('quote-parts', QUOTE_ITEMS.parts);
+      renderQuoteSection('quote-labor', QUOTE_ITEMS.labor);
+      updateQuoteTotal();
+    }
+
+    function renderQuoteSection(containerId, items) {
+      const container = $(`#${containerId}`);
+      container.innerHTML = items.map(item => `
+        <div class="quote-item">
+          <div class="quote-item-info">
+            <div class="quote-item-name">${item.name}</div>
+            <div class="quote-item-price">$${item.price}</div>
+          </div>
+          <div class="quote-item-qty">
+            <button class="qty-btn" onclick="updateQuoteQty('${item.id}', -1)" aria-label="Decrease quantity">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+            <span class="qty-value">${state.quote[item.id] || 0}</span>
+            <button class="qty-btn" onclick="updateQuoteQty('${item.id}', 1)" aria-label="Increase quantity">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.updateQuoteQty = function(itemId, delta) {
+      const current = state.quote[itemId] || 0;
+      const newQty = Math.max(0, current + delta);
+      
+      if (newQty === 0) {
+        delete state.quote[itemId];
+      } else {
+        state.quote[itemId] = newQty;
+      }
+      
+      saveQuote();
+      renderQuote();
+    };
+
+    function updateQuoteTotal() {
+      let total = 0;
+      const allItems = [...QUOTE_ITEMS.repairs, ...QUOTE_ITEMS.parts, ...QUOTE_ITEMS.labor];
+      
+      for (const [id, qty] of Object.entries(state.quote)) {
+        const item = allItems.find(i => i.id === id);
+        if (item) {
+          total += item.price * qty;
+        }
+      }
+      
+      const totalEl = $('#quote-amount');
+      totalEl.textContent = '$' + total.toLocaleString();
+      
+      // Add pulse animation
+      totalEl.classList.remove('total-updated');
+      void totalEl.offsetWidth; // Trigger reflow
+      totalEl.classList.add('total-updated');
+    }
+
+    function clearQuote() {
+      state.quote = {};
+      saveQuote();
+      renderQuote();
+      showToast('Quote cleared');
+    }
+
+    function shareQuote() {
+      let total = 0;
+      const lines = ['Quote from Ocean Spas:', ''];
+      const allItems = [...QUOTE_ITEMS.repairs, ...QUOTE_ITEMS.parts, ...QUOTE_ITEMS.labor];
+      
+      for (const [id, qty] of Object.entries(state.quote)) {
+        const item = allItems.find(i => i.id === id);
+        if (item && qty > 0) {
+          const lineTotal = item.price * qty;
+          total += lineTotal;
+          lines.push(`${item.name} x${qty}: $${lineTotal}`);
+        }
+      }
+      
+      if (total === 0) {
+        showToast('Add some items first', 'error');
+        return;
+      }
+      
+      lines.push('');
+      lines.push(`Total: $${total.toLocaleString()}`);
+      lines.push('');
+      lines.push('Ocean Spas Hot Tubs - (480) 686-3347');
+      
+      const text = lines.join('\n');
+      
+      if (navigator.share) {
+        navigator.share({
+          title: 'Quote from Ocean Spas',
+          text: text
+        }).catch(() => {
+          copyToClipboard(text);
+        });
+      } else {
+        copyToClipboard(text);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Quote copied to clipboard', 'success');
+      }).catch(() => {
+        showToast('Could not copy quote', 'error');
+      });
+    }
+
+    // Parts functions
+    function renderParts() {
+      const container = $('#parts-list');
+      
+      container.innerHTML = state.parts.map(part => {
+        let stockClass = '';
+        let stockText = `${part.stock} in van`;
+        
+        if (part.stock === 0) {
+          stockClass = 'out-of-stock';
+          stockText = 'Out of stock';
+        } else if (part.stock <= part.minStock) {
+          stockClass = 'low-stock';
+          stockText = `${part.stock} left (low)`;
+        }
+        
+        return `
+          <div class="part-item ${stockClass}" role="listitem">
+            <div class="part-info">
+              <div class="part-name">${part.name}</div>
+              <div class="part-stock ${part.stock === 0 ? 'out' : part.stock <= part.minStock ? 'low' : ''}">${stockText}</div>
+            </div>
+            <button class="part-use-btn" 
+                    onclick="usePart('${part.id}')" 
+                    ${part.stock === 0 ? 'disabled' : ''}
+                    aria-label="Use ${part.name}">
+              Use
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.usePart = function(partId) {
+      const part = state.parts.find(p => p.id === partId);
+      if (part && part.stock > 0) {
+        part.stock--;
+        saveParts();
+        renderParts();
+        showToast(`Used 1x ${part.name}`, 'success');
+      }
+    };
+
+    // Camera functions
+    async function startCamera() {
+      try {
+        if (state.cameraStream) {
+          state.cameraStream.getTracks().forEach(t => t.stop());
+        }
+        
+        const constraints = {
+          video: {
+            facingMode: state.facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
+        };
+        
+        state.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = $('#camera-video');
+        video.srcObject = state.cameraStream;
+        video.style.display = 'block';
+        $('#camera-placeholder').style.display = 'none';
+        
+      } catch (err) {
+        console.error('Camera error:', err);
+        showToast('Camera not available', 'error');
+      }
+    }
+
+    function flipCamera() {
+      state.facingMode = state.facingMode === 'environment' ? 'user' : 'environment';
+      startCamera();
+    }
+
+    function capturePhoto() {
+      const video = $('#camera-video');
+      const canvas = $('#camera-canvas');
+      
+      if (!video.srcObject) {
+        startCamera();
+        return;
+      }
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      state.capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // Switch to annotation mode
+      showAnnotationMode();
+    }
+
+    function showAnnotationMode() {
+      $('#camera-view').style.display = 'none';
+      $('#annotation-view').style.display = 'block';
+      
+      const canvas = $('#annotation-canvas');
+      const img = new Image();
+      img.onload = () => {
+        // Size canvas for mobile
+        const maxWidth = Math.min(600, window.innerWidth - 40);
+        const scale = maxWidth / img.width;
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        setupAnnotationCanvas(canvas);
+      };
+      img.src = state.capturedImage;
+    }
+
+    function setupAnnotationCanvas(canvas) {
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      let startX, startY;
+      
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        };
+      };
+      
+      const handleStart = (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getPos(e);
+        startX = pos.x;
+        startY = pos.y;
+        
+        if (state.annotationTool === 'text') {
+          isDrawing = false;
+          state.textPosition = { x: startX, y: startY };
+          $('#text-modal').classList.add('show');
+          $('#annotation-text-input').focus();
+        }
+      };
+      
+      const handleEnd = (e) => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+        const endX = pos.x;
+        const endY = pos.y;
+        
+        ctx.strokeStyle = state.annotationColor;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        
+        if (state.annotationTool === 'circle') {
+          const centerX = (startX + endX) / 2;
+          const centerY = (startY + endY) / 2;
+          const radiusX = Math.abs(endX - startX) / 2;
+          const radiusY = Math.abs(endY - startY) / 2;
+          
+          ctx.beginPath();
+          ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+          ctx.stroke();
+        } else if (state.annotationTool === 'arrow') {
+          // Line
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(endX, endY);
+          ctx.stroke();
+          
+          // Arrowhead
+          const angle = Math.atan2(endY - startY, endX - startX);
+          const headLen = 15;
+          ctx.beginPath();
+          ctx.moveTo(endX, endY);
+          ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 6), endY - headLen * Math.sin(angle - Math.PI / 6));
+          ctx.moveTo(endX, endY);
+          ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 6), endY - headLen * Math.sin(angle + Math.PI / 6));
+          ctx.stroke();
+        }
+      };
+      
+      canvas.addEventListener('mousedown', handleStart);
+      canvas.addEventListener('mouseup', handleEnd);
+      canvas.addEventListener('touchstart', handleStart, { passive: false });
+      canvas.addEventListener('touchend', handleEnd);
+    }
+
+    function addTextAnnotation() {
+      const text = $('#annotation-text-input').value.trim();
+      if (!text) {
+        $('#text-modal').classList.remove('show');
+        return;
+      }
+      
+      const canvas = $('#annotation-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      ctx.font = 'bold 16px Inter, sans-serif';
+      ctx.fillStyle = state.annotationColor;
+      
+      // Background
+      const metrics = ctx.measureText(text);
+      const padding = 6;
+      ctx.fillStyle = 'white';
+      ctx.fillRect(
+        state.textPosition.x - padding,
+        state.textPosition.y - 16 - padding,
+        metrics.width + padding * 2,
+        20 + padding * 2
+      );
+      
+      ctx.fillStyle = state.annotationColor;
+      ctx.fillText(text, state.textPosition.x, state.textPosition.y);
+      
+      $('#text-modal').classList.remove('show');
+      $('#annotation-text-input').value = '';
+    }
+
+    function cancelAnnotation() {
+      $('#annotation-view').style.display = 'none';
+      $('#camera-view').style.display = 'block';
+      state.capturedImage = null;
+    }
+
+    function saveAnnotatedPhoto() {
+      const canvas = $('#annotation-canvas');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // Save to current customer if selected
+      if (state.currentCustomer) {
+        if (!state.currentCustomer.visits || state.currentCustomer.visits.length === 0) {
+          state.currentCustomer.visits = [{
+            date: new Date().toISOString().split('T')[0],
+            work: 'Photo documentation',
+            notes: 'Added photo',
+            photos: [dataUrl]
+          }];
+        } else {
+          // Add to most recent visit
+          const lastVisit = state.currentCustomer.visits[0];
+          if (!lastVisit.photos) lastVisit.photos = [];
+          lastVisit.photos.push(dataUrl);
+        }
+        saveCustomers();
+        showToast('Photo saved to customer record', 'success');
+      } else {
+        // Save to general photos
+        state.photos.push(dataUrl);
+        localStorage.setItem('spa-photos', JSON.stringify(state.photos));
+        showToast('Photo saved', 'success');
+      }
+      
+      cancelAnnotation();
+    }
+
+    // Helper functions
+    window.addVisit = function(customerId) {
+      showToast('Full visit logging in paid version');
+    };
+
+    window.startQuoteForCustomer = function(customerId) {
+      switchTab('quote');
+    };
+
+    window.openCameraForCustomer = function(customerId) {
+      const customer = state.customers.find(c => c.id === customerId);
+      state.currentCustomer = customer;
+      switchTab('camera');
+      setTimeout(() => startCamera(), 100);
+    };
+
+    function showToast(message, type = 'info') {
+      const toast = $('#toast');
+      toast.className = 'toast' + (type !== 'info' ? ` ${type}` : '');
+      
+      let icon = '';
+      if (type === 'success') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      }
+      
+      toast.innerHTML = icon + message;
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', init);
+
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.no-select')) {
+        e.preventDefault();
+      }
+    });
+
+    // Add grain texture to body
+    document.body.classList.add('texture-grain');
+  </script>
+</body>
+</html>
