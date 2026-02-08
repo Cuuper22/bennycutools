@@ -1,0 +1,2098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>CabinetViz Pro | Kitchen Cabinet Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --charcoal: oklch(0.25 0.01 250);
+      --charcoal-light: oklch(0.35 0.01 250);
+      --cream: oklch(0.97 0.01 85);
+      --cream-dark: oklch(0.92 0.015 85);
+      --gold: oklch(0.72 0.12 85);
+      --gold-hover: oklch(0.68 0.14 85);
+      --text-primary: oklch(0.20 0.01 250);
+      --text-secondary: oklch(0.45 0.01 250);
+      --text-muted: oklch(0.55 0.01 250);
+      --success: oklch(0.65 0.15 145);
+      --error: oklch(0.55 0.20 25);
+      --border: oklch(0.85 0.01 85);
+      --shadow-sm: 0 1px 3px oklch(0.20 0.01 250 / 0.08);
+      --shadow-md: 0 4px 12px oklch(0.20 0.01 250 / 0.12);
+      --shadow-lg: 0 8px 24px oklch(0.20 0.01 250 / 0.16);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Anti-scrape protections */
+    html {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    body * {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+    .header, .tab-bar, .auth-screen, .style-card, .project-card, .btn, .tab-btn, .color-swatch {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Auth Screen */
+    .auth-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--charcoal);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 24px;
+    }
+
+    .auth-box {
+      background: var(--cream);
+      padding: 40px 32px;
+      border-radius: var(--radius-lg);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-box h1 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+
+    .auth-box p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      font-family: var(--font-body);
+      transition: border-color 0.2s;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--gold);
+      color: var(--charcoal);
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .auth-btn:hover { background: var(--gold-hover); }
+    .auth-btn:active { transform: scale(0.98); }
+
+    .auth-error {
+      color: var(--error);
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    /* App Container */
+    .app { display: none; }
+    .app.active { display: block; }
+
+    /* Header */
+    .header {
+      background: var(--charcoal);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      position: relative;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--gold);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .current-project {
+      font-size: 13px;
+      color: oklch(0.75 0.01 250);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 16px oklch(0 0 0 / 0.08);
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--gold);
+      outline-offset: -2px;
+    }
+
+    .tab-btn.active {
+      color: var(--gold);
+    }
+
+    .tab-btn.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 0 0 3px 3px;
+    }
+
+    .tab-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .tab-btn.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .lock-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 20px);
+      background: var(--charcoal);
+      color: white;
+      font-size: 8px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeSlideUp 0.3s ease-out;
+    }
+
+    .tab-panel.active { display: block; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Capture Tab */
+    .capture-hero {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .capture-hero h2 {
+      font-family: var(--font-display);
+      font-size: 28px;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+
+    .capture-hero p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      max-width: 400px;
+      margin: 0 auto 32px;
+    }
+
+    .camera-preview {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 4/3;
+      margin: 0 auto 24px;
+      background: var(--charcoal);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .camera-preview video,
+    .camera-preview canvas,
+    .camera-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-preview canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .camera-guide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .camera-guide-box {
+      width: 80%;
+      height: 60%;
+      border: 2px dashed oklch(1 0 0 / 0.5);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: white;
+      text-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
+      font-size: 14px;
+    }
+
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: oklch(0.7 0 0);
+      gap: 12px;
+    }
+
+    .camera-placeholder svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.5;
+    }
+
+    .capture-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .btn svg { width: 20px; height: 20px; }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--charcoal);
+    }
+    .btn-primary:hover { background: var(--gold-hover); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-secondary {
+      background: white;
+      color: var(--charcoal);
+      border: 2px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--charcoal-light); }
+
+    .btn-capture {
+      width: 72px;
+      height: 72px;
+      padding: 0;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 4px white, 0 4px 16px oklch(0 0 0 / 0.2);
+    }
+
+    .btn-capture svg { width: 28px; height: 28px; }
+
+    /* Captured Image State */
+    .captured-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .btn-sm {
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+
+    /* Styles Tab */
+    .styles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .style-card {
+      background: white;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid transparent;
+      position: relative;
+    }
+
+    .style-card:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: var(--shadow-md);
+    }
+    .style-card:active {
+      transform: translateY(-2px) scale(1.01);
+    }
+
+    .style-card:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .style-card.selected {
+      border-color: var(--gold);
+    }
+
+    .style-card.locked {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .style-card.locked:hover {
+      transform: none;
+    }
+
+    .style-preview {
+      aspect-ratio: 4/3;
+      background: var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .style-preview svg {
+      width: 64px;
+      height: 64px;
+      color: var(--charcoal);
+      opacity: 0.8;
+    }
+
+    .style-info {
+      padding: 12px;
+    }
+
+    .style-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--charcoal);
+      margin-bottom: 2px;
+    }
+
+    .style-price {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .lock-overlay {
+      position: absolute;
+      inset: 0;
+      background: oklch(0.97 0.01 85 / 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .lock-overlay svg {
+      width: 24px;
+      height: 24px;
+      opacity: 1;
+    }
+
+    /* Colors Section */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--charcoal);
+      margin-bottom: 16px;
+    }
+
+    .color-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .color-swatch {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.1);
+    }
+
+    .color-swatch:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 3px;
+      transform: scale(1.15);
+    }
+
+    .color-swatch.selected {
+      box-shadow: 0 0 0 3px var(--gold);
+    }
+
+    .color-swatch.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .color-name {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      font-size: 10px;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .color-swatch:hover .color-name,
+    .color-swatch.selected .color-name {
+      opacity: 1;
+    }
+
+    /* Quote Tab */
+    .quote-builder {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+    }
+
+    .quote-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quote-row:last-child { border-bottom: none; }
+
+    .quote-label {
+      font-weight: 500;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .quote-label svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+
+    .quote-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--cream);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+    }
+
+    .stepper-btn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .stepper-btn:hover { background: var(--cream-dark); transform: scale(1.05); }
+    .stepper-btn:active { transform: scale(0.95); }
+    .stepper-btn:focus-visible { 
+      outline: 2px solid var(--gold); 
+      outline-offset: 2px;
+    }
+
+    .stepper-value {
+      min-width: 48px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .select-input {
+      padding: 10px 14px;
+      font-size: 15px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: white;
+      font-family: var(--font-body);
+      cursor: pointer;
+    }
+
+    .select-input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    /* Quote Summary */
+    .quote-summary {
+      background: var(--charcoal);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .quote-total-label {
+      font-size: 13px;
+      color: oklch(0.7 0 0);
+      margin-bottom: 4px;
+    }
+
+    .quote-total {
+      font-family: var(--font-display);
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .quote-range {
+      font-size: 20px;
+      font-weight: 400;
+      color: oklch(0.7 0 0);
+    }
+
+    .quote-breakdown {
+      display: grid;
+      gap: 12px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 8px 0;
+      border-bottom: 1px solid oklch(1 0 0 / 0.1);
+    }
+
+    .breakdown-row:last-child { border-bottom: none; }
+
+    .breakdown-label { color: oklch(0.75 0 0); }
+    .breakdown-value { font-weight: 600; }
+
+    .timeline-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: oklch(0.35 0.01 250);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .timeline-badge svg { width: 16px; height: 16px; }
+
+    /* Projects Tab */
+    .projects-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .project-card {
+      background: white;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: box-shadow 0.2s;
+    }
+
+    .project-card:hover { box-shadow: var(--shadow-md); }
+    .project-card:focus-visible { outline: 3px solid var(--gold); }
+
+    .project-image {
+      aspect-ratio: 16/9;
+      background: var(--cream-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .project-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-status {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-draft {
+      background: oklch(0.92 0.05 60);
+      color: oklch(0.45 0.1 60);
+    }
+
+    .status-quoted {
+      background: oklch(0.9 0.08 145);
+      color: oklch(0.4 0.12 145);
+    }
+
+    .project-details {
+      padding: 16px;
+    }
+
+    .project-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .project-address {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .project-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .project-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .project-meta svg { width: 16px; height: 16px; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--charcoal);
+      color: white;
+      padding: 14px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast svg { width: 20px; height: 20px; color: var(--success); }
+
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, var(--charcoal) 0%, oklch(0.30 0.02 250) 100%);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .upsell-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--gold);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .upsell-icon svg { width: 28px; height: 28px; color: var(--charcoal); }
+
+    .upsell-content { flex: 1; min-width: 200px; }
+
+    .upsell-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .upsell-desc {
+      font-size: 14px;
+      color: oklch(0.75 0 0);
+    }
+
+    .upsell-price {
+      font-size: 13px;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .tab-panel { padding: 32px; }
+      .styles-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+      .quote-builder { padding: 32px; }
+    }
+
+    @media (min-width: 1024px) {
+      .capture-hero { padding: 60px 20px; }
+      .capture-hero h2 { font-size: 36px; }
+      .camera-preview { max-width: 800px; }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Staggered Animations */
+    .animate-in {
+      animation: slideUp 0.4s ease-out backwards;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+    }
+
+    .style-card:nth-child(1) { animation-delay: 0.05s; }
+    .style-card:nth-child(2) { animation-delay: 0.1s; }
+    .style-card:nth-child(3) { animation-delay: 0.15s; }
+    .style-card:nth-child(4) { animation-delay: 0.2s; }
+    .style-card:nth-child(5) { animation-delay: 0.25s; }
+    .style-card:nth-child(6) { animation-delay: 0.3s; }
+
+    .color-swatch:nth-child(1) { animation-delay: 0.1s; }
+    .color-swatch:nth-child(2) { animation-delay: 0.12s; }
+    .color-swatch:nth-child(3) { animation-delay: 0.14s; }
+    .color-swatch:nth-child(4) { animation-delay: 0.16s; }
+    .color-swatch:nth-child(5) { animation-delay: 0.18s; }
+    .color-swatch:nth-child(6) { animation-delay: 0.20s; }
+    .color-swatch:nth-child(7) { animation-delay: 0.22s; }
+    .color-swatch:nth-child(8) { animation-delay: 0.24s; }
+  </style>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-box">
+      <h1>CabinetViz Pro</h1>
+      <p>Enter your access key to continue</p>
+      <input type="text" class="auth-input" id="authInput" placeholder="Access key" aria-label="Access key">
+      <button class="auth-btn" id="authBtn">Unlock</button>
+      <p class="auth-error" id="authError">Invalid access key. Please try again.</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"/>
+              <rect x="14" y="3" width="7" height="9"/>
+              <rect x="3" y="14" width="7" height="7"/>
+              <rect x="14" y="14" width="7" height="7"/>
+            </svg>
+          </div>
+          <span>CabinetViz Pro</span>
+        </div>
+        <div class="current-project" id="currentProject">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span id="projectLocation">Buckhead, GA</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Panels -->
+    <main>
+      <!-- Capture Tab -->
+      <section class="tab-panel active" id="capturePanel" role="tabpanel" aria-labelledby="captureTab">
+        <div class="capture-hero">
+          <h2>Snap a Photo</h2>
+          <p>Take a quick picture of the kitchen, then see how different cabinet styles look right on your screen</p>
+          
+          <div class="camera-preview" id="cameraPreview">
+            <video id="cameraVideo" autoplay playsinline style="display:none;"></video>
+            <img id="capturedImage" alt="Captured kitchen photo" style="display:none;">
+            <canvas id="overlayCanvas"></canvas>
+            
+            <div class="camera-placeholder" id="cameraPlaceholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Tap to start camera</span>
+            </div>
+            
+            <div class="camera-guide" id="cameraGuide" style="display:none;">
+              <div class="camera-guide-box">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <rect x="3" y="3" width="7" height="9"/>
+                  <rect x="14" y="3" width="7" height="9"/>
+                </svg>
+                <span>Line up the cabinets</span>
+              </div>
+            </div>
+
+            <div class="captured-controls" id="capturedControls" style="display:none;">
+              <button class="btn btn-secondary btn-sm" id="retakeBtn" aria-label="Retake photo">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 4v6h-6"/>
+                  <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                </svg>
+                Retake
+              </button>
+              <button class="btn btn-primary btn-sm" id="usePhotoBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Use Photo
+              </button>
+            </div>
+          </div>
+
+          <div class="capture-actions" id="captureActions">
+            <button class="btn btn-secondary" id="uploadBtn" aria-label="Upload existing photo">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload Photo
+            </button>
+            <button class="btn-capture" id="captureBtn" aria-label="Take photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4" fill="currentColor"/>
+              </svg>
+            </button>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;">
+          </div>
+        </div>
+      </section>
+
+      <!-- Styles Tab -->
+      <section class="tab-panel" id="stylesPanel" role="tabpanel" aria-labelledby="stylesTab">
+        <h2 class="section-title">Door Styles</h2>
+        <div class="styles-grid" id="stylesGrid" role="listbox" aria-label="Cabinet door styles">
+          <!-- Populated by JS -->
+        </div>
+
+        <h2 class="section-title">Cabinet Colors</h2>
+        <div class="color-palette" id="colorPalette" role="listbox" aria-label="Cabinet colors">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="upsell-banner">
+          <div class="upsell-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="upsell-content">
+            <div class="upsell-title">Get 50+ Styles</div>
+            <div class="upsell-desc">Every color in the book, 3D preview, and quotes with your logo</div>
+            <div class="upsell-price">$200 one-time</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quote Tab -->
+      <section class="tab-panel" id="quotePanel" role="tabpanel" aria-labelledby="quoteTab">
+        <h2 class="section-title">Build Your Quote</h2>
+        
+        <div class="quote-builder">
+          <div class="quote-row">
+            <div class="quote-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="9"/>
+                <rect x="14" y="3" width="7" height="9"/>
+              </svg>
+              Cabinet Count
+            </div>
+            <div class="quote-input">
+              <div class="stepper">
+                <button class="stepper-btn" data-action="decrement" data-target="cabinetCount" aria-label="Decrease cabinet count">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span class="stepper-value" id="cabinetCount">24</span>
+                <button class="stepper-btn" data-action="increment" data-target="cabinetCount" aria-label="Increase cabinet count">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="quote-row">
+            <div class="quote-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+              </svg>
+              Linear Feet
+            </div>
+            <div class="quote-input">
+              <div class="stepper">
+                <button class="stepper-btn" data-action="decrement" data-target="linearFeet" aria-label="Decrease linear feet">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <span class="stepper-value" id="linearFeet">18</span>
+                <button class="stepper-btn" data-action="increment" data-target="linearFeet" aria-label="Increase linear feet">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="quote-row">
+            <div class="quote-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <path d="M9 3v18"/>
+                <path d="M3 9h18"/>
+              </svg>
+              Door Style
+            </div>
+            <div class="quote-input">
+              <select class="select-input" id="doorStyleSelect" aria-label="Select door style">
+                <option value="shaker">Shaker</option>
+                <option value="raised">Raised Panel</option>
+                <option value="flat">Flat Panel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="quote-row">
+            <div class="quote-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+              </svg>
+              Hardware
+            </div>
+            <div class="quote-input">
+              <select class="select-input" id="hardwareSelect" aria-label="Select hardware type">
+                <option value="standard">Standard Pulls</option>
+                <option value="premium">Premium Pulls</option>
+                <option value="knobs">Knobs Only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="quote-summary" id="quoteSummary">
+          <div class="quote-total-label">Estimated Total</div>
+          <div class="quote-total">
+            <span id="quoteLow">$17,400</span>
+            <span class="quote-range">-</span>
+            <span id="quoteHigh">$19,200</span>
+          </div>
+          
+          <div class="quote-breakdown">
+            <div class="breakdown-row">
+              <span class="breakdown-label">Materials</span>
+              <span class="breakdown-value" id="materialsCost">$9,800</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Labor</span>
+              <span class="breakdown-value" id="laborCost">$6,400</span>
+            </div>
+            <div class="breakdown-row">
+              <span class="breakdown-label">Hardware</span>
+              <span class="breakdown-value" id="hardwareCost">$1,200</span>
+            </div>
+          </div>
+
+          <div class="timeline-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span id="timeline">4-5 weeks estimated</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary" id="generatePdfBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Generate PDF Quote
+          </button>
+          <button class="btn btn-secondary" id="shareBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Share
+          </button>
+        </div>
+      </section>
+
+      <!-- Projects Tab -->
+      <section class="tab-panel" id="projectsPanel" role="tabpanel" aria-labelledby="projectsTab">
+        <div class="projects-header">
+          <h2 class="section-title" style="margin:0;">Saved Projects</h2>
+          <button class="btn btn-primary btn-sm" id="newProjectBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New
+          </button>
+        </div>
+
+        <div id="projectsList">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="upsell-banner" style="margin-top:24px;">
+          <div class="upsell-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="upsell-content">
+            <div class="upsell-title">Customer E-Signature</div>
+            <div class="upsell-desc">Get approval right on the spot with built-in signature capture</div>
+            <div class="upsell-price">Included in $200 upgrade</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3D View Tab (Locked) -->
+      <section class="tab-panel" id="threeDPanel" role="tabpanel" aria-labelledby="threeDTab">
+        <div style="text-align:center; padding:60px 20px;">
+          <div style="width:80px;height:80px;background:var(--cream-dark);border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+          </div>
+          <h2 class="section-title">3D Preview Coming Soon</h2>
+          <p style="color:var(--text-muted);max-width:400px;margin:0 auto 24px;">Spin the cabinets around, see every angle. Know exactly what you're getting before we start.</p>
+          <div style="background:var(--cream-dark);display:inline-block;padding:12px 24px;border-radius:20px;font-size:14px;color:var(--text-secondary);">
+            <strong>$200</strong> one-time to unlock
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+      <button class="tab-btn active" id="captureTab" role="tab" aria-selected="true" aria-controls="capturePanel" data-panel="capturePanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+        Capture
+      </button>
+      <button class="tab-btn" id="stylesTab" role="tab" aria-selected="false" aria-controls="stylesPanel" data-panel="stylesPanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="9"/>
+          <rect x="14" y="3" width="7" height="9"/>
+          <rect x="3" y="14" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Styles
+      </button>
+      <button class="tab-btn" id="quoteTab" role="tab" aria-selected="false" aria-controls="quotePanel" data-panel="quotePanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"/>
+          <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+        </svg>
+        Quote
+      </button>
+      <button class="tab-btn" id="projectsTab" role="tab" aria-selected="false" aria-controls="projectsPanel" data-panel="projectsPanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+        </svg>
+        Projects
+      </button>
+      <button class="tab-btn locked" id="threeDTab" role="tab" aria-selected="false" aria-controls="threeDPanel" data-panel="threeDPanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+          <line x1="1" y1="10" x2="23" y2="10"/>
+        </svg>
+        3D View
+        <span class="lock-badge">PRO</span>
+      </button>
+    </nav>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+      <span id="toastMessage">Saved!</span>
+    </div>
+  </div>
+
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Creative Cabinets and Fine Finishes, LLC. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Creative%20Cabinets&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // Hash function for URL auth
+      function _h(s) {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) {
+          h = ((h << 5) - h) + s.charCodeAt(i);
+          h |= 0;
+        }
+        return h;
+      }
+
+      // Auth check
+      const AUTH_HASH = 880038485;
+      const authScreen = document.getElementById('authScreen');
+      const app = document.getElementById('app');
+      const authInput = document.getElementById('authInput');
+      const authBtn = document.getElementById('authBtn');
+      const authError = document.getElementById('authError');
+
+      function showApp() {
+        authScreen.style.display = 'none';
+        app.classList.add('active');
+        initApp();
+      }
+
+      // URL auto-auth
+      const _urlKey = new URLSearchParams(window.location.search).get('key');
+      if (_urlKey && _h(_urlKey) === AUTH_HASH) {
+        showApp();
+      }
+
+      authBtn.addEventListener('click', function() {
+        const key = authInput.value.trim();
+        if (_h(key) === AUTH_HASH) {
+          showApp();
+        } else {
+          authError.style.display = 'block';
+          authInput.focus();
+        }
+      });
+
+      authInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') authBtn.click();
+      });
+
+      // App state
+      let state = {
+        currentProject: null,
+        projects: [],
+        selectedStyle: 'shaker',
+        selectedColor: 'white-dove',
+        cabinetCount: 24,
+        linearFeet: 18,
+        doorStyle: 'shaker',
+        hardware: 'standard',
+        capturedImage: null,
+        cameraStream: null
+      };
+
+      // Cabinet styles
+      const styles = [
+        { id: 'shaker', name: 'Shaker', pricePerCabinet: 380, locked: false },
+        { id: 'raised', name: 'Raised Panel', pricePerCabinet: 420, locked: false },
+        { id: 'flat', name: 'Flat Panel', pricePerCabinet: 350, locked: false },
+        { id: 'beadboard', name: 'Beadboard', pricePerCabinet: 450, locked: true },
+        { id: 'cathedral', name: 'Cathedral', pricePerCabinet: 480, locked: true },
+        { id: 'mullion', name: 'Glass Mullion', pricePerCabinet: 520, locked: true }
+      ];
+
+      // Colors - using real paint names
+      const colors = [
+        { id: 'white-dove', name: 'White Dove', hex: '#F3EEE7', locked: false },
+        { id: 'simply-white', name: 'Simply White', hex: '#F7F5EF', locked: false },
+        { id: 'hale-navy', name: 'Hale Navy', hex: '#3C4858', locked: false },
+        { id: 'iron-ore', name: 'Iron Ore', hex: '#4A4A4C', locked: false },
+        { id: 'repose-gray', name: 'Repose Gray', hex: '#C2BCB4', locked: false },
+        { id: 'sea-salt', name: 'Sea Salt', hex: '#DADED4', locked: false },
+        { id: 'tricorn-black', name: 'Tricorn Black', hex: '#2F2F30', locked: true },
+        { id: 'alabaster', name: 'Alabaster', hex: '#F2EDE3', locked: true },
+        { id: 'agreeable-gray', name: 'Agreeable Gray', hex: '#D5CEC5', locked: true },
+        { id: 'natural-oak', name: 'Natural Oak', hex: '#C4A67C', locked: true },
+        { id: 'walnut-stain', name: 'Walnut Stain', hex: '#5C4033', locked: true },
+        { id: 'sage-green', name: 'Sage Green', hex: '#9CAF88', locked: true }
+      ];
+
+      // Demo projects
+      const demoProjects = [
+        {
+          id: 'demo-1',
+          name: 'Williams Kitchen',
+          address: '245 Peachtree Battle Ave, Buckhead, GA',
+          location: 'Buckhead, GA',
+          cabinetCount: 24,
+          linearFeet: 18,
+          style: 'shaker',
+          color: 'white-dove',
+          hardware: 'premium',
+          status: 'quoted',
+          quoteLow: 17400,
+          quoteHigh: 19200,
+          date: '2026-02-06'
+        },
+        {
+          id: 'demo-2',
+          name: 'Chen Residence',
+          address: '892 Riverside Dr, Roswell, GA',
+          location: 'Roswell, GA',
+          cabinetCount: 18,
+          linearFeet: 14,
+          style: 'raised',
+          color: 'hale-navy',
+          hardware: 'premium',
+          status: 'quoted',
+          quoteLow: 13800,
+          quoteHigh: 15600,
+          date: '2026-02-04'
+        },
+        {
+          id: 'demo-3',
+          name: 'Martinez Condo',
+          address: '1250 Town Park Dr #402, Kennesaw, GA',
+          location: 'Kennesaw, GA',
+          cabinetCount: 12,
+          linearFeet: 10,
+          style: 'flat',
+          color: 'simply-white',
+          hardware: 'standard',
+          status: 'draft',
+          quoteLow: 8600,
+          quoteHigh: 9800,
+          date: '2026-02-08'
+        }
+      ];
+
+      // Initialize app
+      function initApp() {
+        loadDemoData();
+        renderStyles();
+        renderColors();
+        renderProjects();
+        setupTabs();
+        setupCamera();
+        setupSteppers();
+        setupQuote();
+        setupActions();
+        updateQuote();
+        setupAntiScrape();
+      }
+
+      // Anti-scrape protections
+      function setupAntiScrape() {
+        // Prevent right-click on structural elements
+        document.querySelectorAll('.header, .tab-bar, .style-card, .project-card, .color-swatch').forEach(el => {
+          el.addEventListener('contextmenu', (e) => e.preventDefault());
+        });
+        // Prevent drag on images
+        document.addEventListener('dragstart', (e) => {
+          if (e.target.tagName === 'IMG') e.preventDefault();
+        });
+      }
+
+      function loadDemoData() {
+        // Auto-load demo data on first visit
+        const stored = localStorage.getItem('cabinetVizProjects');
+        if (!stored) {
+          state.projects = [...demoProjects];
+          saveProjects();
+        } else {
+          state.projects = JSON.parse(stored);
+        }
+        
+        // Set current project to first demo
+        if (state.projects.length > 0) {
+          state.currentProject = state.projects[0];
+          document.getElementById('projectLocation').textContent = state.currentProject.location;
+          state.cabinetCount = state.currentProject.cabinetCount;
+          state.linearFeet = state.currentProject.linearFeet;
+          state.doorStyle = state.currentProject.style;
+          state.hardware = state.currentProject.hardware;
+          state.selectedStyle = state.currentProject.style;
+          state.selectedColor = state.currentProject.color;
+        }
+      }
+
+      function saveProjects() {
+        localStorage.setItem('cabinetVizProjects', JSON.stringify(state.projects));
+      }
+
+      // Render style cards
+      function renderStyles() {
+        const grid = document.getElementById('stylesGrid');
+        grid.innerHTML = styles.map(style => `
+          <div class="style-card animate-in ${style.id === state.selectedStyle ? 'selected' : ''} ${style.locked ? 'locked' : ''}" 
+               data-style="${style.id}" 
+               role="option" 
+               aria-selected="${style.id === state.selectedStyle}"
+               tabindex="${style.locked ? -1 : 0}">
+            <div class="style-preview">
+              ${getStyleSVG(style.id)}
+              ${style.locked ? `
+                <div class="lock-overlay">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                  <span>Pro Only</span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="style-info">
+              <div class="style-name">${style.name}</div>
+              <div class="style-price">$${style.pricePerCabinet}/cabinet</div>
+            </div>
+          </div>
+        `).join('');
+
+        // Add click handlers
+        grid.querySelectorAll('.style-card:not(.locked)').forEach(card => {
+          card.addEventListener('click', () => selectStyle(card.dataset.style));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              selectStyle(card.dataset.style);
+            }
+          });
+        });
+      }
+
+      function getStyleSVG(id) {
+        const svgs = {
+          shaker: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/><rect x="14" y="14" width="36" height="36" rx="1"/></svg>',
+          raised: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/><rect x="14" y="14" width="36" height="36" rx="1"/><rect x="20" y="20" width="24" height="24" rx="1"/></svg>',
+          flat: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/></svg>',
+          beadboard: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/><line x1="20" y1="8" x2="20" y2="56"/><line x1="32" y1="8" x2="32" y2="56"/><line x1="44" y1="8" x2="44" y2="56"/></svg>',
+          cathedral: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/><path d="M14 48 L32 14 L50 48"/></svg>',
+          mullion: '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="48" height="48" rx="2"/><line x1="32" y1="14" x2="32" y2="50"/><line x1="14" y1="32" x2="50" y2="32"/></svg>'
+        };
+        return svgs[id] || svgs.shaker;
+      }
+
+      function selectStyle(styleId) {
+        state.selectedStyle = styleId;
+        document.querySelectorAll('.style-card').forEach(card => {
+          card.classList.toggle('selected', card.dataset.style === styleId);
+          card.setAttribute('aria-selected', card.dataset.style === styleId);
+        });
+        document.getElementById('doorStyleSelect').value = styleId;
+        updateQuote();
+        applyOverlay();
+        showToast('Style updated');
+      }
+
+      // Render color palette
+      function renderColors() {
+        const palette = document.getElementById('colorPalette');
+        palette.innerHTML = colors.map(color => `
+          <button class="color-swatch animate-in ${color.id === state.selectedColor ? 'selected' : ''} ${color.locked ? 'locked' : ''}"
+                  style="background-color: ${color.hex};"
+                  data-color="${color.id}"
+                  role="option"
+                  aria-selected="${color.id === state.selectedColor}"
+                  aria-label="${color.name}"
+                  ${color.locked ? 'disabled' : ''}>
+            <span class="color-name">${color.name}</span>
+          </button>
+        `).join('');
+
+        palette.querySelectorAll('.color-swatch:not(.locked)').forEach(swatch => {
+          swatch.addEventListener('click', () => selectColor(swatch.dataset.color));
+        });
+      }
+
+      function selectColor(colorId) {
+        state.selectedColor = colorId;
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+          swatch.classList.toggle('selected', swatch.dataset.color === colorId);
+          swatch.setAttribute('aria-selected', swatch.dataset.color === colorId);
+        });
+        applyOverlay();
+        showToast('Color updated');
+      }
+
+      // Render projects
+      function renderProjects() {
+        const list = document.getElementById('projectsList');
+        list.innerHTML = state.projects.map(project => `
+          <article class="project-card" data-id="${project.id}" tabindex="0" role="button" aria-label="Open ${project.name} project">
+            <div class="project-image">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="9"/>
+                <rect x="14" y="3" width="7" height="9"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/>
+              </svg>
+              <span class="project-status ${project.status === 'quoted' ? 'status-quoted' : 'status-draft'}">
+                ${project.status}
+              </span>
+            </div>
+            <div class="project-details">
+              <h3 class="project-name">${project.name}</h3>
+              <p class="project-address">${project.address}</p>
+              <div class="project-meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="9"/>
+                    <rect x="14" y="3" width="7" height="9"/>
+                  </svg>
+                  ${project.cabinetCount} cabinets
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                  </svg>
+                  $${project.quoteLow.toLocaleString()} - $${project.quoteHigh.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </article>
+        `).join('');
+
+        list.querySelectorAll('.project-card').forEach(card => {
+          card.addEventListener('click', () => loadProject(card.dataset.id));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              loadProject(card.dataset.id);
+            }
+          });
+        });
+      }
+
+      function loadProject(id) {
+        const project = state.projects.find(p => p.id === id);
+        if (project) {
+          state.currentProject = project;
+          state.cabinetCount = project.cabinetCount;
+          state.linearFeet = project.linearFeet;
+          state.doorStyle = project.style;
+          state.hardware = project.hardware;
+          state.selectedStyle = project.style;
+          state.selectedColor = project.color;
+
+          document.getElementById('projectLocation').textContent = project.location;
+          document.getElementById('cabinetCount').textContent = project.cabinetCount;
+          document.getElementById('linearFeet').textContent = project.linearFeet;
+          document.getElementById('doorStyleSelect').value = project.style;
+          document.getElementById('hardwareSelect').value = project.hardware;
+
+          renderStyles();
+          renderColors();
+          updateQuote();
+          
+          // Switch to capture tab
+          switchTab('captureTab');
+          showToast('Project loaded');
+        }
+      }
+
+      // Tab navigation
+      function setupTabs() {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.addEventListener('click', () => switchTab(btn.id));
+        });
+      }
+
+      function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.id === tabId);
+          btn.setAttribute('aria-selected', btn.id === tabId);
+        });
+
+        const panelId = document.getElementById(tabId).dataset.panel;
+        document.querySelectorAll('.tab-panel').forEach(panel => {
+          panel.classList.toggle('active', panel.id === panelId);
+        });
+      }
+
+      // Camera functionality
+      function setupCamera() {
+        const captureBtn = document.getElementById('captureBtn');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const usePhotoBtn = document.getElementById('usePhotoBtn');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const video = document.getElementById('cameraVideo');
+
+        captureBtn.addEventListener('click', async () => {
+          if (!state.cameraStream) {
+            await startCamera();
+          } else {
+            capturePhoto();
+          }
+        });
+
+        placeholder.addEventListener('click', startCamera);
+
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              showCapturedImage(event.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        retakeBtn.addEventListener('click', () => {
+          startCamera();
+        });
+
+        usePhotoBtn.addEventListener('click', () => {
+          showToast('Photo saved');
+          switchTab('stylesTab');
+        });
+      }
+
+      async function startCamera() {
+        const video = document.getElementById('cameraVideo');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const guide = document.getElementById('cameraGuide');
+        const capturedImage = document.getElementById('capturedImage');
+        const capturedControls = document.getElementById('capturedControls');
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+          });
+          state.cameraStream = stream;
+          video.srcObject = stream;
+          video.style.display = 'block';
+          placeholder.style.display = 'none';
+          guide.style.display = 'flex';
+          capturedImage.style.display = 'none';
+          capturedControls.style.display = 'none';
+        } catch (err) {
+          console.log('Camera not available:', err);
+          showToast('Camera access needed');
+        }
+      }
+
+      function capturePhoto() {
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        
+        showCapturedImage(dataUrl);
+        stopCamera();
+      }
+
+      function showCapturedImage(dataUrl) {
+        state.capturedImage = dataUrl;
+        const capturedImage = document.getElementById('capturedImage');
+        const video = document.getElementById('cameraVideo');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const guide = document.getElementById('cameraGuide');
+        const capturedControls = document.getElementById('capturedControls');
+
+        capturedImage.src = dataUrl;
+        capturedImage.style.display = 'block';
+        video.style.display = 'none';
+        placeholder.style.display = 'none';
+        guide.style.display = 'none';
+        capturedControls.style.display = 'flex';
+        
+        applyOverlay();
+      }
+
+      function stopCamera() {
+        if (state.cameraStream) {
+          state.cameraStream.getTracks().forEach(track => track.stop());
+          state.cameraStream = null;
+        }
+      }
+
+      // Canvas overlay for style preview
+      function applyOverlay() {
+        if (!state.capturedImage) return;
+
+        const canvas = document.getElementById('overlayCanvas');
+        const ctx = canvas.getContext('2d');
+        const img = document.getElementById('capturedImage');
+
+        canvas.width = img.naturalWidth || 800;
+        canvas.height = img.naturalHeight || 600;
+
+        // Apply color tint overlay
+        const color = colors.find(c => c.id === state.selectedColor);
+        if (color) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = color.hex;
+          ctx.globalAlpha = 0.25;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.globalAlpha = 1;
+        }
+      }
+
+      // Steppers
+      function setupSteppers() {
+        document.querySelectorAll('.stepper-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.dataset.target;
+            const action = btn.dataset.action;
+            const valueEl = document.getElementById(target);
+            let value = parseInt(valueEl.textContent);
+
+            if (action === 'increment') {
+              value = Math.min(value + 1, 100);
+            } else {
+              value = Math.max(value - 1, 1);
+            }
+
+            valueEl.textContent = value;
+            state[target] = value;
+            updateQuote();
+          });
+        });
+      }
+
+      // Quote calculation
+      function setupQuote() {
+        document.getElementById('doorStyleSelect').addEventListener('change', (e) => {
+          state.doorStyle = e.target.value;
+          state.selectedStyle = e.target.value;
+          renderStyles();
+          updateQuote();
+        });
+
+        document.getElementById('hardwareSelect').addEventListener('change', (e) => {
+          state.hardware = e.target.value;
+          updateQuote();
+        });
+      }
+
+      function updateQuote() {
+        const style = styles.find(s => s.id === state.doorStyle) || styles[0];
+        const cabinetCount = parseInt(document.getElementById('cabinetCount').textContent);
+        const linearFeet = parseInt(document.getElementById('linearFeet').textContent);
+
+        // Atlanta-area pricing
+        const materialsCost = cabinetCount * style.pricePerCabinet;
+        const laborRate = 350; // per linear foot
+        const laborCost = linearFeet * laborRate;
+        
+        const hardwareCosts = {
+          standard: cabinetCount * 35,
+          premium: cabinetCount * 65,
+          knobs: cabinetCount * 25
+        };
+        const hardwareCost = hardwareCosts[state.hardware];
+
+        const total = materialsCost + laborCost + hardwareCost;
+        const low = Math.round(total * 0.95);
+        const high = Math.round(total * 1.05);
+
+        // Animate numbers
+        animateNumber('quoteLow', low, '$');
+        animateNumber('quoteHigh', high, '$');
+        animateNumber('materialsCost', materialsCost, '$');
+        animateNumber('laborCost', laborCost, '$');
+        animateNumber('hardwareCost', hardwareCost, '$');
+
+        // Timeline
+        const weeks = Math.ceil(cabinetCount / 6);
+        document.getElementById('timeline').textContent = `${weeks}-${weeks + 1} weeks estimated`;
+      }
+
+      function animateNumber(id, target, prefix = '') {
+        const el = document.getElementById(id);
+        const current = parseInt(el.textContent.replace(/[^0-9]/g, '')) || 0;
+        const duration = 400;
+        const start = performance.now();
+
+        function update(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          const value = Math.round(current + (target - current) * eased);
+          el.textContent = prefix + value.toLocaleString();
+          
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          }
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      // Actions
+      function setupActions() {
+        document.getElementById('generatePdfBtn').addEventListener('click', generatePdf);
+        document.getElementById('shareBtn').addEventListener('click', shareQuote);
+        document.getElementById('newProjectBtn').addEventListener('click', newProject);
+      }
+
+      async function generatePdf() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFillColor(44, 49, 60);
+        doc.rect(0, 0, 210, 35, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text('CabinetViz Pro', 20, 22);
+        doc.setFontSize(10);
+        doc.text('Kitchen Cabinet Quote', 20, 30);
+
+        // Project info
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(16);
+        doc.text(state.currentProject?.name || 'New Project', 20, 50);
+        doc.setFontSize(11);
+        doc.setTextColor(100, 100, 100);
+        doc.text(state.currentProject?.address || 'Address TBD', 20, 58);
+        doc.text(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }), 20, 66);
+
+        // Quote details
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(12);
+        let y = 85;
+        
+        const details = [
+          ['Cabinet Count', document.getElementById('cabinetCount').textContent],
+          ['Linear Feet', document.getElementById('linearFeet').textContent],
+          ['Door Style', document.getElementById('doorStyleSelect').options[document.getElementById('doorStyleSelect').selectedIndex].text],
+          ['Hardware', document.getElementById('hardwareSelect').options[document.getElementById('hardwareSelect').selectedIndex].text],
+          ['Selected Color', colors.find(c => c.id === state.selectedColor)?.name || 'White Dove']
+        ];
+
+        details.forEach(([label, value]) => {
+          doc.text(label + ':', 20, y);
+          doc.text(value, 80, y);
+          y += 10;
+        });
+
+        // Pricing
+        y += 10;
+        doc.setFillColor(248, 248, 248);
+        doc.rect(15, y - 5, 180, 60, 'F');
+        
+        doc.setFontSize(14);
+        doc.text('Quote Summary', 20, y + 8);
+        
+        doc.setFontSize(11);
+        y += 20;
+        doc.text('Materials:', 25, y);
+        doc.text(document.getElementById('materialsCost').textContent, 120, y);
+        y += 8;
+        doc.text('Labor:', 25, y);
+        doc.text(document.getElementById('laborCost').textContent, 120, y);
+        y += 8;
+        doc.text('Hardware:', 25, y);
+        doc.text(document.getElementById('hardwareCost').textContent, 120, y);
+        
+        y += 15;
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text('Estimated Total:', 25, y);
+        doc.text(document.getElementById('quoteLow').textContent + ' - ' + document.getElementById('quoteHigh').textContent, 100, y);
+
+        // Timeline
+        y += 20;
+        doc.setFont(undefined, 'normal');
+        doc.setFontSize(11);
+        doc.text('Estimated Timeline: ' + document.getElementById('timeline').textContent, 20, y);
+
+        // Watermark (demo version)
+        doc.setTextColor(200, 200, 200);
+        doc.setFontSize(40);
+        doc.text('DEMO', 105, 180, { align: 'center', angle: 45 });
+
+        // Footer
+        doc.setTextColor(150, 150, 150);
+        doc.setFontSize(8);
+        doc.text('Quote generated by CabinetViz Pro Demo - For demonstration purposes only', 105, 285, { align: 'center' });
+
+        doc.save('cabinet-quote.pdf');
+        showToast('PDF downloaded');
+      }
+
+      async function shareQuote() {
+        const shareData = {
+          title: 'Cabinet Quote - ' + (state.currentProject?.name || 'New Project'),
+          text: `Kitchen cabinet refacing quote: ${document.getElementById('quoteLow').textContent} - ${document.getElementById('quoteHigh').textContent}. ${document.getElementById('cabinetCount').textContent} cabinets, ${document.getElementById('timeline').textContent}.`,
+          url: window.location.href
+        };
+
+        try {
+          if (navigator.share) {
+            await navigator.share(shareData);
+            showToast('Shared successfully');
+          } else {
+            await navigator.clipboard.writeText(shareData.text);
+            showToast('Copied to clipboard');
+          }
+        } catch (err) {
+          console.log('Share failed:', err);
+        }
+      }
+
+      function newProject() {
+        const id = 'proj-' + Date.now();
+        const project = {
+          id,
+          name: 'New Consultation',
+          address: 'Address TBD',
+          location: 'Atlanta, GA',
+          cabinetCount: 16,
+          linearFeet: 12,
+          style: 'shaker',
+          color: 'white-dove',
+          hardware: 'standard',
+          status: 'draft',
+          quoteLow: 0,
+          quoteHigh: 0,
+          date: new Date().toISOString().split('T')[0]
+        };
+
+        state.projects.unshift(project);
+        saveProjects();
+        loadProject(id);
+        renderProjects();
+        showToast('New project created');
+      }
+
+      // Toast notification
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2500);
+      }
+
+    })();
+  </script>
+</body>
+</html>
