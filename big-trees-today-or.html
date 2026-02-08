@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Planting ROI Calculator - Big Trees Today</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #065f46 0%, #10b981 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        
+        .content { padding: 40px 30px; }
+        
+        .input-section {
+            background: #f0fdf4;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .input-section h2 {
+            color: #065f46;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+        }
+        
+        .tree-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .tree-card {
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .tree-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+        }
+        
+        .tree-card.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+        
+        .tree-card .icon { font-size: 2.5em; margin-bottom: 8px; }
+        .tree-card h3 { color: #065f46; font-size: 1em; }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .input-group { margin-bottom: 20px; }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #065f46;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #d1fae5;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #065f46 0%, #10b981 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-card h2 {
+            color: #065f46;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .comparison-item {
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .comparison-item.mature {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .comparison-item.sapling {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .comparison-item h3 { margin-bottom: 15px; font-size: 1.2em; }
+        .comparison-item .value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .comparison-item .timeline {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .savings-highlight {
+            background: linear-gradient(135deg, #065f46 0%, #10b981 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .savings-highlight h3 { font-size: 1.3em; margin-bottom: 10px; }
+        .savings-highlight .amount {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .benefit-card {
+            background: white;
+            border: 2px solid #d1fae5;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .benefit-card .icon { font-size: 3em; margin-bottom: 15px; }
+        .benefit-card h3 {
+            color: #065f46;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+        .benefit-card .stat {
+            font-size: 2em;
+            font-weight: bold;
+            color: #10b981;
+            margin: 10px 0;
+        }
+        .benefit-card p {
+            color: #6b7280;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5em; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .input-row { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌳 Tree Planting ROI Calculator</h1>
+            <p>Calculate your investment & property value increase in Oregon</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2>Tree Purpose</h2>
+                
+                <div class="tree-type-grid">
+                    <div class="tree-card selected" data-type="shade" data-price="850">
+                        <div class="icon">☀️</div>
+                        <h3>Shade Trees</h3>
+                    </div>
+                    
+                    <div class="tree-card" data-type="privacy" data-price="750">
+                        <div class="icon">🌲</div>
+                        <h3>Privacy Trees</h3>
+                    </div>
+                    
+                    <div class="tree-card" data-type="flowering" data-price="650">
+                        <div class="icon">🌸</div>
+                        <h3>Flowering Trees</h3>
+                    </div>
+                    
+                    <div class="tree-card" data-type="ornamental" data-price="700">
+                        <div class="icon">🍁</div>
+                        <h3>Ornamental</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <h2>Project Details</h2>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Number of Trees</label>
+                        <input type="number" id="treeCount" value="3" min="1" max="20">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>Current Home Value</label>
+                        <input type="number" id="homeValue" value="450000" min="100000" max="2000000" step="10000">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Tree Size</label>
+                    <select id="treeSize">
+                        <option value="mature">Mature Trees (10-20ft) - Big Trees Today Specialty</option>
+                        <option value="sapling">Small Saplings (3-6ft) - Traditional Nurseries</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateROI()">Calculate Investment & ROI</button>
+            
+            <div class="results" id="results">
+                <div class="comparison-card">
+                    <h2>💰 Mature Trees vs Saplings Comparison</h2>
+                    
+                    <div class="comparison-grid">
+                        <div class="comparison-item mature">
+                            <h3>Big Trees Today<br>(Mature Specimens)</h3>
+                            <div class="value" id="matureCost"></div>
+                            <div class="timeline">⏱️ Instant Impact</div>
+                        </div>
+                        
+                        <div class="comparison-item sapling">
+                            <h3>Traditional Nursery<br>(Small Saplings)</h3>
+                            <div class="value" id="saplingCost"></div>
+                            <div class="timeline">⏱️ 8-12 years to maturity</div>
+                        </div>
+                    </div>
+                    
+                    <div class="savings-highlight">
+                        <h3 id="savingsTitle">🎉 Your Time Savings</h3>
+                        <div class="amount" id="timeSavings">8-12 Years</div>
+                        <p id="savingsDescription">Get immediate shade, privacy & property value boost</p>
+                    </div>
+                </div>
+                
+                <div class="benefits-grid">
+                    <div class="benefit-card">
+                        <div class="icon">🏡</div>
+                        <h3>Property Value Increase</h3>
+                        <div class="stat" id="propertyValue"></div>
+                        <p>Mature landscaping adds 7-15% to Oregon home values</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="icon">❄️</div>
+                        <h3>Annual Energy Savings</h3>
+                        <div class="stat" id="energySavings"></div>
+                        <p>Shade trees reduce cooling costs 20-35% in Oregon summers</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="icon">🌬️</div>
+                        <h3>Air Quality Value</h3>
+                        <div class="stat" id="carbonOffset"></div>
+                        <p>Each mature tree absorbs 48 lbs CO₂/year & improves air quality</p>
+                    </div>
+                    
+                    <div class="benefit-card">
+                        <div class="icon">💧</div>
+                        <h3>Stormwater Management</h3>
+                        <div class="stat">$120/yr</div>
+                        <p>Trees intercept rainfall, reducing runoff & erosion (per tree value)</p>
+                    </div>
+                </div>
+                
+                <div class="comparison-card" style="background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); color: white; margin-top: 25px;">
+                    <h2 style="color: white;">✅ Why Choose Big Trees Today</h2>
+                    <div style="text-align: left; line-height: 1.8; font-size: 1.05em;">
+                        <p style="margin-bottom: 15px;"><strong>35+ years specializing in mature specimen trees</strong> — Field-grown, healthier root systems</p>
+                        <p style="margin-bottom: 15px;"><strong>Instant impact</strong> — No waiting 8-12 years for shade/privacy</p>
+                        <p style="margin-bottom: 15px;"><strong>Professional installation</strong> — Expert transplanting, delivery & planting services</p>
+                        <p style="margin-bottom: 15px;"><strong>Better survival rates</strong> — Mature trees establish faster than saplings with proper care</p>
+                        <p style="margin-bottom: 15px;"><strong>Property value boost</strong> — Immediate curb appeal & resale advantage</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedType = 'shade';
+        let selectedPrice = 850;
+        
+        document.querySelectorAll('.tree-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.tree-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedType = this.dataset.type;
+                selectedPrice = parseFloat(this.dataset.price);
+            });
+        });
+        
+        function calculateROI() {
+            const treeCount = parseInt(document.getElementById('treeCount').value) || 3;
+            const homeValue = parseInt(document.getElementById('homeValue').value) || 450000;
+            const treeSize = document.getElementById('treeSize').value;
+            
+            const isMature = treeSize === 'mature';
+            const matureTreeCost = selectedPrice;
+            const saplingCost = matureTreeCost * 0.25; // Saplings ~25% of mature tree cost
+            
+            const totalMatureCost = matureTreeCost * treeCount + 400; // +$400 delivery/install
+            const totalSaplingCost = saplingCost * treeCount + 150; // +$150 delivery
+            
+            // 10 years of care for saplings (fertilizer, water, staking)
+            const saplingCareCost = treeCount * 120 * 10; // $120/tree/year for 10 years
+            const totalSaplingWithCare = totalSaplingCost + saplingCareCost;
+            
+            // Property value increase (mature trees: 10%, saplings after 10yr: 10%, saplings now: 2%)
+            const propertyValueIncrease = Math.round(homeValue * (isMature ? 0.10 : 0.02));
+            
+            // Annual energy savings (shade trees only, mature trees only)
+            const annualEnergySavings = (selectedType === 'shade' && isMature) ? 
+                Math.round(treeCount * 180) : 
+                (selectedType === 'shade' ? Math.round(treeCount * 30) : 0);
+            
+            // Carbon offset value
+            const carbonOffsetValue = Math.round(treeCount * 48 * 0.05); // 48 lbs CO2/yr @ $0.05/lb
+            
+            // Display results
+            document.getElementById('matureCost').textContent = '$' + totalMatureCost.toLocaleString();
+            document.getElementById('saplingCost').textContent = '$' + totalSaplingCost.toLocaleString();
+            
+            if (isMature) {
+                document.getElementById('savingsTitle').textContent = '🎉 Your Time Savings';
+                document.getElementById('timeSavings').textContent = '8-12 Years';
+                document.getElementById('savingsDescription').textContent = 'Get immediate shade, privacy & property value boost';
+            } else {
+                const longTermSavings = totalSaplingWithCare - totalMatureCost;
+                document.getElementById('savingsTitle').textContent = longTermSavings > 0 ? '⚠️ Long-Term Cost Reality' : '💰 Potential Savings';
+                document.getElementById('timeSavings').textContent = longTermSavings > 0 ? 
+                    '+$' + longTermSavings.toLocaleString() : 
+                    '$' + Math.abs(longTermSavings).toLocaleString();
+                document.getElementById('savingsDescription').textContent = longTermSavings > 0 ?
+                    'Saplings cost MORE over 10 years (care + waiting)' :
+                    'But wait 8-12 years for full benefits';
+            }
+            
+            document.getElementById('propertyValue').textContent = '+$' + propertyValueIncrease.toLocaleString();
+            document.getElementById('energySavings').textContent = annualEnergySavings > 0 ? 
+                '$' + annualEnergySavings.toLocaleString() + '/yr' : 
+                'N/A';
+            document.getElementById('carbonOffset').textContent = '$' + carbonOffsetValue.toLocaleString() + '/yr';
+            
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        window.addEventListener('load', calculateROI);
+    </script>
+</body>
+</html>

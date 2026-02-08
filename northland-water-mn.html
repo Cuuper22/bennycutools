@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Softener ROI Calculator - Northland Water</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+        }
+        
+        .section h2 {
+            color: #2a5298;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .input-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .results.visible {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h3 {
+            color: #2a5298;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .savings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .savings-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .savings-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .savings-card .value {
+            color: #2a5298;
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        .savings-card .subtext {
+            color: #27ae60;
+            font-size: 0.85em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .breakdown {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .breakdown h4 {
+            color: #2a5298;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #2a5298;
+            padding-top: 15px;
+            margin-top: 10px;
+            border-top: 2px solid #667eea;
+        }
+        
+        .breakdown-item span:first-child {
+            color: #333;
+        }
+        
+        .breakdown-item span:last-child {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .product-recommendation {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+            text-align: center;
+        }
+        
+        .product-recommendation h4 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+        
+        .product-recommendation p {
+            font-size: 1.05em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #2a5298;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+        
+        .info-box h4 {
+            color: #2a5298;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            padding: 8px 0;
+            color: #333;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 25px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .savings-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 Water Softener ROI Calculator</h1>
+            <p>Calculate Your Annual Savings with Soft Water<br>Serving the Twin Cities Since 1949</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Household Information</h2>
+                
+                <div class="input-group">
+                    <label for="people">Number of People in Home</label>
+                    <input type="number" id="people" value="4" min="1" max="12">
+                    <div class="input-hint">Average household water usage increases with family size</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="hardness">Water Hardness Level (grains per gallon)</label>
+                    <select id="hardness">
+                        <option value="15">Very Hard (15+ gpg) - Twin Cities Average</option>
+                        <option value="12">Hard (10-15 gpg)</option>
+                        <option value="8">Moderately Hard (7-10 gpg)</option>
+                        <option value="5">Slightly Hard (3-7 gpg)</option>
+                    </select>
+                    <div class="input-hint">Twin Cities water typically 15-20 grains per gallon</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="gallons">Monthly Water Usage (gallons)</label>
+                    <input type="number" id="gallons" value="6000" min="1000" max="30000" step="500">
+                    <div class="input-hint">Average: 1,500 gallons per person/month</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Current Costs</h2>
+                
+                <div class="input-group">
+                    <label for="detergent">Monthly Detergent/Soap Spending</label>
+                    <input type="number" id="detergent" value="40" min="0" max="200" step="5">
+                    <div class="input-hint">Laundry, dish soap, shampoo, body wash, cleaning products</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="bottled">Monthly Bottled Water Spending</label>
+                    <input type="number" id="bottled" value="30" min="0" max="200" step="5">
+                    <div class="input-hint">If you buy bottled water due to hard water taste</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="electric">Average Monthly Electric Bill</label>
+                    <input type="number" id="electric" value="150" min="0" max="500" step="10">
+                    <div class="input-hint">Water heater efficiency improves with soft water</div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateROI()">💰 Calculate My Savings</button>
+            
+            <div class="results" id="results">
+                <h3>Your Annual Savings with Soft Water</h3>
+                
+                <div class="savings-grid">
+                    <div class="savings-card">
+                        <div class="label">Total Annual Savings</div>
+                        <div class="value" id="totalSavings">$0</div>
+                        <div class="subtext">Year after year</div>
+                    </div>
+                    
+                    <div class="savings-card">
+                        <div class="label">Monthly Savings</div>
+                        <div class="value" id="monthlySavings">$0</div>
+                        <div class="subtext">Every month</div>
+                    </div>
+                    
+                    <div class="savings-card">
+                        <div class="label">10-Year ROI</div>
+                        <div class="value" id="tenYearROI">$0</div>
+                        <div class="subtext">Long-term value</div>
+                    </div>
+                </div>
+                
+                <div class="breakdown">
+                    <h4>💵 Savings Breakdown</h4>
+                    <div class="breakdown-item">
+                        <span>Soap & Detergent (50% reduction)</span>
+                        <span id="detergentSavings">$0/year</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Bottled Water (eliminated)</span>
+                        <span id="bottledSavings">$0/year</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Energy Bills (22% water heater savings)</span>
+                        <span id="energySavings">$0/year</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Appliance Lifespan Extension</span>
+                        <span id="applianceSavings">$0/year</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Plumbing Repairs Avoided</span>
+                        <span id="plumbingSavings">$0/year</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span><strong>Total Annual Savings</strong></span>
+                        <span id="totalBreakdown">$0/year</span>
+                    </div>
+                </div>
+                
+                <div class="product-recommendation" id="recommendation">
+                    <h4>📋 Recommended System</h4>
+                    <p id="recommendationText"></p>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🏆 Additional Benefits of Soft Water</h4>
+                    <ul>
+                        <li><strong>Appliances last 30% longer</strong> - water heaters, dishwashers, washing machines</li>
+                        <li><strong>Softer skin & shinier hair</strong> - no mineral buildup</li>
+                        <li><strong>Cleaner dishes & brighter clothes</strong> - no hard water spots</li>
+                        <li><strong>Reduced scale buildup</strong> - fewer plumbing issues</li>
+                        <li><strong>Better tasting water</strong> - no metallic taste or smell</li>
+                        <li><strong>Less time cleaning</strong> - no soap scum on fixtures</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="info-box" style="margin-top: 30px;">
+                <h4>🌟 Why Choose Northland Water?</h4>
+                <ul>
+                    <li><strong>Family-owned since 1949</strong> - Third generation, 75+ years of expertise</li>
+                    <li><strong>Angie's List Super Service Award</strong> - Top 5% in Minnesota</li>
+                    <li><strong>Three product tiers</strong> - Silver, Gold, Platinum to fit any budget</li>
+                    <li><strong>Service-first approach</strong> - No high-pressure sales tactics</li>
+                    <li><strong>Twin Cities hard water specialists</strong> - Local expertise matters</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Northland Water</strong> - Serving the Twin Cities Metropolitan Area Since 1949</p>
+            <p style="margin-top: 10px;">This calculator provides estimates based on industry averages and Twin Cities water conditions.<br>Actual savings may vary based on usage patterns and water hardness.</p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateROI() {
+            // Get inputs
+            const people = parseInt(document.getElementById('people').value);
+            const hardness = parseInt(document.getElementById('hardness').value);
+            const gallons = parseInt(document.getElementById('gallons').value);
+            const detergent = parseFloat(document.getElementById('detergent').value);
+            const bottled = parseFloat(document.getElementById('bottled').value);
+            const electric = parseFloat(document.getElementById('electric').value);
+            
+            // Calculate savings
+            // Detergent savings: 50% reduction with soft water
+            const detergentAnnual = detergent * 12 * 0.5;
+            
+            // Bottled water: eliminated
+            const bottledAnnual = bottled * 12;
+            
+            // Energy savings: 22% on water heater portion (30% of bill)
+            const energyAnnual = electric * 12 * 0.30 * 0.22;
+            
+            // Appliance lifespan extension (water heater, dishwasher, washing machine)
+            // Average: $150/year avoided replacement costs
+            const applianceAnnual = 150 + (people * 10);
+            
+            // Plumbing repairs: scale buildup reduction
+            // Average: $100-200/year in avoided repairs
+            const plumbingAnnual = 100 + (hardness * 5);
+            
+            // Total annual savings
+            const totalAnnual = detergentAnnual + bottledAnnual + energyAnnual + applianceAnnual + plumbingAnnual;
+            const totalMonthly = totalAnnual / 12;
+            const tenYear = totalAnnual * 10;
+            
+            // Update display
+            document.getElementById('totalSavings').textContent = '$' + Math.round(totalAnnual).toLocaleString();
+            document.getElementById('monthlySavings').textContent = '$' + Math.round(totalMonthly).toLocaleString();
+            document.getElementById('tenYearROI').textContent = '$' + Math.round(tenYear).toLocaleString();
+            
+            document.getElementById('detergentSavings').textContent = '$' + Math.round(detergentAnnual).toLocaleString() + '/year';
+            document.getElementById('bottledSavings').textContent = '$' + Math.round(bottledAnnual).toLocaleString() + '/year';
+            document.getElementById('energySavings').textContent = '$' + Math.round(energyAnnual).toLocaleString() + '/year';
+            document.getElementById('applianceSavings').textContent = '$' + Math.round(applianceAnnual).toLocaleString() + '/year';
+            document.getElementById('plumbingSavings').textContent = '$' + Math.round(plumbingAnnual).toLocaleString() + '/year';
+            document.getElementById('totalBreakdown').textContent = '$' + Math.round(totalAnnual).toLocaleString() + '/year';
+            
+            // Product recommendation
+            let recommendation = '';
+            if (people <= 2) {
+                recommendation = '<strong>Silver Series</strong> - Perfect for your 1-2 person household. Our most economical on-demand softener provides excellent value and performance.';
+            } else if (people <= 4) {
+                recommendation = '<strong>Gold Series</strong> - Ideal for your family of ' + people + '. Our most efficient single-tank softener saves money on salt and water usage throughout the year.';
+            } else {
+                recommendation = '<strong>Platinum Series (Twin Tank)</strong> - Best for your ' + people + '-person household. Guarantees 24/7 soft water with no regeneration downtime. Perfect for high water usage.';
+            }
+            
+            document.getElementById('recommendationText').innerHTML = recommendation;
+            
+            // Show results
+            document.getElementById('results').classList.add('visible');
+            
+            // Smooth scroll to results
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        // Auto-update gallons based on people
+        document.getElementById('people').addEventListener('input', function() {
+            const people = parseInt(this.value);
+            if (!isNaN(people)) {
+                document.getElementById('gallons').value = people * 1500;
+            }
+        });
+    </script>
+</body>
+</html>

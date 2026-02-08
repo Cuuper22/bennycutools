@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Roof ROI Calculator - Piedmont Roofing</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #4b5563 0%, #1f2937 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 800px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #6b7280 0%, #374151 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { font-size: 2.2em; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 1.1em; opacity: 0.95; line-height: 1.6; }
+        .content { padding: 40px 30px; }
+        .section { margin-bottom: 35px; }
+        .section h2 { color: #374151; font-size: 1.5em; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 3px solid #6b7280; }
+        .input-group { margin-bottom: 25px; }
+        .input-group label { display: block; color: #333; font-weight: 600; margin-bottom: 8px; font-size: 1em; }
+        .input-group input, .input-group select { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; transition: all 0.3s; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: #6b7280; box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1); }
+        .input-hint { font-size: 0.85em; color: #666; margin-top: 5px; font-style: italic; }
+        .calculate-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #6b7280 0%, #374151 100%); color: white; border: none; border-radius: 12px; font-size: 1.2em; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 10px; }
+        .calculate-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(107, 114, 128, 0.4); }
+        .results { display: none; margin-top: 40px; }
+        .results.visible { display: block; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .highlight-box { background: #f0fdf4; border-left: 5px solid #22c55e; padding: 25px; border-radius: 10px; margin-bottom: 30px; text-align: center; }
+        .highlight-box h3 { color: #15803d; font-size: 1.8em; margin-bottom: 10px; }
+        .highlight-box .big-number { font-size: 3em; font-weight: 700; color: #16a34a; margin: 15px 0; }
+        .comparison-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .comparison-card { padding: 25px; border-radius: 12px; text-align: center; border: 2px solid; }
+        .comparison-card h4 { font-size: 1.3em; margin-bottom: 15px; }
+        .comparison-card .price { font-size: 2.5em; font-weight: 700; margin: 15px 0; }
+        .comparison-card .details { font-size: 0.9em; line-height: 1.7; }
+        .metal-card { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-color: #22c55e; }
+        .metal-card h4, .metal-card .price { color: #15803d; }
+        .asphalt-card { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444; }
+        .asphalt-card h4, .asphalt-card .price { color: #b91c1c; }
+        .breakdown { background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-bottom: 25px; }
+        .breakdown h4 { color: #374151; margin-bottom: 20px; font-size: 1.3em; }
+        .breakdown-item { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #e5e7eb; }
+        .breakdown-item:last-child { border-bottom: none; }
+        .breakdown-item span:first-child { color: #374151; font-weight: 500; }
+        .breakdown-item span:last-child { color: #16a34a; font-weight: 700; font-size: 1.05em; }
+        .info-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin-top: 25px; }
+        .info-box h4 { color: #1e40af; margin-bottom: 10px; font-size: 1.1em; }
+        .info-box ul { list-style: none; padding-left: 0; }
+        .info-box li { padding: 8px 0; color: #1e3a8a; position: relative; padding-left: 25px; }
+        .info-box li:before { content: "✓"; position: absolute; left: 0; color: #16a34a; font-weight: bold; font-size: 1.2em; }
+        .footer { background: #f8f9fa; padding: 25px 30px; text-align: center; color: #666; font-size: 0.9em; border-top: 1px solid #e0e0e0; }
+        @media (max-width: 700px) { .header h1 { font-size: 1.6em; } .content { padding: 25px 20px; } .comparison-grid { grid-template-columns: 1fr; } }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Metal Roof ROI Calculator</h1>
+            <p>50-Year Lifetime Cost Comparison<br>Serving Virginia Since 1977</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Your Home & Roof</h2>
+                
+                <div class="input-group">
+                    <label for="roofSize">Roof Size (square feet)</label>
+                    <input type="number" id="roofSize" value="2000" min="500" max="8000" step="100">
+                    <div class="input-hint">Average Virginia home: 1,800-2,500 sq ft</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="currentRoof">Current Roof Type & Age</label>
+                    <select id="currentRoof">
+                        <option value="asphalt-new">Asphalt Shingles (0-5 years old)</option>
+                        <option value="asphalt-mid">Asphalt Shingles (6-12 years old)</option>
+                        <option value="asphalt-old">Asphalt Shingles (13+ years old, needs replacement soon)</option>
+                        <option value="other">Other (planning new roof)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="yearsInHome">How long do you plan to stay in this home?</label>
+                    <select id="yearsInHome">
+                        <option value="10">10 years or less</option>
+                        <option value="20">11-20 years</option>
+                        <option value="30">21-30 years</option>
+                        <option value="50">30+ years (forever home)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="electricBill">Average Summer Electric Bill</label>
+                    <input type="number" id="electricBill" value="180" min="50" max="500" step="10">
+                    <div class="input-hint">Metal roofs reflect heat, reducing cooling costs 10-25%</div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateROI()">💰 Compare Metal vs. Asphalt</button>
+            
+            <div class="results" id="results">
+                <div class="highlight-box">
+                    <h3>Your Lifetime Savings with Metal Roofing</h3>
+                    <div class="big-number" id="totalSavings">$0</div>
+                    <p style="color: #166534; font-size: 1.1em;" id="savingsText"></p>
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card metal-card">
+                        <h4>✅ Metal Roof</h4>
+                        <div class="price" id="metalCost">$0</div>
+                        <div class="details">
+                            <strong>One-time cost</strong><br>
+                            Lasts 50+ years<br>
+                            Minimal maintenance<br>
+                            Energy savings<br>
+                            Recyclable
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card asphalt-card">
+                        <h4>❌ Asphalt Shingles</h4>
+                        <div class="price" id="asphaltCost">$0</div>
+                        <div class="details">
+                            <strong id="replacementText">Multiple replacements</strong><br>
+                            Lasts 15-20 years<br>
+                            Repair costs<br>
+                            Higher energy bills<br>
+                            Landfill waste
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="breakdown">
+                    <h4>💵 Lifetime Savings Breakdown (<span id="timeframe">50</span> Years)</h4>
+                    <div class="breakdown-item">
+                        <span>Avoided Roof Replacements</span>
+                        <span id="replacementSavings">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Maintenance & Repair Savings</span>
+                        <span id="maintenanceSavings">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Energy Bill Savings (cooling)</span>
+                        <span id="energySavings">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Insurance Premium Reduction</span>
+                        <span id="insuranceSavings">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Resale Value Increase</span>
+                        <span id="resaleSavings">$0</span>
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🏆 Why Metal Roofs Win in Virginia</h4>
+                    <ul>
+                        <li><strong>Weather Resistance:</strong> Withstands Virginia storms, hail, high winds (120+ mph)</li>
+                        <li><strong>Energy Efficiency:</strong> Reflects solar heat, reducing summer cooling costs 10-25%</li>
+                        <li><strong>Lifespan:</strong> 50+ years vs. asphalt's 15-20 years (you own it for life)</li>
+                        <li><strong>Low Maintenance:</strong> No curling shingles, no granule loss, no algae growth</li>
+                        <li><strong>Eco-Friendly:</strong> 100% recyclable vs. 11 million tons of shingles in landfills/year</li>
+                        <li><strong>Fire Resistant:</strong> Class A fire rating (asphalt only Class A if treated)</li>
+                        <li><strong>Resale Value:</strong> Premium feature buyers pay extra for</li>
+                    </ul>
+                </div>
+                
+                <div style="background: white; padding: 25px; border-radius: 12px; border: 2px solid #e5e7eb; margin-top: 25px;">
+                    <h4 style="color: #374151; margin-bottom: 15px; font-size: 1.3em;">🏅 Why Choose Piedmont Roofing?</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 10px 0; color: #4b5563; border-bottom: 1px solid #e5e7eb;">
+                            <strong>✓ Since 1977:</strong> 47+ years serving Virginia families
+                        </li>
+                        <li style="padding: 10px 0; color: #4b5563; border-bottom: 1px solid #e5e7eb;">
+                            <strong>✓ Family-Owned:</strong> Local business that understands you
+                        </li>
+                        <li style="padding: 10px 0; color: #4b5563; border-bottom: 1px solid #e5e7eb;">
+                            <strong>✓ Class A Licensed:</strong> Fully insured & certified
+                        </li>
+                        <li style="padding: 10px 0; color: #4b5563; border-bottom: 1px solid #e5e7eb;">
+                            <strong>✓ Historical Roofing:</strong> Rare specialty expertise
+                        </li>
+                        <li style="padding: 10px 0; color: #4b5563; border-bottom: 1px solid #e5e7eb;">
+                            <strong>✓ Transparent Pricing:</strong> Quality work, 100% satisfaction
+                        </li>
+                        <li style="padding: 10px 0; color: #4b5563;">
+                            <strong>✓ Service Area:</strong> Fairfax to Winchester corridor
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Piedmont Roofing</strong> - Serving Virginia Since 1977</p>
+            <p style="margin-top: 10px;">1-800-594-8180 | piedmontroofing.com</p>
+            <p style="margin-top: 10px;">This calculator provides estimates based on typical Virginia costs and metal roof performance.<br>Actual savings vary based on roof size, material choice, and energy usage.</p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateROI() {
+            const roofSize = parseInt(document.getElementById('roofSize').value);
+            const currentRoof = document.getElementById('currentRoof').value;
+            const yearsInHome = parseInt(document.getElementById('yearsInHome').value);
+            const electricBill = parseFloat(document.getElementById('electricBill').value);
+            
+            // Cost per sq ft
+            const metalCostPerSqFt = 9; // $9-12/sq ft installed
+            const asphaltCostPerSqFt = 6; // $5-7/sq ft installed
+            
+            const metalTotalCost = roofSize * metalCostPerSqFt;
+            const asphaltInitialCost = roofSize * asphaltCostPerSqFt;
+            
+            // Asphalt replacements needed
+            const asphaltLifespan = 18; // 15-20 years average
+            const replacementsNeeded = Math.floor(yearsInHome / asphaltLifespan);
+            const asphaltTotalCost = asphaltInitialCost * (replacementsNeeded + 1);
+            
+            // Maintenance costs
+            const asphaltMaintenance = 300; // per year
+            const metalMaintenance = 50; // minimal
+            const maintenanceSavings = (asphaltMaintenance - metalMaintenance) * yearsInHome;
+            
+            // Energy savings (metal reflects heat, 15% average cooling savings)
+            const summerMonths = 5; // May-Sept
+            const energySavingsAnnual = electricBill * summerMonths * 0.15;
+            const totalEnergySavings = energySavingsAnnual * yearsInHome;
+            
+            // Insurance savings (some insurers give 5-10% discount)
+            const insuranceAnnual = 50; // $50-100/year discount
+            const totalInsuranceSavings = insuranceAnnual * yearsInHome;
+            
+            // Resale value increase
+            const resaleIncrease = roofSize * 1.5; // $1-2/sq ft value add
+            
+            // Replacement savings
+            const replacementSavings = asphaltInitialCost * replacementsNeeded;
+            
+            // Total savings
+            const totalSavings = (asphaltTotalCost - metalTotalCost) + maintenanceSavings + totalEnergySavings + totalInsuranceSavings;
+            
+            // Update display
+            document.getElementById('metalCost').textContent = '$' + Math.round(metalTotalCost).toLocaleString();
+            document.getElementById('asphaltCost').textContent = '$' + Math.round(asphaltTotalCost).toLocaleString();
+            document.getElementById('totalSavings').textContent = '$' + Math.round(totalSavings).toLocaleString();
+            document.getElementById('timeframe').textContent = yearsInHome;
+            
+            let savingsText = '';
+            if (totalSavings > 0) {
+                savingsText = 'Over ' + yearsInHome + ' years, metal saves you $' + Math.round(totalSavings).toLocaleString() + ' vs. asphalt shingles';
+            } else {
+                savingsText = 'Break-even point: ' + Math.ceil(metalTotalCost / (asphaltMaintenance + energySavingsAnnual + insuranceAnnual)) + ' years';
+            }
+            document.getElementById('savingsText').textContent = savingsText;
+            
+            document.getElementById('replacementText').textContent = (replacementsNeeded + 1) + ' roofs needed';
+            document.getElementById('replacementSavings').textContent = '$' + Math.round(replacementSavings).toLocaleString();
+            document.getElementById('maintenanceSavings').textContent = '$' + Math.round(maintenanceSavings).toLocaleString();
+            document.getElementById('energySavings').textContent = '$' + Math.round(totalEnergySavings).toLocaleString();
+            document.getElementById('insuranceSavings').textContent = '$' + Math.round(totalInsuranceSavings).toLocaleString();
+            document.getElementById('resaleSavings').textContent = '$' + Math.round(resaleIncrease).toLocaleString();
+            
+            // Show results
+            document.getElementById('results').classList.add('visible');
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>

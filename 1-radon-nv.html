@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radon Risk Calculator | #1 Radon Inc</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #3b82f6;
+        }
+        
+        .header h1 {
+            color: #1e293b;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #64748b;
+            font-size: 1.1em;
+        }
+        
+        .epa-banner {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+        }
+        
+        .epa-banner strong {
+            font-size: 1.2em;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        
+        .info-box p {
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+        }
+        
+        .value-display {
+            text-align: center;
+            color: #3b82f6;
+            font-size: 1.4em;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        .radon-level-indicator {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 700;
+            margin-top: 10px;
+            font-size: 1.1em;
+        }
+        
+        .level-low {
+            background: #dcfce7;
+            color: #166534;
+            border: 2px solid #22c55e;
+        }
+        
+        .level-moderate {
+            background: #fef3c7;
+            color: #92400e;
+            border: 2px solid #f59e0b;
+        }
+        
+        .level-high {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+        
+        .level-extreme {
+            background: #fecaca;
+            color: #7f1d1d;
+            border: 2px solid #dc2626;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: 16px;
+            border-left: 5px solid #3b82f6;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .result-item h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .result-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #3b82f6;
+            margin: 10px 0;
+        }
+        
+        .result-item p {
+            color: #475569;
+            line-height: 1.6;
+        }
+        
+        .danger {
+            color: #dc2626 !important;
+        }
+        
+        .warning {
+            color: #ea580c !important;
+        }
+        
+        .success {
+            color: #16a34a !important;
+        }
+        
+        .health-timeline {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .timeline-item .years {
+            font-weight: 700;
+            color: #3b82f6;
+            min-width: 100px;
+            font-size: 1.1em;
+        }
+        
+        .timeline-item .risk {
+            color: #475569;
+            line-height: 1.5;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .comparison-card {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .comparison-card.bad {
+            background: #fef2f2;
+            border: 2px solid #dc2626;
+        }
+        
+        .comparison-card.good {
+            background: #f0fdf4;
+            border: 2px solid #16a34a;
+        }
+        
+        .comparison-card h4 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .comparison-card .price {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .comparison-card ul {
+            text-align: left;
+            margin-top: 15px;
+            list-style: none;
+            padding: 0;
+        }
+        
+        .comparison-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+        
+        .cta-box {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            color: white;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .cta-box h3 {
+            font-size: 1.6em;
+            margin-bottom: 15px;
+        }
+        
+        .cta-box p {
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            opacity: 0.95;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 14px 40px;
+            background: white;
+            color: #1e3a8a;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            margin: 0 10px;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-card .number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #3b82f6;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .label {
+            color: #64748b;
+            font-size: 0.95em;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .result-value {
+                font-size: 1.6em;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☢️ Radon Risk & Mitigation Calculator</h1>
+            <p class="subtitle">Calculate Your Health Risk & Mitigation Costs</p>
+        </div>
+        
+        <div class="epa-banner">
+            ⚠️ <strong>EPA Action Level: 4.0 pCi/L</strong><br>
+            Radon is the #2 cause of lung cancer in the U.S. (after smoking) — 21,000 deaths annually
+        </div>
+        
+        <div class="info-box">
+            <h3>What is Radon?</h3>
+            <p>Radon is a colorless, odorless radioactive gas that comes from the natural breakdown of uranium in soil and rock. It seeps into homes through cracks in foundations, and long-term exposure significantly increases lung cancer risk — even if you've never smoked.</p>
+        </div>
+        
+        <div class="input-group">
+            <label for="radonLevel">Measured Radon Level (pCi/L)</label>
+            <div class="slider-container">
+                <input type="range" id="radonLevel" class="slider" min="0" max="20" value="4" step="0.5">
+                <div class="value-display" id="radonDisplay">4.0 pCi/L</div>
+                <div class="radon-level-indicator" id="radonIndicator"></div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="squareFootage">Home Square Footage</label>
+            <input type="number" id="squareFootage" value="2000" step="100" placeholder="2000">
+        </div>
+        
+        <div class="input-group">
+            <label for="foundationType">Foundation Type</label>
+            <select id="foundationType">
+                <option value="slab">Slab on Grade</option>
+                <option value="crawlspace">Crawl Space</option>
+                <option value="basement">Basement</option>
+                <option value="combination">Combination (Slab + Basement/Crawl)</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="occupants">Number of Occupants</label>
+            <input type="number" id="occupants" value="3" min="1" max="20">
+        </div>
+        
+        <div class="input-group">
+            <label for="homeValue">Estimated Home Value ($)</label>
+            <input type="number" id="homeValue" value="450000" step="10000" placeholder="450000">
+        </div>
+        
+        <div class="input-group">
+            <label for="smokingStatus">Smoking Status in Home</label>
+            <select id="smokingStatus">
+                <option value="none">Non-smokers</option>
+                <option value="current">Current smoker(s) present</option>
+                <option value="former">Former smoker(s) only</option>
+            </select>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateRadonRisk()">Calculate Radon Risk & Cost</button>
+        
+        <div class="results" id="results">
+            <h2 style="color: #1e293b; margin-bottom: 25px; font-size: 1.8em;">📊 Your Radon Risk Analysis</h2>
+            
+            <div class="result-item">
+                <h3>EPA Assessment</h3>
+                <div class="result-value" id="epaAssessment"></div>
+                <p id="epaRecommendation"></p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Lung Cancer Risk Increase</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="number" id="riskNonSmoker"></div>
+                        <div class="label">Non-smoker lifetime risk</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="riskSmoker"></div>
+                        <div class="label">Smoker lifetime risk</div>
+                    </div>
+                </div>
+                <div class="health-timeline" id="healthTimeline"></div>
+            </div>
+            
+            <div class="result-item">
+                <h3>Estimated Mitigation Cost</h3>
+                <div class="result-value success" id="mitigationCost">$0</div>
+                <p id="mitigationDetails"></p>
+                <p style="margin-top: 15px;"><strong>Post-mitigation levels:</strong> Typically reduced to <strong>0.5-2.0 pCi/L</strong> (below EPA action level)</p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Real Estate Impact</h3>
+                <div class="result-value warning" id="realEstateImpact"></div>
+                <p id="realEstateNote"></p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Testing Options Comparison</h3>
+                <div class="comparison-grid">
+                    <div class="comparison-card bad">
+                        <h4>DIY Test Kit</h4>
+                        <div class="price" style="color: #475569;">$25-40</div>
+                        <ul>
+                            <li>❌ 48-hour short-term test (less accurate)</li>
+                            <li>❌ Self-placement (positioning errors common)</li>
+                            <li>❌ Mail-in lab (7-14 day results)</li>
+                            <li>❌ No professional interpretation</li>
+                            <li>❌ Not accepted by all lenders/buyers</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card good">
+                        <h4>Professional Testing</h4>
+                        <div class="price" style="color: #16a34a;">$150-300</div>
+                        <ul>
+                            <li>✅ Continuous 48-hour monitoring</li>
+                            <li>✅ EPA-approved device placement</li>
+                            <li>✅ Same-day or next-day results</li>
+                            <li>✅ Certified interpretation & report</li>
+                            <li>✅ Accepted by all lenders/buyers</li>
+                            <li>✅ Tamper-proof (real estate transactions)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="result-item">
+                <h3>10-Year Cost Analysis</h3>
+                <div class="comparison-grid">
+                    <div class="comparison-card bad">
+                        <h4>Do Nothing</h4>
+                        <div class="price danger" id="doNothingCost">$0</div>
+                        <p id="doNothingNote"></p>
+                    </div>
+                    <div class="comparison-card good">
+                        <h4>Mitigate Now</h4>
+                        <div class="price success" id="mitigateNowCost">$0</div>
+                        <p id="mitigateNowNote"></p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="cta-box">
+                <h3>🏠 Protect Your Home & Health Today</h3>
+                <p><strong>#1 Radon Inc</strong> — RMT Certified since 2009. Serving Las Vegas & Denver Metro with fast, reliable testing and mitigation. Founded by real estate agent Jesse Fuller, so we understand your timeline.</p>
+                <a href="https://www.numberoneradon.com" class="cta-btn">Schedule Testing →</a>
+                <a href="tel:7203534290" class="cta-btn">Call (720) 353-4290</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // EPA data: Radon level to lung cancer deaths per 1,000
+        const EPA_DATA = {
+            20: { nonSmoker: 260, smoker: 260 },
+            10: { nonSmoker: 150, smoker: 150 },
+            8: { nonSmoker: 120, smoker: 120 },
+            4: { nonSmoker: 62, smoker: 62 },
+            2: { nonSmoker: 32, smoker: 32 },
+            1.3: { nonSmoker: 20, smoker: 20 }
+        };
+        
+        // Update radon slider display and indicator
+        document.getElementById('radonLevel').addEventListener('input', function(e) {
+            const level = parseFloat(e.target.value);
+            document.getElementById('radonDisplay').textContent = level.toFixed(1) + ' pCi/L';
+            
+            const indicator = document.getElementById('radonIndicator');
+            if (level < 2.0) {
+                indicator.textContent = '✓ Below EPA Action Level (Continue monitoring)';
+                indicator.className = 'radon-level-indicator level-low';
+            } else if (level < 4.0) {
+                indicator.textContent = '⚠️ Moderate - EPA recommends considering mitigation';
+                indicator.className = 'radon-level-indicator level-moderate';
+            } else if (level < 8.0) {
+                indicator.textContent = '⚠️ HIGH - EPA recommends mitigation within months';
+                indicator.className = 'radon-level-indicator level-high';
+            } else {
+                indicator.textContent = '🚨 EXTREME - EPA recommends mitigation ASAP (weeks)';
+                indicator.className = 'radon-level-indicator level-extreme';
+            }
+        });
+        
+        // Trigger initial indicator update
+        document.getElementById('radonLevel').dispatchEvent(new Event('input'));
+        
+        function interpolateRisk(level) {
+            const levels = [20, 10, 8, 4, 2, 1.3];
+            for (let i = 0; i < levels.length - 1; i++) {
+                if (level >= levels[i + 1]) {
+                    const lower = levels[i + 1];
+                    const upper = levels[i];
+                    const ratio = (level - lower) / (upper - lower);
+                    return {
+                        nonSmoker: Math.round(EPA_DATA[lower].nonSmoker + ratio * (EPA_DATA[upper].nonSmoker - EPA_DATA[lower].nonSmoker)),
+                        smoker: Math.round(EPA_DATA[lower].smoker + ratio * (EPA_DATA[upper].smoker - EPA_DATA[lower].smoker))
+                    };
+                }
+            }
+            return EPA_DATA[1.3];
+        }
+        
+        function calculateRadonRisk() {
+            const radonLevel = parseFloat(document.getElementById('radonLevel').value);
+            const sqft = parseInt(document.getElementById('squareFootage').value);
+            const foundation = document.getElementById('foundationType').value;
+            const occupants = parseInt(document.getElementById('occupants').value);
+            const homeValue = parseInt(document.getElementById('homeValue').value);
+            const smoking = document.getElementById('smokingStatus').value;
+            
+            // EPA Assessment
+            let assessment, recommendation;
+            if (radonLevel < 2.0) {
+                assessment = 'BELOW ACTION LEVEL';
+                recommendation = 'Your radon level is below 2.0 pCi/L, which is below the EPA action level of 4.0 pCi/L. EPA recommends testing every 2 years and after any renovations affecting the foundation.';
+            } else if (radonLevel < 4.0) {
+                assessment = 'MODERATE';
+                recommendation = 'Your level is between 2-4 pCi/L. EPA recommends considering mitigation, especially if you have long-term occupancy planned or vulnerable occupants (children, elderly). Testing again in 6 months is advised.';
+            } else if (radonLevel < 8.0) {
+                assessment = 'HIGH - ACTION REQUIRED';
+                recommendation = 'Your level exceeds EPA\'s action level of 4.0 pCi/L. EPA strongly recommends mitigation within several months. At this level, your lung cancer risk increases significantly with prolonged exposure.';
+            } else {
+                assessment = 'EXTREME - URGENT ACTION';
+                recommendation = 'Your radon level is extremely high. EPA recommends mitigation as soon as possible — ideally within weeks. This level poses a serious health risk with continued exposure.';
+            }
+            
+            // Lung cancer risk
+            const riskData = interpolateRisk(radonLevel);
+            const riskNonSmoker = riskData.nonSmoker;
+            const riskSmoker = riskData.smoker;
+            
+            // Mitigation cost based on foundation type
+            const costPerSqft = {
+                slab: 2.5,
+                crawlspace: 2.0,
+                basement: 3.0,
+                combination: 2.8
+            };
+            
+            const baseCost = Math.min(1200 + (sqft * costPerSqft[foundation]), 3500);
+            const mitigationCost = baseCost + (radonLevel > 10 ? 500 : 0); // Complex systems for high levels
+            
+            // Real estate impact
+            let realEstateImpact = '0-2% value loss';
+            let realEstateNote = 'Properties with known high radon that hasn\'t been mitigated can lose 0-2% in value and face sale delays. Buyers often require mitigation before closing or negotiate lower prices.';
+            
+            if (radonLevel >= 4.0) {
+                realEstateImpact = '$' + Math.round(homeValue * 0.015).toLocaleString() + ' potential loss';
+                realEstateNote = `Properties with radon levels above EPA action level face significant sale obstacles. Buyers typically require mitigation before closing, causing 30-90 day delays. Some buyers will walk away or demand price reductions of 1-3% ($${Math.round(homeValue * 0.01).toLocaleString()}-$${Math.round(homeValue * 0.03).toLocaleString()}).`;
+            }
+            
+            // Health timeline
+            let timelineHTML = '';
+            if (radonLevel >= 4.0) {
+                const years = [
+                    { year: '10 years', risk: `${riskNonSmoker * 10 / 1000} in 1,000 people develop lung cancer` },
+                    { year: '20 years', risk: `${riskNonSmoker * 20 / 1000} in 1,000 people develop lung cancer` },
+                    { year: '30 years', risk: `${riskNonSmoker * 30 / 1000} in 1,000 people develop lung cancer (lifetime exposure)` }
+                ];
+                
+                years.forEach(item => {
+                    timelineHTML += `<div class="timeline-item"><span class="years">${item.year}</span><span class="risk">${item.risk}</span></div>`;
+                });
+            } else {
+                timelineHTML = '<p style="color: #16a34a; font-weight: 600;">✓ Risk is minimal at this level. Continue monitoring with testing every 2 years.</p>';
+            }
+            
+            // 10-year cost analysis
+            const doNothingCost = 0;
+            const doNothingNote = radonLevel >= 4.0 
+                ? `Increased lung cancer risk (${riskNonSmoker} in 1,000 develop lung cancer from lifetime exposure). Potential real estate complications costing $${Math.round(homeValue * 0.015).toLocaleString()} or more.`
+                : 'Continue monitoring with regular testing. Risk is low at current levels.';
+            
+            const mitigateNowCost = mitigationCost;
+            const mitigateNowNote = `One-time investment of $${mitigationCost.toLocaleString()}. Reduces radon to 0.5-2.0 pCi/L, eliminating 80-90% of lung cancer risk. Adds value to home and removes real estate sale obstacles.`;
+            
+            // Display results
+            document.getElementById('epaAssessment').textContent = assessment;
+            document.getElementById('epaAssessment').className = 'result-value ' + 
+                (radonLevel < 2 ? 'success' : radonLevel < 4 ? 'warning' : 'danger');
+            document.getElementById('epaRecommendation').textContent = recommendation;
+            
+            document.getElementById('riskNonSmoker').textContent = riskNonSmoker + '/1000';
+            document.getElementById('riskSmoker').textContent = riskSmoker + '/1000';
+            document.getElementById('healthTimeline').innerHTML = timelineHTML;
+            
+            document.getElementById('mitigationCost').textContent = '$' + mitigationCost.toLocaleString();
+            document.getElementById('mitigationDetails').textContent = 
+                `Based on ${sqft} sq ft ${foundation} foundation. Includes sub-slab depressurization system, radon fan, PVC piping, manometer, and post-mitigation testing. System warranty: 5-10 years.`;
+            
+            document.getElementById('realEstateImpact').textContent = realEstateImpact;
+            document.getElementById('realEstateNote').textContent = realEstateNote;
+            
+            document.getElementById('doNothingCost').textContent = '$' + doNothingCost.toLocaleString();
+            document.getElementById('doNothingNote').textContent = doNothingNote;
+            
+            document.getElementById('mitigateNowCost').textContent = '$' + mitigationCost.toLocaleString();
+            document.getElementById('mitigateNowNote').textContent = mitigateNowNote;
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

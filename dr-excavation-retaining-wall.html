@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retaining Wall ROI Calculator - D R Excavation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #5a3e2b 0%, #8b6f47 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4a2c1a 0%, #6b4423 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 0.95em;
+        }
+        
+        .input-group select,
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .input-group select:focus,
+        .input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #8b6f47;
+            box-shadow: 0 0 0 3px rgba(139,111,71,0.1);
+        }
+        
+        .slider-container {
+            padding: 10px 0;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #8b6f47;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #8b6f47;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .slider-value {
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #8b6f47;
+            margin-top: 8px;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #8b6f47 0%, #5a3e2b 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(139,111,71,0.3);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139,111,71,0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .roi-summary {
+            background: linear-gradient(135deg, #f0fff4 0%, #e6ffed 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 3px solid #38a169;
+        }
+        
+        .roi-summary h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #38a169;
+        }
+        
+        .roi-summary .big-number {
+            font-size: 3em;
+            font-weight: 700;
+            color: #2d5016;
+            margin: 15px 0;
+        }
+        
+        .roi-summary p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #2d3748;
+        }
+        
+        .cost-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .cost-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .cost-card h3 {
+            font-size: 1.1em;
+            color: #4a5568;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .cost-card .amount {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #8b6f47;
+            margin-bottom: 8px;
+        }
+        
+        .cost-card .amount.gain {
+            color: #38a169;
+        }
+        
+        .cost-card .amount.cost {
+            color: #e53e3e;
+        }
+        
+        .cost-card p {
+            font-size: 0.9em;
+            color: #718096;
+            line-height: 1.4;
+        }
+        
+        .details-grid {
+            display: grid;
+            gap: 15px;
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .detail-value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+        
+        .benefits {
+            background: #f0fff4;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #38a169;
+            margin-top: 25px;
+        }
+        
+        .benefits h3 {
+            color: #38a169;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+        
+        .benefits ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .benefits li {
+            padding: 8px 0;
+            color: #2d3748;
+            line-height: 1.5;
+        }
+        
+        .benefits li:before {
+            content: "✓ ";
+            color: #38a169;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .warning-box {
+            background: #fff5f5;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #e53e3e;
+            margin-top: 25px;
+        }
+        
+        .warning-box h3 {
+            color: #e53e3e;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+        
+        .warning-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .warning-box li {
+            padding: 8px 0;
+            color: #2d3748;
+            line-height: 1.5;
+        }
+        
+        .warning-box li:before {
+            content: "⚠️ ";
+            margin-right: 8px;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 3px solid #e9ecef;
+        }
+        
+        .footer p {
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .header p {
+                font-size: 1em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .input-section {
+                padding: 20px;
+            }
+            
+            .cost-comparison {
+                grid-template-columns: 1fr;
+            }
+            
+            .roi-summary .big-number {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧱 Retaining Wall ROI Calculator</h1>
+            <p>See the true value of professional retaining wall construction for your Indianapolis property</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label>Wall length (linear feet): <span id="lengthValue">40</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="length" min="10" max="200" value="40" step="5">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="height">Wall height:</label>
+                    <select id="height">
+                        <option value="2">2-3 feet (low terracing)</option>
+                        <option value="4" selected>3-5 feet (standard terracing)</option>
+                        <option value="6">5-7 feet (tall wall, needs engineering)</option>
+                        <option value="8">7+ feet (major structural wall)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="material">Preferred material:</label>
+                    <select id="material">
+                        <option value="block" selected>Concrete block/modular (most common)</option>
+                        <option value="stone">Natural stone (premium)</option>
+                        <option value="poured">Poured concrete (industrial)</option>
+                        <option value="timber">Timber (budget option)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="slope">Current slope/erosion issue:</label>
+                    <select id="slope">
+                        <option value="minor">Minor slope (aesthetic improvement)</option>
+                        <option value="moderate" selected>Moderate slope (usability issue)</option>
+                        <option value="severe">Severe slope (erosion risk)</option>
+                        <option value="critical">Critical (foundation threat)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="drainage">Current drainage problems:</label>
+                    <select id="drainage">
+                        <option value="none">No drainage issues</option>
+                        <option value="minor" selected>Minor (wet spots, runoff)</option>
+                        <option value="major">Major (flooding, pooling water)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="access">Property access for equipment:</label>
+                    <select id="access">
+                        <option value="easy" selected>Easy (gate/side yard access)</option>
+                        <option value="difficult">Difficult (narrow access)</option>
+                        <option value="very-difficult">Very difficult (hand-carry materials)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label>Current home value: $<span id="homeValueValue">280000</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="homeValue" min="150000" max="600000" value="280000" step="10000">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateROI()">Calculate Retaining Wall ROI</button>
+            </div>
+            
+            <div class="results" id="results">
+                <!-- Results will be inserted here -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>D R Excavation</strong> | Indianapolis, IN<br>
+            25+ years of professional retaining wall construction<br>
+            120 E Market St, Indianapolis, IN 46204 | (463) 255-6971<br>
+            This calculator provides estimates based on industry averages and typical Indianapolis projects.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Update slider displays
+        document.getElementById('length').addEventListener('input', function(e) {
+            document.getElementById('lengthValue').textContent = e.target.value;
+        });
+        
+        document.getElementById('homeValue').addEventListener('input', function(e) {
+            document.getElementById('homeValueValue').textContent = parseInt(e.target.value).toLocaleString();
+        });
+        
+        function calculateROI() {
+            // Get inputs
+            const length = parseFloat(document.getElementById('length').value);
+            const height = parseInt(document.getElementById('height').value);
+            const material = document.getElementById('material').value;
+            const slope = document.getElementById('slope').value;
+            const drainage = document.getElementById('drainage').value;
+            const access = document.getElementById('access').value;
+            const homeValue = parseInt(document.getElementById('homeValue').value);
+            
+            // Calculate base cost per linear foot
+            let costPerFoot = 50;
+            
+            if (material === 'block') {
+                if (height === 2) costPerFoot = 45;
+                else if (height === 4) costPerFoot = 65;
+                else if (height === 6) costPerFoot = 95;
+                else costPerFoot = 135;
+            } else if (material === 'stone') {
+                if (height === 2) costPerFoot = 75;
+                else if (height === 4) costPerFoot = 110;
+                else if (height === 6) costPerFoot = 155;
+                else costPerFoot = 210;
+            } else if (material === 'poured') {
+                if (height === 2) costPerFoot = 55;
+                else if (height === 4) costPerFoot = 75;
+                else if (height === 6) costPerFoot = 105;
+                else costPerFoot = 150;
+            } else if (material === 'timber') {
+                if (height === 2) costPerFoot = 30;
+                else if (height === 4) costPerFoot = 45;
+                else if (height === 6) costPerFoot = 65;
+                else costPerFoot = 85;
+            }
+            
+            // Access difficulty multiplier
+            let accessMultiplier = 1.0;
+            if (access === 'difficult') accessMultiplier = 1.25;
+            else if (access === 'very-difficult') accessMultiplier = 1.6;
+            
+            // Engineering/permit costs for tall walls
+            let engineeringCost = 0;
+            if (height >= 6) engineeringCost = 2500;
+            else if (height === 4) engineeringCost = 800;
+            
+            // Drainage system costs
+            let drainageCost = 0;
+            if (drainage === 'minor') drainageCost = 1200;
+            else if (drainage === 'major') drainageCost = 3500;
+            
+            const totalWallCost = Math.round((costPerFoot * length * accessMultiplier) + engineeringCost + drainageCost);
+            
+            // Calculate usable space gained (assume 8 feet depth per terrace)
+            const usableSquareFeet = Math.round(length * 8);
+            const usableSpaceValue = usableSquareFeet * 15; // $15/sq ft for usable yard space
+            
+            // Calculate erosion prevention value
+            let erosionPreventionValue = 0;
+            if (slope === 'moderate') erosionPreventionValue = 8000;
+            else if (slope === 'severe') erosionPreventionValue = 18000;
+            else if (slope === 'critical') erosionPreventionValue = 35000; // Foundation repair cost avoided
+            else erosionPreventionValue = 3000;
+            
+            // Property value increase (typically 1-2% for major landscaping improvements)
+            const propertyValueIncrease = Math.round(homeValue * 0.015);
+            
+            // Total value created
+            const totalValueCreated = usableSpaceValue + erosionPreventionValue + propertyValueIncrease;
+            
+            // Net ROI
+            const netROI = totalValueCreated - totalWallCost;
+            const roiPercentage = Math.round((netROI / totalWallCost) * 100);
+            
+            // DIY costs and risks
+            const diyMaterialCost = Math.round(costPerFoot * length * 0.5); // Materials only
+            const diyEquipmentRental = 800;
+            const diyLaborTime = Math.ceil(length / 5); // Days of work
+            const diyMistakesCost = Math.round(totalWallCost * 0.3); // 30% for mistakes/redos
+            
+            const totalDIYCost = diyMaterialCost + diyEquipmentRental + diyMistakesCost;
+            
+            // Professional wall lifespan
+            const professionalLifespan = material === 'timber' ? 15 : 50;
+            const diyLifespan = material === 'timber' ? 5 : 10;
+            
+            // Benefits
+            const benefits = [
+                `Usable yard space gained: ${usableSquareFeet} sq ft (worth $${usableSpaceValue.toLocaleString()})`,
+                `Erosion/foundation damage prevented: $${erosionPreventionValue.toLocaleString()}`,
+                `Property value increase: $${propertyValueIncrease.toLocaleString()} (${(propertyValueIncrease/homeValue*100).toFixed(1)}%)`,
+                `Professional lifespan: ${professionalLifespan}+ years with proper drainage`,
+                'Engineered for safety and local building codes'
+            ];
+            
+            if (drainage !== 'none') {
+                benefits.push('Integrated drainage system (prevents wall failure)');
+            }
+            
+            if (height >= 6) {
+                benefits.push('Professional engineering included (required for 4+ foot walls)');
+            }
+            
+            benefits.push('Permits and inspections handled');
+            benefits.push('Warranty on materials and workmanship');
+            benefits.push('Creates flat, usable terraced areas for landscaping');
+            benefits.push('Increased curb appeal and marketability');
+            
+            // DIY risks
+            const diyRisks = [
+                `Materials only: $${diyMaterialCost.toLocaleString()} (no labor, equipment, or expertise)`,
+                `Equipment rental: $${diyEquipmentRental} (compactor, level, tools)`,
+                `Typical lifespan: ${diyLifespan} years (vs ${professionalLifespan}+ professional)`,
+                `Hidden costs: $${diyMistakesCost.toLocaleString()} (mistakes, drainage issues, redos)`,
+                `Time investment: ${diyLaborTime}+ days of backbreaking labor`,
+                'No engineering (walls over 4 feet legally require it)',
+                'Drainage problems lead to wall failure within 2-5 years',
+                'No warranty - rebuild at your expense when it fails',
+                'Building code violations (DIY walls rarely pass inspection)',
+                'Foundation damage risk if wall fails (up to $40,000 repair)'
+            ];
+            
+            // Display results
+            displayResults(
+                totalWallCost,
+                totalDIYCost,
+                usableSpaceValue,
+                erosionPreventionValue,
+                propertyValueIncrease,
+                totalValueCreated,
+                netROI,
+                roiPercentage,
+                length,
+                height,
+                usableSquareFeet,
+                professionalLifespan,
+                diyLifespan,
+                benefits,
+                diyRisks
+            );
+        }
+        
+        function displayResults(wallCost, diyCost, spaceValue, erosionValue, propertyValue, 
+                                totalValue, netROI, roiPercent, length, height, sqft, 
+                                proLifespan, diyLifespan, benefits, diyRisks) {
+            let html = `
+                <div class="roi-summary">
+                    <h2>🎯 Your Retaining Wall Investment</h2>
+                    <div class="big-number">+$${netROI.toLocaleString()}</div>
+                    <p><strong>${roiPercent}% return on investment</strong><br>
+                    Invest $${wallCost.toLocaleString()} → Create $${totalValue.toLocaleString()} in value<br>
+                    Plus ${sqft} sq ft of usable yard space and ${proLifespan}+ year lifespan</p>
+                </div>
+                
+                <div class="cost-comparison">
+                    <div class="cost-card">
+                        <h3>Professional Installation</h3>
+                        <div class="amount cost">$${wallCost.toLocaleString()}</div>
+                        <p>${length} ft × ${height}' wall (engineered, warrantied)</p>
+                    </div>
+                    
+                    <div class="cost-card">
+                        <h3>Total Value Created</h3>
+                        <div class="amount gain">+$${totalValue.toLocaleString()}</div>
+                        <p>Space + erosion prevention + property value</p>
+                    </div>
+                    
+                    <div class="cost-card">
+                        <h3>DIY Attempt Cost</h3>
+                        <div class="amount cost">$${diyCost.toLocaleString()}</div>
+                        <p>Materials + equipment + mistakes (fails in ${diyLifespan} years)</p>
+                    </div>
+                </div>
+                
+                <div class="details-grid">
+                    <div class="detail-row">
+                        <span class="detail-label">Wall Dimensions:</span>
+                        <span class="detail-value">${length} ft long × ${height} ft high</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Professional Installation Cost:</span>
+                        <span class="detail-value">$${wallCost.toLocaleString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Usable Space Value:</span>
+                        <span class="detail-value" style="color: #38a169;">+$${spaceValue.toLocaleString()} (${sqft} sq ft)</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Erosion/Foundation Protection:</span>
+                        <span class="detail-value" style="color: #38a169;">+$${erosionValue.toLocaleString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Property Value Increase:</span>
+                        <span class="detail-value" style="color: #38a169;">+$${propertyValue.toLocaleString()}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Expected Lifespan:</span>
+                        <span class="detail-value">${proLifespan}+ years</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label"><strong>Net Return on Investment:</strong></span>
+                        <span class="detail-value" style="color: #38a169; font-weight: 700;">+$${netROI.toLocaleString()} (${roiPercent}%)</span>
+                    </div>
+                </div>
+                
+                <div class="benefits">
+                    <h3>What You Get with Professional Retaining Walls</h3>
+                    <ul>
+                        ${benefits.map(benefit => `<li>${benefit}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <div class="warning-box">
+                    <h3>Why DIY Retaining Walls Fail (and Cost More Long-Term)</h3>
+                    <ul>
+                        ${diyRisks.map(risk => `<li>${risk}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+            
+            document.getElementById('results').innerHTML = html;
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Treatment Cost Calculator | Secondwind Water Systems</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1E88E5 0%, #0D47A1 100%); padding: 20px; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #1E88E5 0%, #0D47A1 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+        .content { padding: 40px 30px; }
+        .form-section { margin-bottom: 30px; padding: 25px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid #1E88E5; }
+        .form-section h3 { color: #1E88E5; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { margin-bottom: 8px; font-weight: 600; color: #333; }
+        .form-group input, .form-group select { padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #1E88E5; }
+        .checkbox-group { display: flex; align-items: center; margin-top: 15px; }
+        .checkbox-group input { width: 20px; height: 20px; margin-right: 10px; cursor: pointer; }
+        .calculate-btn { width: 100%; padding: 18px; background: linear-gradient(135deg, #1E88E5 0%, #0D47A1 100%); color: white; border: none; border-radius: 12px; font-size: 1.3em; font-weight: 700; cursor: pointer; margin-top: 20px; }
+        .calculate-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(30, 136, 229, 0.4); }
+        .results { margin-top: 30px; padding: 30px; background: linear-gradient(135deg, #1E88E5 0%, #0D47A1 100%); border-radius: 12px; color: white; display: none; }
+        .results.show { display: block; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .quote-details { background: rgba(255, 255, 255, 0.15); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .line-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+        .line-item.total { font-size: 1.5em; font-weight: 700; margin-top: 15px; padding-top: 15px; border-top: 3px solid white; }
+        .export-btn { padding: 12px 30px; background: white; color: #1E88E5; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-right: 10px; }
+        .note { margin-top: 20px; padding: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; font-size: 0.95em; line-height: 1.6; }
+        .footer { text-align: center; padding: 30px; background: #f8f9fa; color: #666; }
+        @media (max-width: 600px) { .header h1 { font-size: 1.6em; } .form-row { grid-template-columns: 1fr; } }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 Water Treatment System Calculator</h1>
+            <p>Get instant estimates for cleaner, safer water</p>
+        </div>
+        <div class="content">
+            <form id="quoteForm">
+                <div class="form-section">
+                    <h3>🏠 Your Property</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="homeSize">Home Size</label>
+                            <select id="homeSize" required>
+                                <option value="1-2">1-2 Bedrooms</option>
+                                <option value="3-4">3-4 Bedrooms</option>
+                                <option value="5+">5+ Bedrooms / Large</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="waterSource">Water Source</label>
+                            <select id="waterSource" required>
+                                <option value="well">Private Well</option>
+                                <option value="municipal">Municipal/City</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-section">
+                    <h3>💦 Water Quality Issues</h3>
+                    <div class="checkbox-group"><input type="checkbox" id="hardness"><label for="hardness">Hard Water (scale, soap scum)</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="iron"><label for="iron">Iron Staining (rust)</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="sulfur"><label for="sulfur">Sulfur Odor (rotten egg smell)</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="arsenic"><label for="arsenic">Arsenic (common in NH wells)</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="taste"><label for="taste">Bad Taste/Odor</label></div>
+                    <div class="checkbox-group"><input type="checkbox" id="drinkingWater"><label for="drinkingWater">Want drinking water system (RO)</label></div>
+                </div>
+                <button type="submit" class="calculate-btn">Calculate My System 💰</button>
+            </form>
+            <div class="results" id="results">
+                <h2>📋 Your Water Treatment Estimate</h2>
+                <div class="quote-details" id="quoteDetails"></div>
+                <div><button class="export-btn" onclick="requestTest()">📞 Schedule FREE Water Test</button></div>
+                <div class="note"><strong>Next Steps:</strong> This is a preliminary estimate. Secondwind Water Systems offers FREE water testing to identify your exact contaminants. With 35+ years serving NH and the most certified water professionals in one location, we'll design a custom treatment plan. Call 603-641-5767 today!</div>
+            </div>
+        </div>
+        <div class="footer"><p><strong>Built for Secondwind Water Systems</strong></p><p>NH's Water Treatment Experts Since 1989 | Authorized Kinetico Dealer</p><p>603-641-5767 | secondwindwater.com</p></div>
+    </div>
+    <script>
+        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const homeSize = document.getElementById('homeSize').value;
+            const waterSource = document.getElementById('waterSource').value;
+            const hardness = document.getElementById('hardness').checked;
+            const iron = document.getElementById('iron').checked;
+            const sulfur = document.getElementById('sulfur').checked;
+            const arsenic = document.getElementById('arsenic').checked;
+            const taste = document.getElementById('taste').checked;
+            const drinkingWater = document.getElementById('drinkingWater').checked;
+            
+            let total = 0;
+            let items = [];
+            
+            if (hardness) { total += (homeSize === '1-2' ? 1800 : homeSize === '3-4' ? 2400 : 3200); items.push({name: 'Water Softener System', cost: (homeSize === '1-2' ? 1800 : homeSize === '3-4' ? 2400 : 3200)}); }
+            if (iron) { total += 1200; items.push({name: 'Iron Filter', cost: 1200}); }
+            if (sulfur) { total += 1500; items.push({name: 'Sulfur Removal System', cost: 1500}); }
+            if (arsenic) { total += 2200; items.push({name: 'Arsenic Removal System', cost: 2200}); }
+            if (taste) { total += 800; items.push({name: 'Whole House Carbon Filter', cost: 800}); }
+            if (drinkingWater) { total += 1600; items.push({name: 'Reverse Osmosis Drinking System', cost: 1600}); }
+            
+            if (total === 0) { alert('Please select at least one water quality issue.'); return; }
+            
+            const installCost = items.length * 350;
+            total += installCost;
+            
+            let html = '<div style="margin-bottom:15px;"><strong>Recommended Systems:</strong></div>';
+            items.forEach(item => { html += `<div class="line-item"><span>${item.name}</span><span>$${item.cost}</span></div>`; });
+            html += `<div class="line-item"><span>Professional Installation</span><span>$${installCost}</span></div>`;
+            html += `<div class="line-item total"><span>ESTIMATED TOTAL</span><span>$${total.toLocaleString()}</span></div>`;
+            html += `<div style="margin-top:15px; padding:15px; background:rgba(255,255,255,0.2); border-radius:8px;"><strong>💡 This includes:</strong> Equipment, installation, startup, water testing, and Kinetico's industry-leading warranty.</div>`;
+            
+            document.getElementById('quoteDetails').innerHTML = html;
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        function requestTest() { alert('Ready for your FREE water test! Call Secondwind Water Systems at 603-641-5767. We\\'ll test your water, recommend the perfect system, and provide an exact quote.'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foundation Damage Urgency Calculator | Lyons Foundation Repair</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .checkbox-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 15px;
+            color: #2d3748;
+        }
+        
+        .severity-tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .severity-critical {
+            background: #feb2b2;
+            color: #742a2a;
+        }
+        
+        .severity-high {
+            background: #fbd38d;
+            color: #7c2d12;
+        }
+        
+        .severity-medium {
+            background: #fef3c7;
+            color: #78350f;
+        }
+        
+        .severity-low {
+            background: #bee3f8;
+            color: #1e40af;
+        }
+        
+        .location-input {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .input-group input,
+        .input-group select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .urgency-score {
+            text-align: center;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .urgency-score h2 {
+            font-size: 24px;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .score-display {
+            font-size: 64px;
+            font-weight: 700;
+            margin: 15px 0;
+        }
+        
+        .score-label {
+            font-size: 20px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        
+        .urgency-critical .score-display {
+            color: #dc2626;
+        }
+        
+        .urgency-high .score-display {
+            color: #ea580c;
+        }
+        
+        .urgency-moderate .score-display {
+            color: #d97706;
+        }
+        
+        .urgency-low .score-display {
+            color: #059669;
+        }
+        
+        .results-section {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .results-section h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .results-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .results-section li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .results-section li:last-child {
+            border-bottom: none;
+        }
+        
+        .checkmark {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .warning {
+            color: #dc2626;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .cost-estimate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .cost-estimate h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .cost-range {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 15px 0;
+        }
+        
+        .cost-note {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .action-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .action-box h3 {
+            color: #78350f;
+            margin-bottom: 15px;
+        }
+        
+        .action-box p {
+            color: #78350f;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .action-box strong {
+            display: block;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 14px;
+        }
+        
+        .emoji {
+            font-size: 24px;
+        }
+        
+        @media (max-width: 640px) {
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .score-display {
+                font-size: 48px;
+            }
+            
+            .cost-range {
+                font-size: 28px;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Foundation Damage Urgency Calculator</h1>
+            <p>Assess your foundation issues and get instant repair guidance</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h3><span class="emoji">🔍</span> Visible Warning Signs</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cracks-exterior" data-points="10" data-severity="high">
+                        <label for="cracks-exterior">Cracks in exterior foundation walls</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="cracks-interior" data-points="8" data-severity="high">
+                        <label for="cracks-interior">Cracks in interior walls (especially diagonal)</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="uneven-floors" data-points="12" data-severity="critical">
+                        <label for="uneven-floors">Sloping or uneven floors</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="doors-windows" data-points="7" data-severity="medium">
+                        <label for="doors-windows">Doors or windows sticking or not closing properly</label>
+                        <span class="severity-tag severity-medium">Medium</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="gaps" data-points="9" data-severity="high">
+                        <label for="gaps">Gaps between walls and ceiling/floor</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="bowing-walls" data-points="15" data-severity="critical">
+                        <label for="bowing-walls">Bowing or leaning walls</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3><span class="emoji">💧</span> Moisture & Water Issues</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="standing-water" data-points="11" data-severity="critical">
+                        <label for="standing-water">Standing water in crawl space or basement</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="moisture-smell" data-points="8" data-severity="high">
+                        <label for="moisture-smell">Musty smell or visible mold/mildew</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="poor-drainage" data-points="7" data-severity="medium">
+                        <label for="poor-drainage">Water pooling around foundation after rain</label>
+                        <span class="severity-tag severity-medium">Medium</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="wet-spots" data-points="6" data-severity="medium">
+                        <label for="wet-spots">Wet spots on floors or walls</label>
+                        <span class="severity-tag severity-medium">Medium</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="efflorescence" data-points="5" data-severity="low">
+                        <label for="efflorescence">White powder/staining on concrete (efflorescence)</label>
+                        <span class="severity-tag severity-low">Low</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3><span class="emoji">🪵</span> Structural & Wood Damage</h3>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="sagging-floors" data-points="13" data-severity="critical">
+                        <label for="sagging-floors">Sagging or bouncy floors</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="rotted-wood" data-points="14" data-severity="critical">
+                        <label for="rotted-wood">Visible rot in beams, sills, or joists</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="termite-damage" data-points="12" data-severity="critical">
+                        <label for="termite-damage">Evidence of termite damage</label>
+                        <span class="severity-tag severity-critical">Critical</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="pier-damage" data-points="10" data-severity="high">
+                        <label for="pier-damage">Cracked or damaged support piers</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="settling-visible" data-points="9" data-severity="high">
+                        <label for="settling-visible">Visible settling or shifting</label>
+                        <span class="severity-tag severity-high">High</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3><span class="emoji">📍</span> Property Information</h3>
+                <div class="location-input">
+                    <div class="input-group">
+                        <label for="home-age">Home Age</label>
+                        <select id="home-age">
+                            <option value="0">Select age range</option>
+                            <option value="5">Less than 10 years</option>
+                            <option value="8">10-25 years</option>
+                            <option value="12">25-50 years</option>
+                            <option value="15">50+ years</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="foundation-type">Foundation Type</label>
+                        <select id="foundation-type">
+                            <option value="0">Select type</option>
+                            <option value="8">Crawl space</option>
+                            <option value="10">Concrete slab</option>
+                            <option value="7">Pier and beam</option>
+                            <option value="6">Basement</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="soil-type">Soil Conditions (if known)</label>
+                        <select id="soil-type">
+                            <option value="0">Not sure</option>
+                            <option value="8">Clay soil (expands/contracts)</option>
+                            <option value="5">Sandy soil</option>
+                            <option value="3">Mixed/rocky soil</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="time-noticed">How long have you noticed these issues?</label>
+                        <select id="time-noticed">
+                            <option value="0">Select timeframe</option>
+                            <option value="3">Less than 6 months</option>
+                            <option value="6">6 months - 1 year</option>
+                            <option value="10">1-2 years</option>
+                            <option value="15">More than 2 years</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateUrgency()">
+                Calculate Urgency & Cost Estimate
+            </button>
+            
+            <div class="results" id="results">
+                <div class="urgency-score" id="urgency-score">
+                    <h2>Your Foundation Urgency Score</h2>
+                    <div class="score-display" id="score-value">--</div>
+                    <div class="score-label" id="score-label">--</div>
+                </div>
+                
+                <div class="results-section">
+                    <h3>Identified Issues</h3>
+                    <ul id="issues-list"></ul>
+                </div>
+                
+                <div class="results-section">
+                    <h3>Recommended Actions</h3>
+                    <ul id="recommendations-list"></ul>
+                </div>
+                
+                <div class="cost-estimate">
+                    <h3>Estimated Repair Cost Range</h3>
+                    <div class="cost-range" id="cost-range">$--</div>
+                    <div class="cost-note">Based on typical Gulf Coast foundation repairs. Actual costs vary by property condition.</div>
+                </div>
+                
+                <div class="action-box" id="action-box">
+                    <h3>⚠️ Next Steps</h3>
+                    <p id="action-text"></p>
+                    <strong>📞 Contact Lyons Foundation Repair: (251) 424-5307</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This calculator provides guidance only. Professional inspection recommended.</p>
+            <p>Built specifically for foundation assessment in Mobile, AL and the Gulf Coast region.</p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateUrgency() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const homeAge = parseInt(document.getElementById('home-age').value) || 0;
+            const foundationType = parseInt(document.getElementById('foundation-type').value) || 0;
+            const soilType = parseInt(document.getElementById('soil-type').value) || 0;
+            const timeNoticed = parseInt(document.getElementById('time-noticed').value) || 0;
+            
+            let totalScore = 0;
+            let issues = [];
+            let criticalCount = 0;
+            let highCount = 0;
+            
+            checkboxes.forEach(cb => {
+                totalScore += parseInt(cb.getAttribute('data-points'));
+                const severity = cb.getAttribute('data-severity');
+                const label = cb.nextElementSibling.textContent;
+                issues.push({label, severity});
+                
+                if (severity === 'critical') criticalCount++;
+                if (severity === 'high') highCount++;
+            });
+            
+            // Add property factors
+            totalScore += homeAge + foundationType + soilType + timeNoticed;
+            
+            // Display results
+            const resultsDiv = document.getElementById('results');
+            const scoreValueDiv = document.getElementById('score-value');
+            const scoreLabelDiv = document.getElementById('score-label');
+            const urgencyScoreDiv = document.getElementById('urgency-score');
+            const issuesList = document.getElementById('issues-list');
+            const recommendationsList = document.getElementById('recommendations-list');
+            const costRangeDiv = document.getElementById('cost-range');
+            const actionText = document.getElementById('action-text');
+            
+            scoreValueDiv.textContent = totalScore;
+            
+            // Determine urgency level
+            let urgencyLevel, urgencyText, recommendations, costRange, actionMessage;
+            
+            // Reset classes
+            urgencyScoreDiv.className = 'urgency-score';
+            
+            if (totalScore >= 50 || criticalCount >= 2) {
+                urgencyLevel = 'urgency-critical';
+                urgencyText = 'CRITICAL - Immediate Action Required';
+                recommendations = [
+                    'Schedule professional inspection within 48 hours',
+                    'Avoid heavy loads on affected floors',
+                    'Monitor for rapid changes',
+                    'Consider temporary water diversion if moisture present',
+                    'Document all damage with photos'
+                ];
+                costRange = '$8,000 - $25,000+';
+                actionMessage = 'Your home shows critical foundation issues that require immediate professional attention. Delaying repairs could lead to structural failure and significantly higher costs. Contact Lyons Foundation Repair TODAY for an emergency assessment.';
+            } else if (totalScore >= 30 || criticalCount >= 1 || highCount >= 2) {
+                urgencyLevel = 'urgency-high';
+                urgencyText = 'HIGH - Schedule Inspection Soon';
+                recommendations = [
+                    'Schedule professional inspection within 1-2 weeks',
+                    'Check for worsening symptoms weekly',
+                    'Improve drainage around foundation',
+                    'Keep detailed records of any changes',
+                    'Get multiple estimates from qualified contractors'
+                ];
+                costRange = '$4,000 - $15,000';
+                actionMessage = 'Your foundation shows significant warning signs that need professional evaluation soon. These issues typically worsen over time, especially in Gulf Coast climate conditions. Schedule an inspection within the next two weeks to prevent escalation.';
+            } else if (totalScore >= 15) {
+                urgencyLevel = 'urgency-moderate';
+                urgencyText = 'MODERATE - Schedule Inspection';
+                recommendations = [
+                    'Schedule inspection within 1-2 months',
+                    'Monitor moisture levels in crawl space',
+                    'Improve gutters and drainage',
+                    'Watch for progression of symptoms',
+                    'Consider preventive maintenance'
+                ];
+                costRange = '$2,000 - $8,000';
+                actionMessage = 'Your home shows moderate foundation concerns that warrant professional inspection. While not immediately critical, these issues should be addressed to prevent escalation. Gulf Coast moisture and soil conditions can accelerate foundation problems.';
+            } else {
+                urgencyLevel = 'urgency-low';
+                urgencyText = 'LOW - Monitoring Recommended';
+                recommendations = [
+                    'Monitor for changes over next 3-6 months',
+                    'Maintain proper drainage around foundation',
+                    'Keep crawl space well-ventilated',
+                    'Schedule routine inspection if symptoms worsen',
+                    'Consider preventive moisture control'
+                ];
+                costRange = '$1,000 - $5,000';
+                actionMessage = 'Your foundation appears relatively stable, but regular monitoring is wise. Gulf Coast homes face unique challenges from moisture, clay soil, and tropical weather. Consider a baseline inspection to establish your foundation\'s current condition.';
+            }
+            
+            urgencyScoreDiv.classList.add(urgencyLevel);
+            scoreLabelDiv.textContent = urgencyText;
+            costRangeDiv.textContent = costRange;
+            actionText.textContent = actionMessage;
+            
+            // Display issues
+            issuesList.innerHTML = '';
+            if (issues.length === 0) {
+                issuesList.innerHTML = '<li><span class="checkmark">✓</span>No specific issues selected</li>';
+            } else {
+                issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    const icon = issue.severity === 'critical' || issue.severity === 'high' ? 
+                        '<span class="warning">⚠️</span>' : 
+                        '<span class="checkmark">●</span>';
+                    li.innerHTML = `${icon} ${issue.label}`;
+                    issuesList.appendChild(li);
+                });
+            }
+            
+            // Display recommendations
+            recommendationsList.innerHTML = '';
+            recommendations.forEach(rec => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="checkmark">✓</span> ${rec}`;
+                recommendationsList.appendChild(li);
+            });
+            
+            // Show results
+            resultsDiv.classList.add('show');
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

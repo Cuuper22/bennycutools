@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Hood Cleaning Compliance Calculator | First State Hood & Duct</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF6B35 0%, #D93D00 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '🔥';
+            position: absolute;
+            font-size: 120px;
+            opacity: 0.1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #FF6B35;
+        }
+        
+        .section h2 {
+            color: #D93D00;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 1em;
+        }
+        
+        .input-group select,
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group select:focus,
+        .input-group input:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #FF6B35 0%, #D93D00 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results.active {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-card h3 {
+            color: #D93D00;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .compliance-status {
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .status-good {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+        }
+        
+        .status-warning {
+            background: linear-gradient(135deg, #FFC107 0%, #F57C00 100%);
+            color: white;
+        }
+        
+        .status-danger {
+            background: linear-gradient(135deg, #F44336 0%, #C62828 100%);
+            color: white;
+        }
+        
+        .risk-meter {
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .risk-fill {
+            height: 100%;
+            transition: all 1s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .cost-item {
+            background: linear-gradient(135deg, #fff5f0 0%, #ffe8dd 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #FF6B35;
+        }
+        
+        .cost-item .amount {
+            font-size: 2em;
+            color: #D93D00;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .cost-item .label {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .nfpa-schedule {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            border-left: 4px solid #FF6B35;
+        }
+        
+        .schedule-icon {
+            background: #FF6B35;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 3px solid #ffc107;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .warning-box p {
+            color: #856404;
+            line-height: 1.7;
+            margin-bottom: 10px;
+        }
+        
+        .fire-stats {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 2px solid #ef5350;
+        }
+        
+        .fire-stats h4 {
+            color: #c62828;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #ef9a9a;
+        }
+        
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .stat-value {
+            color: #c62828;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .cost-breakdown {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Commercial Hood Cleaning Compliance Calculator</h1>
+            <p>NFPA 96 Compliance & Fire Risk Assessment for Restaurants</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Kitchen Information</h2>
+                
+                <div class="input-group">
+                    <label for="cookingVolume">Cooking Volume (NFPA 96 Classification)</label>
+                    <select id="cookingVolume">
+                        <option value="">Select Cooking Volume...</option>
+                        <option value="high">High Volume - Solid fuel cooking, high-temp wok, charbroiling (monthly cleaning)</option>
+                        <option value="moderate">Moderate Volume - Standard restaurant with fryers, grills (quarterly cleaning)</option>
+                        <option value="low">Low Volume - Light cooking, occasional use (semi-annual cleaning)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="hoodSize">Exhaust Hood Size</label>
+                    <select id="hoodSize">
+                        <option value="">Select Hood Size...</option>
+                        <option value="small">Small (6-10 linear feet)</option>
+                        <option value="medium">Medium (10-16 linear feet)</option>
+                        <option value="large">Large (16-25 linear feet)</option>
+                        <option value="xlarge">Extra Large (25+ linear feet)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="lastCleaning">Last Hood Cleaning Date</label>
+                    <input type="date" id="lastCleaning">
+                </div>
+                
+                <div class="input-group">
+                    <label for="facilityType">Facility Type</label>
+                    <select id="facilityType">
+                        <option value="">Select Facility Type...</option>
+                        <option value="restaurant">Full-Service Restaurant</option>
+                        <option value="fast-food">Fast Food / Quick Service</option>
+                        <option value="hotel">Hotel / Resort Kitchen</option>
+                        <option value="hospital">Hospital / Healthcare</option>
+                        <option value="school">School / University Dining</option>
+                        <option value="catering">Catering / Event Venue</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Risk Assessment</h2>
+                
+                <div class="input-group">
+                    <label for="insuranceCoverage">Fire Insurance Coverage Amount</label>
+                    <input type="number" id="insuranceCoverage" placeholder="e.g., 500000" min="0">
+                </div>
+                
+                <div class="input-group">
+                    <label for="avgDailyRevenue">Average Daily Revenue</label>
+                    <input type="number" id="avgDailyRevenue" placeholder="e.g., 3500" min="0">
+                </div>
+            </div>
+            
+            <button class="btn" onclick="calculateCompliance()">🔍 Assess Compliance & Fire Risk</button>
+            
+            <div class="results" id="results">
+                <div class="compliance-status" id="complianceStatus"></div>
+                
+                <div class="result-card">
+                    <h3>📋 Your NFPA 96 Compliance Schedule</h3>
+                    <div class="nfpa-schedule" id="nfpaSchedule"></div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>🔥 Fire Risk Assessment</h3>
+                    <p style="margin-bottom: 15px; color: #666;">
+                        Based on days since last cleaning and your cooking volume:
+                    </p>
+                    <div class="risk-meter">
+                        <div class="risk-fill" id="riskFill"></div>
+                    </div>
+                    <div id="riskDescription"></div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>💰 Non-Compliance Cost Analysis</h3>
+                    <div class="cost-breakdown" id="costBreakdown"></div>
+                </div>
+                
+                <div class="fire-stats">
+                    <h4>🚨 Why Hood Cleaning Matters: National Fire Statistics</h4>
+                    <div class="stat-row">
+                        <span class="stat-label">Annual commercial kitchen fires:</span>
+                        <span class="stat-value">7,400+</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Annual property damage:</span>
+                        <span class="stat-value">$165 million</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Leading cause:</span>
+                        <span class="stat-value">Grease buildup in exhaust systems</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Average fire damage per restaurant:</span>
+                        <span class="stat-value">$22,000+</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg closure time after kitchen fire:</span>
+                        <span class="stat-value">45-90 days</span>
+                    </div>
+                </div>
+                
+                <div class="warning-box">
+                    <h4>⚠️ Insurance Claim Denial Risk</h4>
+                    <p><strong>Critical:</strong> If a fire occurs and your hood cleaning logs are not current per NFPA 96 standards, your insurance company can deny your claim entirely.</p>
+                    <p>This means you're personally liable for:</p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Full fire damage costs ($22,000-100,000+)</li>
+                        <li>Building repairs and reconstruction</li>
+                        <li>Lost revenue during closure (45-90 days = $100k-300k+)</li>
+                        <li>Employee wages during shutdown</li>
+                        <li>Potential personal injury lawsuits</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Don't risk everything over skipped cleanings.</strong></p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>💵 Service Investment</h3>
+                    <div id="serviceEstimate"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function calculateCompliance() {
+            const cookingVolume = document.getElementById('cookingVolume').value;
+            const hoodSize = document.getElementById('hoodSize').value;
+            const lastCleaning = document.getElementById('lastCleaning').value;
+            const facilityType = document.getElementById('facilityType').value;
+            const insuranceCoverage = parseInt(document.getElementById('insuranceCoverage').value) || 500000;
+            const avgDailyRevenue = parseInt(document.getElementById('avgDailyRevenue').value) || 2500;
+            
+            if (!cookingVolume || !hoodSize || !lastCleaning || !facilityType) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Calculate days since last cleaning
+            const lastDate = new Date(lastCleaning);
+            const today = new Date();
+            const daysSince = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+            
+            // NFPA 96 requirements
+            const nfpaSchedules = {
+                high: {
+                    frequency: 'Monthly',
+                    maxDays: 30,
+                    description: 'High-volume cooking (solid fuel, charbroiling, high-temp wok)',
+                    icon: '🔥'
+                },
+                moderate: {
+                    frequency: 'Quarterly',
+                    maxDays: 90,
+                    description: 'Moderate-volume cooking (standard restaurant operations)',
+                    icon: '🍳'
+                },
+                low: {
+                    frequency: 'Semi-Annual',
+                    maxDays: 180,
+                    description: 'Low-volume cooking (occasional use, light cooking)',
+                    icon: '☕'
+                }
+            };
+            
+            const schedule = nfpaSchedules[cookingVolume];
+            const daysOverdue = Math.max(0, daysSince - schedule.maxDays);
+            const isCompliant = daysSince <= schedule.maxDays;
+            
+            // Display NFPA schedule
+            document.getElementById('nfpaSchedule').innerHTML = `
+                <div class="schedule-item">
+                    <div class="schedule-icon">${schedule.icon}</div>
+                    <div>
+                        <strong>Required Frequency: ${schedule.frequency}</strong><br>
+                        <span style="color: #666;">${schedule.description}</span><br>
+                        <span style="color: #666;">Maximum ${schedule.maxDays} days between cleanings per NFPA 96</span>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: ${isCompliant ? '#e8f5e9' : '#ffebee'}; border-radius: 8px;">
+                    <strong>Days Since Last Cleaning:</strong> ${daysSince} days<br>
+                    ${daysOverdue > 0 ? `<strong style="color: #c62828;">OVERDUE BY: ${daysOverdue} days</strong>` : `<strong style="color: #2e7d32;">Next cleaning due in: ${schedule.maxDays - daysSince} days</strong>`}
+                </div>
+            `;
+            
+            // Compliance status
+            let statusHTML = '';
+            let statusClass = '';
+            
+            if (isCompliant && daysSince < schedule.maxDays * 0.7) {
+                statusHTML = '✅ COMPLIANT - On Schedule';
+                statusClass = 'status-good';
+            } else if (isCompliant) {
+                statusHTML = '⚠️ CLEANING DUE SOON - Schedule Now';
+                statusClass = 'status-warning';
+            } else {
+                statusHTML = '🚨 NON-COMPLIANT - Immediate Action Required';
+                statusClass = 'status-danger';
+            }
+            
+            const complianceStatus = document.getElementById('complianceStatus');
+            complianceStatus.className = 'compliance-status ' + statusClass;
+            complianceStatus.innerHTML = statusHTML;
+            
+            // Fire risk assessment
+            const riskPercentage = Math.min(100, (daysSince / schedule.maxDays) * 100);
+            const riskFill = document.getElementById('riskFill');
+            
+            let riskColor = '';
+            let riskLabel = '';
+            
+            if (riskPercentage < 70) {
+                riskColor = '#4CAF50';
+                riskLabel = 'LOW RISK';
+            } else if (riskPercentage < 100) {
+                riskColor = '#FFC107';
+                riskLabel = 'ELEVATED RISK';
+            } else if (riskPercentage < 150) {
+                riskColor = '#FF6B35';
+                riskLabel = 'HIGH RISK';
+            } else {
+                riskColor = '#D32F2F';
+                riskLabel = 'CRITICAL RISK';
+            }
+            
+            riskFill.style.width = Math.min(riskPercentage, 100) + '%';
+            riskFill.style.background = riskColor;
+            riskFill.textContent = riskLabel;
+            
+            document.getElementById('riskDescription').innerHTML = `
+                <p style="margin-top: 15px; color: #666; line-height: 1.7;">
+                    ${riskPercentage < 70 ? 
+                        'Your hood system is within safe operating parameters. Continue regular maintenance schedule.' :
+                        riskPercentage < 100 ?
+                        'Grease is accumulating. Schedule cleaning within 7-10 days to maintain compliance and safety.' :
+                        riskPercentage < 150 ?
+                        '<strong style="color: #FF6B35;">Your system is overdue for cleaning. Fire risk is significantly elevated. Grease buildup is at dangerous levels. Schedule immediate service.</strong>' :
+                        '<strong style="color: #D32F2F;">CRITICAL: Your system is severely overdue. You are operating in violation of NFPA 96 and at extreme fire risk. Your insurance is likely void. Emergency cleaning required NOW.</strong>'
+                    }
+                </p>
+            `;
+            
+            // Cost analysis
+            const avgCleaningCost = {
+                small: 350,
+                medium: 550,
+                large: 850,
+                xlarge: 1200
+            }[hoodSize];
+            
+            const annualCleaningCost = avgCleaningCost * (365 / schedule.maxDays);
+            
+            const healthDeptFine = daysOverdue > 0 ? Math.min(2500, daysOverdue * 100) : 0;
+            const avgFireDamage = 22000;
+            const avgClosureDays = 60;
+            const lostRevenue = avgClosureDays * avgDailyRevenue;
+            const insuranceDenialRisk = daysOverdue > 0 ? (avgFireDamage + lostRevenue) : 0;
+            
+            document.getElementById('costBreakdown').innerHTML = `
+                <div class="cost-item">
+                    <span class="amount">$${Math.round(annualCleaningCost).toLocaleString()}</span>
+                    <span class="label">Annual Cleaning Investment</span>
+                </div>
+                ${daysOverdue > 0 ? `
+                <div class="cost-item">
+                    <span class="amount">$${healthDeptFine.toLocaleString()}</span>
+                    <span class="label">Potential Health Dept Fines</span>
+                </div>
+                ` : ''}
+                <div class="cost-item">
+                    <span class="amount">$${avgFireDamage.toLocaleString()}</span>
+                    <span class="label">Avg Fire Damage Cost</span>
+                </div>
+                <div class="cost-item">
+                    <span class="amount">$${lostRevenue.toLocaleString()}</span>
+                    <span class="label">Lost Revenue (60 Days)</span>
+                </div>
+                ${daysOverdue > 0 ? `
+                <div class="cost-item" style="background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%); border-color: #c62828;">
+                    <span class="amount">$${insuranceDenialRisk.toLocaleString()}</span>
+                    <span class="label" style="color: #c62828; font-weight: bold;">Insurance Denial Risk</span>
+                </div>
+                ` : ''}
+            `;
+            
+            // Service estimate
+            const annualCleanings = Math.ceil(365 / schedule.maxDays);
+            const yearlyTotal = avgCleaningCost * annualCleanings;
+            const potentialFireCost = avgFireDamage + lostRevenue + (insuranceCoverage * 0.1);
+            const roi = ((potentialFireCost - yearlyTotal) / yearlyTotal * 100).toFixed(0);
+            
+            document.getElementById('serviceEstimate').innerHTML = `
+                <p style="font-size: 1.1em; margin-bottom: 15px;">
+                    <strong>Per-Cleaning Cost:</strong> <span style="color: #FF6B35; font-size: 1.3em; font-weight: bold;">$${avgCleaningCost}</span>
+                </p>
+                <p style="font-size: 1.1em; margin-bottom: 15px;">
+                    <strong>Required Cleanings per Year:</strong> ${annualCleanings}x (${schedule.frequency})
+                </p>
+                <p style="font-size: 1.1em; margin-bottom: 25px;">
+                    <strong>Annual Investment:</strong> <span style="color: #FF6B35; font-size: 1.3em; font-weight: bold;">$${yearlyTotal.toLocaleString()}</span>
+                </p>
+                
+                <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 20px; border-radius: 10px; border: 2px solid #4CAF50;">
+                    <strong style="color: #2e7d32; font-size: 1.2em;">ROI Protection:</strong><br>
+                    <p style="margin-top: 10px; color: #2e7d32; line-height: 1.6;">
+                        You're investing $${yearlyTotal.toLocaleString()}/year to protect against $${potentialFireCost.toLocaleString()} in potential fire-related costs.
+                        That's a <strong>${roi}% return</strong> on fire prevention, plus full NFPA compliance and valid insurance.
+                    </p>
+                </div>
+                
+                ${daysOverdue > 0 ? `
+                <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin-top: 20px; border: 2px solid #ffc107;">
+                    <strong style="color: #856404; font-size: 1.1em;">⚠️ Urgent Action Required:</strong><br>
+                    <p style="margin-top: 10px; color: #856404;">
+                        You are currently ${daysOverdue} days overdue for NFPA-required cleaning. 
+                        Schedule emergency service immediately to restore compliance and protect your insurance coverage.
+                    </p>
+                </div>
+                ` : ''}
+                
+                <p style="margin-top: 25px; color: #666; font-size: 0.95em;">
+                    * Pricing estimates for ${hoodSize} hood system (${schedule.frequency.toLowerCase()} cleaning frequency). 
+                    Includes hood interior, ductwork, exhaust fans, and filters. NFPA 96 certified service.
+                </p>
+            `;
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Set default date to 60 days ago
+        window.addEventListener('DOMContentLoaded', () => {
+            const twoMonthsAgo = new Date();
+            twoMonthsAgo.setDate(twoMonthsAgo.getDate() - 60);
+            document.getElementById('lastCleaning').value = twoMonthsAgo.toISOString().split('T')[0];
+        });
+    </script>
+</body>
+</html>

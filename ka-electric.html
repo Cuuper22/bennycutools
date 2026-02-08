@@ -1240,6 +1240,15 @@
 
     <!-- Tab Views -->
     <main id="main-content" tabindex="-1">
+    <!-- Legal Disclaimer for Demo Data -->
+    <div id="legalDisclaimer" class="legal-disclaimer" style="display:none;background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin:8px 16px;font-size:13px;line-height:1.5;color:#5d4037;">
+      <p style="margin:0 0 8px 0;font-weight:600;color:#e65100;">Demo Data Notice</p>
+      <p style="margin:0 0 8px 0;">This tool contains sample data for <strong>demonstration purposes only</strong>. Business names, addresses, and details shown are used solely to illustrate how this tool works. No affiliation with or endorsement by any referenced business is implied.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="clearAllDemoData()" style="background:#d32f2f;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">Permanently Delete All Demo Data</button>
+        <button onclick="document.getElementById('legalDisclaimer').style.display='none'" style="background:#e0e0e0;color:#333;border:none;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;">Dismiss</button>
+      </div>
+    </div>
       <!-- Leads Tab -->
       <section class="tab-view active" id="leadsTab" role="tabpanel" aria-labelledby="navLeads">
         <div class="section-header">
@@ -1810,6 +1819,7 @@
     });
 
     async function showApp() {
+      setTimeout(showLegalDisclaimer, 500);
       authScreen.style.display = 'none';
       mainApp.classList.add('active');
       await initData();
@@ -2419,9 +2429,37 @@
     });
 
     // Init on load
-    if (localStorage.getItem('ls_auth') === 'true') {
+    // Auto-read key from URL parameter
+    const _urlKey = new URLSearchParams(window.location.search).get('key');
+    if (_urlKey && _h(_urlKey) === _V) {
+      localStorage.setItem('ls_auth', 'true');
+      showApp();
+    } else if (localStorage.getItem('ls_auth') === 'true') {
       showApp();
     }
-  </script>
+  
+    // Legal disclaimer for demo data
+    function clearAllDemoData() {
+      if (confirm('This will permanently delete all demo/sample data. Continue?')) {
+        // Clear IndexedDB
+        const dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
+        dbs.then(databases => {
+          databases.forEach(db => indexedDB.deleteDatabase(db.name));
+        }).catch(() => {});
+        // Clear localStorage demo flags
+        localStorage.removeItem('isFirstVisit');
+        localStorage.removeItem('demoLoaded');
+        localStorage.removeItem('hasLoadedDemo');
+        // Reload
+        alert('All demo data has been permanently deleted.');
+        location.reload();
+      }
+    }
+    // Show disclaimer when demo data is present
+    function showLegalDisclaimer() {
+      const el = document.getElementById('legalDisclaimer');
+      if (el) el.style.display = 'block';
+    }
+    </script>
 </body>
 </html>

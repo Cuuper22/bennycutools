@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marine Service Center Dashboard - Vallely Sport & Marine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0066cc 0%, #004c99 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #0066cc;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #0066cc;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            font-size: 24px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #0066cc;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0052a3;
+        }
+        
+        .btn-secondary {
+            background: #28a745;
+        }
+        
+        .btn-secondary:hover {
+            background: #218838;
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #0066cc;
+        }
+        
+        .result-box h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+            padding-top: 12px;
+        }
+        
+        .service-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .service-item .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status.in-queue {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .status.in-progress {
+            background: #007bff;
+            color: white;
+        }
+        
+        .status.ready {
+            background: #28a745;
+            color: white;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .date-slot {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .date-slot:hover {
+            background: #e3f2fd;
+            border-color: #0066cc;
+        }
+        
+        .date-slot.full {
+            background: #ffebee;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .date-slot.selected {
+            background: #0066cc;
+            color: white;
+            border-color: #0052a3;
+        }
+        
+        .date-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .slots-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .alert-box {
+            background: #e3f2fd;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .parts-grid {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .part-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stock-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .stock-badge.in-stock {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .stock-badge.low-stock {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .stock-badge.out-stock {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚓ Marine Service Center Dashboard</h1>
+            <p>Built for Vallely Sport & Marine - Bismarck & Minot, ND</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Winterization Scheduler -->
+            <div class="card">
+                <h2><span class="icon">❄️</span> Winterization Scheduler</h2>
+                <div class="alert-box">
+                    <strong>Fall Season:</strong> Book your winterization early! October-November fills fast.
+                </div>
+                <div class="input-group">
+                    <label>Boat Type</label>
+                    <select id="boatType">
+                        <option value="runabout">Runabout (16-22ft)</option>
+                        <option value="bowrider">Bowrider (23-26ft)</option>
+                        <option value="pontoon">Pontoon</option>
+                        <option value="pwc">Personal Watercraft (PWC)</option>
+                        <option value="fishing">Fishing Boat</option>
+                        <option value="cruiser">Cabin Cruiser</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Engine Type</label>
+                    <select id="engineType">
+                        <option value="outboard">Outboard</option>
+                        <option value="inboard">Inboard/Sterndrive</option>
+                        <option value="jet">Jet Drive</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Preferred Location</label>
+                    <select id="location">
+                        <option value="bismarck">Bismarck</option>
+                        <option value="minot">Minot</option>
+                    </select>
+                </div>
+                
+                <h3 style="margin-top: 20px; margin-bottom: 10px; color: #0066cc;">Available Dates (October 2026)</h3>
+                <div class="calendar-grid" id="dateGrid">
+                    <!-- Dates will be populated by JavaScript -->
+                </div>
+                
+                <button class="btn" style="margin-top: 15px;" onclick="calculateWinterization()">Get Quote & Book</button>
+                <div id="winterizationResult"></div>
+            </div>
+
+            <!-- Service Queue Tracker -->
+            <div class="card">
+                <h2><span class="icon">🔧</span> Service Queue Tracker</h2>
+                <div class="input-group">
+                    <label>Enter Your Service Ticket Number</label>
+                    <input type="text" id="ticketNumber" placeholder="e.g., VSM-2456">
+                </div>
+                <button class="btn" onclick="checkServiceStatus()">Check Status</button>
+                <div id="serviceStatus"></div>
+                
+                <div style="margin-top: 25px;">
+                    <h3 style="color: #0066cc; margin-bottom: 10px;">Current Queue (Bismarck Location)</h3>
+                    <div class="service-item">
+                        <div>
+                            <strong>Ticket #VSM-2451</strong><br>
+                            <small>2022 MasterCraft - Engine Service</small>
+                        </div>
+                        <span class="status in-progress">In Progress</span>
+                    </div>
+                    <div class="service-item">
+                        <div>
+                            <strong>Ticket #VSM-2452</strong><br>
+                            <small>2020 Bennington - Lower Unit Service</small>
+                        </div>
+                        <span class="status in-progress">In Progress</span>
+                    </div>
+                    <div class="service-item">
+                        <div>
+                            <strong>Ticket #VSM-2453</strong><br>
+                            <small>2021 Yamaha PWC - Oil Change</small>
+                        </div>
+                        <span class="status in-queue">In Queue (#1)</span>
+                    </div>
+                    <div class="service-item">
+                        <div>
+                            <strong>Ticket #VSM-2454</strong><br>
+                            <small>2019 Sea Ray - Impeller Replacement</small>
+                        </div>
+                        <span class="status in-queue">In Queue (#2)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Service Quote -->
+            <div class="card">
+                <h2><span class="icon">💰</span> Quick Service Quote</h2>
+                <div class="input-group">
+                    <label>Service Type</label>
+                    <select id="serviceType">
+                        <option value="winterization">Full Winterization</option>
+                        <option value="commissioning">Spring Commissioning</option>
+                        <option value="oil">Oil Change</option>
+                        <option value="lower">Lower Unit Service</option>
+                        <option value="impeller">Impeller Replacement</option>
+                        <option value="tuneup">Engine Tune-Up</option>
+                        <option value="prop">Propeller Repair/Replacement</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Engine Size/Type</label>
+                    <select id="engineSize">
+                        <option value="small">Small (under 100 HP)</option>
+                        <option value="medium">Medium (100-200 HP)</option>
+                        <option value="large">Large (200-300 HP)</option>
+                        <option value="xlarge">XL (300+ HP)</option>
+                        <option value="twin">Twin Engines</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="calculateService()">Calculate Estimate</button>
+                <div id="serviceQuote"></div>
+            </div>
+
+            <!-- Parts Finder -->
+            <div class="card">
+                <h2><span class="icon">🔩</span> Parts Finder</h2>
+                <div class="input-group">
+                    <label>Search Parts</label>
+                    <input type="text" id="partSearch" placeholder="e.g., impeller, spark plugs, oil filter">
+                </div>
+                <button class="btn" onclick="searchParts()">Search Inventory</button>
+                <div id="partsResult"></div>
+                
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #0066cc; margin-bottom: 10px;">Popular Parts (Bismarck)</h3>
+                    <div class="parts-grid">
+                        <div class="part-item">
+                            <div>
+                                <strong>Yamaha Impeller Kit</strong><br>
+                                <small>Part #6E5-44352-00</small>
+                            </div>
+                            <span class="stock-badge in-stock">✓ In Stock</span>
+                        </div>
+                        <div class="part-item">
+                            <div>
+                                <strong>Marine Oil Filter (10W-30)</strong><br>
+                                <small>Universal Fit</small>
+                            </div>
+                            <span class="stock-badge in-stock">✓ In Stock</span>
+                        </div>
+                        <div class="part-item">
+                            <div>
+                                <strong>Lower Unit Gear Lube</strong><br>
+                                <small>Yamaha ACC-GEARL-UB-QT</small>
+                            </div>
+                            <span class="stock-badge low-stock">⚠ Low (3 left)</span>
+                        </div>
+                        <div class="part-item">
+                            <div>
+                                <strong>Stainless Propeller 14x19</strong><br>
+                                <small>Yamaha</small>
+                            </div>
+                            <span class="stock-badge out-stock">✗ Order Required</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spring Prep Checklist -->
+            <div class="card">
+                <h2><span class="icon">☀️</span> Spring Prep Checklist</h2>
+                <p style="margin-bottom: 15px; color: #666;">Check all that apply to your boat to see what services you'll need:</p>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="check1" style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span>Boat was winterized and stored indoors</span>
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="check2" style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span>Engine hasn't been serviced in 12+ months</span>
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="check3" style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span>Propeller has damage or nicks</span>
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="check4" style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span>Battery is 3+ years old</span>
+                    </label>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; cursor: pointer;">
+                        <input type="checkbox" id="check5" style="margin-right: 10px; width: 18px; height: 18px;">
+                        <span>Trailer tires look worn or cracked</span>
+                    </label>
+                </div>
+                
+                <button class="btn btn-secondary" onclick="generateChecklist()">Generate Prep Plan</button>
+                <div id="checklistResult"></div>
+            </div>
+
+            <!-- Contact & Hours -->
+            <div class="card">
+                <h2><span class="icon">📍</span> Locations & Hours</h2>
+                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="color: #0066cc; margin-bottom: 8px;">Bismarck Location</h3>
+                    <p><strong>2800 E. Bismarck Expressway</strong><br>
+                    Bismarck, ND 58504<br>
+                    Phone: (701) 258-9223<br>
+                    Toll-Free: (800) 767-3577</p>
+                </div>
+                
+                <div style="padding: 15px; background: #f8f9fa; border-radius: 8px; margin-bottom: 15px;">
+                    <h3 style="color: #0066cc; margin-bottom: 8px;">Minot Location</h3>
+                    <p><strong>1810 South Broadway</strong><br>
+                    Minot, ND 58701<br>
+                    Phone: (701) 838-6645</p>
+                </div>
+                
+                <div style="padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                    <strong>Service Hours:</strong><br>
+                    Mon-Fri: 8:00 AM - 5:30 PM<br>
+                    Saturday: 9:00 AM - 1:00 PM<br>
+                    Sunday: Closed
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Populate date grid for winterization
+        function populateDateGrid() {
+            const grid = document.getElementById('dateGrid');
+            const startDate = 1;
+            const dates = [];
+            
+            // Generate October dates (8-31)
+            for (let i = 8; i <= 31; i++) {
+                const isFull = Math.random() > 0.7; // Randomly mark some as full
+                const slots = isFull ? 0 : Math.floor(Math.random() * 4) + 1;
+                dates.push({date: i, slots: slots, full: isFull});
+            }
+            
+            dates.forEach(d => {
+                const slot = document.createElement('div');
+                slot.className = 'date-slot' + (d.full ? ' full' : '');
+                slot.innerHTML = `
+                    <div class="date-label">Oct ${d.date}</div>
+                    <div class="slots-label">${d.full ? 'Full' : d.slots + ' slots'}</div>
+                `;
+                if (!d.full) {
+                    slot.onclick = () => selectDate(slot, d.date);
+                }
+                grid.appendChild(slot);
+            });
+        }
+        
+        let selectedDate = null;
+        function selectDate(element, date) {
+            document.querySelectorAll('.date-slot').forEach(s => s.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedDate = date;
+        }
+        
+        // Calculate winterization quote
+        function calculateWinterization() {
+            const boatType = document.getElementById('boatType').value;
+            const engineType = document.getElementById('engineType').value;
+            const location = document.getElementById('location').value;
+            
+            if (!selectedDate) {
+                alert('Please select a date from the calendar above');
+                return;
+            }
+            
+            // Base pricing
+            const basePrices = {
+                'runabout-outboard': 295,
+                'runabout-inboard': 395,
+                'runabout-jet': 325,
+                'bowrider-outboard': 345,
+                'bowrider-inboard': 445,
+                'bowrider-jet': 375,
+                'pontoon-outboard': 275,
+                'pontoon-inboard': 350,
+                'pontoon-jet': 295,
+                'pwc-jet': 195,
+                'fishing-outboard': 285,
+                'cruiser-inboard': 595
+            };
+            
+            const key = boatType + '-' + engineType;
+            const basePrice = basePrices[key] || 325;
+            const materials = Math.round(basePrice * 0.2);
+            const total = basePrice + materials;
+            
+            const resultHTML = `
+                <div class="result-box">
+                    <h3>Winterization Quote</h3>
+                    <div class="result-row">
+                        <span>Labor:</span>
+                        <span>$${basePrice}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Materials (antifreeze, fuel stabilizer):</span>
+                        <span>$${materials}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Location:</span>
+                        <span>${location.charAt(0).toUpperCase() + location.slice(1)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Selected Date:</span>
+                        <span>October ${selectedDate}, 2026</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Total Estimate:</span>
+                        <span>$${total}</span>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                        <strong>Next Step:</strong> Call us at (701) 258-9223 (Bismarck) or (701) 838-6645 (Minot) to confirm your booking for October ${selectedDate}.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('winterizationResult').innerHTML = resultHTML;
+        }
+        
+        // Check service status
+        function checkServiceStatus() {
+            const ticket = document.getElementById('ticketNumber').value.trim().toUpperCase();
+            
+            if (!ticket) {
+                alert('Please enter a ticket number');
+                return;
+            }
+            
+            // Simulated ticket lookup
+            const statuses = {
+                'VSM-2451': {status: 'In Progress', tech: 'Mike', eta: '2-3 hours', position: null},
+                'VSM-2452': {status: 'In Progress', tech: 'Dave', eta: '4-5 hours', position: null},
+                'VSM-2453': {status: 'In Queue', tech: null, eta: '6-8 hours', position: 1},
+                'VSM-2454': {status: 'In Queue', tech: null, eta: '8-10 hours', position: 2},
+                'VSM-2455': {status: 'In Queue', tech: null, eta: '1-2 days', position: 3},
+                'VSM-2456': {status: 'Ready for Pickup', tech: 'Completed', eta: 'Now', position: null}
+            };
+            
+            const info = statuses[ticket] || {status: 'Not Found', tech: null, eta: 'N/A', position: null};
+            
+            let statusColor = '#ffc107';
+            if (info.status === 'In Progress') statusColor = '#007bff';
+            if (info.status === 'Ready for Pickup') statusColor = '#28a745';
+            if (info.status === 'Not Found') statusColor = '#dc3545';
+            
+            const resultHTML = `
+                <div class="result-box" style="border-left-color: ${statusColor};">
+                    <h3>Ticket: ${ticket}</h3>
+                    <div class="result-row">
+                        <span>Status:</span>
+                        <span style="color: ${statusColor}; font-weight: bold;">${info.status}</span>
+                    </div>
+                    ${info.tech ? `
+                        <div class="result-row">
+                            <span>Technician:</span>
+                            <span>${info.tech}</span>
+                        </div>
+                    ` : ''}
+                    ${info.position ? `
+                        <div class="result-row">
+                            <span>Position in Queue:</span>
+                            <span>#${info.position}</span>
+                        </div>
+                    ` : ''}
+                    <div class="result-row">
+                        <span>Estimated Completion:</span>
+                        <span>${info.eta}</span>
+                    </div>
+                    ${info.status === 'Ready for Pickup' ? `
+                        <div style="margin-top: 15px; padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">
+                            <strong>✓ Your boat is ready!</strong> Please bring your ticket to the service counter during business hours.
+                        </div>
+                    ` : ''}
+                    ${info.status === 'Not Found' ? `
+                        <div style="margin-top: 15px; padding: 15px; background: #f8d7da; border-radius: 8px; color: #721c24;">
+                            Ticket not found. Please verify your ticket number or call us at (701) 258-9223.
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            document.getElementById('serviceStatus').innerHTML = resultHTML;
+        }
+        
+        // Calculate service quote
+        function calculateService() {
+            const serviceType = document.getElementById('serviceType').value;
+            const engineSize = document.getElementById('engineSize').value;
+            
+            const servicePrices = {
+                'winterization': {small: 195, medium: 295, large: 395, xlarge: 495, twin: 590},
+                'commissioning': {small: 165, medium: 245, large: 325, xlarge: 425, twin: 510},
+                'oil': {small: 95, medium: 135, large: 185, xlarge: 245, twin: 370},
+                'lower': {small: 125, medium: 165, large: 215, xlarge: 275, twin: 430},
+                'impeller': {small: 175, medium: 225, large: 285, xlarge: 345, twin: 550},
+                'tuneup': {small: 245, medium: 345, large: 445, xlarge: 595, twin: 890},
+                'prop': {small: 125, medium: 175, large: 225, xlarge: 295, twin: 450}
+            };
+            
+            const price = servicePrices[serviceType][engineSize];
+            const labor = Math.round(price * 0.7);
+            const parts = price - labor;
+            
+            const serviceNames = {
+                'winterization': 'Full Winterization',
+                'commissioning': 'Spring Commissioning',
+                'oil': 'Oil Change',
+                'lower': 'Lower Unit Service',
+                'impeller': 'Impeller Replacement',
+                'tuneup': 'Engine Tune-Up',
+                'prop': 'Propeller Service'
+            };
+            
+            const resultHTML = `
+                <div class="result-box">
+                    <h3>${serviceNames[serviceType]}</h3>
+                    <div class="result-row">
+                        <span>Labor:</span>
+                        <span>$${labor}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Parts & Materials:</span>
+                        <span>$${parts}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Estimated Total:</span>
+                        <span>$${price}</span>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 8px; color: #856404;">
+                        <strong>Note:</strong> Final price may vary based on actual condition and additional services needed. Call for exact quote.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('serviceQuote').innerHTML = resultHTML;
+        }
+        
+        // Search parts
+        function searchParts() {
+            const query = document.getElementById('partSearch').value.toLowerCase();
+            
+            if (!query) {
+                alert('Please enter a search term');
+                return;
+            }
+            
+            const parts = {
+                'impeller': [{name: 'Yamaha Impeller Kit', part: '6E5-44352-00', price: 42.99, stock: 'in-stock'}],
+                'spark plug': [{name: 'NGK Spark Plugs (set of 4)', part: 'BPR6HS', price: 18.99, stock: 'in-stock'}],
+                'oil filter': [{name: 'Marine Oil Filter', part: 'HF303', price: 12.99, stock: 'in-stock'}],
+                'propeller': [{name: 'Stainless Propeller 14x19', part: 'YAM-6E5-45945', price: 295.00, stock: 'out-stock'}],
+                'battery': [{name: 'Marine Deep Cycle Battery', part: 'DC27', price: 189.99, stock: 'low-stock'}]
+            };
+            
+            let found = false;
+            let resultHTML = '<div class="parts-grid" style="margin-top: 15px;">';
+            
+            for (let key in parts) {
+                if (query.includes(key) || key.includes(query)) {
+                    found = true;
+                    parts[key].forEach(p => {
+                        const stockClass = p.stock;
+                        const stockText = stockClass === 'in-stock' ? '✓ In Stock' : 
+                                        stockClass === 'low-stock' ? '⚠ Low Stock' : '✗ Order Required';
+                        resultHTML += `
+                            <div class="part-item">
+                                <div>
+                                    <strong>${p.name}</strong><br>
+                                    <small>Part #${p.part} - $${p.price}</small>
+                                </div>
+                                <span class="stock-badge ${stockClass}">${stockText}</span>
+                            </div>
+                        `;
+                    });
+                }
+            }
+            
+            resultHTML += '</div>';
+            
+            if (!found) {
+                resultHTML = `
+                    <div class="result-box" style="margin-top: 15px;">
+                        <h3>No results found</h3>
+                        <p>Please call us at (701) 258-9223 for parts availability.</p>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('partsResult').innerHTML = resultHTML;
+        }
+        
+        // Generate checklist
+        function generateChecklist() {
+            const checks = [
+                document.getElementById('check1').checked,
+                document.getElementById('check2').checked,
+                document.getElementById('check3').checked,
+                document.getElementById('check4').checked,
+                document.getElementById('check5').checked
+            ];
+            
+            const services = [];
+            let totalCost = 0;
+            
+            if (checks[0]) {
+                services.push({name: 'Spring Commissioning', cost: 245});
+                totalCost += 245;
+            }
+            if (checks[1]) {
+                services.push({name: 'Engine Service/Tune-Up', cost: 345});
+                totalCost += 345;
+            }
+            if (checks[2]) {
+                services.push({name: 'Propeller Repair/Replacement', cost: 175});
+                totalCost += 175;
+            }
+            if (checks[3]) {
+                services.push({name: 'Battery Replacement', cost: 189});
+                totalCost += 189;
+            }
+            if (checks[4]) {
+                services.push({name: 'Trailer Tire Replacement', cost: 150});
+                totalCost += 150;
+            }
+            
+            if (services.length === 0) {
+                alert('Please check at least one item to generate a prep plan');
+                return;
+            }
+            
+            let resultHTML = `
+                <div class="result-box">
+                    <h3>Recommended Services</h3>
+            `;
+            
+            services.forEach(s => {
+                resultHTML += `
+                    <div class="result-row">
+                        <span>${s.name}</span>
+                        <span>$${s.cost}</span>
+                    </div>
+                `;
+            });
+            
+            resultHTML += `
+                    <div class="result-row">
+                        <span>Estimated Total:</span>
+                        <span>$${totalCost}</span>
+                    </div>
+                    <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                        <strong>Next Step:</strong> Book your spring service now! Call (701) 258-9223 (Bismarck) or (701) 838-6645 (Minot) to schedule.
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('checklistResult').innerHTML = resultHTML;
+        }
+        
+        // Initialize
+        populateDateGrid();
+    </script>
+</body>
+</html>

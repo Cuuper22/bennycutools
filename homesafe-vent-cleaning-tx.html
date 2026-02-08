@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dryer Fire Risk Calculator - HomeSafe Vent Cleaning</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+            padding: 20px; min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px; margin: 0 auto; background: white;
+            border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+            color: white; padding: 40px; text-align: center;
+        }
+        .header h1 { font-size: 2.2em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .header p { font-size: 1.1em; opacity: 0.95; }
+        .content { padding: 40px; }
+        .warning-box {
+            background: linear-gradient(135deg, #ff5722 0%, #ff6f00 100%);
+            color: white; padding: 25px; border-radius: 12px; margin-bottom: 30px; text-align: center;
+        }
+        .warning-box h3 { font-size: 1.5em; margin-bottom: 10px; }
+        .warning-box .stat { font-size: 2.5em; font-weight: bold; margin: 10px 0; }
+        .section {
+            margin-bottom: 35px; padding: 25px; background: #f8f9fa;
+            border-radius: 12px; border-left: 4px solid #f44336;
+        }
+        .section-title { font-size: 1.3em; color: #2c3e50; margin-bottom: 20px; font-weight: 600; }
+        .symptom-grid { display: grid; gap: 12px; }
+        .symptom-item {
+            background: white; padding: 18px; border-radius: 8px; border: 2px solid #e0e0e0;
+            cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 15px;
+        }
+        .symptom-item:hover { border-color: #f44336; }
+        .symptom-item.selected { border-color: #f44336; background: linear-gradient(135deg, #f4433615, #d32f2f15); }
+        .symptom-item input[type="checkbox"] { width: 24px; height: 24px; cursor: pointer; }
+        .symptom-item label { cursor: pointer; flex: 1; }
+        .symptom-item .danger { font-weight: bold; color: #f44336; }
+        .option-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .option-card {
+            background: white; padding: 20px; border-radius: 10px; border: 3px solid #e0e0e0;
+            cursor: pointer; transition: all 0.3s ease; text-align: center;
+        }
+        .option-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .option-card.selected {
+            border-color: #f44336; background: linear-gradient(135deg, #f4433615, #d32f2f15);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.2);
+        }
+        .option-card h3 { color: #2c3e50; font-size: 1.1em; margin-bottom: 8px; }
+        .option-card p { color: #666; font-size: 0.9em; }
+        .results {
+            background: linear-gradient(135deg, #1565C0 0%, #1976D2 100%);
+            color: white; padding: 35px; border-radius: 12px; margin-top: 30px;
+        }
+        .results h2 { font-size: 1.8em; margin-bottom: 20px; text-align: center; }
+        .risk-display {
+            background: rgba(255,255,255,0.2); padding: 30px; border-radius: 12px;
+            margin: 25px 0; text-align: center;
+        }
+        .risk-level { font-size: 3.5em; font-weight: bold; margin: 20px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .risk-description { font-size: 1.1em; opacity: 0.95; line-height: 1.6; }
+        .cost-breakdown { background: rgba(255,255,255,0.2); padding: 25px; border-radius: 10px; margin-top: 25px; }
+        .cost-item {
+            display: flex; justify-content: space-between; padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3); font-size: 1.05em;
+        }
+        .cost-item:last-child { border-bottom: none; font-weight: bold; font-size: 1.3em; padding-top: 15px; }
+        .comparison-cards {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 25px 0;
+        }
+        .comparison-card {
+            background: rgba(255,255,255,0.15); padding: 25px; border-radius: 10px; text-align: center;
+        }
+        .comparison-card h3 { font-size: 1.2em; margin-bottom: 15px; }
+        .comparison-card .price { font-size: 2.2em; font-weight: bold; margin: 15px 0; }
+        .comparison-card.best { background: rgba(76, 175, 80, 0.3); border: 3px solid rgba(255,255,255,0.6); }
+        .cta-button {
+            background: linear-gradient(135deg, #FB8C00 0%, #F57C00 100%);
+            color: white; border: none; padding: 18px 40px; font-size: 1.2em;
+            border-radius: 50px; cursor: pointer; width: 100%; margin-top: 25px;
+            font-weight: 600; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(251, 140, 0, 0.3);
+        }
+        .cta-button:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(251, 140, 0, 0.4); }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.6em; }
+            .content { padding: 20px; }
+            .comparison-cards { grid-template-columns: 1fr; }
+            .risk-level { font-size: 2.5em; }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Dryer Fire Risk Calculator</h1>
+            <p>Is your clogged dryer vent a ticking time bomb?</p>
+        </div>
+        
+        <div class="content">
+            <div class="warning-box">
+                <h3>⚠️ National Fire Protection Association Data</h3>
+                <div class="stat">15,000 dryer fires/year</div>
+                <p>Causing $238 million in property damage, 440 injuries, and 15 deaths annually in the U.S.<br><strong>Leading cause: Failure to clean dryer vents (34% of fires)</strong></p>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">1. Are you experiencing any of these warning signs?</div>
+                <div class="symptom-grid">
+                    <div class="symptom-item" data-symptom="damp" data-risk="2">
+                        <input type="checkbox" id="damp">
+                        <label for="damp">
+                            <strong>Clothes still damp after full cycle</strong> <span class="danger">(+2 risk)</span><br>
+                            <small>Airflow is severely restricted</small>
+                        </label>
+                    </div>
+                    <div class="symptom-item" data-symptom="hot" data-risk="3">
+                        <input type="checkbox" id="hot">
+                        <label for="hot">
+                            <strong>Dryer or clothes extremely hot to touch</strong> <span class="danger">(+3 risk)</span><br>
+                            <small>Dangerous heat buildup from poor ventilation</small>
+                        </label>
+                    </div>
+                    <div class="symptom-item" data-symptom="burning" data-risk="5">
+                        <input type="checkbox" id="burning">
+                        <label for="burning">
+                            <strong>Burning smell when dryer runs</strong> <span class="danger">(+5 CRITICAL)</span><br>
+                            <small>Lint is scorching — fire risk is IMMINENT</small>
+                        </label>
+                    </div>
+                    <div class="symptom-item" data-symptom="shutoff" data-risk="2">
+                        <input type="checkbox" id="shutoff">
+                        <label for="shutoff">
+                            <strong>Dryer shuts off mid-cycle</strong> <span class="danger">(+2 risk)</span><br>
+                            <small>Thermal fuse triggered from overheating</small>
+                        </label>
+                    </div>
+                    <div class="symptom-item" data-symptom="time" data-risk="2">
+                        <input type="checkbox" id="time">
+                        <label for="time">
+                            <strong>Takes 2-3 cycles to dry one load</strong> <span class="danger">(+2 risk)</span><br>
+                            <small>Vent is partially blocked, dryer working overtime</small>
+                        </label>
+                    </div>
+                    <div class="symptom-item" data-symptom="bills" data-risk="1">
+                        <input type="checkbox" id="bills">
+                        <label for="bills">
+                            <strong>Higher than normal utility bills</strong> <span class="danger">(+1 risk)</span><br>
+                            <small>Dryer using 30-50% more electricity</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">2. When was your dryer vent last professionally cleaned?</div>
+                <div class="option-group">
+                    <div class="option-card" data-cleaned="recent" data-risk="0">
+                        <h3>Within 1 Year</h3>
+                        <p>Low risk (good job!)</p>
+                    </div>
+                    <div class="option-card" data-cleaned="1-2yr" data-risk="2">
+                        <h3>1-2 Years Ago</h3>
+                        <p>Moderate risk (+2)</p>
+                    </div>
+                    <div class="option-card" data-cleaned="3-5yr" data-risk="4">
+                        <h3>3-5 Years Ago</h3>
+                        <p>High risk (+4)</p>
+                    </div>
+                    <div class="option-card" data-cleaned="never" data-risk="5">
+                        <h3>Never / Don't Know</h3>
+                        <p>CRITICAL (+5)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">3. How old is your dryer?</div>
+                <div class="option-group">
+                    <div class="option-card" data-age="new" data-risk="0">
+                        <h3>&lt; 3 Years</h3>
+                        <p>Newer dryer</p>
+                    </div>
+                    <div class="option-card" data-age="middle" data-risk="1">
+                        <h3>3-7 Years</h3>
+                        <p>Mid-life (+1)</p>
+                    </div>
+                    <div class="option-card" data-age="old" data-risk="2">
+                        <h3>8-12 Years</h3>
+                        <p>Aging (+2)</p>
+                    </div>
+                    <div class="option-card" data-age="ancient" data-risk="3">
+                        <h3>12+ Years</h3>
+                        <p>Very old (+3)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">4. Describe your dryer vent system</div>
+                <div class="option-group">
+                    <div class="option-card" data-vent="short" data-risk="0">
+                        <h3>Short & Direct</h3>
+                        <p>&lt; 8 ft, straight run</p>
+                    </div>
+                    <div class="option-card" data-vent="medium" data-risk="1">
+                        <h3>Medium</h3>
+                        <p>8-20 ft, few turns (+1)</p>
+                    </div>
+                    <div class="option-card" data-vent="long" data-risk="2">
+                        <h3>Long & Complex</h3>
+                        <p>20+ ft, many turns (+2)</p>
+                    </div>
+                    <div class="option-card" data-vent="extreme" data-risk="3">
+                        <h3>Very Long/Roof</h3>
+                        <p>30+ ft or roof vent (+3)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="results">
+                <h2>🎯 Your Fire Risk Assessment</h2>
+                
+                <div class="risk-display">
+                    <div class="risk-level" id="riskLevel">Calculate Above</div>
+                    <div class="risk-description" id="riskDescription">
+                        Answer the questions above to see your dryer fire risk level.
+                    </div>
+                </div>
+                
+                <h3 style="text-align: center; margin: 30px 0 20px; font-size: 1.5em;">Annual Cost of a Clogged Dryer Vent</h3>
+                <div class="cost-breakdown">
+                    <div class="cost-item">
+                        <span>Extra electricity (30% increase):</span>
+                        <span id="electricCost">$0</span>
+                    </div>
+                    <div class="cost-item">
+                        <span>Wasted time on re-runs (valued at $25/hr):</span>
+                        <span id="timeCost">$0</span>
+                    </div>
+                    <div class="cost-item">
+                        <span>Premature dryer wear & repairs:</span>
+                        <span id="wearCost">$0</span>
+                    </div>
+                    <div class="cost-item">
+                        <span>Potential fire damage risk:</span>
+                        <span id="fireCost">$0</span>
+                    </div>
+                    <div class="cost-item">
+                        <span>Total Annual Hidden Cost:</span>
+                        <span id="totalCost">$0</span>
+                    </div>
+                </div>
+                
+                <h3 style="text-align: center; margin: 30px 0 20px; font-size: 1.5em;">Solution Comparison</h3>
+                <div class="comparison-cards">
+                    <div class="comparison-card">
+                        <h3>❌ Do Nothing</h3>
+                        <div class="price">$0</div>
+                        <p>+ $800/yr energy waste<br>+ Fire risk ($8k-50k)<br>+ Dryer death ($600-1200)</p>
+                    </div>
+                    <div class="comparison-card">
+                        <h3>🛠️ DIY</h3>
+                        <div class="price">$50</div>
+                        <p>+ 3-4 hours labor<br>+ Can't reach full vent<br>+ No airflow verification</p>
+                    </div>
+                    <div class="comparison-card best">
+                        <h3>✅ Professional</h3>
+                        <div class="price">$300</div>
+                        <p><strong>BEST VALUE</strong><br>Saves $800/yr energy<br>Prevents $8k+ fire<br>Extends dryer life 5+ yrs</p>
+                    </div>
+                </div>
+                
+                <button class="cta-button" onclick="requestInspection()">🔥 Schedule $89 Fire Risk Inspection (FREE if you book cleaning!)</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selections = { symptoms: [], cleaned: null, age: null, vent: null };
+        
+        document.querySelectorAll('.symptom-item').forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            item.addEventListener('click', function(e) {
+                if (e.target.tagName !== 'INPUT') checkbox.checked = !checkbox.checked;
+                this.classList.toggle('selected', checkbox.checked);
+                if (checkbox.checked) {
+                    selections.symptoms.push({ symptom: this.dataset.symptom, risk: parseFloat(this.dataset.risk) });
+                } else {
+                    selections.symptoms = selections.symptoms.filter(s => s.symptom !== this.dataset.symptom);
+                }
+                calculateRisk();
+            });
+        });
+        
+        document.querySelectorAll('.option-card[data-cleaned]').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.option-card[data-cleaned]').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selections.cleaned = { risk: parseFloat(this.dataset.risk) };
+                calculateRisk();
+            });
+        });
+        
+        document.querySelectorAll('.option-card[data-age]').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.option-card[data-age]').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selections.age = { risk: parseFloat(this.dataset.risk) };
+                calculateRisk();
+            });
+        });
+        
+        document.querySelectorAll('.option-card[data-vent]').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.option-card[data-vent]').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                selections.vent = { risk: parseFloat(this.dataset.risk) };
+                calculateRisk();
+            });
+        });
+        
+        function calculateRisk() {
+            if (!selections.cleaned || !selections.age || !selections.vent) return;
+            
+            const symptomRisk = selections.symptoms.reduce((sum, s) => sum + s.risk, 0);
+            const totalRisk = symptomRisk + selections.cleaned.risk + selections.age.risk + selections.vent.risk;
+            
+            let level = '', color = '', desc = '';
+            let electricCost = 0, timeCost = 0, wearCost = 0, fireCost = 0;
+            
+            if (totalRisk <= 3) {
+                level = 'LOW RISK'; color = '#4CAF50';
+                desc = 'Your dryer vent is in relatively good shape. Schedule cleaning within the next 6-12 months to maintain safety.';
+                electricCost = 50; timeCost = 100; wearCost = 50; fireCost = 100;
+            } else if (totalRisk <= 7) {
+                level = 'MODERATE RISK'; color = '#FF9800';
+                desc = 'Your dryer vent needs attention soon. Schedule professional cleaning within the next 1-3 months to prevent issues.';
+                electricCost = 150; timeCost = 200; wearCost = 150; fireCost = 500;
+            } else if (totalRisk <= 12) {
+                level = 'HIGH RISK'; color = '#FF5722';
+                desc = 'Your dryer vent is significantly clogged. Schedule professional cleaning IMMEDIATELY to prevent fire danger and dryer damage.';
+                electricCost = 250; timeCost = 300; wearCost = 300; fireCost = 2000;
+            } else {
+                level = 'CRITICAL DANGER'; color = '#D32F2F';
+                desc = 'URGENT: Your dryer is a fire hazard. DO NOT use your dryer until it has been professionally inspected and cleaned. Call HomeSafe TODAY.';
+                electricCost = 350; timeCost = 400; wearCost = 500; fireCost = 8000;
+            }
+            
+            const totalCost = electricCost + timeCost + wearCost + fireCost;
+            
+            document.getElementById('riskLevel').textContent = level;
+            document.getElementById('riskLevel').style.color = color;
+            document.getElementById('riskDescription').textContent = desc;
+            document.getElementById('electricCost').textContent = '$' + electricCost;
+            document.getElementById('timeCost').textContent = '$' + timeCost;
+            document.getElementById('wearCost').textContent = '$' + wearCost;
+            document.getElementById('fireCost').textContent = '$' + fireCost.toLocaleString();
+            document.getElementById('totalCost').textContent = '$' + totalCost.toLocaleString();
+        }
+        
+        function requestInspection() {
+            alert('Call HomeSafe Vent Cleaning at (214) 681-9848 to schedule your $89 dryer vent inspection.\n\nBook the cleaning during the inspection and the $89 inspection is FREE!\n\nMost cleanings: $269-$339 • Same-day service available');
+        }
+    </script>
+</body>
+</html>

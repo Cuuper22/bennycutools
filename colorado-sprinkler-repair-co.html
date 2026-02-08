@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprinkler Blowout ROI Calculator - Colorado Sprinkler Repair</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+        }
+        
+        .section h2 {
+            color: #16a085;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #27ae60;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+        }
+        
+        .input-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(39, 174, 96, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #e8f8f5 0%, #d5f4e6 100%);
+            border-radius: 15px;
+            border-left: 5px solid #27ae60;
+        }
+        
+        .results.visible {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h3 {
+            color: #16a085;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .risk-alert {
+            background: #fff3cd;
+            border-left: 4px solid #f39c12;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .risk-alert .risk-level {
+            font-size: 2em;
+            font-weight: 700;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+        
+        .risk-alert .risk-level.medium {
+            color: #f39c12;
+        }
+        
+        .risk-alert .risk-level.low {
+            color: #27ae60;
+        }
+        
+        .savings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .savings-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .savings-card .label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .savings-card .value {
+            color: #16a085;
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        .savings-card .subtext {
+            color: #27ae60;
+            font-size: 0.85em;
+            margin-top: 5px;
+            font-weight: 600;
+        }
+        
+        .breakdown {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .breakdown h4 {
+            color: #16a085;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #16a085;
+            padding-top: 15px;
+            margin-top: 10px;
+            border-top: 2px solid #27ae60;
+        }
+        
+        .breakdown-item span:first-child {
+            color: #333;
+        }
+        
+        .breakdown-item span:last-child {
+            color: #27ae60;
+            font-weight: 600;
+        }
+        
+        .comparison {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+        
+        .comparison h4 {
+            color: #16a085;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .comparison-option {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .comparison-option.good {
+            background: #d5f4e6;
+            border: 2px solid #27ae60;
+        }
+        
+        .comparison-option.bad {
+            background: #fadbd8;
+            border: 2px solid #e74c3c;
+        }
+        
+        .comparison-option h5 {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        
+        .comparison-option .price {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .comparison-option .details {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #16a085;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 25px;
+        }
+        
+        .info-box h4 {
+            color: #16a085;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-box li {
+            padding: 8px 0;
+            color: #333;
+            position: relative;
+            padding-left: 25px;
+        }
+        
+        .info-box li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 25px 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .savings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❄️ Sprinkler Blowout ROI Calculator</h1>
+            <p>Protect Your Sprinkler System from Colorado's Freezing Winters<br>Family-Owned Since Day One</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Your Sprinkler System</h2>
+                
+                <div class="input-group">
+                    <label for="zones">Number of Zones</label>
+                    <input type="number" id="zones" value="8" min="1" max="20">
+                    <div class="input-hint">Typical Colorado home: 6-10 zones</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="systemAge">System Age (years)</label>
+                    <input type="number" id="systemAge" value="10" min="0" max="40">
+                    <div class="input-hint">Older systems more susceptible to freeze damage</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="systemValue">Estimated System Value</label>
+                    <input type="number" id="systemValue" value="8000" min="1000" max="50000" step="500">
+                    <div class="input-hint">Replacement cost if severely damaged</div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="propertyValue">Property Value</label>
+                    <input type="number" id="propertyValue" value="450000" min="100000" max="2000000" step="10000">
+                    <div class="input-hint">Curb appeal impact from landscape damage</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Winterization Approach</h2>
+                
+                <div class="input-group">
+                    <label for="approach">How do you plan to winterize?</label>
+                    <select id="approach">
+                        <option value="professional">Professional Blowout (Colorado Sprinkler Repair)</option>
+                        <option value="diy">DIY Blowout (rent compressor myself)</option>
+                        <option value="skip">Skip Winterization (risk it)</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="prevDamage">Ever had winter freeze damage before?</label>
+                    <select id="prevDamage">
+                        <option value="no">No, never</option>
+                        <option value="yes">Yes, pipes cracked or valves broke</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateROI()">❄️ Calculate Protection Value</button>
+            
+            <div class="results" id="results">
+                <div class="risk-alert" id="riskAlert">
+                    <div class="risk-level" id="riskLevel">HIGH RISK</div>
+                    <div id="riskText"></div>
+                </div>
+                
+                <h3>Your Cost Analysis</h3>
+                
+                <div class="savings-grid">
+                    <div class="savings-card">
+                        <div class="label">Blowout Cost</div>
+                        <div class="value" id="blowoutCost">$0</div>
+                        <div class="subtext">One-time annual</div>
+                    </div>
+                    
+                    <div class="savings-card">
+                        <div class="label">Potential Damage Cost</div>
+                        <div class="value" id="damageCost">$0</div>
+                        <div class="subtext">If pipes freeze</div>
+                    </div>
+                    
+                    <div class="savings-card">
+                        <div class="label">Net Protection Value</div>
+                        <div class="value" id="netValue">$0</div>
+                        <div class="subtext">Risk avoided</div>
+                    </div>
+                </div>
+                
+                <div class="breakdown">
+                    <h4>💸 Potential Freeze Damage Breakdown</h4>
+                    <div class="breakdown-item">
+                        <span>Cracked Pipes (2-4 locations)</span>
+                        <span id="pipeCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Broken Valves (1-3 valves)</span>
+                        <span id="valveCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Backflow Preventer Damage</span>
+                        <span id="backflowCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Controller Replacement (if damaged)</span>
+                        <span id="controllerCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Labor for Spring Repairs (4-8 hours)</span>
+                        <span id="laborCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span>Landscape Recovery (if delayed watering)</span>
+                        <span id="landscapeCost">$0</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span><strong>Total Potential Damage</strong></span>
+                        <span id="totalDamage">$0</span>
+                    </div>
+                </div>
+                
+                <div class="comparison">
+                    <h4>🔍 Your Options Compared</h4>
+                    <div class="comparison-grid">
+                        <div class="comparison-option good">
+                            <h5>✅ Professional Blowout</h5>
+                            <div class="price" id="proPriceDisplay">$120</div>
+                            <div class="details">
+                                • 99% protection rate<br>
+                                • Proper PSI (40-80)<br>
+                                • All zones cleared<br>
+                                • Colorado Sprinkler Guarantee<br>
+                                • Peace of mind
+                            </div>
+                        </div>
+                        
+                        <div class="comparison-option bad" id="altOption">
+                            <h5 id="altTitle">❌ Skip Winterization</h5>
+                            <div class="price" id="altPrice">$0</div>
+                            <div class="details" id="altDetails">
+                                • 70% freeze damage risk<br>
+                                • $2,000-8,000 repairs<br>
+                                • Spring startup delayed<br>
+                                • Landscape at risk<br>
+                                • Stress & hassle
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-box" id="recommendation">
+                    <h4>📋 Why Professional Blowout Matters</h4>
+                    <p id="recommendationText" style="color: #333; line-height: 1.7;"></p>
+                </div>
+            </div>
+            
+            <div class="info-box" style="margin-top: 30px;">
+                <h4>🏆 Why Choose Colorado Sprinkler Repair?</h4>
+                <ul>
+                    <li><strong>Family-owned business</strong> - We treat customers like family</li>
+                    <li><strong>Colorado Sprinkler Guarantee</strong> - We stand by our work, fix issues at no cost</li>
+                    <li><strong>Transparent pricing</strong> - No hidden fees, upfront estimates</li>
+                    <li><strong>One-stop shop</strong> - Full landscape, sprinkler, and lawn care services</li>
+                    <li><strong>Local expertise</strong> - Thornton, Broomfield, Lafayette, Erie, Westminster</li>
+                    <li><strong>Up to 10 zones</strong> - Standard service covers most homes</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Colorado Sprinkler Repair</strong> - Serving Thornton & Surrounding Areas</p>
+            <p style="margin-top: 10px;">(303) 517-9368 | coloradosprinklerrepair.com</p>
+            <p style="margin-top: 10px;">This calculator provides estimates based on typical Colorado freeze damage costs.<br>Actual costs vary based on system size, age, and damage severity.</p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateROI() {
+            // Get inputs
+            const zones = parseInt(document.getElementById('zones').value);
+            const systemAge = parseInt(document.getElementById('systemAge').value);
+            const systemValue = parseInt(document.getElementById('systemValue').value);
+            const propertyValue = parseInt(document.getElementById('propertyValue').value);
+            const approach = document.getElementById('approach').value;
+            const prevDamage = document.getElementById('prevDamage').value;
+            
+            // Professional blowout cost: typically $75-150 depending on zones
+            let blowoutCost = 75 + (zones * 8);
+            if (zones > 10) blowoutCost += (zones - 10) * 15;
+            
+            // Damage risk calculation
+            let damageRisk = 0.70; // 70% chance without winterization
+            if (approach === 'professional') damageRisk = 0.01; // 1% with professional
+            if (approach === 'diy') damageRisk = 0.30; // 30% with DIY (often incomplete)
+            
+            // Age factor (older systems more vulnerable)
+            if (systemAge > 15) damageRisk *= 1.3;
+            if (systemAge > 25) damageRisk *= 1.5;
+            
+            // Previous damage increases risk
+            if (prevDamage === 'yes') damageRisk *= 1.4;
+            
+            // Cap at 95%
+            damageRisk = Math.min(damageRisk, 0.95);
+            
+            // Damage cost breakdown
+            const pipeCost = 800 + (zones * 100); // $800-2,000 for pipe repairs
+            const valveCost = 400 + (zones * 50); // $400-1,200 for valve replacement
+            const backflowCost = 350; // Backflow preventer
+            const controllerCost = systemAge > 10 ? 400 : 0; // Controller if old
+            const laborCost = 600 + (zones * 40); // Labor for repairs
+            const landscapeCost = propertyValue * 0.005; // 0.5% property value for landscape recovery
+            
+            const totalDamageCost = pipeCost + valveCost + backflowCost + controllerCost + laborCost + landscapeCost;
+            
+            // Expected damage (risk-weighted)
+            const expectedDamage = totalDamageCost * damageRisk;
+            
+            // Net value
+            const netValue = expectedDamage - blowoutCost;
+            
+            // Update display
+            document.getElementById('blowoutCost').textContent = '$' + Math.round(blowoutCost).toLocaleString();
+            document.getElementById('damageCost').textContent = '$' + Math.round(totalDamageCost).toLocaleString();
+            document.getElementById('netValue').textContent = '$' + Math.round(netValue).toLocaleString();
+            
+            document.getElementById('pipeCost').textContent = '$' + Math.round(pipeCost).toLocaleString();
+            document.getElementById('valveCost').textContent = '$' + Math.round(valveCost).toLocaleString();
+            document.getElementById('backflowCost').textContent = '$' + backflowCost.toLocaleString();
+            document.getElementById('controllerCost').textContent = controllerCost > 0 ? '$' + controllerCost.toLocaleString() : 'N/A';
+            document.getElementById('laborCost').textContent = '$' + Math.round(laborCost).toLocaleString();
+            document.getElementById('landscapeCost').textContent = '$' + Math.round(landscapeCost).toLocaleString();
+            document.getElementById('totalDamage').textContent = '$' + Math.round(totalDamageCost).toLocaleString();
+            
+            // Risk assessment
+            const riskLevel = document.getElementById('riskLevel');
+            const riskText = document.getElementById('riskText');
+            const riskAlert = document.getElementById('riskAlert');
+            
+            if (damageRisk > 0.60) {
+                riskLevel.textContent = 'HIGH RISK';
+                riskLevel.className = 'risk-level';
+                riskText.innerHTML = '<strong>Your system has a ' + Math.round(damageRisk * 100) + '% chance of freeze damage this winter.</strong><br>Without proper winterization, Colorado\'s freezing temperatures WILL crack pipes and break valves.';
+            } else if (damageRisk > 0.20) {
+                riskLevel.textContent = 'MEDIUM RISK';
+                riskLevel.className = 'risk-level medium';
+                riskText.innerHTML = '<strong>Your system has a ' + Math.round(damageRisk * 100) + '% chance of freeze damage.</strong><br>DIY blowouts often miss water in backflow preventers and low zones.';
+            } else {
+                riskLevel.textContent = 'LOW RISK';
+                riskLevel.className = 'risk-level low';
+                riskText.innerHTML = '<strong>Professional blowout reduces freeze damage risk to ' + Math.round(damageRisk * 100) + '%.</strong><br>Your system is properly protected with Colorado Sprinkler Repair\'s guarantee.';
+                riskAlert.style.background = '#d5f4e6';
+                riskAlert.style.borderColor = '#27ae60';
+            }
+            
+            // Update comparison
+            document.getElementById('proPriceDisplay').textContent = '$' + Math.round(blowoutCost).toLocaleString();
+            
+            if (approach === 'diy') {
+                document.getElementById('altTitle').textContent = '⚠️ DIY Blowout';
+                document.getElementById('altPrice').textContent = '$50-80';
+                document.getElementById('altDetails').innerHTML = '• 30% failure rate<br>• Compressor rental cost<br>• Easy to miss zones<br>• No guarantee<br>• Risk of improper PSI';
+            } else {
+                document.getElementById('altTitle').textContent = '❌ Skip Winterization';
+                document.getElementById('altPrice').textContent = '$0';
+                document.getElementById('altDetails').innerHTML = '• 70% freeze damage risk<br>• $2,000-8,000 repairs<br>• Spring startup delayed<br>• Landscape at risk<br>• Stress & hassle';
+            }
+            
+            // Recommendation
+            let recommendation = '';
+            if (damageRisk > 0.60) {
+                recommendation = 'Your ' + zones + '-zone system is at <strong>HIGH RISK</strong> for freeze damage without professional winterization. Colorado winters regularly drop to 0-10°F, and any water left in pipes WILL freeze and expand, cracking PVC and breaking valves. A $' + Math.round(blowoutCost) + ' professional blowout protects against $' + Math.round(totalDamageCost).toLocaleString() + ' in potential damage — that\'s a ' + Math.round((netValue / blowoutCost) * 100) + '% ROI on protection. Don\'t risk it.';
+            } else if (damageRisk > 0.20) {
+                recommendation = 'DIY blowouts save upfront cost but fail 30% of the time. The issue? Rental compressors often can\'t maintain proper 40-80 PSI, and it\'s easy to miss backflow preventers or low zones. One missed zone = cracked pipes. Colorado Sprinkler Repair uses commercial equipment and covers all ' + zones + ' zones with a guarantee. $' + Math.round(blowoutCost) + ' for peace of mind vs. $' + Math.round(totalDamageCost).toLocaleString() + ' in repairs if something breaks.';
+            } else {
+                recommendation = 'Smart choice! Professional blowout reduces your freeze damage risk to just ' + Math.round(damageRisk * 100) + '%. Colorado Sprinkler Repair uses commercial-grade compressors (40-80 PSI), clears all ' + zones + ' zones, protects your backflow preventer, and stands behind the work with their Colorado Sprinkler Guarantee. You\'re protecting a $' + Math.round(systemValue).toLocaleString() + ' irrigation system for just $' + Math.round(blowoutCost) + ' — and avoiding the spring nightmare of discovering cracked pipes when you need water most.';
+            }
+            
+            document.getElementById('recommendationText').innerHTML = recommendation;
+            
+            // Show results
+            document.getElementById('results').classList.add('visible');
+            
+            // Smooth scroll to results
+            setTimeout(() => {
+                document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>

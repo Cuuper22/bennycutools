@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Instant Quote Calculator — Coastal Georgia Pressure Washing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        coastal: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                            950: '#052e16'
+                        },
+                        ocean: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        .slide-up { animation: slideUp 0.4s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+        
+        .pulse-border { animation: pulseBorder 2s ease-in-out infinite; }
+        @keyframes pulseBorder { 
+            0%, 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.3); }
+            50% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+        }
+        
+        .service-card { transition: all 0.3s ease; }
+        .service-card:hover { transform: translateY(-2px); }
+        .service-card.selected { 
+            border-color: #16a34a; 
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+        }
+        
+        .condition-option { transition: all 0.3s ease; cursor: pointer; }
+        .condition-option:hover { transform: scale(1.02); }
+        .condition-option.selected { 
+            border-color: #16a34a; 
+            background: #f0fdf4;
+        }
+        
+        .step-indicator { transition: all 0.3s ease; }
+        .step-indicator.active { background: #16a34a; color: white; }
+        .step-indicator.completed { background: #16a34a; color: white; }
+        
+        .estimate-bar { transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #15803d, #14532d);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+        }
+        .btn-primary:active { transform: translateY(0); }
+        
+        .property-type-card { transition: all 0.3s ease; cursor: pointer; }
+        .property-type-card:hover { border-color: #86efac; }
+        .property-type-card.selected { 
+            border-color: #16a34a; 
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #16a34a;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #16a34a;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .quote-result {
+            background: linear-gradient(135deg, #052e16, #14532d, #166534);
+        }
+        
+        @media (max-width: 640px) {
+            .service-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-coastal-600 to-coastal-800 flex items-center justify-center">
+                    <i data-lucide="droplets" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-gray-900 leading-tight">Coastal Georgia</h1>
+                    <p class="text-xs text-coastal-600 font-medium">Pressure Washing</p>
+                </div>
+            </div>
+            <a href="tel:9123125513" class="flex items-center gap-2 bg-coastal-50 text-coastal-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-coastal-100 transition-colors">
+                <i data-lucide="phone" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">(912) 312-5513</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto px-4 py-6">
+        
+        <!-- Hero -->
+        <div class="text-center mb-8 fade-in">
+            <div class="inline-flex items-center gap-2 bg-coastal-50 text-coastal-700 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
+                <i data-lucide="calculator" class="w-3.5 h-3.5"></i>
+                Instant Estimate in 60 Seconds
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">How Much Will Your<br>Pressure Washing Cost?</h2>
+            <p class="text-gray-500 text-sm sm:text-base max-w-lg mx-auto">Get a ballpark estimate right now — no phone call needed. Answer a few questions about your property and we'll show you a price range instantly.</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="flex items-center justify-center gap-2 mb-8">
+            <div id="step-1-dot" class="step-indicator w-8 h-8 rounded-full bg-coastal-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+            <div class="w-8 h-0.5 bg-gray-200" id="connector-1"></div>
+            <div id="step-2-dot" class="step-indicator w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs font-bold">2</div>
+            <div class="w-8 h-0.5 bg-gray-200" id="connector-2"></div>
+            <div id="step-3-dot" class="step-indicator w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs font-bold">3</div>
+            <div class="w-8 h-0.5 bg-gray-200" id="connector-3"></div>
+            <div id="step-4-dot" class="step-indicator w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center text-xs font-bold">4</div>
+        </div>
+
+        <!-- Step 1: Property Type -->
+        <div id="step-1" class="slide-up">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">What type of property?</h3>
+                <p class="text-sm text-gray-500 mb-5">This helps us estimate surface area and complexity.</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="property-types">
+                    <div class="property-type-card border-2 border-gray-200 rounded-xl p-4 text-center" data-type="single" onclick="selectProperty(this)">
+                        <div class="text-3xl mb-2">🏠</div>
+                        <p class="text-sm font-semibold text-gray-800">Single Story</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Ranch, bungalow</p>
+                    </div>
+                    <div class="property-type-card border-2 border-gray-200 rounded-xl p-4 text-center" data-type="two-story" onclick="selectProperty(this)">
+                        <div class="text-3xl mb-2">🏡</div>
+                        <p class="text-sm font-semibold text-gray-800">Two Story</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Colonial, townhome</p>
+                    </div>
+                    <div class="property-type-card border-2 border-gray-200 rounded-xl p-4 text-center" data-type="large" onclick="selectProperty(this)">
+                        <div class="text-3xl mb-2">🏘️</div>
+                        <p class="text-sm font-semibold text-gray-800">Large Home</p>
+                        <p class="text-xs text-gray-400 mt-0.5">3,000+ sq ft</p>
+                    </div>
+                    <div class="property-type-card border-2 border-gray-200 rounded-xl p-4 text-center" data-type="commercial" onclick="selectProperty(this)">
+                        <div class="text-3xl mb-2">🏢</div>
+                        <p class="text-sm font-semibold text-gray-800">Commercial</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Office, storefront</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Approximate square footage</h3>
+                <p class="text-sm text-gray-500 mb-5">Don't know exactly? That's okay — just estimate.</p>
+                
+                <div class="flex items-center gap-4">
+                    <input type="range" id="sqft-slider" min="800" max="5000" value="1800" step="100" oninput="updateSqft()">
+                    <div class="bg-coastal-50 text-coastal-700 font-bold text-lg px-4 py-2 rounded-lg min-w-[100px] text-center" id="sqft-display">1,800</div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400 mt-2 px-1">
+                    <span>800 sq ft</span>
+                    <span>5,000 sq ft</span>
+                </div>
+            </div>
+
+            <button onclick="goToStep(2)" id="btn-step-1" class="btn-primary w-full text-white font-semibold py-3.5 rounded-xl text-sm opacity-50 pointer-events-none transition-opacity" disabled>
+                Continue — Select Property Type
+            </button>
+        </div>
+
+        <!-- Step 2: Services -->
+        <div id="step-2" class="hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 slide-up">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">What needs cleaning?</h3>
+                <p class="text-sm text-gray-500 mb-5">Select all surfaces you'd like us to wash. Most popular: House + Driveway combo.</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 service-grid" id="services-grid">
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="house" data-base="250" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="home" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">House Wash</p>
+                        <p class="text-xs text-gray-400">Siding, stucco, brick</p>
+                    </div>
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="driveway" data-base="150" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="car" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">Driveway</p>
+                        <p class="text-xs text-gray-400">Concrete, pavers</p>
+                    </div>
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="roof" data-base="300" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="triangle" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">Roof Wash</p>
+                        <p class="text-xs text-gray-400">Shingles, tile, metal</p>
+                    </div>
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="deck" data-base="125" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="fence" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">Deck</p>
+                        <p class="text-xs text-gray-400">Wood, composite</p>
+                    </div>
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="pool-deck" data-base="125" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="waves" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">Pool Deck</p>
+                        <p class="text-xs text-gray-400">Concrete, travertine</p>
+                    </div>
+                    <div class="service-card border-2 border-gray-200 rounded-xl p-4 cursor-pointer" data-service="fence" data-base="100" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="square-dashed-bottom" class="w-5 h-5 text-coastal-600"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-800">Fence</p>
+                        <p class="text-xs text-gray-400">Wood, vinyl, metal</p>
+                    </div>
+                </div>
+                
+                <!-- Rust removal addon -->
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <div class="service-card border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer flex items-center gap-4" data-service="rust" data-base="75" onclick="toggleService(this)">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5 text-orange-500"></i>
+                            <div class="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center service-check">
+                                <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Add Rust Removal</p>
+                            <p class="text-xs text-gray-400">Sprinkler stains, battery acid, irrigation rust</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mb-6">
+                <button onclick="goToStep(1)" class="flex-shrink-0 bg-white border border-gray-200 text-gray-600 font-medium py-3.5 px-5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+                    Back
+                </button>
+                <button onclick="goToStep(3)" id="btn-step-2" class="btn-primary flex-1 text-white font-semibold py-3.5 rounded-xl text-sm opacity-50 pointer-events-none" disabled>
+                    Continue — Select at Least One Service
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 3: Condition -->
+        <div id="step-3" class="hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 slide-up">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">How dirty are your surfaces?</h3>
+                <p class="text-sm text-gray-500 mb-5">Coastal Georgia's humidity means mold and algae build up fast. Be honest — it helps the estimate.</p>
+                
+                <div class="space-y-3" id="conditions">
+                    <div class="condition-option border-2 border-gray-200 rounded-xl p-4 flex items-start gap-4" data-condition="light" data-multiplier="1.0" onclick="selectCondition(this)">
+                        <div class="text-2xl mt-0.5">✨</div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Light — Just dusty</p>
+                            <p class="text-xs text-gray-500">Last cleaned within a year. Some dirt, maybe light pollen. No visible mold or algae.</p>
+                        </div>
+                    </div>
+                    <div class="condition-option border-2 border-gray-200 rounded-xl p-4 flex items-start gap-4" data-condition="moderate" data-multiplier="1.25" onclick="selectCondition(this)">
+                        <div class="text-2xl mt-0.5">🌿</div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Moderate — Green is showing</p>
+                            <p class="text-xs text-gray-500">1-2 years since last wash. Visible green algae on north-facing walls, dark streaks on roof, mildew spots.</p>
+                        </div>
+                    </div>
+                    <div class="condition-option border-2 border-gray-200 rounded-xl p-4 flex items-start gap-4" data-condition="heavy" data-multiplier="1.5" onclick="selectCondition(this)">
+                        <div class="text-2xl mt-0.5">🦠</div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800">Heavy — It's been a while</p>
+                            <p class="text-xs text-gray-500">3+ years or never cleaned. Thick algae/mold, black streaks everywhere, stained concrete, slippery surfaces.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Repeat customer discount -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="repeat-customer" class="w-5 h-5 accent-coastal-600 rounded" onchange="updateEstimate()">
+                    <div>
+                        <label for="repeat-customer" class="text-sm font-semibold text-gray-800 cursor-pointer">I want annual service</label>
+                        <p class="text-xs text-gray-500">Sign up for yearly cleaning and save — surfaces stay cleaner, jobs are faster.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mb-6">
+                <button onclick="goToStep(2)" class="flex-shrink-0 bg-white border border-gray-200 text-gray-600 font-medium py-3.5 px-5 rounded-xl text-sm hover:bg-gray-50 transition-colors">
+                    Back
+                </button>
+                <button onclick="calculateAndShow()" id="btn-step-3" class="btn-primary flex-1 text-white font-semibold py-3.5 rounded-xl text-sm opacity-50 pointer-events-none" disabled>
+                    Get My Estimate
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Results -->
+        <div id="step-4" class="hidden">
+            <div class="quote-result rounded-2xl p-6 sm:p-8 mb-6 text-white slide-up">
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center gap-2 bg-white/10 text-white/80 px-3 py-1.5 rounded-full text-xs font-medium mb-4">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                        Your Instant Estimate
+                    </div>
+                    <div class="flex items-baseline justify-center gap-2 mb-2">
+                        <span class="text-4xl sm:text-5xl font-extrabold" id="estimate-low">$0</span>
+                        <span class="text-xl text-white/60">—</span>
+                        <span class="text-4xl sm:text-5xl font-extrabold" id="estimate-high">$0</span>
+                    </div>
+                    <p class="text-sm text-white/60">Ballpark range based on your selections</p>
+                </div>
+
+                <!-- Estimate breakdown -->
+                <div class="bg-white/10 rounded-xl p-4 mb-4">
+                    <h4 class="text-xs uppercase tracking-wider text-white/50 font-medium mb-3">Breakdown</h4>
+                    <div id="breakdown-list" class="space-y-2">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- Annual savings -->
+                <div id="annual-savings" class="bg-coastal-400/20 border border-coastal-400/30 rounded-xl p-4 mb-4 hidden">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="piggy-bank" class="w-6 h-6 text-coastal-300"></i>
+                        <div>
+                            <p class="text-sm font-semibold">Annual Service Savings</p>
+                            <p class="text-xs text-white/70">You'd save <span class="font-bold text-coastal-300" id="savings-amount">$0</span>/year with annual scheduling. Surfaces stay cleaner, which means faster jobs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs text-white/40 text-center">This is a ballpark estimate. Final pricing depends on property inspection. No commitment.</p>
+            </div>
+
+            <!-- Contact form to get firm quote -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 slide-up" style="animation-delay: 0.1s;">
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Want an exact quote?</h3>
+                <p class="text-sm text-gray-500 mb-5">Jacob will review your property details and follow up with a firm price — usually same day.</p>
+                
+                <div class="space-y-3" id="contact-form">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Your Name</label>
+                        <input type="text" id="contact-name" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-coastal-500 focus:ring-2 focus:ring-coastal-500/20 transition-all" placeholder="First and last name">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                            <input type="tel" id="contact-phone" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-coastal-500 focus:ring-2 focus:ring-coastal-500/20 transition-all" placeholder="(912) 555-0123">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                            <input type="email" id="contact-email" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-coastal-500 focus:ring-2 focus:ring-coastal-500/20 transition-all" placeholder="you@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Property Address</label>
+                        <input type="text" id="contact-address" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-coastal-500 focus:ring-2 focus:ring-coastal-500/20 transition-all" placeholder="123 Main St, Richmond Hill, GA">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Anything else Jacob should know?</label>
+                        <textarea id="contact-notes" rows="2" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-coastal-500 focus:ring-2 focus:ring-coastal-500/20 transition-all resize-none" placeholder="Special requests, access notes, timing preferences..."></textarea>
+                    </div>
+                    <button onclick="submitQuoteRequest()" id="submit-btn" class="btn-primary w-full text-white font-semibold py-3.5 rounded-xl text-sm flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        Request Firm Quote from Jacob
+                    </button>
+                </div>
+
+                <!-- Success state -->
+                <div id="submit-success" class="hidden text-center py-8">
+                    <div class="w-16 h-16 rounded-full bg-coastal-100 flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="check-circle-2" class="w-8 h-8 text-coastal-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Quote request saved!</h3>
+                    <p class="text-sm text-gray-500 mb-4">Jacob typically follows up the same day. For faster service, call directly:</p>
+                    <a href="tel:9123125513" class="inline-flex items-center gap-2 btn-primary text-white font-semibold py-3 px-6 rounded-xl text-sm">
+                        <i data-lucide="phone" class="w-4 h-4"></i>
+                        Call (912) 312-5513
+                    </a>
+                </div>
+            </div>
+
+            <!-- Or just call -->
+            <div class="bg-coastal-50 border border-coastal-100 rounded-2xl p-6 mb-6 text-center slide-up" style="animation-delay: 0.2s;">
+                <p class="text-sm text-coastal-800 mb-3 font-medium">Prefer to talk? Jacob picks up.</p>
+                <a href="tel:9123125513" class="inline-flex items-center gap-2 btn-primary text-white font-semibold py-3 px-8 rounded-xl text-sm pulse-border">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
+                    (912) 312-5513
+                </a>
+                <p class="text-xs text-coastal-600 mt-2">Mon — Sun, 7am – 10pm</p>
+            </div>
+
+            <button onclick="startOver()" class="w-full bg-white border border-gray-200 text-gray-600 font-medium py-3 rounded-xl text-sm hover:bg-gray-50 transition-colors mb-6">
+                Start Over with Different Selections
+            </button>
+        </div>
+
+        <!-- Social proof bar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6" id="social-proof">
+            <div class="flex items-center justify-center gap-6 flex-wrap text-center">
+                <div class="flex items-center gap-2">
+                    <div class="flex -space-x-1">
+                        <div class="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center text-xs">⭐</div>
+                        <div class="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center text-xs">⭐</div>
+                        <div class="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center text-xs">⭐</div>
+                        <div class="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center text-xs">⭐</div>
+                        <div class="w-5 h-5 rounded-full bg-yellow-400 flex items-center justify-center text-xs">⭐</div>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600">180+ Reviews</span>
+                </div>
+                <div class="text-xs text-gray-400">|</div>
+                <div class="text-xs font-medium text-gray-600">Since 2012</div>
+                <div class="text-xs text-gray-400">|</div>
+                <div class="text-xs font-medium text-gray-600">100% Satisfaction Guarantee</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-gray-400 mt-8">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h3 class="text-white font-bold text-sm mb-1">Coastal Georgia Pressure Washing</h3>
+                    <p class="text-xs">Richmond Hill, GA · Serving Bryan, Chatham & Effingham Counties</p>
+                </div>
+                <a href="tel:9123125513" class="text-coastal-400 font-medium text-sm">(912) 312-5513</a>
+            </div>
+            <div class="text-xs space-y-1 mb-4">
+                <p>Owner-operated by Jacob · Over a decade of experience</p>
+                <p>Fully insured · 100% Satisfaction Guarantee — you don't pay until you're happy</p>
+                <p>Service areas: Richmond Hill, Savannah, Hinesville, Pooler, Pembroke, Rincon, Walthourville, Flemington, Skidaway Island</p>
+            </div>
+            <div class="flex items-center gap-4 pt-4 border-t border-gray-800">
+                <a href="https://www.facebook.com/coastalgeorgiapw" target="_blank" class="text-gray-500 hover:text-coastal-400 transition-colors">
+                    <i data-lucide="facebook" class="w-4 h-4"></i>
+                </a>
+                <a href="https://www.instagram.com/coastalgeorgiapw/" target="_blank" class="text-gray-500 hover:text-coastal-400 transition-colors">
+                    <i data-lucide="instagram" class="w-4 h-4"></i>
+                </a>
+                <a href="mailto:jacob@coastalgapw.com" class="text-gray-500 hover:text-coastal-400 transition-colors">
+                    <i data-lucide="mail" class="w-4 h-4"></i>
+                </a>
+                <span class="text-xs text-gray-600 ml-auto">jacob@coastalgapw.com</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // ============ STATE ============
+        let state = {
+            propertyType: null,
+            sqft: 1800,
+            services: new Set(),
+            condition: null,
+            annualService: false
+        };
+
+        // ============ PRICING DATA ============
+        // Base prices for average 1,800 sqft single story home
+        const servicePricing = {
+            'house': { name: 'House Wash', base: 250, sqftFactor: 0.08 },
+            'driveway': { name: 'Driveway & Walkways', base: 150, sqftFactor: 0.02 },
+            'roof': { name: 'Roof Wash', base: 300, sqftFactor: 0.1 },
+            'deck': { name: 'Deck Cleaning', base: 125, sqftFactor: 0 },
+            'pool-deck': { name: 'Pool Deck', base: 125, sqftFactor: 0 },
+            'fence': { name: 'Fence Cleaning', base: 100, sqftFactor: 0 },
+            'rust': { name: 'Rust Removal', base: 75, sqftFactor: 0 }
+        };
+
+        const propertyMultipliers = {
+            'single': 1.0,
+            'two-story': 1.3,
+            'large': 1.6,
+            'commercial': 1.8
+        };
+
+        const conditionMultipliers = {
+            'light': 1.0,
+            'moderate': 1.2,
+            'heavy': 1.4
+        };
+
+        // ============ INTERACTIONS ============
+        function selectProperty(el) {
+            document.querySelectorAll('.property-type-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            state.propertyType = el.dataset.type;
+            
+            const btn = document.getElementById('btn-step-1');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+            btn.textContent = 'Continue';
+        }
+
+        function updateSqft() {
+            const val = document.getElementById('sqft-slider').value;
+            state.sqft = parseInt(val);
+            document.getElementById('sqft-display').textContent = parseInt(val).toLocaleString();
+        }
+
+        function toggleService(el) {
+            const svc = el.dataset.service;
+            const check = el.querySelector('.service-check');
+            const icon = check.querySelector('i');
+            
+            if (state.services.has(svc)) {
+                state.services.delete(svc);
+                el.classList.remove('selected');
+                check.style.background = '';
+                check.style.borderColor = '';
+                icon.classList.add('hidden');
+            } else {
+                state.services.add(svc);
+                el.classList.add('selected');
+                check.style.background = '#16a34a';
+                check.style.borderColor = '#16a34a';
+                icon.classList.remove('hidden');
+            }
+
+            const btn = document.getElementById('btn-step-2');
+            if (state.services.size > 0) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                btn.textContent = `Continue — ${state.services.size} service${state.services.size > 1 ? 's' : ''} selected`;
+            } else {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'pointer-events-none');
+                btn.textContent = 'Continue — Select at Least One Service';
+            }
+        }
+
+        function selectCondition(el) {
+            document.querySelectorAll('.condition-option').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            state.condition = el.dataset.condition;
+            
+            const btn = document.getElementById('btn-step-3');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'pointer-events-none');
+            btn.innerHTML = '<span class="flex items-center gap-2"><span>🎯</span> Get My Estimate</span>';
+        }
+
+        // ============ NAVIGATION ============
+        function goToStep(num) {
+            // Hide all steps
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`step-${i}`).classList.add('hidden');
+            }
+            // Show target step
+            document.getElementById(`step-${num}`).classList.remove('hidden');
+            
+            // Update step indicators
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`step-${i}-dot`);
+                dot.classList.remove('active', 'completed');
+                if (i < num) {
+                    dot.classList.add('completed');
+                    dot.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                } else if (i === num) {
+                    dot.classList.add('active');
+                    dot.textContent = i;
+                } else {
+                    dot.textContent = i;
+                    dot.style.background = '#e5e7eb';
+                    dot.style.color = '#9ca3af';
+                }
+            }
+            
+            // Update connector colors
+            for (let i = 1; i <= 3; i++) {
+                const conn = document.getElementById(`connector-${i}`);
+                conn.style.background = i < num ? '#16a34a' : '#e5e7eb';
+            }
+            
+            lucide.createIcons();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ============ CALCULATION ============
+        function calculateEstimate() {
+            let totalLow = 0;
+            let totalHigh = 0;
+            let breakdown = [];
+            
+            const propMult = propertyMultipliers[state.propertyType] || 1.0;
+            const condMult = conditionMultipliers[state.condition] || 1.0;
+            const sqftDelta = (state.sqft - 1800) / 1800; // deviation from avg
+            
+            state.services.forEach(svc => {
+                const p = servicePricing[svc];
+                let price = p.base;
+                
+                // Adjust for sqft (for sqft-dependent services)
+                if (p.sqftFactor > 0) {
+                    price += (state.sqft - 1800) * p.sqftFactor;
+                }
+                
+                // Apply multipliers
+                price *= propMult * condMult;
+                
+                const low = Math.round(price * 0.85);
+                const high = Math.round(price * 1.15);
+                
+                totalLow += low;
+                totalHigh += high;
+                breakdown.push({ name: p.name, low, high });
+            });
+            
+            // Annual service discount
+            const isAnnual = document.getElementById('repeat-customer').checked;
+            let savings = 0;
+            if (isAnnual) {
+                savings = Math.round(totalHigh * 0.15);
+                totalLow = Math.round(totalLow * 0.85);
+                totalHigh = Math.round(totalHigh * 0.85);
+            }
+            
+            return { totalLow, totalHigh, breakdown, savings, isAnnual };
+        }
+
+        function calculateAndShow() {
+            state.annualService = document.getElementById('repeat-customer').checked;
+            const result = calculateEstimate();
+            
+            // Fill in results
+            document.getElementById('estimate-low').textContent = '$' + result.totalLow.toLocaleString();
+            document.getElementById('estimate-high').textContent = '$' + result.totalHigh.toLocaleString();
+            
+            // Breakdown
+            const breakdownEl = document.getElementById('breakdown-list');
+            breakdownEl.innerHTML = result.breakdown.map(item => `
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-white/70">${item.name}</span>
+                    <span class="text-sm font-medium">$${item.low} — $${item.high}</span>
+                </div>
+            `).join('');
+            
+            // Annual savings
+            const savingsEl = document.getElementById('annual-savings');
+            if (result.isAnnual) {
+                savingsEl.classList.remove('hidden');
+                document.getElementById('savings-amount').textContent = '$' + result.savings;
+            } else {
+                savingsEl.classList.add('hidden');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('cgpw-quote', JSON.stringify({
+                ...state,
+                services: Array.from(state.services),
+                result,
+                timestamp: new Date().toISOString()
+            }));
+            
+            goToStep(4);
+        }
+
+        function submitQuoteRequest() {
+            const name = document.getElementById('contact-name').value.trim();
+            const phone = document.getElementById('contact-phone').value.trim();
+            const email = document.getElementById('contact-email').value.trim();
+            const address = document.getElementById('contact-address').value.trim();
+            const notes = document.getElementById('contact-notes').value.trim();
+            
+            if (!name || (!phone && !email)) {
+                alert('Please enter your name and at least a phone number or email.');
+                return;
+            }
+            
+            // Save to localStorage
+            const existing = JSON.parse(localStorage.getItem('cgpw-leads') || '[]');
+            existing.push({
+                name, phone, email, address, notes,
+                quote: JSON.parse(localStorage.getItem('cgpw-quote') || '{}'),
+                submitted: new Date().toISOString()
+            });
+            localStorage.setItem('cgpw-leads', JSON.stringify(existing));
+            
+            // Show success
+            document.getElementById('contact-form').classList.add('hidden');
+            document.getElementById('submit-success').classList.remove('hidden');
+        }
+
+        function startOver() {
+            state = {
+                propertyType: null,
+                sqft: 1800,
+                services: new Set(),
+                condition: null,
+                annualService: false
+            };
+            
+            // Reset UI
+            document.querySelectorAll('.property-type-card').forEach(c => c.classList.remove('selected'));
+            document.querySelectorAll('.service-card').forEach(c => {
+                c.classList.remove('selected');
+                const check = c.querySelector('.service-check');
+                if (check) {
+                    check.style.background = '';
+                    check.style.borderColor = '';
+                    const icon = check.querySelector('i');
+                    if (icon) icon.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('.condition-option').forEach(c => c.classList.remove('selected'));
+            document.getElementById('sqft-slider').value = 1800;
+            document.getElementById('sqft-display').textContent = '1,800';
+            document.getElementById('repeat-customer').checked = false;
+            document.getElementById('contact-form').classList.remove('hidden');
+            document.getElementById('submit-success').classList.add('hidden');
+            
+            // Reset buttons
+            const btn1 = document.getElementById('btn-step-1');
+            btn1.disabled = true;
+            btn1.classList.add('opacity-50', 'pointer-events-none');
+            btn1.textContent = 'Continue — Select Property Type';
+            
+            const btn2 = document.getElementById('btn-step-2');
+            btn2.disabled = true;
+            btn2.classList.add('opacity-50', 'pointer-events-none');
+            btn2.textContent = 'Continue — Select at Least One Service';
+            
+            const btn3 = document.getElementById('btn-step-3');
+            btn3.disabled = true;
+            btn3.classList.add('opacity-50', 'pointer-events-none');
+            btn3.textContent = 'Get My Estimate';
+            
+            // Reset form fields
+            document.getElementById('contact-name').value = '';
+            document.getElementById('contact-phone').value = '';
+            document.getElementById('contact-email').value = '';
+            document.getElementById('contact-address').value = '';
+            document.getElementById('contact-notes').value = '';
+            
+            goToStep(1);
+        }
+
+        // ============ INIT ============
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

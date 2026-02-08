@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welding & Fabrication Quote Calculator | C&B Welders Tools</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.2em; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 1.1em; }
+        .content { padding: 40px; }
+        .section { margin-bottom: 30px; }
+        .section h2 {
+            color: #991b1b;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #ef4444;
+            padding-bottom: 10px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
+        .results {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            display: none;
+        }
+        .results.active { display: block; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result-item h3 { color: #991b1b; margin-bottom: 10px; font-size: 1.3em; }
+        .result-value { font-size: 2em; font-weight: bold; color: #991b1b; }
+        .result-detail { color: #666; margin-top: 8px; font-size: 0.95em; }
+        .info-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .breakdown-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .breakdown-table td { padding: 10px; border-bottom: 1px solid #ddd; }
+        .breakdown-table td:first-child { font-weight: 600; color: #555; }
+        .breakdown-table td:last-child { text-align: right; color: #991b1b; font-weight: 600; }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.6em; }
+            .content { padding: 20px; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Welding & Fabrication Quote Calculator</h1>
+            <p>Instant Pricing for C&B Welders Inc. - Serving Chicago Since 1945</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <strong>80 Years of Expertise:</strong> This calculator reflects C&B Welders' competitive pricing for both mobile on-site welding and in-house fabrication. Rush service available!
+            </div>
+
+            <div class="section">
+                <h2>Project Details</h2>
+                
+                <div class="form-group">
+                    <label for="serviceType">Service Type</label>
+                    <select id="serviceType">
+                        <option value="mobile">Mobile Welding (On-Site)</option>
+                        <option value="shop">In-House Fabrication</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="projectType">Project Type</label>
+                    <select id="projectType">
+                        <option value="railing">Railings/Handrails</option>
+                        <option value="gate">Gates/Fencing</option>
+                        <option value="stairs">Stairs/Fire Escapes</option>
+                        <option value="structural">Structural Repair</option>
+                        <option value="custom_fab">Custom Fabrication</option>
+                        <option value="restaurant">Restaurant Equipment</option>
+                        <option value="production">Production Welding</option>
+                    </select>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="material">Material Type</label>
+                        <select id="material">
+                            <option value="steel">Carbon Steel</option>
+                            <option value="galvanized">Galvanized Steel</option>
+                            <option value="stainless">Stainless Steel</option>
+                            <option value="aluminum">Aluminum</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="materialWeight">Estimated Material Weight (lbs)</label>
+                        <input type="number" id="materialWeight" placeholder="e.g., 200" min="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="complexity">Job Complexity</label>
+                    <select id="complexity">
+                        <option value="simple">Simple (Straight cuts, basic welding)</option>
+                        <option value="moderate">Moderate (Some bends, multiple joints)</option>
+                        <option value="complex">Complex (Custom design, precision work)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="weldingMethod">Welding Method Required</label>
+                    <select id="weldingMethod">
+                        <option value="mig">MIG Welding</option>
+                        <option value="tig">TIG Welding (Precision)</option>
+                        <option value="stick">Stick Welding</option>
+                    </select>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="laborHours">Estimated Labor Hours</label>
+                        <input type="number" id="laborHours" placeholder="e.g., 8" min="1" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="rushService">Rush Service?</label>
+                        <select id="rushService">
+                            <option value="no">Standard Turnaround</option>
+                            <option value="yes">Rush Service (+20%)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="mobileOptions" style="display: none;">
+                    <label for="distance">Distance from West Loop Chicago (miles)</label>
+                    <input type="number" id="distance" placeholder="e.g., 15" min="0" value="10">
+                </div>
+            </div>
+
+            <button class="btn" onclick="calculateProject()">Calculate Project Cost</button>
+
+            <div class="results" id="results">
+                <div class="result-item">
+                    <h3>💰 Total Project Investment</h3>
+                    <div class="result-value" id="totalCost">$0</div>
+                    <div class="result-detail">Complete welding/fabrication project</div>
+                </div>
+
+                <div class="result-item">
+                    <h3>📊 Cost Breakdown</h3>
+                    <table class="breakdown-table" id="breakdownTable"></table>
+                </div>
+
+                <div class="result-item">
+                    <h3>⏱️ Timeline & Notes</h3>
+                    <div class="result-detail" id="timeline"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('serviceType').addEventListener('change', function() {
+            document.getElementById('mobileOptions').style.display = this.value === 'mobile' ? 'block' : 'none';
+        });
+
+        function calculateProject() {
+            const serviceType = document.getElementById('serviceType').value;
+            const projectType = document.getElementById('projectType').value;
+            const material = document.getElementById('material').value;
+            const materialWeight = parseFloat(document.getElementById('materialWeight').value) || 0;
+            const complexity = document.getElementById('complexity').value;
+            const weldingMethod = document.getElementById('weldingMethod').value;
+            const laborHours = parseFloat(document.getElementById('laborHours').value) || 0;
+            const rushService = document.getElementById('rushService').value === 'yes';
+            const distance = parseFloat(document.getElementById('distance').value) || 0;
+
+            if (materialWeight === 0 || laborHours === 0) {
+                alert('Please enter material weight and labor hours');
+                return;
+            }
+
+            // Material costs per pound (Chicago pricing)
+            const materialCosts = {
+                'steel': 0.85,
+                'galvanized': 1.20,
+                'stainless': 3.50,
+                'aluminum': 2.80
+            };
+
+            const materialCost = materialWeight * materialCosts[material];
+
+            // Labor rates (per hour)
+            const laborRates = {
+                'mig': 85,
+                'tig': 110,
+                'stick': 90
+            };
+
+            let laborRate = laborRates[weldingMethod];
+
+            // Complexity multiplier
+            const complexityMultipliers = {
+                'simple': 1.0,
+                'moderate': 1.2,
+                'complex': 1.5
+            };
+
+            const laborCost = laborHours * laborRate * complexityMultipliers[complexity];
+
+            // Mobile service premium + travel
+            let mobileCost = 0;
+            if (serviceType === 'mobile') {
+                mobileCost = 150 + (distance * 3); // $150 base + $3/mile
+            }
+
+            // Subtotal
+            let subtotal = materialCost + laborCost + mobileCost;
+
+            // Rush service
+            let rushCost = rushService ? subtotal * 0.20 : 0;
+
+            // Total
+            const grandTotal = subtotal + rushCost;
+
+            // Display results
+            document.getElementById('totalCost').textContent = '$' + grandTotal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            // Breakdown
+            const breakdown = [
+                ['Material Cost', '$' + materialCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')],
+                ['Labor (' + laborHours + ' hrs × $' + laborRate + '/hr)', '$' + laborCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')]
+            ];
+
+            if (mobileCost > 0) {
+                breakdown.push(['Mobile Service + Travel (' + distance + ' mi)', '$' + mobileCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')]);
+            }
+
+            if (rushCost > 0) {
+                breakdown.push(['Rush Service (20% premium)', '$' + rushCost.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')]);
+            }
+
+            breakdown.push(['<strong>Total Investment</strong>', '<strong>$' + grandTotal.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</strong>']);
+
+            let tableHTML = '';
+            breakdown.forEach(row => {
+                tableHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td></tr>`;
+            });
+            document.getElementById('breakdownTable').innerHTML = tableHTML;
+
+            // Timeline
+            let timelineDays = laborHours <= 8 ? 1 : Math.ceil(laborHours / 8);
+            if (rushService) timelineDays = Math.max(1, Math.ceil(timelineDays * 0.6));
+
+            const materialDesc = {
+                'steel': 'Carbon Steel',
+                'galvanized': 'Galvanized Steel',
+                'stainless': 'Stainless Steel',
+                'aluminum': 'Aluminum'
+            };
+
+            const methodDesc = {
+                'mig': 'MIG welding (versatile, fast)',
+                'tig': 'TIG welding (precision, clean finish)',
+                'stick': 'Stick welding (structural, outdoor)'
+            };
+
+            document.getElementById('timeline').innerHTML = `
+                <strong>Estimated Timeline:</strong> ${timelineDays} working day${timelineDays > 1 ? 's' : ''}<br>
+                <strong>Service Location:</strong> ${serviceType === 'mobile' ? 'On-site mobile welding' : 'C&B Welders West Loop shop'}<br>
+                <strong>Material:</strong> ${materialDesc[material]} (${materialWeight} lbs)<br>
+                <strong>Welding Method:</strong> ${methodDesc[weldingMethod]}<br>
+                ${rushService ? '<strong>⚡ Rush Service Activated:</strong> Priority scheduling<br>' : ''}
+                <br><strong>Next Steps:</strong> Contact C&B Welders to confirm availability and schedule your project. Quote valid for 7 days (material prices subject to market fluctuation).
+            `;
+
+            // Show results
+            document.getElementById('results').classList.add('active');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

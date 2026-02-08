@@ -1088,6 +1088,15 @@
 
   <!-- Main App -->
   <div id="app" role="main">
+    <!-- Legal Disclaimer for Demo Data -->
+    <div id="legalDisclaimer" class="legal-disclaimer" style="display:none;background:#fff8e1;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin:8px 16px;font-size:13px;line-height:1.5;color:#5d4037;">
+      <p style="margin:0 0 8px 0;font-weight:600;color:#e65100;">Demo Data Notice</p>
+      <p style="margin:0 0 8px 0;">This tool contains sample data for <strong>demonstration purposes only</strong>. Business names, addresses, and details shown are used solely to illustrate how this tool works. No affiliation with or endorsement by any referenced business is implied.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="clearAllDemoData()" style="background:#d32f2f;color:white;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">Permanently Delete All Demo Data</button>
+        <button onclick="document.getElementById('legalDisclaimer').style.display='none'" style="background:#e0e0e0;color:#333;border:none;border-radius:6px;padding:8px 12px;font-size:13px;cursor:pointer;">Dismiss</button>
+      </div>
+    </div>
     <header class="header">
       <h1 class="header-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1323,8 +1332,16 @@
       return false;
     }
 
+    // Auto-read key from URL parameter (no sign-in needed for customers)
+    const _urlKey = new URLSearchParams(window.location.search).get('key');
+    if (_urlKey && _h(_urlKey) === _V) {
+      document.getElementById('access-gate').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      sessionStorage.setItem('wtxd_auth', '1');
+      document.addEventListener('DOMContentLoaded', initApp);
+    }
     // Check if already authenticated
-    if (sessionStorage.getItem('wtxd_auth') === '1') {
+    else if (sessionStorage.getItem('wtxd_auth') === '1') {
       document.getElementById('access-gate').style.display = 'none';
       document.getElementById('app').classList.add('active');
       document.addEventListener('DOMContentLoaded', initApp);
@@ -1880,6 +1897,29 @@
       }
       checkInterval = setInterval(check, 2000);
     })();
-  </script>
+  
+    // Legal disclaimer for demo data
+    function clearAllDemoData() {
+      if (confirm('This will permanently delete all demo/sample data. Continue?')) {
+        // Clear IndexedDB
+        const dbs = indexedDB.databases ? indexedDB.databases() : Promise.resolve([]);
+        dbs.then(databases => {
+          databases.forEach(db => indexedDB.deleteDatabase(db.name));
+        }).catch(() => {});
+        // Clear localStorage demo flags
+        localStorage.removeItem('isFirstVisit');
+        localStorage.removeItem('demoLoaded');
+        localStorage.removeItem('hasLoadedDemo');
+        // Reload
+        alert('All demo data has been permanently deleted.');
+        location.reload();
+      }
+    }
+    // Show disclaimer when demo data is present
+    function showLegalDisclaimer() {
+      const el = document.getElementById('legalDisclaimer');
+      if (el) el.style.display = 'block';
+    }
+    </script>
 </body>
 </html>

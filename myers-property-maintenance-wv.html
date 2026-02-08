@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commercial Snow Operations Dashboard - Myers Property Maintenance</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #1e3c72;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .card h2 {
+            color: #1e3c72;
+            font-size: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            font-size: 24px;
+        }
+        
+        .weather-widget {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .weather-widget h2 {
+            color: white;
+        }
+        
+        .temp-display {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .snow-forecast {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #1e3c72;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #2a5298;
+        }
+        
+        .btn-secondary {
+            background: #28a745;
+        }
+        
+        .btn-secondary:hover {
+            background: #218838;
+        }
+        
+        .result-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #1e3c72;
+        }
+        
+        .result-box h3 {
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+            padding-top: 12px;
+        }
+        
+        .property-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .property-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .property-item .status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status.pending {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .status.complete {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .alert-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-box strong {
+            color: #856404;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .metric-label {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❄️ Commercial Snow Operations Dashboard</h1>
+            <p>Built for Myers Property Maintenance - Charleston, WV</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Weather Widget -->
+            <div class="card weather-widget">
+                <h2>🌨️ Charleston Weather</h2>
+                <div class="temp-display" id="temperature">32°F</div>
+                <div style="font-size: 18px; margin-bottom: 10px;" id="conditions">Light Snow</div>
+                <div class="snow-forecast">
+                    <strong>Next 48 Hours:</strong><br>
+                    <span id="forecast">3-5" expected overnight. Heavy accumulation likely 10pm-6am.</span>
+                </div>
+                <div style="margin-top: 15px; font-size: 14px;">
+                    <strong>Storm Trigger:</strong> <span style="color: #ffc107;">⚠️ ACTIVE</span>
+                </div>
+            </div>
+
+            <!-- Quick Quote Calculator -->
+            <div class="card">
+                <h2><span class="icon">💰</span> Quick Quote Calculator</h2>
+                <div class="input-group">
+                    <label>Property Type</label>
+                    <select id="propertyType">
+                        <option value="small">Small Lot (5,000-15,000 sq ft)</option>
+                        <option value="medium">Medium Lot (15,000-40,000 sq ft)</option>
+                        <option value="large">Large Lot (40,000-80,000 sq ft)</option>
+                        <option value="xlarge">XL Commercial (80,000+ sq ft)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Snow Depth (inches)</label>
+                    <input type="number" id="snowDepth" value="4" min="1" max="24">
+                </div>
+                <div class="input-group">
+                    <label>Sidewalk Linear Feet</label>
+                    <input type="number" id="sidewalk" value="200" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Include Salting?</label>
+                    <select id="salting">
+                        <option value="yes">Yes - Include De-icing</option>
+                        <option value="no">No - Plowing Only</option>
+                    </select>
+                </div>
+                <button class="btn" onclick="calculateQuote()">Calculate Quote</button>
+                <div id="quoteResult"></div>
+            </div>
+
+            <!-- Active Properties Status -->
+            <div class="card">
+                <h2><span class="icon">📍</span> Active Properties</h2>
+                <div class="alert-box">
+                    <strong>⚡ Priority Alert:</strong> Bank locations must be clear by 6:00 AM
+                </div>
+                <div class="property-list" id="propertyList">
+                    <div class="property-item">
+                        <div>
+                            <strong>WV State Capitol Complex</strong><br>
+                            <small>Charleston - 85,000 sq ft</small>
+                        </div>
+                        <span class="status active">In Progress</span>
+                    </div>
+                    <div class="property-item">
+                        <div>
+                            <strong>City National Bank HQ</strong><br>
+                            <small>Charleston - 42,000 sq ft</small>
+                        </div>
+                        <span class="status complete">✓ Complete</span>
+                    </div>
+                    <div class="property-item">
+                        <div>
+                            <strong>Quarrier St Office Building</strong><br>
+                            <small>Charleston - 28,000 sq ft</small>
+                        </div>
+                        <span class="status pending">Pending</span>
+                    </div>
+                    <div class="property-item">
+                        <div>
+                            <strong>Town Center Mall</strong><br>
+                            <small>Charleston - 120,000 sq ft</small>
+                        </div>
+                        <span class="status pending">Pending</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" style="margin-top: 15px;" onclick="sendClientUpdate()">Send Client Updates</button>
+            </div>
+
+            <!-- Season Revenue Tracker -->
+            <div class="card">
+                <h2><span class="icon">📊</span> Season Performance</h2>
+                <div class="metric-grid">
+                    <div class="metric-box">
+                        <div class="metric-value" id="eventsCompleted">8</div>
+                        <div class="metric-label">Events This Season</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="seasonRevenue">$64K</div>
+                        <div class="metric-label">Season Revenue</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="propertiesManaged">23</div>
+                        <div class="metric-label">Active Contracts</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-value" id="avgResponse">38min</div>
+                        <div class="metric-label">Avg Response Time</div>
+                    </div>
+                </div>
+                <div class="result-box" style="margin-top: 20px;">
+                    <h3>Season Projection</h3>
+                    <div class="result-row">
+                        <span>Estimated Total Events:</span>
+                        <span>18-22</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Projected Revenue:</span>
+                        <span>$144K - $176K</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Current Pace:</span>
+                        <span style="color: #28a745;">On Track 📈</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crew Dispatch Optimizer -->
+            <div class="card">
+                <h2><span class="icon">🚛</span> Crew Dispatch Optimizer</h2>
+                <div class="input-group">
+                    <label>Available Crews</label>
+                    <input type="number" id="crewCount" value="3" min="1" max="10">
+                </div>
+                <div class="input-group">
+                    <label>Properties to Service</label>
+                    <input type="number" id="propertyCount" value="23" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Average Property Time (minutes)</label>
+                    <input type="number" id="serviceTime" value="45" min="10">
+                </div>
+                <button class="btn" onclick="optimizeDispatch()">Optimize Route</button>
+                <div id="dispatchResult"></div>
+            </div>
+
+            <!-- Client Communication -->
+            <div class="card">
+                <h2><span class="icon">📧</span> Client Notifications</h2>
+                <div class="input-group">
+                    <label>Property Name</label>
+                    <input type="text" id="clientProperty" placeholder="e.g., City National Bank HQ">
+                </div>
+                <div class="input-group">
+                    <label>Service Status</label>
+                    <select id="serviceStatus">
+                        <option value="started">Service Started</option>
+                        <option value="complete">Service Complete</option>
+                        <option value="delayed">Delayed - ETA Update</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Notes (optional)</label>
+                    <input type="text" id="clientNotes" placeholder="Additional details...">
+                </div>
+                <button class="btn btn-secondary" onclick="generateNotification()">Generate Notification</button>
+                <div id="notificationResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quote Calculator
+        function calculateQuote() {
+            const propertyType = document.getElementById('propertyType').value;
+            const snowDepth = parseFloat(document.getElementById('snowDepth').value);
+            const sidewalk = parseFloat(document.getElementById('sidewalk').value);
+            const salting = document.getElementById('salting').value;
+
+            // Base rates by property size
+            const baseRates = {
+                small: 150,
+                medium: 350,
+                large: 650,
+                xlarge: 1200
+            };
+
+            let basePrice = baseRates[propertyType];
+            
+            // Depth multiplier (standard is 1-4 inches)
+            if (snowDepth > 4) {
+                basePrice *= (1 + ((snowDepth - 4) * 0.15));
+            }
+
+            // Sidewalk cost
+            const sidewalkCost = sidewalk * 0.75;
+
+            // Salting/de-icing
+            const saltingCost = salting === 'yes' ? basePrice * 0.35 : 0;
+
+            const totalCost = Math.round(basePrice + sidewalkCost + saltingCost);
+            const crewHours = (totalCost / 85).toFixed(1); // $85/hour crew rate
+            const recommendedPrice = Math.round(totalCost * 1.65); // 65% markup
+
+            const resultHTML = `
+                <div class="result-box">
+                    <h3>Quote Breakdown</h3>
+                    <div class="result-row">
+                        <span>Base Service:</span>
+                        <span>$${Math.round(basePrice)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Sidewalk (${sidewalk} ft):</span>
+                        <span>$${Math.round(sidewalkCost)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Salting/De-icing:</span>
+                        <span>$${Math.round(saltingCost)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Estimated Crew Hours:</span>
+                        <span>${crewHours} hrs</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Your Cost:</span>
+                        <span>$${totalCost}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Recommended Client Price:</span>
+                        <span>$${recommendedPrice}</span>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('quoteResult').innerHTML = resultHTML;
+        }
+
+        // Dispatch Optimizer
+        function optimizeDispatch() {
+            const crewCount = parseInt(document.getElementById('crewCount').value);
+            const propertyCount = parseInt(document.getElementById('propertyCount').value);
+            const serviceTime = parseInt(document.getElementById('serviceTime').value);
+
+            const propertiesPerCrew = Math.ceil(propertyCount / crewCount);
+            const totalTimePerCrew = propertiesPerCrew * serviceTime;
+            const hoursPerCrew = (totalTimePerCrew / 60).toFixed(1);
+            const completionTime = Math.ceil(totalTimePerCrew / 60);
+
+            // Calculate if we can meet 6am deadline (assuming start at 11pm)
+            const availableHours = 7; // 11pm to 6am
+            const onSchedule = completionTime <= availableHours;
+
+            const resultHTML = `
+                <div class="result-box">
+                    <h3>Optimized Dispatch Plan</h3>
+                    <div class="result-row">
+                        <span>Properties Per Crew:</span>
+                        <span>${propertiesPerCrew}</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Hours Per Crew:</span>
+                        <span>${hoursPerCrew} hrs</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Expected Completion:</span>
+                        <span>${completionTime} hours</span>
+                    </div>
+                    <div class="result-row">
+                        <span>6AM Deadline:</span>
+                        <span style="color: ${onSchedule ? '#28a745' : '#dc3545'};">
+                            ${onSchedule ? '✓ On Schedule' : '⚠️ Need More Crews'}
+                        </span>
+                    </div>
+                    ${!onSchedule ? `
+                        <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 6px;">
+                            <strong>Recommendation:</strong> Add ${Math.ceil((completionTime - availableHours) / hoursPerCrew)} more crew(s) to meet deadline.
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('dispatchResult').innerHTML = resultHTML;
+        }
+
+        // Client Notification Generator
+        function generateNotification() {
+            const property = document.getElementById('clientProperty').value;
+            const status = document.getElementById('serviceStatus').value;
+            const notes = document.getElementById('clientNotes').value;
+
+            if (!property) {
+                alert('Please enter a property name');
+                return;
+            }
+
+            const timestamp = new Date().toLocaleString();
+            let message = '';
+
+            switch(status) {
+                case 'started':
+                    message = `Snow removal service has STARTED at ${property}. Crew on-site and actively clearing parking areas.`;
+                    break;
+                case 'complete':
+                    message = `Snow removal service COMPLETE at ${property}. All parking areas, drives, and sidewalks cleared and treated. Property ready for business.`;
+                    break;
+                case 'delayed':
+                    message = `Service update for ${property}: Crew delayed due to high volume. Updated ETA: 45 minutes.`;
+                    break;
+            }
+
+            if (notes) {
+                message += `\n\nAdditional Notes: ${notes}`;
+            }
+
+            const resultHTML = `
+                <div class="result-box">
+                    <h3>Generated Notification</h3>
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin-top: 10px; border: 2px solid #e0e0e0;">
+                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                            ${timestamp}
+                        </div>
+                        <div style="font-size: 14px; line-height: 1.6; white-space: pre-wrap;">
+                            ${message}
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 13px; color: #666;">
+                        ✓ Copy this message to send via email or text to property manager
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('notificationResult').innerHTML = resultHTML;
+        }
+
+        // Send client updates function
+        function sendClientUpdate() {
+            alert('✓ Client update notifications prepared!\n\nIn production, this would:\n- Send automated emails to all property managers\n- Include completion status and photos\n- Log communication for records\n\nDemo mode: Copy notification text from the Client Notifications card.');
+        }
+
+        // Simulate live updates
+        function simulateLiveUpdates() {
+            const temps = [32, 31, 30, 29, 33, 28];
+            const conditions = ['Light Snow', 'Moderate Snow', 'Heavy Snow', 'Snow Showers'];
+            
+            setInterval(() => {
+                const temp = temps[Math.floor(Math.random() * temps.length)];
+                document.getElementById('temperature').textContent = temp + '°F';
+                document.getElementById('conditions').textContent = conditions[Math.floor(Math.random() * conditions.length)];
+            }, 30000); // Update every 30 seconds
+        }
+
+        // Initialize
+        simulateLiveUpdates();
+    </script>
+</body>
+</html>

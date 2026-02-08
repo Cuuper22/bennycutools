@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Attic Fan ROI Calculator | Energy Attic</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #d84315 0%, #bf360c 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .info-box {
+            background: #ffebee;
+            border-left: 5px solid #f44336;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        
+        .info-box h3 {
+            color: #c62828;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .info-box p {
+            color: #d32f2f;
+            line-height: 1.7;
+        }
+        
+        .calculator-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+        
+        .calculator-section h2 {
+            color: #d84315;
+            margin-bottom: 25px;
+            font-size: 1.6em;
+            border-bottom: 3px solid #ff6b35;
+            padding-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #d84315;
+            font-size: 1em;
+        }
+        
+        select, input[type="number"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            background: white;
+        }
+        
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        
+        .checkbox-option label {
+            display: inline;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 12px;
+            border: 3px solid #4caf50;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h3 {
+            color: #2e7d32;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border-left: 5px solid #4caf50;
+        }
+        
+        .result-item h4 {
+            color: #1b5e20;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .result-item p {
+            color: #555;
+            line-height: 1.7;
+            font-size: 1em;
+        }
+        
+        .result-value {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-top: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 20px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+        
+        .warning-box h4 {
+            color: #e65100;
+            margin-bottom: 8px;
+        }
+        
+        .warning-box p {
+            color: #ef6c00;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .calculator-section {
+                padding: 20px;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☀️ Solar Attic Fan ROI Calculator</h1>
+            <p>Your 150°F+ attic is costing you hundreds every summer. Let's calculate the savings.</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h3>🔥 Texas Heat = Attic Temperatures Hit 150-170°F</h3>
+                <p>Most Dallas-Fort Worth homeowners don't realize their attic can reach 150-170°F in summer, which radiates down through insulation and forces AC units to work overtime. Solar attic fans reduce attic temperatures by 20-50°F, cutting cooling costs by 30-40% while being FREE to operate (Texas sun powers them). One Energy Attic customer saved 34% monthly (41% in hottest months).</p>
+            </div>
+            
+            <div class="calculator-section">
+                <h2>Calculate Your Solar Attic Fan Savings</h2>
+                
+                <div class="form-group">
+                    <label>Home square footage:</label>
+                    <input type="number" id="sqft" value="2500" min="1000" max="6000" step="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Number of stories:</label>
+                    <select id="stories">
+                        <option value="1">1 story (ranch)</option>
+                        <option value="2" selected>2 stories</option>
+                        <option value="3">3+ stories</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Average summer electric bill (June-September):</label>
+                    <select id="bill">
+                        <option value="150">Under $150/month</option>
+                        <option value="225">$150 - $250/month</option>
+                        <option value="325" selected>$250 - $400/month</option>
+                        <option value="475">$400 - $550/month</option>
+                        <option value="650">Over $550/month</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Current attic situation (check all that apply):</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="hot-upstairs" checked>
+                            <label for="hot-upstairs">Upstairs is HOT (10-15°F warmer than downstairs)</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="ac-runs">
+                            <label for="ac-runs">AC runs constantly in summer</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="high-bills" checked>
+                            <label for="high-bills">Summer electric bills are painful</label>
+                        </div>
+                        <div class="checkbox-option">
+                            <input type="checkbox" id="roof-age">
+                            <label for="roof-age">Roof is 10+ years old (heat damage concern)</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Texas region:</label>
+                    <select id="region">
+                        <option value="dfw" selected>Dallas-Fort Worth (brutal summers)</option>
+                        <option value="houston">Houston (heat + humidity)</option>
+                        <option value="austin">Austin / Central Texas</option>
+                        <option value="san-antonio">San Antonio</option>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="calculateROI()">Calculate My Solar Attic Fan Savings</button>
+            </div>
+            
+            <div class="results" id="results">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Built exclusively for Energy Attic</strong></p>
+            <p>Serving the Dallas-Fort Worth Metroplex since [year]</p>
+            <p>📞 Dallas: (972) 548-0088 | Fort Worth: (817) 529-6087</p>
+            <p>Energy Star Certified | Award-Winning Green Energy Company</p>
+            <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
+                This calculator provides estimates based on typical Texas conditions and Energy Attic customer data. 
+                Actual savings vary by home insulation, HVAC efficiency, and usage. Free energy efficiency audit available.
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        function calculateROI() {
+            // Get input values
+            const sqft = parseInt(document.getElementById('sqft').value);
+            const stories = parseInt(document.getElementById('stories').value);
+            const monthlyBill = parseInt(document.getElementById('bill').value);
+            const region = document.getElementById('region').value;
+            
+            const hotUpstairs = document.getElementById('hot-upstairs').checked;
+            const acRuns = document.getElementById('ac-runs').checked;
+            const highBills = document.getElementById('high-bills').checked;
+            const roofAge = document.getElementById('roof-age').checked;
+            
+            // Calculate attic square footage (typically 80-100% of home sqft for single story, 40-50% for 2-story)
+            let atticSqft = stories === 1 ? Math.round(sqft * 0.9) : Math.round(sqft * 0.45);
+            if (stories === 3) atticSqft = Math.round(sqft * 0.35);
+            
+            // Determine fan recommendation (based on attic sqft)
+            let fanCount = 1;
+            let fanCFM = 1250; // CFM rating
+            if (atticSqft > 2000) {
+                fanCount = 2;
+                fanCFM = 2500;
+            }
+            if (atticSqft > 3500) {
+                fanCount = 3;
+                fanCFM = 3750;
+            }
+            
+            // Installation cost (solar attic fans including labor)
+            const fanCostEach = 600; // average per fan
+            const installCostEach = 350;
+            const totalInstall = fanCount * (fanCostEach + installCostEach);
+            
+            // Current annual cooling cost (4 summer months)
+            const annualCoolingCost = monthlyBill * 4;
+            
+            // Savings multiplier based on conditions
+            let savingsPercent = 0.30; // base 30% reduction
+            
+            // Adjust based on checked conditions
+            if (hotUpstairs) savingsPercent += 0.05;
+            if (acRuns) savingsPercent += 0.05;
+            if (highBills) savingsPercent += 0.03;
+            if (stories >= 2) savingsPercent += 0.02; // 2-story homes benefit more
+            
+            // Region adjustment
+            if (region === 'houston') savingsPercent += 0.02; // humidity factor
+            if (region === 'dfw') savingsPercent += 0.01;
+            
+            // Cap at realistic 45% max
+            savingsPercent = Math.min(savingsPercent, 0.45);
+            
+            const annualSavings = Math.round(annualCoolingCost * savingsPercent);
+            
+            // Attic temperature reduction
+            const tempReduction = 20 + Math.round(savingsPercent * 60); // 20-50°F range
+            
+            // Payback period
+            const paybackYears = (totalInstall / annualSavings).toFixed(1);
+            const paybackMonths = Math.ceil((totalInstall / annualSavings) * 12);
+            
+            // Lifetime savings (20-year solar panel lifespan)
+            const lifetimeSavings = annualSavings * 20;
+            
+            // Roof lifespan extension value
+            const roofExtensionValue = roofAge ? 2500 : 1500; // reduced heat = longer roof life
+            
+            // AC unit strain reduction
+            const acRepairAvoidance = 800; // less strain = fewer repairs over lifetime
+            
+            // Carbon footprint reduction
+            const co2Reduction = Math.round(annualSavings * 0.7 * 1.2); // lbs of CO2 per year
+            
+            // Display results
+            let resultsHTML = `
+                <h3>💰 Your Solar Attic Fan Investment Analysis</h3>
+            `;
+            
+            if (hotUpstairs && acRuns) {
+                resultsHTML += `
+                    <div class="warning-box">
+                        <h4>🌡️ Your Attic Is Cooking Your Home</h4>
+                        <p>Hot upstairs + constantly running AC = your attic is likely 150-170°F in summer. That superheated air radiates through insulation and forces your AC to battle an impossible task. Solar attic fans eliminate this problem at the source.</p>
+                    </div>
+                `;
+            }
+            
+            resultsHTML += `
+                <div class="result-item">
+                    <h4>Recommended Solar Attic Fan System</h4>
+                    <p class="result-value">${fanCount} Solar Fan${fanCount > 1 ? 's' : ''} (${fanCFM} CFM total)</p>
+                    <p>Your ${atticSqft} sq ft attic needs ${fanCount} solar-powered ventilation fan${fanCount > 1 ? 's' : ''} for optimal airflow. These fans automatically activate when attic temperature rises, pulling superheated air out and drawing cooler outside air in through soffit vents. ${fanCount > 1 ? 'Multiple fans ensure complete attic ventilation.' : 'Single fan handles your attic volume effectively.'}</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Total Installation Investment</h4>
+                    <p class="result-value">$${totalInstall.toLocaleString()}</p>
+                    <p>Includes ${fanCount} solar attic fan${fanCount > 1 ? 's' : ''} ($${fanCostEach * fanCount}), professional installation with roof mounting and sealing ($${installCostEach * fanCount}), and warranty. Solar-powered means ZERO operating costs forever — Texas sun powers the fans (ironically perfect for our brutal heat).</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Attic Temperature Reduction</h4>
+                    <p class="result-value">-${tempReduction}°F average</p>
+                    <p>Your attic currently reaches 150-170°F on summer days. Solar fans will reduce that to 100-130°F — still warm, but ${tempReduction}°F cooler means dramatically less heat radiating into your living spaces. ${stories >= 2 ? 'Your upstairs will finally be comfortable.' : 'Your entire home stays cooler with less AC strain.'}</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Annual Cooling Cost Savings</h4>
+                    <p class="result-value">$${annualSavings}/year (${Math.round(savingsPercent * 100)}% reduction)</p>
+                    <p>Current summer cooling cost: $${annualCoolingCost}/year<br>
+                    With solar attic fans: $${annualCoolingCost - annualSavings}/year<br>
+                    <br>
+                    You'll save $${annualSavings} every summer. This matches Energy Attic customer results — one DFW homeowner saw 34% average monthly savings (41% in hottest months). Your ${Math.round(savingsPercent * 100)}% reduction is based on your home profile.</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>⏱️ Payback Period</h4>
+                    <p class="result-value">${paybackYears} years (${paybackMonths} months)</p>
+                    <p>Your investment pays for itself through AC savings alone in ${paybackYears} years. After that, you're saving $${annualSavings} every single year with ZERO operating costs (solar-powered). No electric fans eating electricity — the Texas sun that creates the problem also powers the solution.</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>20-Year Lifetime Savings</h4>
+                    <p class="result-value">$${lifetimeSavings.toLocaleString()}</p>
+                    <p>Solar panels last 20+ years. Over that lifespan, you'll save $${lifetimeSavings.toLocaleString()} in cooling costs. Subtract your $${totalInstall.toLocaleString()} investment = <strong>$${(lifetimeSavings - totalInstall).toLocaleString()} net profit</strong> over 20 years, plus benefits below.</p>
+                </div>
+            `;
+            
+            if (roofAge) {
+                resultsHTML += `
+                    <div class="result-item">
+                        <h4>🏠 Roof Lifespan Extension</h4>
+                        <p class="result-value">+$${roofExtensionValue} value</p>
+                        <p>Your 10+ year old roof is being cooked by 150-170°F attic temperatures. This accelerates shingle degradation, shortens roof life by 2-5 years. Solar attic fans reduce heat exposure, extending your roof lifespan and delaying the $15K-25K replacement cost by years. Estimated value: $${roofExtensionValue}.</p>
+                    </div>
+                `;
+            }
+            
+            resultsHTML += `
+                <div class="result-item">
+                    <h4>AC Unit Protection</h4>
+                    <p>Cooler attic = less AC strain = fewer repairs and longer unit lifespan. Your AC won't run constantly fighting 150°F attic heat. This reduces compressor wear, extends unit life, and avoids $800+ in repair costs over the system's lifetime. Bonus: AC replacement can be delayed by 2-3 years.</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>🌍 Environmental Impact</h4>
+                    <p class="result-value">${co2Reduction} lbs CO2 reduction/year</p>
+                    <p>Reducing your electricity usage by ${annualSavings * 4} kWh/year eliminates ${co2Reduction} pounds of CO2 emissions annually (equivalent to planting ${Math.round(co2Reduction / 48)} trees). Solar attic fans are 100% green energy — no grid power required, just Texas sunshine.</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Energy Attic's 3-Part ERS System</h4>
+                    <p>Energy Attic doesn't just install solar fans — we offer a complete <strong>Energy Reduction System (ERS)</strong>:<br>
+                    <br>
+                    1️⃣ <strong>Solar Attic Fans</strong> — Remove superheated air (what you're calculating now)<br>
+                    2️⃣ <strong>Radiant Barrier</strong> — Reflects 97% of radiant heat before it enters attic<br>
+                    3️⃣ <strong>Attic Insulation</strong> — Proper insulation stops heat transfer to living spaces<br>
+                    <br>
+                    Combined, these three components can reduce cooling costs by up to <strong>40%</strong>. Most DFW homes benefit from all three. Energy Attic offers free energy efficiency audits to assess your specific needs.</p>
+                </div>
+                
+                <div class="result-item">
+                    <h4>Why Choose Energy Attic?</h4>
+                    <p>
+                        ✓ <strong>Award-winning</strong> green energy company<br>
+                        ✓ <strong>Energy Star certified</strong> products<br>
+                        ✓ <strong>Free energy efficiency audits</strong> — honest assessment of your attic<br>
+                        ✓ <strong>Complete ERS system</strong> — radiant barrier + insulation + solar fans<br>
+                        ✓ <strong>Proven results</strong> — customer saved 34% monthly (41% in peak heat)<br>
+                        ✓ <strong>Professional installation</strong> — roof mounting, sealing, warranty<br>
+                        ✓ <strong>0% financing available</strong> — start saving now, pay over time<br>
+                        <br>
+                        Energy Attic has transformed thousands of DFW attics. Our 3-Part ERS system addresses the root cause of high cooling costs: superheated attics radiating into your home.
+                    </p>
+                </div>
+                
+                <div class="result-item" style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border-left-color: #ff9800;">
+                    <h4 style="color: #e65100;">📊 Real Customer Results</h4>
+                    <p style="color: #555;">
+                        <strong>Mike Reed, Dallas TX (5,000 sq ft home):</strong><br>
+                        "After Energy Attic's attic reengineering, we saved <strong>34% average per month</strong>, with <strong>41% savings during the hottest month</strong>. Attic temperature dropped from +35°F above outside air to only +6°F. Temperature between rooms levelized. AC units run noticeably less. <strong>3.7-year payback</strong> — that's a <strong>27% pre-tax annual ROI</strong>. Plus environmental benefits: eliminated 3,900 lbs CO2/year, saved 6,400 gallons of water/year required to cool power plants."
+                    </p>
+                </div>
+            `;
+            
+            // Show results
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = resultsHTML;
+            resultsDiv.classList.add('show');
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Initialize with calculation
+        window.addEventListener('load', function() {
+            setTimeout(calculateROI, 500);
+        });
+    </script>
+</body>
+</html>

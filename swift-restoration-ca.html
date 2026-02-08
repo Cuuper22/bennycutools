@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mold Damage Calculator | Swift Restoration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .header h1 {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header .subtitle {
+            color: #718096;
+            font-size: 1.1em;
+        }
+        
+        .warning-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(238, 90, 111, 0.4);
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .slider-container {
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .value-display {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f6f8fb, #eef2f7);
+            border-radius: 16px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .result-item h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .result-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        
+        .result-item p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .danger {
+            color: #e53e3e !important;
+        }
+        
+        .warning {
+            color: #dd6b20 !important;
+        }
+        
+        .success {
+            color: #38a169 !important;
+        }
+        
+        .timeline {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .timeline-item .day {
+            font-weight: 700;
+            color: #667eea;
+            min-width: 80px;
+        }
+        
+        .timeline-item .event {
+            color: #4a5568;
+        }
+        
+        .cta-box {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .cta-box h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .cta-box p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 14px 40px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .comparison-table {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .highlight {
+            background: #fef5e7;
+            font-weight: 700;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .result-value {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦠 Mold Damage Calculator</h1>
+            <p class="subtitle">Calculate the True Cost of Delaying Mold Remediation</p>
+        </div>
+        
+        <div class="warning-banner">
+            ⚠️ Mold spreads exponentially. Every day of delay increases your costs and health risks.
+        </div>
+        
+        <div class="input-group">
+            <label for="squareFootage">Affected Area (Square Feet)</label>
+            <div class="slider-container">
+                <input type="range" id="squareFootage" class="slider" min="10" max="1000" value="100" step="10">
+                <div class="value-display" id="sqftDisplay">100 sq ft</div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="severity">Mold Severity Level</label>
+            <select id="severity">
+                <option value="minor">Minor - Small patches, surface level</option>
+                <option value="moderate" selected>Moderate - Multiple areas, visible growth</option>
+                <option value="severe">Severe - Extensive growth, structural damage</option>
+                <option value="extreme">Extreme - Toxic black mold, widespread contamination</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="propertyValue">Estimated Property Value ($)</label>
+            <input type="number" id="propertyValue" value="500000" step="10000" placeholder="500000">
+        </div>
+        
+        <div class="input-group">
+            <label for="occupants">Number of Occupants</label>
+            <input type="number" id="occupants" value="3" min="1" max="20">
+        </div>
+        
+        <div class="input-group">
+            <label for="daysDelayed">Days Since Discovery (if delaying action)</label>
+            <div class="slider-container">
+                <input type="range" id="daysDelayed" class="slider" min="0" max="90" value="0" step="1">
+                <div class="value-display" id="daysDisplay">0 days</div>
+            </div>
+        </div>
+        
+        <button class="calculate-btn" onclick="calculateDamage()">Calculate Mold Impact</button>
+        
+        <div class="results" id="results">
+            <h2 style="color: #2d3748; margin-bottom: 25px; font-size: 1.8em;">📊 Your Mold Impact Analysis</h2>
+            
+            <div class="result-item">
+                <h3>Estimated Remediation Cost</h3>
+                <div class="result-value" id="remediationCost">$0</div>
+                <p id="costBreakdown"></p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Property Value Impact</h3>
+                <div class="result-value danger" id="propertyImpact">-$0</div>
+                <p id="propertyNote"></p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Health Risk Timeline</h3>
+                <div class="result-value" id="healthRisk"></div>
+                <div class="timeline" id="timeline"></div>
+            </div>
+            
+            <div class="result-item">
+                <h3>Cost of Delay</h3>
+                <div class="result-value warning" id="delayCost">$0</div>
+                <p id="delayNote"></p>
+            </div>
+            
+            <div class="result-item">
+                <h3>Insurance Claim Estimate</h3>
+                <div class="result-value success" id="insuranceClaim">$0</div>
+                <p>Potential out-of-pocket after insurance: <strong id="outOfPocket">$0</strong></p>
+                <p style="margin-top: 10px; font-size: 0.95em;">Swift Restoration handles insurance claims to minimize your costs and hassle.</p>
+            </div>
+            
+            <div class="comparison-table">
+                <h3 style="margin-bottom: 15px; color: #2d3748;">Act Now vs. Wait 30 Days</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Factor</th>
+                            <th>Immediate Action</th>
+                            <th>30-Day Delay</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTable"></tbody>
+                </table>
+            </div>
+            
+            <div class="cta-box">
+                <h3>🚨 Don't Let Mold Cost You More</h3>
+                <p>Swift Restoration specializes in fast, thorough mold remediation with minimal disruption. We handle insurance claims and complete jobs in days, not weeks.</p>
+                <a href="https://www.swiftresto.com" class="cta-btn">Get Free Assessment →</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update slider displays
+        document.getElementById('squareFootage').addEventListener('input', function(e) {
+            document.getElementById('sqftDisplay').textContent = e.target.value + ' sq ft';
+        });
+        
+        document.getElementById('daysDelayed').addEventListener('input', function(e) {
+            document.getElementById('daysDisplay').textContent = e.target.value + ' days';
+        });
+        
+        function calculateDamage() {
+            const sqft = parseInt(document.getElementById('squareFootage').value);
+            const severity = document.getElementById('severity').value;
+            const propertyValue = parseInt(document.getElementById('propertyValue').value);
+            const occupants = parseInt(document.getElementById('occupants').value);
+            const daysDelayed = parseInt(document.getElementById('daysDelayed').value);
+            
+            // Cost per square foot based on severity
+            const costPerSqft = {
+                minor: 12,
+                moderate: 25,
+                severe: 45,
+                extreme: 75
+            };
+            
+            // Base remediation cost
+            let baseCost = sqft * costPerSqft[severity];
+            
+            // Add fixed costs (inspection, testing, equipment)
+            baseCost += severity === 'minor' ? 800 : severity === 'moderate' ? 1500 : severity === 'severe' ? 2500 : 4000;
+            
+            // Cost increases with delay (5% per week)
+            const weeksFactor = Math.floor(daysDelayed / 7);
+            const delayCost = baseCost * weeksFactor * 0.05;
+            const totalCost = baseCost + delayCost;
+            
+            // Property value impact (1-5% depending on severity)
+            const valueImpactPercent = {
+                minor: 0.01,
+                moderate: 0.02,
+                severe: 0.035,
+                extreme: 0.05
+            };
+            
+            const propertyImpact = propertyValue * valueImpactPercent[severity] * (1 + daysDelayed / 90);
+            
+            // Insurance coverage (typically 60-80% depending on policy)
+            const insuranceCoverage = 0.70;
+            const insurancePays = totalCost * insuranceCoverage;
+            const outOfPocket = totalCost - insurancePays;
+            
+            // Health risk timeline
+            const healthTimeline = {
+                minor: [
+                    { day: "Days 1-3", event: "Mild respiratory irritation possible" },
+                    { day: "Days 7-14", event: "Allergic reactions, persistent cough" },
+                    { day: "Days 30+", event: "Chronic symptoms, asthma exacerbation" }
+                ],
+                moderate: [
+                    { day: "Days 1-2", event: "Respiratory irritation, headaches" },
+                    { day: "Days 5-10", event: "Allergic reactions, chronic cough" },
+                    { day: "Days 14+", event: "Asthma attacks, sinus infections" },
+                    { day: "Days 30+", event: "Severe allergic reactions, immune suppression" }
+                ],
+                severe: [
+                    { day: "Immediately", event: "Strong respiratory irritation" },
+                    { day: "Days 1-3", event: "Headaches, fatigue, nausea" },
+                    { day: "Days 7+", event: "Chronic respiratory problems" },
+                    { day: "Days 14+", event: "Cognitive issues, severe allergic reactions" },
+                    { day: "Days 30+", event: "Long-term health complications" }
+                ],
+                extreme: [
+                    { day: "Immediately", event: "Severe respiratory distress (evacuate)" },
+                    { day: "Hours", event: "Toxic exposure symptoms" },
+                    { day: "Days 1-5", event: "Neurological symptoms, severe illness" },
+                    { day: "Days 7+", event: "Permanent health damage risk" },
+                    { day: "Days 14+", event: "Critical health emergency" }
+                ]
+            };
+            
+            // Display results
+            document.getElementById('remediationCost').textContent = '$' + totalCost.toLocaleString();
+            document.getElementById('costBreakdown').textContent = 
+                `Base cost: $${baseCost.toLocaleString()} • Area: ${sqft} sq ft @ $${costPerSqft[severity]}/sq ft • Severity: ${severity}`;
+            
+            document.getElementById('propertyImpact').textContent = '-$' + Math.round(propertyImpact).toLocaleString();
+            document.getElementById('propertyNote').textContent = 
+                `Untreated mold reduces property value by ${(valueImpactPercent[severity] * 100).toFixed(1)}%-${((valueImpactPercent[severity] * 100) + 2).toFixed(1)}% and can make your home unsellable until resolved.`;
+            
+            const healthRiskLevel = severity === 'extreme' ? 'CRITICAL' : severity === 'severe' ? 'HIGH' : severity === 'moderate' ? 'MODERATE' : 'LOW';
+            const healthClass = severity === 'extreme' || severity === 'severe' ? 'danger' : severity === 'moderate' ? 'warning' : 'success';
+            document.getElementById('healthRisk').textContent = healthRiskLevel;
+            document.getElementById('healthRisk').className = 'result-value ' + healthClass;
+            
+            // Timeline
+            let timelineHTML = '';
+            healthTimeline[severity].forEach(item => {
+                timelineHTML += `<div class="timeline-item"><span class="day">${item.day}</span><span class="event">${item.event}</span></div>`;
+            });
+            document.getElementById('timeline').innerHTML = timelineHTML;
+            
+            document.getElementById('delayCost').textContent = '$' + Math.round(delayCost).toLocaleString();
+            document.getElementById('delayNote').textContent = 
+                daysDelayed > 0 
+                    ? `You've already incurred approximately $${Math.round(delayCost).toLocaleString()} in additional costs due to ${daysDelayed} days of delay. Mold grows 5% per week, increasing remediation complexity and cost.`
+                    : 'Acting immediately saves you thousands. Mold remediation costs increase 5% per week due to spread and structural damage.';
+            
+            document.getElementById('insuranceClaim').textContent = '$' + Math.round(insurancePays).toLocaleString();
+            document.getElementById('outOfPocket').textContent = '$' + Math.round(outOfPocket).toLocaleString();
+            
+            // Comparison table
+            const nowCost = totalCost;
+            const delayCost30 = totalCost * 1.20; // 20% increase over 30 days
+            const nowArea = sqft;
+            const delayArea30 = Math.round(sqft * 1.4); // 40% spread
+            
+            const comparisonData = [
+                { factor: 'Remediation Cost', now: `$${nowCost.toLocaleString()}`, delay: `$${delayCost30.toLocaleString()}` },
+                { factor: 'Affected Area', now: `${nowArea} sq ft`, delay: `${delayArea30} sq ft` },
+                { factor: 'Health Risk', now: healthRiskLevel, delay: severity === 'extreme' ? 'CRITICAL' : 'HIGH' },
+                { factor: 'Property Value Loss', now: `$${Math.round(propertyImpact).toLocaleString()}`, delay: `$${Math.round(propertyImpact * 1.5).toLocaleString()}` },
+                { factor: 'Job Duration', now: '2-4 days', delay: '5-10 days' }
+            ];
+            
+            let tableHTML = '';
+            comparisonData.forEach(row => {
+                tableHTML += `<tr><td><strong>${row.factor}</strong></td><td class="highlight">${row.now}</td><td>${row.delay}</td></tr>`;
+            });
+            document.getElementById('comparisonTable').innerHTML = tableHTML;
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

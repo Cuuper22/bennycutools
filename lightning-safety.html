@@ -1,0 +1,1354 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Electrical Safety Score - Lightning Electric</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.min.js"></script>
+    <!-- html2pdf.js for PDF report generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #0066cc;
+            --accent-yellow: #ffc107;
+            --dark-charcoal: #1a1a2e;
+            --text-white: #ffffff;
+            --danger-red: #dc2626;
+            --warning-orange: #f59e0b;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--dark-charcoal);
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden; /* For screen transitions */
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: #2a2a3e; /* Slightly lighter than dark-charcoal for contrast */
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            padding: 2rem;
+            margin: 1rem;
+            position: relative;
+            overflow: hidden; /* For transitions */
+            min-height: 600px; /* Ensure container has enough height */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Lightning bolt animation */
+        .lightning-bolt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            background-color: var(--accent-yellow);
+            -webkit-mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodGg9IjEwOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqZ29pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0bmluZyI+PHBvbHlnb24gcG9pbnRzPSIxMyAyIDMgMTQgMTIgMTQgMTEgMjIgMjEgMTAgMTIgMTAgMTMgMiIvPjwvc3ZnPg==') no-repeat center / contain;
+            mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodGg9IjEwOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lZ29pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0bmluZyI+PHBvbHlnb24gcG9pbnRzPSIxMyAyIDMgMTQgMTIgMTQgMTEgMjIgMjEgMTAgMTIgMTAgMTMgMiIvPjwvc3ZnPg==') no-repeat center / contain;
+            transform: translate(-50%, -50%);
+            animation: pulse-lightning 2s infinite ease-in-out;
+            opacity: 0.1;
+            z-index: 0;
+        }
+        @keyframes pulse-lightning {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.3; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.1; }
+        }
+
+        /* Screen transitions */
+        .screen {
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            opacity: 0;
+            transform: translateX(100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            z-index: 1; /* Above lightning bolt */
+        }
+        .screen.active {
+            opacity: 1;
+            transform: translateX(0%);
+            position: relative;
+        }
+        .screen.leaving {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        .screen.leaving-reverse {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        /* Custom buttons */
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary:hover {
+            background-color: #004c99; /* Darker blue */
+        }
+        .btn-outline {
+            border: 2px solid var(--primary-blue);
+            color: var(--primary-blue);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-outline:hover {
+            background-color: var(--primary-blue);
+            color: var(--text-white);
+        }
+        .text-lightning-yellow { color: var(--accent-yellow); }
+        .bg-lightning-yellow { background-color: var(--accent-yellow); }
+        .border-lightning-yellow { border-color: var(--accent-yellow); }
+
+        /* Progress bar */
+        #progress-bar-container {
+            width: 100%;
+            background-color: #4a4a5e;
+            border-radius: 9999px;
+            height: 10px;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 2; /* Above screens */
+        }
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-blue);
+            border-radius: 9999px;
+            transition: width 0.4s ease-out;
+            position: relative;
+        }
+        #progress-marker {
+            position: absolute;
+            right: -12px; /* Half of marker width (24px) */
+            top: 50%;
+            transform: translateY(-50%) rotate(15deg);
+            width: 24px;
+            height: 24px;
+            background-color: var(--accent-yellow);
+            -webkit-mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodGg9IjEwOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lZ29pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0bmluZyI+PHBvbHlnb24gcG9pbnRzPSIxMyAyIDMgMTQgMTIgMTQgMTEgMjIgMjEgMTAgMTIgMTAgMTMgMiIvPjwvc3ZnPg==') no-repeat center / contain;
+            mask: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodGg9IjEwOCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIxIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lZ29pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxpZ2h0bmluZyI+PHBvbHlnb24gcG9pbnRzPSIxMyAyIDMgMTQgMTIgMTQgMTEgMjIgMjEgMTAgMTIgMTAgMTMgMiIvPjwvc3ZnPg==');
+            box-shadow: 0 0 8px var(--accent-yellow);
+            transition: all 0.4s ease-out;
+        }
+
+        /* Custom form elements */
+        input[type="text"] {
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a6e;
+            color: var(--text-white);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.5);
+        }
+
+        /* Question specific styles */
+        .question-options button {
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a6e;
+            color: var(--text-white);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .question-options button:hover {
+            background-color: #4a4a5e;
+            border-color: var(--primary-blue);
+        }
+        .question-options button.selected {
+            background-color: var(--primary-blue);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        .question-options button img {
+            max-width: 100px;
+            height: auto;
+            margin-bottom: 0.5rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Lucide icons styling */
+        .lucide {
+            stroke: var(--text-white);
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .question-options button .lucide-icon {
+            stroke: var(--text-white);
+        }
+        .question-options button.selected .lucide-icon {
+            stroke: var(--accent-yellow);
+        }
+        .logo-icon {
+            stroke: var(--accent-yellow);
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #3a3a4e;
+            color: #ccc;
+            font-size: 0.875rem;
+            text-align: center;
+            z-index: 2; /* Above other content */
+        }
+        footer a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* For the circular gauge */
+        .gauge-container {
+            width: 200px;
+            height: 200px;
+            position: relative;
+        }
+        .gauge-bg, .gauge-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 15px solid transparent;
+        }
+        .gauge-bg {
+            border-color: #3a3a4e; /* Background color for the gauge track */
+        }
+        .gauge-fill {
+            border-top-color: var(--primary-blue);
+            border-right-color: var(--primary-blue);
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            transform: rotate(45deg);
+            transition: transform 1s ease-out, border-color 0.5s ease-out;
+        }
+        .gauge-fill.score-low {
+            border-top-color: var(--danger-red);
+            border-right-color: var(--danger-red);
+        }
+        .gauge-fill.score-medium {
+            border-top-color: var(--warning-orange);
+            border-right-color: var(--warning-orange);
+        }
+        .gauge-fill.score-high {
+            border-top-color: var(--primary-blue);
+            border-right-color: var(--primary-blue);
+        }
+
+        .gauge-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-white);
+            z-index: 10;
+        }
+        .gauge-label {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.9rem;
+            color: #aaa;
+            z-index: 10;
+        }
+
+        /* Critical findings */
+        .critical-finding {
+            background-color: rgba(220, 38, 38, 0.15); /* Red with transparency */
+            border: 2px solid var(--danger-red);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            animation: pulse-red 1.5s infinite ease-in-out;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+        .critical-finding strong {
+            color: var(--danger-red);
+        }
+
+        /* Risk category bars */
+        .risk-bar-container {
+            background-color: #3a3a4e;
+            border-radius: 9999px;
+            height: 12px;
+            overflow: hidden;
+        }
+        .risk-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 9999px;
+            transition: width 1s ease-out;
+        }
+        .risk-bar-fill.high { background-color: var(--danger-red); }
+        .risk-bar-fill.medium { background-color: var(--warning-orange); }
+        .risk-bar-fill.low { background-color: var(--primary-blue); }
+
+        /* General form input styling */
+        .form-input {
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a6e;
+            color: var(--text-white);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't increase width */
+        }
+        .form-input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.5);
+        }
+
+        /* Custom checkbox/radio styling for multiple choice questions */
+        .multi-choice-option {
+            background-color: #3a3a4e;
+            border: 1px solid #5a5a6e;
+            color: var(--text-white);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+        }
+        .multi-choice-option:hover {
+            background-color: #4a4a5e;
+            border-color: var(--primary-blue);
+        }
+        .multi-choice-option.selected {
+            background-color: var(--primary-blue);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+        }
+        .multi-choice-option .checkmark {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--text-white);
+            border-radius: 4px; /* For checkbox */
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .multi-choice-option.selected .checkmark {
+            background-color: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+        }
+        .multi-choice-option.selected .checkmark::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid var(--primary-blue);
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container" id="printable-area">
+        <div class="lightning-bolt"></div>
+
+        <!-- Progress Bar (Hidden initially, shown after welcome) -->
+        <div id="progress-bar-container" class="hidden">
+            <div id="progress-bar">
+                <div id="progress-marker"></div>
+            </div>
+        </div>
+
+        <!-- Screens will be dynamically managed by JS -->
+        <div id="screen-container" class="relative flex-grow flex items-center justify-center">
+
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="screen active p-8">
+                <div class="z-10 relative">
+                    <div class="flex flex-col items-center justify-center mb-6">
+                        <svg class="lucide lucide-zap logo-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        <h1 class="text-4xl font-bold mb-2 text-lightning-yellow">Lightning Electric</h1>
+                        <h2 class="text-xl font-semibold mb-8">Shreveport, LA</h2>
+                    </div>
+                    <p class="text-3xl md:text-4xl font-bold mb-6">How Safe Is Your Home's Electrical System?</p>
+                    <p class="text-lg mb-8 max-w-prose mx-auto text-gray-300">Take this quick assessment to understand your home's electrical safety score and identify potential risks. Every assessment helps us provide tailored safety recommendations.</p>
+                    <button id="start-assessment-btn" class="btn-primary">
+                        Start Assessment
+                        <svg class="lucide lucide-arrow-right ml-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Address Screen -->
+            <div id="address-screen" class="screen p-8">
+                <div class="z-10 relative">
+                    <h2 class="text-3xl font-bold mb-6">Just a Quick Personalization Step...</h2>
+                    <p class="text-lg mb-8 text-gray-300">Enter your address or neighborhood. This helps us provide more relevant local safety tips! (Stored locally, not shared.)</p>
+                    <div class="w-full max-w-md mx-auto">
+                        <input type="text" id="user-address" class="form-input mb-4" placeholder="e.g., 123 Main St, Shreveport, LA">
+                        <button id="address-next-btn" class="btn-primary w-full mt-4">
+                            Next
+                            <svg class="lucide lucide-arrow-right ml-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Screens (Dynamic content will be injected here) -->
+            <div id="questions-screen" class="screen p-8">
+                <div class="z-10 relative w-full h-full flex flex-col justify-between">
+                    <div id="question-content" class="flex-grow flex flex-col items-center justify-center">
+                        <!-- Question and options will be loaded here -->
+                        <p class="text-xl text-gray-400 mb-4" id="question-number">Question 1/12</p>
+                        <h3 class="text-3xl font-bold text-center mb-8" id="question-text"></h3>
+                        <div id="question-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                            <!-- Options go here -->
+                        </div>
+                    </div>
+                    <div class="flex justify-between w-full max-w-2xl mt-8">
+                        <button id="back-btn" class="btn-outline hidden">
+                            <svg class="lucide lucide-arrow-left mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                            Back
+                        </button>
+                        <button id="next-btn" class="btn-primary ml-auto hidden">
+                            Next
+                            <svg class="lucide lucide-arrow-right ml-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="results-screen" class="screen p-8 text-left">
+                <div class="z-10 relative w-full overflow-y-auto max-h-full">
+                    <h2 class="text-4xl font-bold mb-6 text-center text-lightning-yellow">Your Home Electrical Safety Score</h2>
+
+                    <!-- Score Gauge -->
+                    <div class="flex flex-col items-center mb-8">
+                        <div class="gauge-container">
+                            <div class="gauge-bg"></div>
+                            <div id="score-gauge-fill" class="gauge-fill"></div>
+                            <div id="score-text" class="gauge-text">0</div>
+                            <div class="gauge-label">Score (0-100)</div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Findings -->
+                    <div id="critical-findings-container" class="mb-8">
+                        <!-- Critical findings will be dynamically added here -->
+                    </div>
+
+                    <!-- Risk Breakdown -->
+                    <h3 class="text-2xl font-bold mb-4">Risk Breakdown</h3>
+                    <div id="risk-breakdown-container" class="mb-8 space-y-4">
+                        <!-- Risk categories and bars will be dynamically added here -->
+                    </div>
+
+                    <!-- Estimated Costs & Shreveport Content -->
+                    <div id="recommendations-container" class="mb-8 space-y-4">
+                        <h3 class="text-2xl font-bold mb-4">Recommendations & Insights</h3>
+                        <!-- Dynamic recommendations and Shreveport content here -->
+                    </div>
+
+                    <!-- Call to Action & Share -->
+                    <div class="flex flex-col items-center mt-8 space-y-4">
+                        <a href="tel:3182050740" class="btn-primary text-xl w-full max-w-md py-4">
+                            <svg class="lucide lucide-phone mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                            Schedule a FREE Inspection!
+                        </a>
+                        <button id="get-pdf-report-btn" class="btn-outline w-full max-w-md">
+                            <svg class="lucide lucide-download mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                            Get PDF Report
+                        </button>
+                        <div class="relative w-full max-w-md">
+                            <input type="text" id="share-link-input" class="form-input text-center pr-10" readonly value="My home scored 0/100 on electrical safety — check yours!">
+                            <button id="copy-share-link-btn" class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-transparent text-gray-400 hover:text-white rounded">
+                                <svg class="lucide lucide-copy lucide-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            </button>
+                            <span id="copy-message" class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-sm text-green-400 opacity-0 transition-opacity duration-300">Copied!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            Powered by Lightning Electric | Shreveport & Blanchard, LA | (318) 205-0740 | Licensed ECL #75356
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const screens = ['welcome-screen', 'address-screen', 'questions-screen', 'results-screen'];
+        let currentScreenIndex = 0;
+        let userAnswers = {};
+        let score = 100; // Starting score
+        let questionData = []; // Will be populated with question objects
+        let criticalFindings = [];
+        let riskBreakdown = {};
+
+        // DOM Elements
+        const screenContainer = document.getElementById('screen-container');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const addressScreen = document.getElementById('address-screen');
+        const questionsScreen = document.getElementById('questions-screen');
+        const resultsScreen = document.getElementById('results-screen');
+
+        const startAssessmentBtn = document.getElementById('start-assessment-btn');
+        const userAddressInput = document.getElementById('user-address');
+        const addressNextBtn = document.getElementById('address-next-btn');
+
+        const questionNumberElem = document.getElementById('question-number');
+        const questionTextElem = document.getElementById('question-text');
+        const questionOptionsContainer = document.getElementById('question-options-container');
+        const backBtn = document.getElementById('back-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressMarker = document.getElementById('progress-marker');
+
+        const scoreText = document.getElementById('score-text');
+        const scoreGaugeFill = document.getElementById('score-gauge-fill');
+        const criticalFindingsContainer = document.getElementById('critical-findings-container');
+        const riskBreakdownContainer = document.getElementById('risk-breakdown-container');
+        const recommendationsContainer = document.getElementById('recommendations-container');
+        const getPdfReportBtn = document.getElementById('get-pdf-report-btn');
+        const shareLinkInput = document.getElementById('share-link-input');
+        const copyShareLinkBtn = document.getElementById('copy-share-link-btn');
+        const copyMessage = document.getElementById('copy-message');
+
+        // --- Question Data ---
+        questionData = [
+            {
+                id: 'q1',
+                question: 'When was your home built?',
+                options: [
+                    { text: 'Pre-1960', value: 'pre1960', icon: 'home' },
+                    { text: '1960s', value: '1960s', icon: 'home' },
+                    { text: '1970s', value: '1970s', icon: 'home' },
+                    { text: '1980s', value: '1980s', icon: 'home' },
+                    { text: '1990s', value: '1990s', icon: 'home' },
+                    { text: '2000s', value: '2000s', icon: 'home' },
+                    { text: '2010s+', value: '2010s+', icon: 'home' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Wiring Safety'
+            },
+            {
+                id: 'q2',
+                question: 'What type of electrical panel do you have?',
+                options: [
+                    { text: 'Fuse box (old)', value: 'fusebox', img: 'https://i.imgur.com/8Q9Y0wS.png' }, // Placeholder for Fuse box
+                    { text: 'Federal Pacific/Zinsco (dangerous!)', value: 'federalpacific', img: 'https://i.imgur.com/K3aYq0r.png' }, // Placeholder for FPE/Zinsco
+                    { text: 'Modern breaker panel', value: 'modernbreaker', img: 'https://i.imgur.com/0Q9Z2xW.png' }, // Placeholder for Modern breaker
+                    { text: 'I don\'t know', value: 'dontknow_panel', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Panel Safety'
+            },
+            {
+                id: 'q3',
+                question: 'How many amps is your electrical service?',
+                options: [
+                    { text: '60A', value: '60a', icon: 'zap' },
+                    { text: '100A', value: '100a', icon: 'zap' },
+                    { text: '150A', value: '150a', icon: 'zap' },
+                    { text: '200A', value: '200a', icon: 'zap' },
+                    { text: 'I don\'t know', value: 'dontknow_amps', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Load Capacity'
+            },
+            {
+                id: 'q4',
+                question: 'Do any outlets in your home have only 2 prongs (no ground)?',
+                options: [
+                    { text: 'Many', value: 'many', img: 'https://i.imgur.com/rM1X0wT.png' }, // Placeholder for 2-prong outlet
+                    { text: 'Some', value: 'some', img: 'https://i.imgur.com/rM1X0wT.png' }, // Placeholder for 2-prong outlet
+                    { text: 'None', value: 'none', img: 'https://i.imgur.com/xQ9Z2xW.png' }, // Placeholder for 3-prong outlet
+                    { text: 'Not sure', value: 'notsure', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Wiring Safety'
+            },
+            {
+                id: 'q5',
+                question: 'How many GFCI outlets (the ones with test/reset buttons) are in wet areas?',
+                options: [
+                    { text: 'Bathroom', value: 'bathroom', icon: 'bath' },
+                    { text: 'Kitchen', value: 'kitchen', icon: 'chef-hat' },
+                    { text: 'Garage', value: 'garage', icon: 'car' },
+                    { text: 'Outdoor', value: 'outdoor', icon: 'sun' }
+                ],
+                type: 'multi-choice',
+                riskCategory: 'Ground Protection'
+            },
+            {
+                id: 'q6',
+                question: 'Have you experienced flickering lights?',
+                options: [
+                    { text: 'Never', value: 'never', icon: 'check' },
+                    { text: 'Occasionally', value: 'occasionally', icon: 'lightbulb' },
+                    { text: 'Frequently', value: 'frequently', icon: 'zap' },
+                    { text: 'Constantly', value: 'constantly', icon: 'alert-triangle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Maintenance'
+            },
+            {
+                id: 'q7',
+                question: 'Do any outlets or switches feel warm to the touch?',
+                options: [
+                    { text: 'Yes', value: 'yes', icon: 'thermometer' },
+                    { text: 'No', value: 'no', icon: 'check' },
+                    { text: 'Haven\'t checked', value: 'unchecked', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Wiring Safety'
+            },
+            {
+                id: 'q8',
+                question: 'Does your panel trip breakers frequently?',
+                options: [
+                    { text: 'Never', value: 'never', icon: 'check' },
+                    { text: 'Rarely', value: 'rarely', icon: 'minus' },
+                    { text: 'Monthly', value: 'monthly', icon: 'repeat' },
+                    { text: 'Weekly', value: 'weekly', icon: 'alert-triangle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Panel Safety'
+            },
+            {
+                id: 'q9',
+                question: 'Do you use many power strips or extension cords as permanent solutions?',
+                options: [
+                    { text: 'None', value: 'none', icon: 'check' },
+                    { text: 'A few', value: 'afew', icon: 'plug' },
+                    { text: 'Many (5+)', value: 'many', icon: 'cable' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Load Capacity'
+            },
+            {
+                id: 'q10',
+                question: 'Do lights dim when your AC or large appliances kick on?',
+                options: [
+                    { text: 'Yes', value: 'yes', icon: 'alert-triangle' },
+                    { text: 'No', value: 'no', icon: 'check' },
+                    { text: 'Don\'t have central AC', value: 'no_ac', icon: 'thermometer-snowflake' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Load Capacity'
+            },
+            {
+                id: 'q11',
+                question: 'When was your last professional electrical inspection?',
+                options: [
+                    { text: 'Within 1 year', value: 'within1yr', icon: 'calendar-check' },
+                    { text: '1-5 years ago', value: '1-5yr', icon: 'calendar' },
+                    { text: '5-10 years ago', value: '5-10yr', icon: 'calendar-x' },
+                    { text: 'Never', value: 'never', icon: 'ban' },
+                    { text: 'Don\'t know', value: 'dontknow_inspection', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Maintenance'
+            },
+            {
+                id: 'q12',
+                question: 'Do you have a whole-home surge protector?',
+                options: [
+                    { text: 'Yes', value: 'yes', icon: 'shield-check' },
+                    { text: 'No', value: 'no', icon: 'shield-off' },
+                    { text: 'What\'s that?', value: 'whats_that', icon: 'help-circle' }
+                ],
+                type: 'single-choice',
+                riskCategory: 'Ground Protection'
+            }
+        ];
+
+        // --- Navigation Logic ---
+        function showScreen(index, direction = 'next') {
+            if (index < 0 || index >= screens.length) return;
+
+            const currentActiveScreen = document.querySelector('.screen.active');
+            const nextScreen = document.getElementById(screens[index]);
+
+            if (currentActiveScreen) {
+                currentActiveScreen.classList.remove('active');
+                if (direction === 'next') {
+                    currentActiveScreen.classList.add('leaving');
+                } else {
+                    currentActiveScreen.classList.add('leaving-reverse');
+                }
+                setTimeout(() => {
+                    currentActiveScreen.classList.remove('leaving', 'leaving-reverse');
+                    nextScreen.classList.add('active');
+                    nextScreen.style.transform = (direction === 'next') ? 'translateX(100%)' : 'translateX(-100%)';
+                    setTimeout(() => nextScreen.style.transform = 'translateX(0%)', 50); // Small delay for slide-in effect
+                }, 400); // Match CSS transition duration
+            } else {
+                // Initial load
+                nextScreen.classList.add('active');
+                nextScreen.style.transform = 'translateX(0%)';
+            }
+
+            currentScreenIndex = index;
+            updateProgressBar();
+
+            // Show/hide progress bar
+            if (screens[currentScreenIndex] === 'welcome-screen' || screens[currentScreenIndex] === 'address-screen') {
+                progressBarContainer.classList.add('hidden');
+            } else {
+                progressBarContainer.classList.remove('hidden');
+            }
+
+            // Specific screen logic after transition
+            if (screens[currentScreenIndex] === 'questions-screen') {
+                loadQuestion(userAnswers.questionNumber || 1);
+            } else if (screens[currentScreenIndex] === 'results-screen') {
+                calculateScoreAndDisplayResults();
+            }
+        }
+
+        function navigateNext() {
+            // Validate current screen before moving
+            if (screens[currentScreenIndex] === 'address-screen') {
+                const address = userAddressInput.value.trim();
+                if (address) {
+                    localStorage.setItem('userAddress', address);
+                }
+            } else if (screens[currentScreenIndex] === 'questions-screen') {
+                const qIndex = userAnswers.questionNumber - 1;
+                const question = questionData[qIndex];
+                const answer = userAnswers[question.id];
+
+                if (question.type === 'single-choice' && !answer) {
+                    alert('Please select an option to continue.');
+                    return;
+                }
+                if (question.type === 'multi-choice' && (!answer || answer.length === 0)) {
+                    alert('Please select at least one option to continue.');
+                    return;
+                }
+
+                if (userAnswers.questionNumber < questionData.length) {
+                    userAnswers.questionNumber++;
+                    loadQuestion(userAnswers.questionNumber); // Load next question on the same screen
+                    updateProgressBar();
+                    return; // Don't advance screen index yet
+                }
+            }
+
+            if (currentScreenIndex < screens.length - 1) {
+                showScreen(currentScreenIndex + 1, 'next');
+            }
+        }
+
+        function navigateBack() {
+            if (currentScreenIndex > 0) {
+                // If on questions screen, go back to previous question
+                if (screens[currentScreenIndex] === 'questions-screen' && userAnswers.questionNumber > 1) {
+                    userAnswers.questionNumber--;
+                    loadQuestion(userAnswers.questionNumber);
+                    updateProgressBar();
+                    return; // Don't advance screen index yet
+                }
+                showScreen(currentScreenIndex - 1, 'back');
+            }
+        }
+
+        // --- Progress Bar ---
+        function updateProgressBar() {
+            let progress = 0;
+            if (screens[currentScreenIndex] === 'questions-screen') {
+                progress = userAnswers.questionNumber / questionData.length;
+            } else if (screens[currentScreenIndex] === 'results-screen') {
+                progress = 1;
+            } else {
+                // Welcome and Address screens have minimal progress for visualization
+                if (currentScreenIndex === 0) progress = 0; // Welcome screen
+                if (currentScreenIndex === 1) progress = 0.05; // After address screen
+            }
+
+            const progressBarWidth = progress * 100;
+            progressBar.style.width = `${progressBarWidth}%`;
+            progressMarker.style.left = `calc(${progressBarWidth}% - 12px)`; // Adjust for marker width
+        }
+
+        // --- Question Loading and Handling ---
+        function loadQuestion(qNum) {
+            const qIndex = qNum - 1;
+            if (qIndex < 0 || qIndex >= questionData.length) return;
+
+            const question = questionData[qIndex];
+            questionNumberElem.textContent = `Question ${qNum}/${questionData.length}`;
+            questionTextElem.textContent = question.question;
+            questionOptionsContainer.innerHTML = ''; // Clear previous options
+
+            question.options.forEach(option => {
+                const button = document.createElement('button');
+                button.dataset.value = option.value;
+
+                if (question.type === 'single-choice') {
+                    button.classList.add('question-option', 'flex', 'items-center', 'justify-start', 'text-left', 'p-4', 'rounded-lg', 'bg-gray-700', 'hover:bg-gray-600', 'transition', 'duration-200');
+                    let content = '';
+                    if (option.icon) {
+                        content += `<svg class="lucide lucide-${option.icon} mr-3 lucide-icon"></svg>`;
+                    } else if (option.img) {
+                        content += `<img src="${option.img}" alt="${option.text}" class="w-16 h-12 object-cover rounded mr-3">`;
+                    }
+                    content += `<span>${option.text}</span>`;
+                    button.innerHTML = content;
+                    button.addEventListener('click', () => {
+                        // Deselect all other single-choice options for this question
+                        Array.from(questionOptionsContainer.children).forEach(btn => btn.classList.remove('selected'));
+                        button.classList.add('selected');
+                        handleAnswer(question.id, option.value, question.type);
+                    });
+                } else if (question.type === 'multi-choice') {
+                    button.classList.add('multi-choice-option'); // Custom class for multi-choice
+                    button.innerHTML = `
+                        <span class="checkmark"></span>
+                        <span class="flex items-center">
+                            ${option.icon ? `<svg class="lucide lucide-${option.icon} mr-2 lucide-icon"></svg>` : ''}
+                            ${option.text}
+                        </span>
+                    `;
+                    button.addEventListener('click', () => {
+                        button.classList.toggle('selected');
+                        // For multi-choice, we pass an array of selected values
+                        const selectedValues = Array.from(questionOptionsContainer.children)
+                                                    .filter(btn => btn.classList.contains('selected'))
+                                                    .map(btn => btn.dataset.value);
+                        handleAnswer(question.id, selectedValues, question.type);
+                    });
+                }
+                questionOptionsContainer.appendChild(button);
+            });
+
+            // Restore previous answer if exists
+            const savedAnswer = userAnswers[question.id];
+            if (question.type === 'single-choice' && savedAnswer) {
+                document.querySelector(`#question-options-container button[data-value="${savedAnswer}"]`)?.classList.add('selected');
+            } else if (question.type === 'multi-choice' && Array.isArray(savedAnswer)) {
+                savedAnswer.forEach(val => {
+                    document.querySelector(`#question-options-container button[data-value="${val}"]`)?.classList.add('selected');
+                });
+            }
+
+            updateQuestionNavigationButtons(qNum);
+            lucide.createIcons(); // Re-initialize icons for new content
+        }
+
+        function handleAnswer(questionId, value, type) {
+            userAnswers[questionId] = value;
+            updateQuestionNavigationButtons(userAnswers.questionNumber);
+        }
+
+        function updateQuestionNavigationButtons(qNum) {
+            // Show/hide back button
+            if (qNum > 1) {
+                backBtn.classList.remove('hidden');
+            } else {
+                backBtn.classList.add('hidden');
+            }
+
+            // Enable/disable next button based on answer
+            const question = questionData[qNum - 1];
+            const answer = userAnswers[question.id];
+            let isAnswered = false;
+            if (question.type === 'single-choice' && answer) {
+                isAnswered = true;
+            } else if (question.type === 'multi-choice' && answer && answer.length > 0) {
+                isAnswered = true;
+            }
+
+            if (isAnswered) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.add('hidden');
+            }
+
+            // Change next button text to 'See Results' on last question
+            if (qNum === questionData.length) {
+                nextBtn.innerHTML = `See Results <svg class="lucide lucide-check-circle ml-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`;
+            } else {
+                nextBtn.innerHTML = `Next <svg class="lucide lucide-arrow-right ml-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
+            }
+            lucide.createIcons();
+        }
+
+        // --- Scoring Algorithm ---
+        function calculateScoreAndDisplayResults() {
+            score = 100;
+            criticalFindings = [];
+            riskBreakdown = {
+                'Panel Safety': { deduction: 0, max: 30, details: [] },
+                'Wiring Safety': { deduction: 0, max: 25, details: [] },
+                'Ground Protection': { deduction: 0, max: 20, details: [] },
+                'Load Capacity': { deduction: 0, max: 15, details: [] },
+                'Maintenance': { deduction: 0, max: 10, details: [] }
+            };
+            let estimatedUpgradeCost = 0;
+
+            // Helper to add findings
+            function addFinding(category, deduction, detail) {
+                score -= deduction;
+                if (riskBreakdown[category]) {
+                    riskBreakdown[category].deduction += deduction;
+                    riskBreakdown[category].details.push(detail);
+                }
+            }
+
+            questionData.forEach(q => {
+                const answer = userAnswers[q.id];
+                if (!answer) return; // Skip if no answer
+
+                // Q1: Home age (Wiring Safety)
+                if (q.id === 'q1') {
+                    if (answer === 'pre1960') {
+                        addFinding('Wiring Safety', 20, 'Your home is Pre-1960. Older wiring may not meet modern safety standards.');
+                    } else if (answer === '1960s') {
+                        addFinding('Wiring Safety', 15, 'Your home was built in the 1960s. Some older wiring methods like aluminum wiring were common, posing fire risks.');
+                    } else if (answer === '1970s') {
+                        addFinding('Wiring Safety', 10, 'Your home was built in the 1970s. Aluminum wiring was sometimes used, which can degrade and pose fire hazards.');
+                    } else if (answer === '1980s') {
+                        addFinding('Wiring Safety', 5, 'Your home was built in the 1980s. Early 3-wire systems can still have issues and may not be sufficient for modern loads.');
+                    }
+                }
+
+                // Q2: Panel type (Panel Safety)
+                if (q.id === 'q2') {
+                    if (answer === 'federalpacific') {
+                        addFinding('Panel Safety', 30, 'You have a Federal Pacific/Zinsco panel. These are known fire hazards.');
+                        criticalFindings.push({
+                            title: '⚠️ FIRE RISK: Federal Pacific/Zinsco Panel Detected!',
+                            description: 'Federal Pacific Electric (FPE) panels have a documented failure rate of up to 80% for some breakers. These panels are no longer manufactured and many experts recommend immediate replacement. Estimated cost: $1,500-2,500 for a modern 200A panel upgrade.'
+                        });
+                        estimatedUpgradeCost += 2000; // Average for FPE replacement
+                    } else if (answer === 'fusebox') {
+                        addFinding('Panel Safety', 20, 'You have an old fuse box. These provide less protection than modern breakers and can be easily overloaded, leading to safety risks.');
+                        estimatedUpgradeCost += 1800; // Average for fuse box upgrade
+                    } else if (answer === 'dontknow_panel') {
+                        addFinding('Panel Safety', 10, 'Uncertainty about your panel type indicates a potential knowledge gap about a critical component of your electrical system. A professional inspection is recommended.');
+                    }
+                }
+
+                // Q3: Amperage (Load Capacity)
+                if (q.id === 'q3') {
+                    if (answer === '60a') {
+                        addFinding('Load Capacity', 15, '60A electrical service is severely undersized for modern homes and appliances, leading to frequent trips and potential overloads.');
+                        // Shreveport specific content
+                        if (userAddressInput.value.toLowerCase().includes('shreveport') || userAddressInput.value.toLowerCase().includes('blanchard')) {
+                            riskBreakdown['Load Capacity'].details.push('Many Shreveport homes built in the 1950s-1970s still have original 60A panels — adequate for that era but dangerously undersized for modern AC units, EV chargers, and smart home systems.');
+                        }
+                        estimatedUpgradeCost += 2000; // Estimate for service upgrade
+                    } else if (answer === '100a') {
+                        addFinding('Load Capacity', 5, '100A electrical service can be adequate for smaller homes but may struggle with modern electrical demands, especially with large appliances.');
+                         if (userAddressInput.value.toLowerCase().includes('shreveport') || userAddressInput.value.toLowerCase().includes('blanchard')) {
+                            riskBreakdown['Load Capacity'].details.push('Many Shreveport homes built in the 1950s-1970s still have original 100A panels — adequate for that era but dangerously undersized for modern AC units, EV chargers, and smart home systems.');
+                        }
+                    }
+                }
+
+                // Q4: 2-prong outlets (Wiring Safety)
+                if (q.id === 'q4') {
+                    if (answer === 'many') {
+                        addFinding('Wiring Safety', 15, 'Many 2-prong outlets indicate a lack of grounding throughout your home, significantly increasing shock risk and appliance damage.');
+                    } else if (answer === 'some') {
+                        addFinding('Wiring Safety', 8, 'Some 2-prong outlets suggest partial grounding, but risks remain in ungrounded areas, especially in kitchens and bathrooms.');
+                    }
+                    // Critical finding for pre-1960 home with 2-prong
+                    if (userAnswers.q1 === 'pre1960' && (answer === 'many' || answer === 'some')) {
+                        criticalFindings.push({
+                            title: '⚠️ Old Wiring System: Pre-1960 Home with 2-prong Outlets!',
+                            description: 'Your home likely has knob-and-tube or early NM wiring without a ground conductor. This wiring is functional but cannot safely handle modern electrical loads. Insurance companies may require upgrades. Consider an electrical upgrade for enhanced safety and functionality.'
+                        });
+                        estimatedUpgradeCost += 3000; // Estimate for partial rewire/upgrade
+                    }
+                }
+
+                // Q5: GFCI outlets (Ground Protection) - multi-choice
+                if (q.id === 'q5' && Array.isArray(answer)) {
+                    if (!answer.includes('bathroom')) {
+                        addFinding('Ground Protection', 8, 'Missing GFCI protection in the bathroom increases shock hazard near water.');
+                        estimatedUpgradeCost += 150; // Per outlet
+                    }
+                    if (!answer.includes('kitchen')) {
+                        addFinding('Ground Protection', 6, 'Missing GFCI protection in the kitchen increases shock hazard near water and appliances.');
+                        estimatedUpgradeCost += 150;
+                    }
+                    if (!answer.includes('garage')) {
+                        addFinding('Ground Protection', 4, 'Missing GFCI protection in the garage leaves power tools and outdoor equipment unprotected.');
+                        estimatedUpgradeCost += 150;
+                    }
+                    if (!answer.includes('outdoor')) {
+                        addFinding('Ground Protection', 4, 'Missing GFCI protection outdoors is a significant safety risk, especially in wet conditions.');
+                        estimatedUpgradeCost += 150;
+                    }
+                }
+
+                // Q6: Flickering lights (Maintenance)
+                if (q.id === 'q6') {
+                    if (answer === 'constantly') {
+                        addFinding('Maintenance', 8, 'Constantly flickering lights often point to severe underlying issues like loose wiring, overloaded circuits, or utility problems.');
+                    } else if (answer === 'frequently') {
+                        addFinding('Maintenance', 8, 'Frequently flickering lights suggest persistent circuit overloads or faulty connections that need immediate investigation.');
+                    } else if (answer === 'occasionally') {
+                        addFinding('Maintenance', 3, 'Occasionally flickering lights can be a sign of minor issues, appliance startup demands, or early signs of a developing problem.');
+                    }
+                }
+
+                // Q7: Warm outlets/switches (Wiring Safety)
+                if (q.id === 'q7' && answer === 'yes') {
+                    addFinding('Wiring Safety', 20, 'Warm outlets/switches are a serious indicator of loose connections or overloaded circuits — a leading cause of electrical fires.');
+                    criticalFindings.push({
+                        title: '⚠️ IMMEDIATE HAZARD: Warm Outlets/Switches Detected!',
+                        description: 'Warm outlets indicate loose connections or overloaded circuits — a leading cause of electrical fires. Do not use these outlets until inspected by a licensed electrician.'
+                    });
+                }
+
+                // Q8: Breaker trips (Panel Safety)
+                if (q.id === 'q8') {
+                    if (answer === 'weekly') {
+                        addFinding('Panel Safety', 15, 'Weekly breaker trips indicate persistent circuit overloads or faulty breakers, requiring immediate attention to prevent hazards.');
+                    } else if (answer === 'monthly') {
+                        addFinding('Panel Safety', 8, 'Monthly breaker trips suggest circuits are often at their limit or specific appliances cause intermittent issues, indicating potential capacity problems.');
+                    }
+                }
+
+                // Q9: Power strips as permanent solutions (Load Capacity)
+                if (q.id === 'q9') {
+                    if (answer === 'many') {
+                        addFinding('Load Capacity', 10, 'Many permanent power strips/extension cords suggest an insufficient number of outlets or overloaded circuits, increasing fire risk.');
+                    } else if (answer === 'afew') {
+                        addFinding('Load Capacity', 5, 'A few permanent power strips/extension cords might indicate minor outlet shortages, which could still lead to localized overloads.');
+                    }
+                }
+
+                // Q10: Lights dim with AC (Load Capacity)
+                if (q.id === 'q10' && answer === 'yes') {
+                    addFinding('Load Capacity', 8, 'Lights dimming when large appliances start indicates an undersized electrical service or circuit issues, leading to power fluctuations.');
+                }
+
+                // Q11: Last inspection (Maintenance)
+                if (q.id === 'q11') {
+                    if (answer === 'never') {
+                        addFinding('Maintenance', 10, 'Never having a professional electrical inspection means potential safety issues could go undetected for years, increasing risk.');
+                    } else if (answer === '5-10yr') {
+                        addFinding('Maintenance', 5, 'An inspection 5-10 years ago means many changes and wear could have occurred since then, making an updated assessment crucial.');
+                    } else if (answer === '1-5yr') {
+                        addFinding('Maintenance', 2, 'An inspection 1-5 years ago is good, but regular checks (every 3-5 years) are still recommended to maintain optimal safety.');
+                    }
+                }
+
+                // Q12: Whole-home surge protector (Ground Protection)
+                if (q.id === 'q12' && (answer === 'no' || answer === 'whats_that')) {
+                    addFinding('Ground Protection', 5, 'Lack of a whole-home surge protector leaves your electronics vulnerable to power surges from lightning or grid fluctuations, risking costly damage.');
+                    // Shreveport specific content
+                    if (userAddressInput.value.toLowerCase().includes('shreveport') || userAddressInput.value.toLowerCase().includes('blanchard')) {
+                        riskBreakdown['Ground Protection'].details.push('Shreveport averages 50+ thunderstorm days per year — more than most US cities. Without whole-home surge protection, a single lightning strike can destroy thousands in electronics.');
+                    }
+                    if (answer === 'whats_that') {
+                        riskBreakdown['Ground Protection'].details.push('A whole-home surge protector guards all your home\'s electronics from damaging power surges, offering far superior protection than individual power strips.');
+                    }
+                    estimatedUpgradeCost += 500; // Estimate for whole home surge protector
+                }
+            });
+
+            // Ensure score doesn't go below 0
+            score = Math.max(0, Math.round(score));
+
+            displayResults(score, criticalFindings, riskBreakdown, estimatedUpgradeCost);
+        }
+
+        function displayResults(finalScore, criticalFindingsArr, riskBreakdownObj, estimatedCost) {
+            // Update score text with animation
+            let currentScore = 0;
+            const scoreAnimationInterval = setInterval(() => {
+                if (currentScore < finalScore) {
+                    currentScore++;
+                    scoreText.textContent = currentScore;
+                } else {
+                    clearInterval(scoreAnimationInterval);
+                }
+            }, 20); // Adjust speed
+
+            // Update gauge fill
+            const gaugeRotation = (finalScore / 100) * 180; // Max 180 degrees for half circle
+            scoreGaugeFill.style.transform = `rotate(${45 + gaugeRotation}deg)`; // Start at 45deg to align bottom
+
+            scoreGaugeFill.classList.remove('score-low', 'score-medium', 'score-high');
+            if (finalScore < 40) {
+                scoreGaugeFill.classList.add('score-low');
+            } else if (finalScore < 70) {
+                scoreGaugeFill.classList.add('score-medium');
+            } else {
+                scoreGaugeFill.classList.add('score-high');
+            }
+
+
+            // Display Critical Findings
+            criticalFindingsContainer.innerHTML = '';
+            if (criticalFindingsArr.length > 0) {
+                criticalFindingsArr.forEach(finding => {
+                    const div = document.createElement('div');
+                    div.classList.add('critical-finding');
+                    div.innerHTML = `<strong class="text-danger-red">${finding.title}</strong><p class="mt-2">${finding.description}</p>`;
+                    criticalFindingsContainer.appendChild(div);
+                });
+            } else {
+                criticalFindingsContainer.innerHTML = `<div class="p-4 rounded-lg bg-green-900 border border-green-600 text-green-200">
+                    <p class="font-semibold text-lg flex items-center"><svg class="lucide lucide-check-circle mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> No immediate critical hazards detected.</p>
+                    <p class="mt-1 text-sm">However, please review the full risk breakdown for comprehensive insights.</p>
+                </div>`;
+            }
+
+            // Display Risk Breakdown
+            riskBreakdownContainer.innerHTML = '';
+            for (const category in riskBreakdownObj) {
+                const data = riskBreakdownObj[category];
+                if (data.deduction > 0) { // Only show categories with deductions
+                    const percentage = (data.deduction / data.max) * 100; // How much of the max risk is realized
+                    const barWidth = Math.min(100, percentage);
+
+                    let riskLevel = 'low';
+                    if (percentage >= 70) riskLevel = 'high';
+                    else if (percentage >= 40) riskLevel = 'medium';
+
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.classList.add('mb-4');
+                    categoryDiv.innerHTML = `
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold">${category}</span>
+                            <span class="text-sm text-gray-400">Score Impact: -${data.deduction} pts</span>
+                        </div>
+                        <div class="risk-bar-container">
+                            <div class="risk-bar-fill ${riskLevel}" style="width: ${barWidth}%;"></div>
+                        </div>
+                        <ul class="list-disc list-inside mt-2 text-gray-300 text-sm">
+                            ${data.details.map(detail => `<li>${detail}</li>`).join('')}
+                        </ul>
+                    `;
+                    riskBreakdownContainer.appendChild(categoryDiv);
+                }
+            }
+            if (Object.values(riskBreakdownObj).every(rb => rb.deduction === 0)) {
+                riskBreakdownContainer.innerHTML = `<div class="p-4 rounded-lg bg-green-900 border border-green-600 text-green-200">
+                    <p class="font-semibold text-lg flex items-center"><svg class="lucide lucide-thumbs-up mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12c0 1.1.9 2 2 2h7.9a2 2 0 0 0 1.9-2.1L21 13V8a2 2 0 0 0-2-2h-2.2L16 2"/><path d="M4 12v6a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-6"/></svg> Great job! Minimal risks detected in your home's electrical system.</p>
+                </div>`;
+            }
+
+
+            // Display Recommendations & Shreveport Content
+            recommendationsContainer.innerHTML = `<h3 class="text-2xl font-bold mb-4">Recommendations & Insights</h3>`;
+            if (estimatedCost > 0) {
+                recommendationsContainer.innerHTML += `<div class="p-4 bg-gray-800 rounded-lg mb-4">
+                    <p class="font-semibold text-lg text-lightning-yellow">Estimated Upgrade Costs:</p>
+                    <p class="text-white mt-1">Based on your assessment, estimated costs for recommended upgrades could range from <strong>$${Math.max(0, estimatedCost - 250)} - $${estimatedCost + 250}</strong> (e.g., panel upgrade, partial rewire, GFCI installation). This will vary based on specific needs.</p>
+                    <p class="text-sm text-gray-400 mt-2"><em>This is a preliminary estimate; a professional inspection is required for an accurate quote.</em></p>
+                </div>`;
+            }
+
+            // General Shreveport-specific insights
+            let shreveportInsights = [];
+            const userLocation = userAddressInput.value.toLowerCase();
+            const isShreveport = userLocation.includes('shreveport') || userLocation.includes('blanchard');
+
+            if (isShreveport) {
+                // Add general Shreveport content if not already covered by specific findings
+                if (!riskBreakdown['Ground Protection'].details.some(d => d.includes('Shreveport averages 50+ thunderstorm days'))) {
+                     shreveportInsights.push("<strong>Shreveport averages 50+ thunderstorm days per year</strong> — more than most US cities. Without whole-home surge protection, a single lightning strike can destroy thousands in electronics.");
+                }
+                if (!riskBreakdown['Load Capacity'].details.some(d => d.includes('Many Shreveport homes built in the 1950s-1970s'))) {
+                    shreveportInsights.push("Many Shreveport homes built in the 1950s-1970s still have original 60A or 100A panels — adequate for that era but dangerously undersized for modern AC units, EV chargers, and smart home systems.");
+                }
+                // Reference Barksdale AFB housing if relevant
+                if (userLocation.includes('barksdale') || userLocation.includes('afb')) {
+                    shreveportInsights.push("If you're in Barksdale AFB housing, ensure your electrical system is up-to-date with current base regulations and safety standards. Regular inspections are particularly important for older on-base properties.");
+                }
+            }
+
+            if (shreveportInsights.length > 0) {
+                recommendationsContainer.innerHTML += `<div class="p-4 bg-blue-900 rounded-lg mb-4">
+                    <p class="font-semibold text-lg text-primary-blue">Local Insights for Shreveport/Blanchard Residents:</p>
+                    <ul class="list-disc list-inside mt-2 text-blue-200 text-sm">
+                        ${shreveportInsights.map(insight => `<li>${insight}</li>`).join('')}
+                    </ul>
+                </div>`;
+            }
+
+            if (shreveportInsights.length === 0 && estimatedCost === 0 && criticalFindingsArr.length === 0 && Object.values(riskBreakdownObj).every(rb => rb.deduction === 0)) {
+                 recommendationsContainer.innerHTML += `<div class="p-4 rounded-lg bg-gray-800 border border-gray-600 text-gray-300">
+                    <p class="font-semibold text-lg flex items-center"><svg class="lucide lucide-info mr-2 lucide-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg> No specific upgrade recommendations at this time.</p>
+                    <p class="mt-1 text-sm">Your electrical system appears to be in good condition based on your answers. Regular maintenance and inspections are still recommended.</p>
+                </div>`;
+            }
+
+
+            // Update shareable link
+            shareLinkInput.value = `My home scored ${finalScore}/100 on electrical safety — check yours! (from Lightning Electric)`;
+            lucide.createIcons(); // Ensure icons in results screen are rendered
+        }
+
+        // --- Event Listeners ---
+        startAssessmentBtn.addEventListener('click', () => showScreen(1)); // Move to Address Screen
+        addressNextBtn.addEventListener('click', navigateNext);
+        backBtn.addEventListener('click', navigateBack);
+        nextBtn.addEventListener('click', navigateNext);
+
+        copyShareLinkBtn.addEventListener('click', () => {
+            shareLinkInput.select();
+            document.execCommand('copy');
+            copyMessage.classList.add('opacity-100');
+            setTimeout(() => {
+                copyMessage.classList.remove('opacity-100');
+            }, 2000);
+        });
+
+        getPdfReportBtn.addEventListener('click', () => {
+            const element = document.getElementById('printable-area'); // Target the main container for PDF
+            const opt = {
+                margin: 1,
+                filename: 'LightningElectric_SafetyReport.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        });
+
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen(0); // Show welcome screen first
+            userAnswers.questionNumber = 1; // Initialize question tracker
+            // Try to load address from local storage
+            const savedAddress = localStorage.getItem('userAddress');
+            if (savedAddress) {
+                userAddressInput.value = savedAddress;
+            }
+            lucide.createIcons(); // Ensure all initial icons are created
+        });
+    </script>
+<script>// Anti-scrape protection — injected into all tool pages
+(function(){
+  // Disable right-click context menu
+
+  
+  
+  // Disable text selection on body (forms still selectable)
+  
+  
+  // Re-enable for inputs/textareas
+  document.querySelectorAll('input,textarea,select').forEach(function(el){
+    el.style.userSelect = 'auto'; el.style.webkitUserSelect = 'auto';
+  });
+  
+  // Disable drag
+  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  
+  // Disable print
+  var style = document.createElement('style');
+  style.textContent = '@media print { body { display: none !important; } }';
+  document.head.appendChild(style);
+  
+  // Add invisible watermark
+  var wm = document.createElement('div');
+  wm.style.cssText = 'position:fixed;bottom:0;right:0;opacity:0.03;font-size:10px;pointer-events:none;z-index:99999;color:#000;';
+  wm.textContent = 'Licensed demo — bennycutools.com — ' + new Date().toISOString().slice(0,10);
+  document.body.appendChild(wm);
+  
+  // Detect devtools (basic)
+  var threshold = 160;
+  setInterval(function(){
+    if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>This demo is proprietary. Please contact ben@bennycutools.com for licensing.</h1></div>';
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

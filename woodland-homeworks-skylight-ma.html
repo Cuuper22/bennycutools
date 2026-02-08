@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skylight ROI & Energy Savings Calculator - Massachusetts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 25px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #f6d365;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(246, 211, 101, 0.4);
+        }
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        .results.visible {
+            display: block;
+        }
+        .result-card {
+            background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result-card h2 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .result-card .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .comparison-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .comparison-card.recommended {
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        .comparison-card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .comparison-card .price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #f6a93d;
+            margin: 10px 0;
+        }
+        .comparison-card ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .savings-breakdown {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .savings-breakdown h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .savings-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .savings-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #f6a93d;
+        }
+        .timeline {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        .timeline h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .timeline-bar {
+            background: #e2e8f0;
+            height: 40px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .timeline-fill {
+            background: linear-gradient(90deg, #f6d365 0%, #fda085 100%);
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        .info-box {
+            background: #fff5e6;
+            border-left: 4px solid #f6a93d;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .info-box strong {
+            color: #c97c14;
+        }
+        .benefit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .benefit-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+        }
+        .benefit-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .benefit-item h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .benefit-item p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            .result-card .big-number {
+                font-size: 2.2em;
+            }
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>☀️ Skylight ROI & Energy Savings Calculator</h1>
+            <p>Discover Your 20-Year Return on Natural Light Investment</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2 style="margin-bottom: 25px; color: #2d3748;">Enter Your Home Details</h2>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Home Value ($)</label>
+                        <input type="number" id="homeValue" value="500000" min="100000" step="10000">
+                    </div>
+                    <div class="input-group">
+                        <label>Number of Skylights to Install</label>
+                        <input type="number" id="numSkylights" value="2" min="1" max="10">
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Skylight Type</label>
+                        <select id="skylightType">
+                            <option value="fixed">Fixed (non-opening, light only)</option>
+                            <option value="manual">Manual Venting (operable, light + air circulation)</option>
+                            <option value="solar" selected>Solar Venting (solar-powered, rain sensor)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Primary Room Type</label>
+                        <select id="roomType">
+                            <option value="living">Living Room / Great Room</option>
+                            <option value="kitchen" selected>Kitchen</option>
+                            <option value="bedroom">Bedroom / Master Suite</option>
+                            <option value="bathroom">Bathroom</option>
+                            <option value="office">Home Office</option>
+                            <option value="hallway">Hallway / Dark Corridor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Monthly Electric Bill (Winter Average) ($)</label>
+                        <input type="number" id="electricBill" value="200" min="50" step="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Years Planning to Stay in Home</label>
+                        <input type="number" id="yearsStaying" value="15" min="5" max="50">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Massachusetts Location</label>
+                    <select id="location">
+                        <option value="greater-boston" selected>Greater Boston Area</option>
+                        <option value="north-shore">North Shore (Salem, Gloucester)</option>
+                        <option value="south-shore">South Shore (Quincy, Plymouth)</option>
+                        <option value="worcester">Worcester County</option>
+                        <option value="western-ma">Western Massachusetts</option>
+                    </select>
+                </div>
+
+                <button class="calculate-btn" onclick="calculateROI()">Calculate My Savings</button>
+            </div>
+
+            <div class="results" id="results">
+                <div class="result-card">
+                    <h2>Your 20-Year Total Value Created</h2>
+                    <div class="big-number" id="totalValue">$0</div>
+                    <p>Energy savings + property value increase + wellness benefits</p>
+                </div>
+
+                <div class="info-box">
+                    <strong>Net ROI:</strong> <span id="netROI">0%</span> | 
+                    <strong>Payback Period:</strong> <span id="paybackPeriod">0 years</span> | 
+                    <strong>Daily Cost:</strong> <span id="dailyCost">$0</span> over <span id="lifespan">30 years</span>
+                </div>
+
+                <div class="benefit-grid">
+                    <div class="benefit-item">
+                        <div class="icon">💡</div>
+                        <h4>Lighting Savings</h4>
+                        <p id="lightingSavings">$0/year</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">❄️</div>
+                        <h4>HVAC Savings</h4>
+                        <p id="hvacSavings">$0/year</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">🏠</div>
+                        <h4>Home Value Increase</h4>
+                        <p id="homeValueIncrease">$0</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">😊</div>
+                        <h4>Wellness Value</h4>
+                        <p id="wellnessValue">Improved mood & health</p>
+                    </div>
+                </div>
+
+                <div class="comparison-grid" id="comparisonGrid"></div>
+
+                <div class="savings-breakdown">
+                    <h3>💰 20-Year Value Breakdown</h3>
+                    <div class="savings-item">
+                        <span>Reduced Electric Lighting (6-8 hrs/day):</span>
+                        <span id="totalLightingSavings">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>HVAC Savings (solar venting):</span>
+                        <span id="totalHvacSavings">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Property Value Increase (6% in MA):</span>
+                        <span id="totalPropertyValue">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Mental Health/Wellness (SAD reduction):</span>
+                        <span id="totalWellness">Priceless</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Total Value Created:</span>
+                        <span id="totalValueBreakdown">$0</span>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <h3>⏱️ Payback Timeline</h3>
+                    <p style="color: #4a5568; margin-bottom: 15px;">Time until your energy savings equal the installation cost</p>
+                    <div class="timeline-bar">
+                        <div class="timeline-fill" id="timelineFill" style="width: 0%">
+                            <span id="timelineText"></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #718096; font-size: 0.9em;">
+                        <span>Today</span>
+                        <span>20 Years</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>☀️ New England Climate Benefits:</strong> In Massachusetts' dark winters (only 9-10 hours of daylight December-January), skylights combat Seasonal Affective Disorder (SAD) by flooding your home with natural light. Velux skylights feature thermal insulation (R-value 2.8+) to handle harsh New England winters, rain sensors for automatic closing, and solar-powered venting that reduces summer cooling loads by 10-15%. Greater Boston's climate makes natural light especially valuable — and skylights deliver it year-round.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateROI() {
+            // Get inputs
+            const homeValue = parseFloat(document.getElementById('homeValue').value);
+            const numSkylights = parseInt(document.getElementById('numSkylights').value);
+            const skylightType = document.getElementById('skylightType').value;
+            const roomType = document.getElementById('roomType').value;
+            const electricBill = parseFloat(document.getElementById('electricBill').value);
+            const yearsStaying = parseInt(document.getElementById('yearsStaying').value);
+            const location = document.getElementById('location').value;
+
+            // Skylight costs by type
+            const costPerSkylight = {
+                'fixed': 1800,
+                'manual': 2400,
+                'solar': 3200
+            };
+            const totalCost = costPerSkylight[skylightType] * numSkylights;
+
+            // Lighting savings (skylights reduce electric lighting 6-8 hrs/day)
+            const lightingPercentReduction = 0.12; // 12% of electric bill is lighting
+            const hoursLightingSaved = 7; // Average 7 hours/day natural light replaces artificial
+            const lightingSavingsPerSkylight = (electricBill * 12 * lightingPercentReduction) * (hoursLightingSaved / 24);
+            const annualLightingSavings = lightingSavingsPerSkylight * numSkylights;
+
+            // HVAC savings (solar venting reduces cooling load, thermal insulation reduces heating)
+            let hvacSavingsMultiplier = 0;
+            if (skylightType === 'solar') {
+                hvacSavingsMultiplier = 0.10; // 10% HVAC savings from solar venting + insulation
+            } else if (skylightType === 'manual') {
+                hvacSavingsMultiplier = 0.07; // 7% from manual venting
+            } else {
+                hvacSavingsMultiplier = 0.04; // 4% from thermal insulation only
+            }
+            const annualHvacSavings = (electricBill * 12 * 0.4) * hvacSavingsMultiplier; // 40% of bill is HVAC
+
+            // Total annual energy savings
+            const totalAnnualSavings = annualLightingSavings + annualHvacSavings;
+
+            // 20-year energy savings with 3% annual energy inflation
+            let totalEnergySavings = 0;
+            for (let year = 1; year <= 20; year++) {
+                totalEnergySavings += totalAnnualSavings * Math.pow(1.03, year - 1);
+            }
+
+            // Property value increase (6% in MA for skylights in dark climate)
+            const propertyValueIncrease = homeValue * 0.06;
+
+            // Total value created
+            const totalValue = totalEnergySavings + propertyValueIncrease;
+
+            // Net ROI
+            const netROI = ((totalValue - totalCost) / totalCost) * 100;
+
+            // Payback period
+            const paybackYears = totalCost / totalAnnualSavings;
+
+            // Daily cost over lifespan (30 years typical)
+            const lifespan = 30;
+            const dailyCost = totalCost / (lifespan * 365);
+
+            // Display results
+            document.getElementById('totalValue').textContent = '$' + Math.round(totalValue).toLocaleString();
+            document.getElementById('netROI').textContent = Math.round(netROI) + '%';
+            document.getElementById('paybackPeriod').textContent = paybackYears.toFixed(1) + ' years';
+            document.getElementById('dailyCost').textContent = '$' + dailyCost.toFixed(2);
+            document.getElementById('lifespan').textContent = lifespan + ' years';
+
+            document.getElementById('lightingSavings').textContent = '$' + Math.round(annualLightingSavings).toLocaleString() + '/year';
+            document.getElementById('hvacSavings').textContent = '$' + Math.round(annualHvacSavings).toLocaleString() + '/year';
+            document.getElementById('homeValueIncrease').textContent = '+$' + Math.round(propertyValueIncrease).toLocaleString();
+            document.getElementById('wellnessValue').textContent = 'SAD reduction in MA winters';
+
+            document.getElementById('totalLightingSavings').textContent = '$' + Math.round(totalEnergySavings * (annualLightingSavings / totalAnnualSavings)).toLocaleString();
+            document.getElementById('totalHvacSavings').textContent = '$' + Math.round(totalEnergySavings * (annualHvacSavings / totalAnnualSavings)).toLocaleString();
+            document.getElementById('totalPropertyValue').textContent = '$' + Math.round(propertyValueIncrease).toLocaleString();
+            document.getElementById('totalValueBreakdown').textContent = '$' + Math.round(totalValue).toLocaleString();
+
+            // Timeline visualization
+            const timelinePercent = Math.min((paybackYears / 20) * 100, 100);
+            document.getElementById('timelineFill').style.width = timelinePercent + '%';
+            document.getElementById('timelineText').textContent = paybackYears.toFixed(1) + ' years';
+
+            // Comparison cards
+            const comparisonGrid = document.getElementById('comparisonGrid');
+            const fixedCost = costPerSkylight['fixed'] * numSkylights;
+            const manualCost = costPerSkylight['manual'] * numSkylights;
+            const solarCost = costPerSkylight['solar'] * numSkylights;
+
+            const solarBadge = (skylightType === 'solar') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+            const manualBadge = (skylightType === 'manual') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+            const fixedBadge = (skylightType === 'fixed') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+
+            comparisonGrid.innerHTML = `
+                <div class="comparison-card ${skylightType === 'solar' ? 'recommended' : ''}">
+                    ${solarBadge}
+                    <h3>☀️ Solar Venting Velux</h3>
+                    <div class="price">$${solarCost.toLocaleString()}</div>
+                    <ul>
+                        <li>Solar-powered opening (button control)</li>
+                        <li>Rain sensor (auto-closes)</li>
+                        <li>Natural light + air circulation</li>
+                        <li>10-15% HVAC savings</li>
+                        <li>Best energy efficiency</li>
+                        <li>Perfect for out-of-reach locations</li>
+                        <li>Lifetime: 30+ years</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card ${skylightType === 'manual' ? 'recommended' : ''}">
+                    ${manualBadge}
+                    <h3>🔧 Manual Venting Velux</h3>
+                    <div class="price">$${manualCost.toLocaleString()}</div>
+                    <ul>
+                        <li>Manual crank operation</li>
+                        <li>Natural light + air circulation</li>
+                        <li>7% HVAC savings</li>
+                        <li>Good energy efficiency</li>
+                        <li>Affordable operable option</li>
+                        <li>Best for reachable areas</li>
+                        <li>Lifetime: 30+ years</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card ${skylightType === 'fixed' ? 'recommended' : ''}">
+                    ${fixedBadge}
+                    <h3>🔒 Fixed (Non-Opening)</h3>
+                    <div class="price">$${fixedCost.toLocaleString()}</div>
+                    <ul>
+                        <li>Natural light only (no ventilation)</li>
+                        <li>Sealed unit (no drafts)</li>
+                        <li>4% HVAC savings (insulation only)</li>
+                        <li>Most affordable option</li>
+                        <li>Perfect for bedrooms/living rooms</li>
+                        <li>Keeps allergens/pollutants out</li>
+                        <li>Lifetime: 30+ years</li>
+                    </ul>
+                </div>
+            `;
+
+            // Show results
+            document.getElementById('results').classList.add('visible');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Calculate on page load with defaults
+        window.addEventListener('load', () => {
+            calculateROI();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1361 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butler Alignment & Brake - Vehicle Health Checker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary-dark: #1a2332;
+            --accent-red: #c0392b;
+            --light-gray: #f5f5f5;
+            --text-on-dark: #ffffff;
+            --text-on-light: #1a2332;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+            color: var(--text-on-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            background-color: var(--primary-dark);
+            color: var(--text-on-dark);
+        }
+        body.dark-mode .bg-white { background-color: #2a3447 !important; }
+        body.dark-mode .text-gray-800 { color: var(--text-on-dark) !important; }
+        body.dark-mode .border-gray-300 { border-color: #4a5a73 !important; }
+        body.dark-mode .shadow-md { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -1px rgba(0,0,0,0.15) !important; }
+        body.dark-mode input, body.dark-mode select {
+            background-color: #3a475e !important;
+            color: var(--text-on-dark) !important;
+            border-color: #4a5a73 !important;
+        }
+        body.dark-mode input::placeholder { color: #ccc !important; }
+        body.dark-mode .bg-light-gray-background { background-color: #2a3447 !important; }
+        body.dark-mode .border-light-gray-border { border-color: #4a5a73 !important; }
+
+
+        /* Custom animations */
+        .slide-enter-active, .slide-leave-active {
+            transition: transform 0.35s ease-out;
+        }
+        .slide-enter-from {
+            transform: translateX(100%);
+        }
+        .slide-leave-to {
+            transform: translateX(-100%);
+            position: absolute; /* To allow slide-enter-from to start from right */
+        }
+        .slide-enter-to, .slide-leave-from {
+            transform: translateX(0);
+        }
+
+        .hidden-screen {
+            display: none;
+        }
+
+        /* Gauge styling */
+        .gauge-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        .circular-chart {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .gauge-bg, .gauge-fill {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+        }
+        .gauge-bg {
+            stroke: #e0e0e0;
+        }
+        .gauge-fill {
+            transition: stroke-dashoffset 1s ease-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .gauge-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* CSS Illustrations */
+        .steering-wheel {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 8px solid var(--primary-dark);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 0 2px #fff;
+        }
+        .steering-wheel::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 8px;
+            background-color: var(--primary-dark);
+            transform: translateY(-50%);
+            top: 50%;
+        }
+        .steering-wheel::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 60%;
+            background-color: var(--primary-dark);
+            transform: translateX(-50%);
+            left: 50%;
+        }
+
+        .tire-diagram {
+          width: 100px;
+          height: 100px;
+          border: 2px solid var(--primary-dark);
+          background-color: #f0f0f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          text-align: center;
+          position: relative;
+          cursor: pointer;
+          border-radius: 8px;
+        }
+        .tire-diagram.selected {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px var(--accent-red);
+        }
+        .tire-diagram::before {
+            content: '';
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2px dashed #999;
+        }
+        .tire-diagram-inner-edge .wear-area {
+            position: absolute;
+            width: 30%;
+            height: 100%;
+            left: 0;
+            background-color: var(--accent-red);
+            opacity: 0.7;
+        }
+        .tire-diagram-outer-edge .wear-area {
+            position: absolute;
+            width: 30%;
+            height: 100%;
+            right: 0;
+            background-color: var(--accent-red);
+            opacity: 0.7;
+        }
+        .tire-diagram-center .wear-area {
+            position: absolute;
+            width: 40%;
+            height: 100%;
+            background-color: var(--accent-red);
+            opacity: 0.7;
+        }
+        .tire-diagram-cupping .wear-area {
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            border-radius: 50%;
+            background-color: var(--accent-red);
+            opacity: 0.7;
+            animation: cupping-pulse 1s infinite alternate;
+        }
+
+        @keyframes cupping-pulse {
+            from { transform: scale(0.9); opacity: 0.7; }
+            to { transform: scale(1.1); opacity: 0.9; }
+        }
+
+
+        .car-pull-indicator {
+          width: 120px;
+          height: 60px;
+          border: 2px solid var(--primary-dark);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: space-around;
+          padding: 0 10px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          background-color: #f0f0f0;
+        }
+        .car-pull-indicator.selected {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 0 3px var(--accent-red);
+        }
+        .car-pull-indicator::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 2px;
+          background-color: var(--primary-dark);
+          top: 50%;
+          left: 0;
+          transform: translateY(-50%);
+        }
+        .car-pull-arrow {
+          font-size: 2rem;
+          line-height: 1;
+          color: var(--primary-dark);
+          z-index: 1;
+        }
+        .car-pull-indicator[data-value="left"].selected .car-pull-arrow.left,
+        .car-pull-indicator[data-value="right"].selected .car-pull-arrow.right {
+          color: var(--accent-red);
+        }
+        .car-pull-indicator[data-value="neither"].selected {
+            background-color: var(--accent-red);
+            color: white;
+        }
+        .car-pull-indicator[data-value="neither"].selected .car-pull-arrow {
+            color: white;
+        }
+
+        /* Fluid spot color picker */
+        .fluid-color-box {
+          width: 50px;
+          height: 50px;
+          border: 2px solid var(--primary-dark);
+          border-radius: 8px;
+          cursor: pointer;
+          position: relative;
+          transition: transform 0.2s ease;
+        }
+        .fluid-color-box:hover {
+          transform: scale(1.05);
+        }
+        .fluid-color-box.selected {
+          border-color: var(--accent-red);
+          box-shadow: 0 0 0 3px var(--accent-red);
+        }
+        .fluid-color-box.selected::after {
+          content: '✓';
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background-color: var(--accent-red);
+          color: white;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+          font-weight: bold;
+        }
+
+        /* Car illustration for steering wheel question */
+        .car-illustration {
+          width: 100%;
+          max-width: 300px;
+          height: 150px;
+          position: relative;
+          margin: 20px auto;
+          border: 2px solid var(--primary-dark);
+          border-radius: 10px;
+          background-color: #e0e0e0;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          align-items: center;
+          padding: 10px 0;
+          box-sizing: border-box;
+        }
+
+        .car-illustration::before, .car-illustration::after {
+          content: '';
+          position: absolute;
+          height: 10px;
+          width: 80%;
+          background-color: #a0a0a0;
+          left: 10%;
+        }
+
+        .car-illustration::before {
+          top: 20px;
+        }
+
+        .car-illustration::after {
+          bottom: 20px;
+        }
+
+        .car-body {
+          width: 80%;
+          height: 50px;
+          background-color: #555;
+          border-radius: 5px;
+          position: relative;
+          z-index: 1;
+        }
+
+        .car-window {
+          position: absolute;
+          width: 30%;
+          height: 30px;
+          background-color: #b0c4de;
+          top: -10px;
+          left: 35%;
+          border-radius: 5px 5px 0 0;
+        }
+
+        .car-wheel {
+          width: 40px;
+          height: 40px;
+          background-color: #333;
+          border-radius: 50%;
+          position: absolute;
+          border: 2px solid #666;
+          z-index: 0;
+        }
+        .car-wheel.front-left { top: 15px; left: 10%; }
+        .car-wheel.front-right { top: 15px; right: 10%; }
+        .car-wheel.rear-left { bottom: 15px; left: 10%; }
+        .car-wheel.rear-right { bottom: 15px; right: 10%; }
+
+        .steering-wheel-illustration {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 5px solid var(--primary-dark);
+            position: relative;
+            background-color: #ccc;
+            margin-top: 10px;
+        }
+        .steering-wheel-illustration::before {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 5px;
+            background-color: var(--primary-dark);
+            top: 50%;
+            left: 20%;
+            transform: translateY(-50%);
+        }
+        .steering-wheel-illustration::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 60%;
+            background-color: var(--primary-dark);
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .steering-wheel-illustration.tilted-left {
+          transform: rotate(-15deg);
+          transition: transform 0.3s ease;
+        }
+        .steering-wheel-illustration.tilted-right {
+          transform: rotate(15deg);
+          transition: transform 0.3s ease;
+        }
+        .car-front {
+          width: 80%;
+          height: 20px;
+          background-color: #777;
+          border-radius: 5px;
+          position: relative;
+          top: 5px;
+        }
+        .road-line {
+            height: 5px;
+            width: 80%;
+            background-color: #a0a0a0;
+            margin-top: 10px;
+        }
+        .road-segment {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+        }
+        .road-segment div {
+            width: 15%;
+            height: 5px;
+            background-color: #a0a0a0;
+        }
+        .road-indicator {
+          width: 0;
+          height: 0;
+          border-left: 10px solid transparent;
+          border-right: 10px solid transparent;
+          border-bottom: 20px solid var(--accent-red);
+          position: absolute;
+          bottom: 5px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body class="selection:bg-accent-red selection:text-white">
+    <div id="app" class="min-h-screen flex flex-col items-center justify-between">
+        <!-- Header -->
+        <header class="w-full bg-primary-dark text-white p-4 shadow-md flex justify-between items-center z-10">
+            <h1 class="text-2xl md:text-3xl font-bold text-accent-red">Butler Alignment & Brake</h1>
+            <div class="flex items-center">
+                <span class="text-sm mr-2" id="dark-mode-label">Light Mode</span>
+                <label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="dark-mode-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-red-300 dark:peer-focus:ring-accent-red-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-accent-red"></div>
+                    <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300 hidden md:inline">Dark Mode</span>
+                </label>
+            </div>
+        </header>
+
+        <!-- Progress Bar -->
+        <div id="progress-bar-container" class="w-full h-2 bg-gray-200 relative hidden">
+            <div id="progress-bar-fill" class="h-full bg-accent-red transition-all duration-300 ease-out" style="width: 0%;"></div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-grow w-full max-w-4xl p-4 md:p-8 relative overflow-hidden">
+            <!-- Screens will be dynamically loaded here -->
+
+            <!-- Welcome Screen -->
+            <section id="welcome-screen" class="screen bg-white rounded-lg shadow-md p-6 md:p-10 text-center flex flex-col items-center justify-center transition-all slide-enter-active">
+                <h2 class="text-4xl md:text-5xl font-extrabold text-primary-dark mb-6 leading-tight">Check Your Vehicle's Health</h2>
+                <p class="text-lg md:text-xl text-gray-700 mb-8 max-w-2xl">Get a free, instant diagnostic report for potential alignment, brake, and suspension issues. Empower yourself with knowledge before your next service!</p>
+                <button id="start-checker-btn" class="bg-accent-red hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl md:text-2xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95">
+                    Start My Check <i data-lucide="chevron-right" class="inline-block ml-2 w-6 h-6"></i>
+                </button>
+            </section>
+
+            <!-- Vehicle Selector Screen (hidden by default) -->
+            <section id="vehicle-selector-screen" class="screen hidden-screen absolute top-0 left-0 w-full h-full bg-white rounded-lg shadow-md p-6 md:p-10 flex flex-col justify-center transition-all">
+                <h2 class="text-3xl font-bold text-primary-dark mb-6 text-center">Tell Us About Your Vehicle</h2>
+                <div class="space-y-6 max-w-md mx-auto">
+                    <div>
+                        <label for="vehicle-year" class="block text-gray-700 text-lg font-semibold mb-2">Year:</label>
+                        <select id="vehicle-year" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-accent-red focus:border-accent-red">
+                            <option value="">Select Year</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="vehicle-make" class="block text-gray-700 text-lg font-semibold mb-2">Make:</label>
+                        <select id="vehicle-make" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-accent-red focus:border-accent-red">
+                            <option value="">Select Make</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="vehicle-model" class="block text-gray-700 text-lg font-semibold mb-2">Model:</label>
+                        <input type="text" id="vehicle-model" placeholder="e.g., F-150, Civic, Camry" class="w-full p-3 border border-gray-300 rounded-lg text-lg focus:ring-accent-red focus:border-accent-red">
+                    </div>
+                </div>
+                <div class="flex justify-between mt-8 max-w-md mx-auto">
+                    <button id="back-to-welcome-btn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        <i data-lucide="chevron-left" class="inline-block mr-2 w-5 h-5"></i> Back
+                    </button>
+                    <button id="next-to-q1-btn" class="bg-accent-red hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        Next <i data-lucide="chevron-right" class="inline-block ml-2 w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Question Screens (placeholders) -->
+            <section id="q1-steering-wheel" class="screen hidden-screen absolute top-0 left-0 w-full h-full bg-white rounded-lg shadow-md p-6 md:p-10 flex flex-col justify-center transition-all">
+                <h2 class="text-2xl md:text-3xl font-bold text-primary-dark mb-6 text-center">Does your steering wheel sit straight when driving on a flat road?</h2>
+                <div class="flex flex-col items-center justify-center space-y-8 mt-8">
+                    <div class="car-illustration flex flex-col items-center p-4 relative">
+                        <div class="car-front absolute top-0 w-full flex justify-center items-center">
+                            <div class="steering-wheel-illustration" id="q1-steer-visual"></div>
+                        </div>
+                        <div class="road-segment absolute bottom-0 flex justify-between w-full p-4">
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button data-value="straight" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Yes, it's straight
+                        </button>
+                        <button data-value="tilted" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            No, it's tilted
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-8 max-w-md mx-auto w-full">
+                    <button class="back-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        <i data-lucide="chevron-left" class="inline-block mr-2 w-5 h-5"></i> Back
+                    </button>
+                    <button class="next-btn bg-accent-red hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        Next <i data-lucide="chevron-right" class="inline-block ml-2 w-5 h-5"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Screen (hidden by default) -->
+            <section id="results-screen" class="screen hidden-screen absolute top-0 left-0 w-full h-full bg-white rounded-lg shadow-md p-6 md:p-10 flex flex-col justify-center transition-all">
+                <h2 class="text-3xl font-bold text-primary-dark mb-6 text-center">Your Vehicle Health Report</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <!-- Alignment Gauge -->
+                    <div class="flex flex-col items-center">
+                        <div class="gauge-container">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="gauge-bg"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="#e0e0e0" />
+                                <path class="gauge-fill" id="alignment-gauge-fill"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="var(--accent-red)"
+                                    stroke-dasharray="0, 100" />
+                            </svg>
+                            <div class="gauge-label text-primary-dark" id="alignment-score">0</div>
+                        </div>
+                        <p class="mt-2 text-xl font-semibold text-primary-dark">Alignment</p>
+                    </div>
+
+                    <!-- Brake Gauge -->
+                    <div class="flex flex-col items-center">
+                        <div class="gauge-container">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="gauge-bg"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="#e0e0e0" />
+                                <path class="gauge-fill" id="brake-gauge-fill"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="var(--accent-red)"
+                                    stroke-dasharray="0, 100" />
+                            </svg>
+                            <div class="gauge-label text-primary-dark" id="brake-score">0</div>
+                        </div>
+                        <p class="mt-2 text-xl font-semibold text-primary-dark">Brakes</p>
+                    </div>
+
+                    <!-- Suspension Gauge -->
+                    <div class="flex flex-col items-center">
+                        <div class="gauge-container">
+                            <svg viewBox="0 0 36 36" class="circular-chart">
+                                <path class="gauge-bg"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="#e0e0e0" />
+                                <path class="gauge-fill" id="suspension-gauge-fill"
+                                    d="M18 2.0845
+                                    a 15.9155 15.9155 0 0 1 0 31.831
+                                    a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    stroke="var(--accent-red)"
+                                    stroke-dasharray="0, 100" />
+                            </svg>
+                            <div class="gauge-label text-primary-dark" id="suspension-score">0</div>
+                        </div>
+                        <p class="mt-2 text-xl font-semibold text-primary-dark">Suspension</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-100 p-6 rounded-lg mb-6 shadow-sm">
+                    <h3 class="text-2xl font-bold text-primary-dark mb-3">Diagnosis:</h3>
+                    <p id="diagnosis-text" class="text-gray-800 text-lg"></p>
+                </div>
+
+                <div class="bg-gray-100 p-6 rounded-lg mb-6 shadow-sm">
+                    <h3 class="text-2xl font-bold text-primary-dark mb-3">Cost Comparison & Estimated Services:</h3>
+                    <p id="cost-comparison-text" class="text-gray-800 text-lg mb-4"></p>
+                    <ul class="list-disc list-inside text-gray-700 text-lg">
+                        <li>Alignment: $79-99</li>
+                        <li>Brake Pad Replacement: $150-300</li>
+                        <li>Strut Replacement: $400-800</li>
+                    </ul>
+                </div>
+
+                <a href="tel:9035936687" class="bg-accent-red hover:bg-red-700 text-white font-bold py-4 px-8 rounded-full text-xl md:text-2xl shadow-lg transform transition-all duration-200 hover:scale-105 active:scale-95 text-center block max-w-sm mx-auto">
+                    Schedule Service at Butler <i data-lucide="phone" class="inline-block ml-2 w-6 h-6"></i>
+                </a>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full bg-primary-dark text-white p-4 text-center text-sm md:text-base mt-auto">
+            <p>Built for Butler Alignment & Brake | Tyler, TX | <a href="tel:9035936687" class="text-accent-red hover:underline">(903) 593-6687</a></p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const app = document.getElementById('app');
+        const mainContent = document.getElementById('main-content');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const vehicleSelectorScreen = document.getElementById('vehicle-selector-screen');
+        const progressBarContainer = document.getElementById('progress-bar-container');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const resultsScreen = document.getElementById('results-screen');
+
+        let currentScreen = 0; // 0: welcome, 1: vehicle selector, 2+: questions, last: results
+        const screens = [welcomeScreen, vehicleSelectorScreen]; // Questions will be added dynamically
+        let userAnswers = {};
+        let scores = {
+            alignment: 100,
+            brake: 100,
+            suspension: 100
+        };
+
+        const VEHICLE_MAKES = [
+            "Ford", "Chevrolet", "Toyota", "Honda", "Nissan", "Jeep", "Ram", "BMW", "Mercedes-Benz",
+            "Subaru", "Hyundai", "Kia", "Lexus", "Audi", "Tesla", "Mazda", "Volkswagen", "GMC", "Dodge", "Chrysler"
+        ];
+
+        const SYMPTOM_QUESTIONS = [
+            {
+                id: 'q1-steering-wheel',
+                question: 'Does your steering wheel sit straight when driving on a flat road?',
+                type: 'radio',
+                options: [
+                    { text: 'Yes, it\'s straight', value: 'straight' },
+                    { text: 'No, it\'s tilted', value: 'tilted' }
+                ],
+                scoreImpact: {
+                    tilted: { alignment: -20 }
+                },
+                visual: `
+                    <div class="car-illustration flex flex-col items-center p-4 relative">
+                        <div class="car-front absolute top-0 w-full flex justify-center items-center">
+                            <div class="steering-wheel-illustration" id="q1-steer-visual"></div>
+                        </div>
+                        <div class="road-segment absolute bottom-0 flex justify-between w-full p-4">
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                            <div class="w-1/4 h-2 bg-gray-400 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button data-value="straight" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Yes, it's straight
+                        </button>
+                        <button data-value="tilted" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            No, it's tilted
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'q2-tire-wear',
+                question: 'Do you notice uneven tire wear?',
+                type: 'radio',
+                options: [
+                    { text: 'Inner Edge Wear', value: 'inner-edge' },
+                    { text: 'Outer Edge Wear', value: 'outer-edge' },
+                    { text: 'Center Wear', value: 'center' },
+                    { text: 'Cupping / Scalloping', value: 'cupping' },
+                    { text: 'No, wear is even', value: 'even' }
+                ],
+                scoreImpact: {
+                    'inner-edge': { alignment: -30 },
+                    'outer-edge': { alignment: -30 },
+                    'center': { alignment: -30 },
+                    'cupping': { suspension: -30 } // Cupping is often suspension related
+                },
+                visual: `
+                    <div class="grid grid-cols-2 gap-4 max-w-lg mx-auto">
+                        <div class="tire-diagram tire-diagram-inner-edge" data-value="inner-edge">
+                            <div class="wear-area"></div>
+                            <span class="z-10">Inner Edge Wear</span>
+                        </div>
+                        <div class="tire-diagram tire-diagram-outer-edge" data-value="outer-edge">
+                            <div class="wear-area"></div>
+                            <span class="z-10">Outer Edge Wear</span>
+                        </div>
+                        <div class="tire-diagram tire-diagram-center" data-value="center">
+                            <div class="wear-area"></div>
+                            <span class="z-10">Center Wear</span>
+                        </div>
+                        <div class="tire-diagram tire-diagram-cupping" data-value="cupping">
+                            <div class="wear-area"></div>
+                            <span class="z-10">Cupping/Scalloping</span>
+                        </div>
+                    </div>
+                    <button data-value="even" class="q-option mt-6 bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                        No, wear is even
+                    </button>
+                `
+            },
+            {
+                id: 'q3-car-pull',
+                question: 'Does your car pull to one side while driving?',
+                type: 'radio',
+                options: [
+                    { text: 'Pulls Left', value: 'left' },
+                    { text: 'Pulls Right', value: 'right' },
+                    { text: 'No, drives straight', value: 'neither' }
+                ],
+                scoreImpact: {
+                    left: { alignment: -25 },
+                    right: { alignment: -25 }
+                },
+                visual: `
+                    <div class="flex justify-center space-x-4">
+                        <div class="car-pull-indicator" data-value="left">
+                            <span class="car-pull-arrow left">←</span>
+                            <span class="text-sm">Pulls Left</span>
+                        </div>
+                        <div class="car-pull-indicator" data-value="neither">
+                            <span class="car-pull-arrow">Straight</span>
+                        </div>
+                        <div class="car-pull-indicator" data-value="right">
+                            <span class="text-sm">Pulls Right</span>
+                            <span class="car-pull-arrow right">→</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 'q4-last-alignment',
+                question: 'When did you last get an alignment?',
+                type: 'slider',
+                min: 0, max: 4, step: 1, // 0: Never, 1: <6mo, 2: <1yr, 3: <2yr, 4: 2yr+
+                labels: ['Never', '< 6 months', '< 1 year', '< 2 years', '2+ years / Don\'t know'],
+                scoreImpact: {
+                    1: { alignment: -5 }, // <6 months
+                    2: { alignment: -15 }, // <1 year
+                    3: { alignment: -20 }, // <2 years
+                    4: { alignment: -25 }, // 2+ years / Don't know
+                    0: { alignment: -30 } // Never
+                },
+                visual: `
+                    <div class="w-full max-w-xl mx-auto py-8">
+                        <input type="range" id="q4-alignment-slider" min="0" max="4" step="1" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent-red">
+                        <div class="flex justify-between text-xs mt-2 text-gray-600 font-semibold">
+                            <span>Never</span>
+                            <span>< 6mo</span>
+                            <span>< 1yr</span>
+                            <span>< 2yr</span>
+                            <span>2+ yrs / ?</span>
+                        </div>
+                        <p class="text-center mt-4 text-xl font-semibold text-primary-dark" id="q4-slider-value">Never</p>
+                    </div>
+                `
+            },
+            {
+                id: 'q5-tire-mileage',
+                question: 'How many miles on your current tires?',
+                type: 'slider',
+                min: 0, max: 4, step: 1, // 0: <10k, 1: 10-25k, 2: 25-40k, 3: 40-60k, 4: 60k+
+                labels: ['<10,000', '10,000-25,000', '25,000-40,000', '40,000-60,000', '60,000+'],
+                scoreImpact: {
+                    3: { alignment: -10 },
+                    4: { alignment: -15, suspension: -10 }
+                },
+                visual: `
+                    <div class="w-full max-w-xl mx-auto py-8">
+                        <input type="range" id="q5-mileage-slider" min="0" max="4" step="1" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent-red">
+                        <div class="flex justify-between text-xs mt-2 text-gray-600 font-semibold">
+                            <span><10k</span>
+                            <span>10-25k</span>
+                            <span>25-40k</span>
+                            <span>40-60k</span>
+                            <span>60k+</span>
+                        </div>
+                        <p class="text-center mt-4 text-xl font-semibold text-primary-dark" id="q5-slider-value"><10,000 Miles</p>
+                    </div>
+                `
+            },
+            {
+                id: 'q6-braking-noise',
+                question: 'Do you hear grinding or squealing when braking?',
+                type: 'radio',
+                options: [
+                    { text: 'Yes, grinding', value: 'grinding' },
+                    { text: 'Yes, squealing', value: 'squealing' },
+                    { text: 'Sometimes, light squeal', value: 'light-squeal' },
+                    { text: 'No, brakes are quiet', value: 'quiet' }
+                ],
+                scoreImpact: {
+                    grinding: { brake: -35 },
+                    squealing: { brake: -25 },
+                    'light-squeal': { brake: -10 }
+                },
+                visual: `
+                    <div class="flex flex-wrap justify-center gap-4 mt-8">
+                        <button data-value="grinding" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            <i data-lucide="bell-ring" class="inline-block mr-2 w-5 h-5"></i> Grinding
+                        </button>
+                        <button data-value="squealing" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            <i data-lucide="volume-2" class="inline-block mr-2 w-5 h-5"></i> Squealing
+                        </button>
+                        <button data-value="light-squeal" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            <i data-lucide="volume-1" class="inline-block mr-2 w-5 h-5"></i> Sometimes Squeal
+                        </button>
+                        <button data-value="quiet" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            <i data-lucide="volume-x" class="inline-block mr-2 w-5 h-5"></i> Quiet
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'q7-vibration',
+                question: 'Does your car vibrate at highway speeds?',
+                type: 'radio',
+                options: [
+                    { text: 'Always at highway speed', value: 'always' },
+                    { text: 'Above 60 MPH', value: 'above-60' },
+                    { text: 'Only when braking', value: 'braking' },
+                    { text: 'No, never', value: 'never' }
+                ],
+                scoreImpact: {
+                    always: { suspension: -20, alignment: -15 },
+                    'above-60': { suspension: -15, alignment: -10 },
+                    braking: { brake: -20 }
+                },
+                visual: `
+                    <div class="flex flex-wrap justify-center gap-4 mt-8">
+                        <button data-value="always" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Always (Highway)
+                        </button>
+                        <button data-value="above-60" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Above 60 MPH
+                        </button>
+                        <button data-value="braking" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Only When Braking
+                        </button>
+                        <button data-value="never" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Never
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'q8-brakes-soft',
+                question: 'Do your brakes feel soft or spongy?',
+                type: 'radio',
+                options: [
+                    { text: 'Yes', value: 'yes' },
+                    { text: 'No', value: 'no' }
+                ],
+                scoreImpact: {
+                    yes: { brake: -25 }
+                },
+                visual: `
+                    <div class="flex justify-center space-x-6 mt-8">
+                        <button data-value="yes" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-8 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Yes <i data-lucide="hand-metal" class="inline-block ml-2 w-5 h-5"></i>
+                        </button>
+                        <button data-value="no" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-8 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            No <i data-lucide="check" class="inline-block ml-2 w-5 h-5"></i>
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'q9-bouncing',
+                question: 'Does your car bounce excessively over bumps?',
+                type: 'radio',
+                options: [
+                    { text: 'Yes', value: 'yes' },
+                    { text: 'No', value: 'no' }
+                ],
+                scoreImpact: {
+                    yes: { suspension: -35 }
+                },
+                visual: `
+                    <div class="flex justify-center space-x-6 mt-8">
+                        <button data-value="yes" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-8 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            Yes <i data-lucide="chevrons-up" class="inline-block ml-2 w-5 h-5"></i>
+                        </button>
+                        <button data-value="no" class="q-option bg-gray-100 border border-gray-300 text-gray-800 py-3 px-8 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                            No <i data-lucide="minus" class="inline-block ml-2 w-5 h-5"></i>
+                        </button>
+                    </div>
+                `
+            },
+            {
+                id: 'q10-fluid-spots',
+                question: 'Do you notice any fluid spots where you park?',
+                type: 'radio',
+                options: [
+                    { text: 'Dark Brown/Black (Oil)', value: 'dark-brown' },
+                    { text: 'Red/Pink (Transmission/Power Steering)', value: 'red' },
+                    { text: 'Green/Orange (Coolant)', value: 'green' },
+                    { text: 'Clear (Water/AC Condensate)', value: 'clear' },
+                    { text: 'None', value: 'none' }
+                ],
+                scoreImpact: {
+                    'dark-brown': { suspension: -20 }, // Can indicate oil leaks affecting suspension components
+                    red: { suspension: -20 }, // Can indicate power steering or transmission fluid leaks
+                    green: { suspension: -10 } // Coolant leaks less direct, but still a concern
+                },
+                visual: `
+                    <div class="flex flex-wrap justify-center gap-4 mt-8">
+                        <div class="fluid-color-box bg-black" data-value="dark-brown" title="Dark Brown/Black (Oil)"></div>
+                        <div class="fluid-color-box bg-red-600" data-value="red" title="Red/Pink (Transmission/Power Steering)"></div>
+                        <div class="fluid-color-box bg-green-500" data-value="green" title="Green/Orange (Coolant)"></div>
+                        <div class="fluid-color-box bg-white border border-gray-400" data-value="clear" title="Clear (Water/AC Condensate)"></div>
+                    </div>
+                    <button data-value="none" class="q-option mt-6 bg-gray-100 border border-gray-300 text-gray-800 py-3 px-6 rounded-full text-lg font-semibold hover:bg-gray-200 transition-all duration-200">
+                        None
+                    </button>
+                `
+            }
+        ];
+
+        // Dynamically add question screens to the screens array
+        SYMPTOM_QUESTIONS.forEach(q => {
+            const qScreen = document.createElement('section');
+            qScreen.id = q.id;
+            qScreen.classList.add('screen', 'hidden-screen', 'absolute', 'top-0', 'left-0', 'w-full', 'h-full', 'bg-white', 'rounded-lg', 'shadow-md', 'p-6', 'md:p-10', 'flex', 'flex-col', 'justify-center', 'transition-all');
+            qScreen.innerHTML = `
+                <h2 class="text-2xl md:text-3xl font-bold text-primary-dark mb-6 text-center">${q.question}</h2>
+                <div class="flex flex-col items-center justify-center space-y-8 mt-8">
+                    ${q.visual}
+                </div>
+                <div class="flex justify-between mt-8 max-w-md mx-auto w-full">
+                    <button class="back-btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        <i data-lucide="chevron-left" class="inline-block mr-2 w-5 h-5"></i> Back
+                    </button>
+                    <button class="next-btn bg-accent-red hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full text-lg flex items-center transition-all duration-200 hover:scale-105 active:scale-95">
+                        Next <i data-lucide="chevron-right" class="inline-block ml-2 w-5 h-5"></i>
+                    </button>
+                </div>
+            `;
+            mainContent.appendChild(qScreen);
+            screens.push(qScreen);
+        });
+        screens.push(resultsScreen); // Add results screen last
+
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const darkModeLabel = document.getElementById('dark-mode-label');
+
+        darkModeToggle.addEventListener('change', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                darkModeLabel.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                darkModeLabel.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+            darkModeLabel.textContent = 'Dark Mode';
+        } else {
+            darkModeLabel.textContent = 'Light Mode';
+        }
+
+        function showScreen(index, direction = 'next') {
+            const prevScreen = screens[currentScreen];
+            const nextScreen = screens[index];
+
+            if (prevScreen) {
+                prevScreen.classList.add('slide-leave-active');
+                prevScreen.classList.remove('slide-enter-active');
+                if (direction === 'next') {
+                    prevScreen.classList.add('slide-leave-to');
+                } else {
+                    prevScreen.style.transform = 'translateX(100%)'; // For back transition
+                }
+
+                prevScreen.addEventListener('transitionend', () => {
+                    prevScreen.classList.add('hidden-screen');
+                    prevScreen.classList.remove('slide-leave-active', 'slide-leave-to');
+                    prevScreen.style.transform = ''; // Reset transform
+                }, { once: true });
+            }
+
+            nextScreen.classList.remove('hidden-screen');
+            if (direction === 'next') {
+                nextScreen.classList.add('slide-enter-from');
+                setTimeout(() => {
+                    nextScreen.classList.remove('slide-enter-from');
+                    nextScreen.classList.add('slide-enter-active');
+                }, 10); // Small delay to ensure transition applies
+            } else {
+                nextScreen.style.transform = 'translateX(-100%)'; // Start from left
+                setTimeout(() => {
+                    nextScreen.classList.remove('slide-enter-from'); // Not strictly needed for 'back'
+                    nextScreen.classList.add('slide-enter-active');
+                    nextScreen.style.transform = ''; // Animate to 0
+                }, 10);
+            }
+
+
+            currentScreen = index;
+            updateProgressBar();
+            lucide.createIcons(); // Re-render icons on new screen
+        }
+
+        function updateProgressBar() {
+            if (currentScreen > 0 && currentScreen < screens.length - 1) { // Hide on welcome and results
+                progressBarContainer.classList.remove('hidden');
+                const progress = ((currentScreen - 1) / SYMPTOM_QUESTIONS.length) * 100;
+                progressBarFill.style.width = `${progress}%`;
+            } else {
+                progressBarContainer.classList.add('hidden');
+            }
+        }
+
+        function populateVehicleYears() {
+            const select = document.getElementById('vehicle-year');
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear + 1; year >= 2000; year--) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                select.appendChild(option);
+            }
+        }
+
+        function populateVehicleMakes() {
+            const select = document.getElementById('vehicle-make');
+            VEHICLE_MAKES.forEach(make => {
+                const option = document.createElement('option');
+                option.value = make;
+                option.textContent = make;
+                select.appendChild(option);
+            });
+        }
+
+        function calculateScores() {
+            scores = { alignment: 100, brake: 100, suspension: 100 };
+
+            // Process symptom questions
+            SYMPTOM_QUESTIONS.forEach(q => {
+                const answer = userAnswers[q.id];
+                if (answer && q.scoreImpact && q.scoreImpact[answer]) {
+                    const impact = q.scoreImpact[answer];
+                    if (impact.alignment) scores.alignment += impact.alignment;
+                    if (impact.brake) scores.brake += impact.brake;
+                    if (impact.suspension) scores.suspension += impact.suspension;
+                }
+            });
+
+            // Ensure scores don't go below 0 or above 100
+            for (const key in scores) {
+                scores[key] = Math.max(0, Math.min(100, scores[key]));
+            }
+        }
+
+        function getDiagnosisText() {
+            let diagnosis = { alignment: '', brake: '', suspension: '' };
+            let worstCategory = { name: '', score: 101 };
+
+            if (scores.alignment >= 80) diagnosis.alignment = "Your alignment looks good! Keep up with regular checks every 6,000 miles.";
+            else if (scores.alignment >= 50) diagnosis.alignment = "You may have a developing alignment issue. Inner-edge tire wear suggests negative camber — common after hitting potholes. A professional alignment check ($79-99) could save you hundreds in premature tire wear.";
+            else diagnosis.alignment = "Your symptoms strongly suggest alignment problems. Uneven tire wear + pulling = likely worn tie rods or ball joints causing toe/camber issues. Cost to fix now: ~$89-149. Cost if ignored: $400-800 in destroyed tires plus accelerated suspension wear.";
+
+            if (scores.brake >= 80) diagnosis.brake = "Your brakes seem healthy! Recommended inspection every 12,000 miles.";
+            else if (scores.brake >= 50) diagnosis.brake = "Some brake symptoms detected. Occasional squealing may indicate pad wear approaching minimum thickness. A free brake inspection at Butler can confirm.";
+            else diagnosis.brake = "Your brake symptoms need immediate attention. Grinding + soft pedal could mean metal-on-metal contact or a hydraulic issue. Don't delay — brake failure is a safety emergency.";
+
+            if (scores.suspension >= 80) diagnosis.suspension = "Suspension feels solid. Shocks/struts typically last 50,000-100,000 miles.";
+            else if (scores.suspension >= 50) diagnosis.suspension = "Some ride quality concerns. Excessive bouncing or vibration may indicate worn shocks. A road test at Butler can pinpoint the issue.";
+            else diagnosis.suspension = "Multiple suspension red flags. Bouncing + vibration + possible fluid leaks suggest worn shocks/struts or leaking hydraulic hydraulic components. Professional inspection recommended ASAP.";
+
+            if (scores.alignment < worstCategory.score) {
+                worstCategory = { name: 'alignment', score: scores.alignment };
+            }
+            if (scores.brake < worstCategory.score) {
+                worstCategory = { name: 'brake', score: scores.brake };
+            }
+            if (scores.suspension < worstCategory.score) {
+                worstCategory = { name: 'suspension', score: scores.suspension };
+            }
+
+            let combinedDiagnosis = `Based on your responses:
+            \n<strong class="text-primary-dark">Alignment:</strong> ${diagnosis.alignment}
+            \n<strong class="text-primary-dark">Brakes:</strong> ${diagnosis.brake}
+            \n<strong class="text-primary-dark">Suspension:</strong> ${diagnosis.suspension}
+            \n\n<strong class="text-accent-red">Overall concern:</strong> Your most significant symptoms point towards ${worstCategory.name} issues.`;
+            return combinedDiagnosis;
+        }
+
+        function animateGauge(gaugeId, score) {
+            const gaugeFill = document.getElementById(gaugeId);
+            const gaugeLabel = document.getElementById(gaugeId.replace('-gauge-fill', '-score'));
+            const circumference = 2 * Math.PI * 15.9155; // For a radius of 15.9155
+            const offset = circumference - (score / 100) * circumference;
+            gaugeFill.style.strokeDasharray = `${circumference}, ${circumference}`;
+            gaugeFill.style.strokeDashoffset = circumference; // Start completely empty
+
+            // Set color based on score
+            if (score >= 80) gaugeFill.style.stroke = '#28a745'; // Green
+            else if (score >= 50) gaugeFill.style.stroke = '#ffc107'; // Yellow
+            else gaugeFill.style.stroke = 'var(--accent-red)'; // Red
+
+            // Animate fill
+            setTimeout(() => {
+                gaugeFill.style.strokeDashoffset = offset;
+            }, 100);
+
+            // Animate number count
+            let currentCount = 0;
+            const countInterval = setInterval(() => {
+                if (currentCount < score) {
+                    currentCount++;
+                    gaugeLabel.textContent = currentCount;
+                } else {
+                    clearInterval(countInterval);
+                }
+            }, 20);
+        }
+
+        function displayResults() {
+            calculateScores();
+
+            document.getElementById('diagnosis-text').innerHTML = getDiagnosisText();
+
+            // Cost comparison based on worst category
+            let costComparison = "";
+            let serviceCost = "";
+
+            const alignmentCost = "Fix now: ~$89 alignment | If ignored: $400-800 premature tire replacement";
+            const brakeCost = "Fix now: ~$150-300 brake pads | If ignored: $500-1000 rotor damage or brake failure";
+            const suspensionCost = "Fix now: ~$400-800 strut replacement | If ignored: $800-1500 damage to other components, poor handling, safety risk";
+
+            const maxScore = Math.max(scores.alignment, scores.brake, scores.suspension);
+
+            if (scores.alignment < scores.brake && scores.alignment < scores.suspension) {
+                costComparison = alignmentCost;
+            } else if (scores.brake < scores.alignment && scores.brake < scores.suspension) {
+                costComparison = brakeCost;
+            } else if (scores.suspension < scores.alignment && scores.suspension < scores.brake) {
+                costComparison = suspensionCost;
+            } else { // If scores are similar or high, suggest general maintenance
+                if (scores.alignment < 80 || scores.brake < 80 || scores.suspension < 80) {
+                    costComparison = "Addressing potential issues early can prevent more costly repairs. For example: " + alignmentCost;
+                } else {
+                    costComparison = "Your vehicle seems to be in good health. Regular maintenance is key to preventing future issues.";
+                }
+            }
+
+            document.getElementById('cost-comparison-text').innerHTML = costComparison;
+
+            // Animate gauges
+            animateGauge('alignment-gauge-fill', scores.alignment);
+            animateGauge('brake-gauge-fill', scores.brake);
+            animateGauge('suspension-gauge-fill', scores.suspension);
+        }
+
+        // Event Listeners
+        document.getElementById('start-checker-btn').addEventListener('click', () => showScreen(1, 'next'));
+        document.getElementById('back-to-welcome-btn').addEventListener('click', () => showScreen(0, 'back'));
+
+        // Vehicle Selector
+        populateVehicleYears();
+        populateVehicleMakes();
+
+        document.getElementById('next-to-q1-btn').addEventListener('click', () => {
+            const year = document.getElementById('vehicle-year').value;
+            const make = document.getElementById('vehicle-make').value;
+            const model = document.getElementById('vehicle-model').value;
+
+            if (year && make && model) {
+                userAnswers['vehicle'] = { year, make, model };
+                showScreen(2, 'next'); // Move to the first question
+            } else {
+                alert('Please fill out all vehicle details.');
+            }
+        });
+
+        // General handler for "Next" and "Back" buttons on question screens
+        mainContent.addEventListener('click', (event) => {
+            if (event.target.classList.contains('next-btn')) {
+                const currentQIndex = currentScreen - 2; // Adjust for welcome and vehicle screens
+                const currentQ = SYMPTOM_QUESTIONS[currentQIndex];
+
+                let answer = null;
+                if (currentQ.type === 'radio') {
+                    const selectedOption = document.querySelector(`#${currentQ.id} .q-option.selected, #${currentQ.id} .tire-diagram.selected, #${currentQ.id} .car-pull-indicator.selected, #${currentQ.id} .fluid-color-box.selected`);
+                    if (selectedOption) {
+                        answer = selectedOption.dataset.value;
+                    }
+                } else if (currentQ.type === 'slider') {
+                    answer = document.getElementById(`${currentQ.id.replace('q', 'q')}-slider`).value;
+                }
+
+                if (answer === null) {
+                    alert('Please select an answer to continue.');
+                    return;
+                }
+                userAnswers[currentQ.id] = answer;
+
+                if (currentScreen < screens.length - 1) {
+                    showScreen(currentScreen + 1, 'next');
+                    if (currentScreen === screens.length - 1) {
+                        displayResults();
+                    }
+                }
+            } else if (event.target.classList.contains('back-btn')) {
+                if (currentScreen > 0) {
+                    showScreen(currentScreen - 1, 'back');
+                }
+            }
+        });
+
+        // Handlers for question-specific interactions
+        mainContent.addEventListener('click', (event) => {
+            // Generic radio button like options
+            if (event.target.classList.contains('q-option')) {
+                const parentScreen = event.target.closest('.screen');
+                parentScreen.querySelectorAll('.q-option').forEach(btn => btn.classList.remove('selected', 'bg-accent-red', 'text-white'));
+                event.target.classList.add('selected', 'bg-accent-red', 'text-white');
+                // For styling:
+                event.target.classList.remove('bg-gray-100', 'border-gray-300', 'text-gray-800');
+            }
+            // Tire wear diagrams
+            if (event.target.closest('.tire-diagram')) {
+                const diagram = event.target.closest('.tire-diagram');
+                const parentScreen = diagram.closest('.screen');
+                parentScreen.querySelectorAll('.tire-diagram').forEach(d => d.classList.remove('selected'));
+                parentScreen.querySelectorAll('.q-option').forEach(btn => btn.classList.remove('selected', 'bg-accent-red', 'text-white')); // Deselect 'even' option
+                diagram.classList.add('selected');
+            }
+            // Car pull indicator
+            if (event.target.closest('.car-pull-indicator')) {
+                const indicator = event.target.closest('.car-pull-indicator');
+                const parentScreen = indicator.closest('.screen');
+                parentScreen.querySelectorAll('.car-pull-indicator').forEach(i => i.classList.remove('selected'));
+                indicator.classList.add('selected');
+            }
+            // Fluid color box
+            if (event.target.closest('.fluid-color-box')) {
+                const colorBox = event.target.closest('.fluid-color-box');
+                const parentScreen = colorBox.closest('.screen');
+                parentScreen.querySelectorAll('.fluid-color-box').forEach(box => box.classList.remove('selected'));
+                parentScreen.querySelectorAll('.q-option').forEach(btn => btn.classList.remove('selected', 'bg-accent-red', 'text-white')); // Deselect 'none' option
+                colorBox.classList.add('selected');
+            }
+        });
+
+        // Steering wheel visual update
+        document.addEventListener('DOMContentLoaded', () => {
+            const q1SteerVisual = document.getElementById('q1-steer-visual');
+            if (q1SteerVisual) {
+                const straightBtn = document.querySelector('#q1-steering-wheel button[data-value="straight"]');
+                const tiltedBtn = document.querySelector('#q1-steering-wheel button[data-value="tilted"]');
+
+                if (straightBtn && tiltedBtn) {
+                    straightBtn.addEventListener('click', () => {
+                        q1SteerVisual.classList.remove('tilted-left', 'tilted-right');
+                    });
+                    tiltedBtn.addEventListener('click', () => {
+                        // Randomly tilt left or right for visual effect
+                        if (Math.random() > 0.5) {
+                            q1SteerVisual.classList.add('tilted-left');
+                            q1SteerVisual.classList.remove('tilted-right');
+                        } else {
+                            q1SteerVisual.classList.add('tilted-right');
+                            q1SteerVisual.classList.remove('tilted-left');
+                        }
+                    });
+                }
+            }
+        });
+
+        // Slider updates
+        mainContent.addEventListener('input', (event) => {
+            if (event.target.id === 'q4-alignment-slider') {
+                const sliderValue = event.target.value;
+                document.getElementById('q4-slider-value').textContent = SYMPTOM_QUESTIONS[3].labels[sliderValue];
+            } else if (event.target.id === 'q5-mileage-slider') {
+                const sliderValue = event.target.value;
+                document.getElementById('q5-slider-value').textContent = SYMPTOM_QUESTIONS[4].labels[sliderValue] + ' Miles';
+            }
+        });
+
+
+        // Initial setup
+        updateProgressBar();
+    </script>
+<script>// Anti-scrape protection — injected into all tool pages
+(function(){
+  // Disable right-click context menu
+
+  
+  
+  // Disable text selection on body (forms still selectable)
+  
+  
+  // Re-enable for inputs/textareas
+  document.querySelectorAll('input,textarea,select').forEach(function(el){
+    el.style.userSelect = 'auto'; el.style.webkitUserSelect = 'auto';
+  });
+  
+  // Disable drag
+  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  
+  // Disable print
+  var style = document.createElement('style');
+  style.textContent = '@media print { body { display: none !important; } }';
+  document.head.appendChild(style);
+  
+  // Add invisible watermark
+  var wm = document.createElement('div');
+  wm.style.cssText = 'position:fixed;bottom:0;right:0;opacity:0.03;font-size:10px;pointer-events:none;z-index:99999;color:#000;';
+  wm.textContent = 'Licensed demo — bennycutools.com — ' + new Date().toISOString().slice(0,10);
+  document.body.appendChild(wm);
+  
+  // Detect devtools (basic)
+  var threshold = 160;
+  setInterval(function(){
+    if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>This demo is proprietary. Please contact ben@bennycutools.com for licensing.</h1></div>';
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireplace Project Cost Calculator | Uintah Fireplace & Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .project-type-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .project-type-btn {
+            padding: 20px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .project-type-btn:hover {
+            border-color: #FF6B35;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.3);
+        }
+        
+        .project-type-btn.active {
+            border-color: #FF6B35;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+        }
+        
+        .project-type-btn .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #FF6B35;
+        }
+        
+        .form-section h3 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FF6B35;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            font-weight: 600;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 20px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 107, 53, 0.4);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            border-radius: 12px;
+            color: white;
+            display: none;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h2 {
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .quote-details {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.05em;
+        }
+        
+        .line-item:last-child {
+            border-bottom: none;
+        }
+        
+        .line-item.total {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 3px solid white;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn {
+            padding: 12px 30px;
+            background: white;
+            color: #FF6B35;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .note {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Fireplace Project Calculator</h1>
+            <p>Professional estimates for your dream fireplace</p>
+        </div>
+        
+        <div class="content">
+            <div class="project-type-selector">
+                <div class="project-type-btn active" data-type="new-install">
+                    <div class="icon">🏗️</div>
+                    <div>New Installation</div>
+                </div>
+                <div class="project-type-btn" data-type="replacement">
+                    <div class="icon">🔄</div>
+                    <div>Replacement</div>
+                </div>
+                <div class="project-type-btn" data-type="repair">
+                    <div class="icon">🔧</div>
+                    <div>Repair/Service</div>
+                </div>
+            </div>
+            
+            <form id="quoteForm">
+                <div class="form-section" id="fireplaceSection">
+                    <h3>🔥 Fireplace Details</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fireplaceType">Fireplace Type</label>
+                            <select id="fireplaceType" required>
+                                <option value="gas-insert">Gas Insert (existing fireplace)</option>
+                                <option value="direct-vent">Direct Vent (wall-mounted)</option>
+                                <option value="b-vent">B-Vent Traditional</option>
+                                <option value="vent-free">Vent-Free</option>
+                                <option value="linear">Linear/Contemporary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="btuRating">BTU Output</label>
+                            <select id="btuRating" required>
+                                <option value="20000">20,000 - 25,000 BTU (Small room)</option>
+                                <option value="30000">30,000 - 35,000 BTU (Medium room)</option>
+                                <option value="40000">40,000 - 50,000 BTU (Large room)</option>
+                                <option value="60000">60,000+ BTU (Great room/open concept)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="roomSize">Room Square Footage</label>
+                            <input type="number" id="roomSize" min="100" step="50" placeholder="e.g., 350" required>
+                            <div class="help-text">Helps size the unit properly</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="efficiency">Efficiency Features</label>
+                            <select id="efficiency" required>
+                                <option value="standard">Standard</option>
+                                <option value="electronic">Electronic Ignition</option>
+                                <option value="remote">Remote Control + Fan</option>
+                                <option value="smart">Smart/WiFi Enabled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section" id="installationSection">
+                    <h3>🛠️ Installation Requirements</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="installType">Installation Complexity</label>
+                            <select id="installType" required>
+                                <option value="simple">Simple (existing setup, minimal work)</option>
+                                <option value="moderate">Moderate (some framing/venting needed)</option>
+                                <option value="complex">Complex (new gas line, significant framing)</option>
+                                <option value="remodel">Full Remodel (surround, mantle, stonework)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="gasLineWork">Gas Line Work Required</label>
+                            <select id="gasLineWork" required>
+                                <option value="none">No work needed (line ready)</option>
+                                <option value="short">Short run (&lt;20 ft)</option>
+                                <option value="medium">Medium run (20-40 ft)</option>
+                                <option value="long">Long run (40+ ft)</option>
+                                <option value="new-service">New service line from meter</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ventingWork">Venting Requirements</label>
+                            <select id="ventingWork" required>
+                                <option value="none">None (vent-free)</option>
+                                <option value="simple">Simple (straight vertical)</option>
+                                <option value="moderate">Moderate (1-2 bends)</option>
+                                <option value="complex">Complex (3+ bends, long run)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Installation Floor</label>
+                            <select id="location" required>
+                                <option value="main">Main Level</option>
+                                <option value="basement">Basement</option>
+                                <option value="second">Second Floor</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>🎨 Finishing & Extras</h3>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="surround">
+                        <label for="surround">Include Surround/Mantle ($800-$2,500)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="stonework">
+                        <label for="stonework">Custom Stone/Tile Work ($1,200-$4,000)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="removal">
+                        <label for="removal">Remove Old Fireplace/Wood Stove ($300-$800)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="annual">
+                        <label for="annual">Add Annual Maintenance Plan ($150/year)</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="calculate-btn">Calculate My Project 🔥</button>
+            </form>
+            
+            <div class="results" id="results">
+                <h2>📋 Your Fireplace Project Estimate</h2>
+                <div class="quote-details" id="quoteDetails"></div>
+                <div class="action-buttons">
+                    <button class="export-btn" onclick="printQuote()">🖨️ Print Estimate</button>
+                    <button class="export-btn" onclick="scheduleConsult()">📅 Schedule Free Consultation</button>
+                </div>
+                <div class="note">
+                    <strong>Next Steps:</strong> This is a preliminary estimate based on typical installations. Uintah Fireplace & Design offers free in-home consultations where we'll discuss your specific vision, measure your space, and provide an exact quote. Our professional installers are courteous, expert-trained, and guaranteed to get it right the first time. Valid for 30 days.
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Built for Uintah Fireplace & Design</strong></p>
+            <p>Salt Lake City's Premier Fireplace Store</p>
+            <p>(801) 278-1600 | uintahfireplace.com</p>
+        </div>
+    </div>
+    
+    <script>
+        // Project type selector
+        const projectTypeBtns = document.querySelectorAll('.project-type-btn');
+        let currentProjectType = 'new-install';
+        
+        projectTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                projectTypeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentProjectType = btn.dataset.type;
+                updateFormForProjectType();
+            });
+        });
+        
+        function updateFormForProjectType() {
+            const installSection = document.getElementById('installationSection');
+            const fireplaceSection = document.getElementById('fireplaceSection');
+            
+            if (currentProjectType === 'repair') {
+                installSection.style.display = 'none';
+                // Simplify for repair
+            } else {
+                installSection.style.display = 'block';
+            }
+        }
+        
+        // Form submission
+        document.getElementById('quoteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            calculateQuote();
+        });
+        
+        function calculateQuote() {
+            // Get form values
+            const fireplaceType = document.getElementById('fireplaceType').value;
+            const btuRating = parseInt(document.getElementById('btuRating').value);
+            const roomSize = parseInt(document.getElementById('roomSize').value);
+            const efficiency = document.getElementById('efficiency').value;
+            const installType = document.getElementById('installType').value;
+            const gasLineWork = document.getElementById('gasLineWork').value;
+            const ventingWork = document.getElementById('ventingWork').value;
+            const location = document.getElementById('location').value;
+            const surround = document.getElementById('surround').checked;
+            const stonework = document.getElementById('stonework').checked;
+            const removal = document.getElementById('removal').checked;
+            const annual = document.getElementById('annual').checked;
+            
+            // Base unit cost by type and BTU
+            const unitBasePrices = {
+                'gas-insert': 1800,
+                'direct-vent': 2200,
+                'b-vent': 1600,
+                'vent-free': 1200,
+                'linear': 3500
+            };
+            
+            let unitCost = unitBasePrices[fireplaceType];
+            
+            // BTU multiplier
+            const btuMultipliers = {
+                20000: 1.0,
+                30000: 1.2,
+                40000: 1.5,
+                60000: 2.0
+            };
+            unitCost *= btuMultipliers[btuRating];
+            
+            // Efficiency features
+            const efficiencyCosts = {
+                'standard': 0,
+                'electronic': 150,
+                'remote': 350,
+                'smart': 650
+            };
+            unitCost += efficiencyCosts[efficiency];
+            
+            // Installation labor
+            const installLaborCosts = {
+                'simple': 800,
+                'moderate': 1400,
+                'complex': 2200,
+                'remodel': 3500
+            };
+            let laborCost = installLaborCosts[installType];
+            
+            // Gas line work
+            const gasLineCosts = {
+                'none': 0,
+                'short': 400,
+                'medium': 800,
+                'long': 1400,
+                'new-service': 2500
+            };
+            const gasLineCost = gasLineCosts[gasLineWork];
+            
+            // Venting work
+            const ventingCosts = {
+                'none': 0,
+                'simple': 400,
+                'moderate': 700,
+                'complex': 1200
+            };
+            const ventingCost = ventingCosts[ventingWork];
+            
+            // Location complexity
+            if (location === 'basement') laborCost *= 1.2;
+            if (location === 'second') laborCost *= 1.3;
+            
+            // Finishing extras
+            const surroundCost = surround ? 1500 : 0;
+            const stoneworkCost = stonework ? 2500 : 0;
+            const removalCost = removal ? 500 : 0;
+            const annualCost = annual ? 150 : 0;
+            
+            // Permit & inspection (typical)
+            const permitCost = 150;
+            
+            // Calculate totals
+            const subtotal = unitCost + laborCost + gasLineCost + ventingCost + 
+                            surroundCost + stoneworkCost + removalCost + permitCost;
+            const total = subtotal + annualCost;
+            
+            // Display results
+            displayQuote({
+                unit: unitCost.toFixed(2),
+                labor: laborCost.toFixed(2),
+                gasLine: gasLineCost.toFixed(2),
+                venting: ventingCost.toFixed(2),
+                surround: surroundCost.toFixed(2),
+                stonework: stoneworkCost.toFixed(2),
+                removal: removalCost.toFixed(2),
+                permit: permitCost.toFixed(2),
+                annual: annualCost.toFixed(2),
+                subtotal: subtotal.toFixed(2),
+                total: total.toFixed(2),
+                projectType: currentProjectType,
+                fireplaceTypeText: document.getElementById('fireplaceType').selectedOptions[0].text,
+                btuText: document.getElementById('btuRating').selectedOptions[0].text,
+                roomSize: roomSize
+            });
+        }
+        
+        function displayQuote(data) {
+            const detailsDiv = document.getElementById('quoteDetails');
+            let html = `
+                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3);">
+                    <strong style="font-size: 1.2em;">Project: ${data.projectType === 'new-install' ? 'New Installation' : data.projectType === 'replacement' ? 'Fireplace Replacement' : 'Repair/Service'}</strong><br>
+                    <span style="opacity: 0.9;">
+                        ${data.fireplaceTypeText}<br>
+                        ${data.btuText} | ${data.roomSize} sq ft room
+                    </span>
+                </div>
+                <div class="line-item">
+                    <span>Fireplace Unit & Equipment</span>
+                    <span>$${data.unit}</span>
+                </div>
+                <div class="line-item">
+                    <span>Installation Labor</span>
+                    <span>$${data.labor}</span>
+                </div>
+            `;
+            
+            if (parseFloat(data.gasLine) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Gas Line Work</span>
+                    <span>$${data.gasLine}</span>
+                </div>`;
+            }
+            
+            if (parseFloat(data.venting) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Venting Installation</span>
+                    <span>$${data.venting}</span>
+                </div>`;
+            }
+            
+            if (parseFloat(data.surround) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Surround/Mantle</span>
+                    <span>$${data.surround}</span>
+                </div>`;
+            }
+            
+            if (parseFloat(data.stonework) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Custom Stone/Tile Work</span>
+                    <span>$${data.stonework}</span>
+                </div>`;
+            }
+            
+            if (parseFloat(data.removal) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Old Unit Removal</span>
+                    <span>$${data.removal}</span>
+                </div>`;
+            }
+            
+            html += `
+                <div class="line-item">
+                    <span>Permit & Inspection</span>
+                    <span>$${data.permit}</span>
+                </div>
+            `;
+            
+            if (parseFloat(data.annual) > 0) {
+                html += `
+                <div class="line-item">
+                    <span>Annual Maintenance Plan</span>
+                    <span>$${data.annual}/year</span>
+                </div>`;
+            }
+            
+            html += `
+                <div class="line-item total">
+                    <span>ESTIMATED TOTAL</span>
+                    <span>$${data.total}</span>
+                </div>
+            `;
+            
+            detailsDiv.innerHTML = html;
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function printQuote() {
+            window.print();
+        }
+        
+        function scheduleConsult() {
+            alert('Perfect! Call Uintah Fireplace & Design at (801) 278-1600 to schedule your FREE in-home design consultation. Our team will measure your space, discuss your vision, and provide an exact quote.');
+        }
+    </script>
+</body>
+</html>

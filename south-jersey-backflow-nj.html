@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NJ Backflow Testing Compliance Calculator | South Jersey Backflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .alert-banner {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 30px;
+            border-radius: 10px;
+        }
+        
+        .alert-banner.danger {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        
+        .alert-banner.success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #1e88e5;
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        }
+        
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .radio-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .radio-card:hover {
+            border-color: #1e88e5;
+            background: #e3f2fd;
+        }
+        
+        .radio-card input[type="radio"] {
+            display: none;
+        }
+        
+        .radio-card.selected {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            border-color: #1565c0;
+        }
+        
+        .radio-card .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .results-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #1e88e5;
+        }
+        
+        .result-card h3 {
+            color: #1565c0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .result-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .result-subtext {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .compliance-status {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 3px solid;
+        }
+        
+        .compliance-status.overdue {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .compliance-status.warning {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        .compliance-status.compliant {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .compliance-status .status-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+        
+        .compliance-status h2 {
+            margin-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #1e88e5;
+        }
+        
+        .info-box h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+        
+        .info-box ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .cta-section h2 {
+            margin-bottom: 15px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #1565c0;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            margin: 10px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .cta-button.emergency {
+            background: #dc3545;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .result-value {
+                font-size: 1.5em;
+            }
+            
+            .radio-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💧 NJ Backflow Testing Calculator</h1>
+            <p>Check your compliance status & avoid costly penalties</p>
+        </div>
+        
+        <div class="alert-banner">
+            <strong>⚠️ New Jersey Law:</strong> All backflow devices must be tested annually (N.J.A.C. 7:14B). 
+            Non-compliance can result in fines up to $500/day and water service shutoff.
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label>🏠 Property Type</label>
+                <div class="radio-group">
+                    <label class="radio-card selected">
+                        <input type="radio" name="property" value="residential" checked>
+                        <div class="icon">🏡</div>
+                        <div><strong>Residential</strong></div>
+                        <div style="font-size: 0.85em; margin-top: 5px;">Irrigation system</div>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="property" value="commercial">
+                        <div class="icon">🏢</div>
+                        <div><strong>Commercial</strong></div>
+                        <div style="font-size: 0.85em; margin-top: 5px;">Business property</div>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="property" value="multi-family">
+                        <div class="icon">🏘️</div>
+                        <div><strong>Multi-Family</strong></div>
+                        <div style="font-size: 0.85em; margin-top: 5px;">Apartments, condos</div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>📅 When was your last backflow test?</label>
+                <input type="date" id="lastTest" max="2026-12-31">
+                <div class="result-subtext" style="margin-top: 10px;">
+                    💡 Not sure? Check your certification paperwork or call your water department.
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>🔧 Backflow Device Type</label>
+                <select id="deviceType">
+                    <option value="rpz">RPZ (Reduced Pressure Zone) - Most common</option>
+                    <option value="pvb">PVB (Pressure Vacuum Breaker) - Irrigation</option>
+                    <option value="dc">DC (Double Check Valve) - Low hazard</option>
+                    <option value="dcva">DCVA (Double Check Valve Assembly)</option>
+                </select>
+            </div>
+            
+            <div class="results-section" id="results">
+                <div id="complianceStatus" class="compliance-status compliant">
+                    <div class="status-icon">✅</div>
+                    <h2>Status: Compliant</h2>
+                    <p>Your backflow device is up to date!</p>
+                </div>
+                
+                <div class="result-card">
+                    <h3>📆 Days Since Last Test</h3>
+                    <div class="result-value" id="daysSince">0</div>
+                    <div class="result-subtext">NJ requires annual testing (365 days maximum)</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>💰 Annual Testing Cost</h3>
+                    <div class="result-value" id="testingCost">$0</div>
+                    <div class="result-subtext">Professional testing, certification, & submission to municipality</div>
+                </div>
+                
+                <div class="result-card" id="penaltyCard" style="display: none;">
+                    <h3>⚠️ Potential Penalty for Non-Compliance</h3>
+                    <div class="result-value" style="color: #dc3545;" id="penaltyAmount">$0</div>
+                    <div class="result-subtext">NJ municipalities can fine up to $500/day + water shutoff</div>
+                </div>
+                
+                <div class="result-card">
+                    <h3>📊 5-Year Compliance vs. Penalty Comparison</h3>
+                    <table style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                        <tr style="background: #d4edda;">
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd;"><strong>✅ Stay Compliant (5 years)</strong></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #ddd; text-align: right;"><strong id="fiveYearCost">$0</strong></td>
+                        </tr>
+                        <tr style="background: #f8d7da;">
+                            <td style="padding: 12px;"><strong>❌ Skip 1 year (30 day penalty)</strong></td>
+                            <td style="padding: 12px; text-align: right;"><strong id="oneYearPenalty">$0</strong></td>
+                        </tr>
+                    </table>
+                    <div class="result-subtext" style="margin-top: 15px;">
+                        💡 One missed year can cost more than 5 years of compliance!
+                    </div>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🚨 Why Backflow Testing Matters</h4>
+                    <ul>
+                        <li><strong>Protects Drinking Water:</strong> Prevents contaminated water from entering clean water supply</li>
+                        <li><strong>NJ Legal Requirement:</strong> Mandated by N.J.A.C. 7:14B for public health</li>
+                        <li><strong>Avoids Fines:</strong> Non-compliance = up to $500/day in penalties</li>
+                        <li><strong>Prevents Water Shutoff:</strong> Municipalities can disconnect service for violations</li>
+                        <li><strong>Protects Your Family:</strong> Cross-contamination can cause serious illness</li>
+                    </ul>
+                </div>
+                
+                <div class="info-box">
+                    <h4>🔧 What Happens During Testing?</h4>
+                    <ul>
+                        <li>✅ Certified technician inspects backflow preventer</li>
+                        <li>✅ Tests device pressure & functionality</li>
+                        <li>✅ Repairs/rebuilds if needed (separate cost)</li>
+                        <li>✅ Issues official certification</li>
+                        <li>✅ Submits compliance paperwork to your municipality</li>
+                        <li>✅ Typically takes 30-45 minutes</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <h2>Ready to Schedule Your Test?</h2>
+                <p>Family-owned, licensed, & certified since 2004</p>
+                <a href="tel:856-291-6809" class="cta-button">📞 Call (856) 291-6809</a>
+                <a href="tel:856-291-6809" class="cta-button emergency">🚨 24/7 Emergency</a>
+                <p style="margin-top: 15px; font-size: 0.9em; opacity: 0.9;">
+                    Or visit: <a href="https://southjerseybackflow.com" style="color: white; text-decoration: underline;">southjerseybackflow.com</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Radio card selection
+        document.querySelectorAll('.radio-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                radio.checked = true;
+                calculateResults();
+            });
+        });
+
+        // Input listeners
+        document.getElementById('lastTest').addEventListener('change', calculateResults);
+        document.getElementById('deviceType').addEventListener('change', calculateResults);
+
+        // Set default date to 1 year ago
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        document.getElementById('lastTest').value = oneYearAgo.toISOString().split('T')[0];
+
+        function calculateResults() {
+            const propertyType = document.querySelector('input[name="property"]:checked').value;
+            const lastTestDate = document.getElementById('lastTest').value;
+            const deviceType = document.getElementById('deviceType').value;
+
+            // Calculate days since last test
+            const today = new Date();
+            const lastTest = new Date(lastTestDate);
+            const daysSince = Math.floor((today - lastTest) / (1000 * 60 * 60 * 24));
+
+            // Testing cost (varies by property type)
+            const testingCosts = {
+                'residential': 120,
+                'commercial': 180,
+                'multi-family': 150
+            };
+
+            const testingCost = testingCosts[propertyType] || 120;
+
+            // Compliance status
+            let statusClass = 'compliant';
+            let statusIcon = '✅';
+            let statusText = 'Status: Compliant';
+            let statusDesc = 'Your backflow device is up to date!';
+            let showPenalty = false;
+
+            if (daysSince > 365 && daysSince <= 395) {
+                statusClass = 'warning';
+                statusIcon = '⚠️';
+                statusText = 'Status: Testing Due Soon';
+                statusDesc = 'Schedule your annual test to stay compliant!';
+                showPenalty = false;
+            } else if (daysSince > 395) {
+                statusClass = 'overdue';
+                statusIcon = '❌';
+                statusText = 'Status: OVERDUE';
+                statusDesc = 'You are past your annual testing deadline. Schedule immediately to avoid penalties!';
+                showPenalty = true;
+            }
+
+            // Update compliance status
+            const statusDiv = document.getElementById('complianceStatus');
+            statusDiv.className = 'compliance-status ' + statusClass;
+            statusDiv.innerHTML = `
+                <div class="status-icon">${statusIcon}</div>
+                <h2>${statusText}</h2>
+                <p>${statusDesc}</p>
+            `;
+
+            // Update results
+            document.getElementById('daysSince').textContent = daysSince;
+            document.getElementById('testingCost').textContent = '$' + testingCost;
+
+            // Penalty calculation (if overdue)
+            const daysOverdue = Math.max(0, daysSince - 395);
+            const dailyPenalty = 250; // Conservative estimate ($250-500/day)
+            const penaltyAmount = daysOverdue * dailyPenalty;
+
+            if (showPenalty) {
+                document.getElementById('penaltyCard').style.display = 'block';
+                document.getElementById('penaltyAmount').textContent = '$' + penaltyAmount.toLocaleString();
+            } else {
+                document.getElementById('penaltyCard').style.display = 'none';
+            }
+
+            // 5-year comparison
+            const fiveYearCost = testingCost * 5;
+            const oneYearPenalty = testingCost + (30 * dailyPenalty); // 30 days of penalties
+
+            document.getElementById('fiveYearCost').textContent = '$' + fiveYearCost;
+            document.getElementById('oneYearPenalty').textContent = '$' + oneYearPenalty.toLocaleString();
+        }
+
+        // Initialize on page load
+        calculateResults();
+    </script>
+</body>
+</html>

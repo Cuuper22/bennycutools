@@ -1,0 +1,1175 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countryside Service - 24/7 Service Request</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --color-primary: #2563EB; /* Colorado blue */
+            --color-accent: #C2410C; /* Mesa red/terra cotta */
+            --color-background: #f5f0eb; /* Light stone gray */
+            --color-white: #ffffff;
+            --color-text-dark: #1f2937; /* Dark gray for text */
+        }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text-dark);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Custom Tailwind Configuration (for colors and animations) */
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+
+        @layer base {
+            :root {
+                --color-primary: #2563EB;
+                --color-accent: #C2410C;
+                --color-background: #f5f0eb;
+                --color-white: #ffffff;
+                --color-text-dark: #1f2937;
+            }
+        }
+
+        @layer utilities {
+            .bg-primary { background-color: var(--color-primary); }
+            .text-primary { color: var(--color-primary); }
+            .border-primary { border-color: var(--color-primary); }
+            .bg-accent { background-color: var(--color-accent); }
+            .text-accent { color: var(--color-accent); }
+            .border-accent { border-color: var(--color-accent); }
+            .bg-background { background-color: var(--color-background); }
+
+            /* Pulsing effect for emergency phone */
+            @keyframes pulse-ring {
+                0% { transform: scale(0.33); }
+                80%, 100% { opacity: 0; }
+            }
+            @keyframes pulse-dot {
+                0% { transform: scale(0.8); }
+                50% { transform: scale(1); }
+                100% { transform: scale(0.8); }
+            }
+            .animate-pulse-ring {
+                animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            }
+            .animate-pulse-dot {
+                animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite;
+            }
+
+            /* Custom form step transitions */
+            .form-step-enter-active, .form-step-leave-active {
+                transition: opacity 0.35s ease-in-out, transform 0.35s ease-in-out;
+            }
+            .form-step-enter-from, .form-step-leave-to {
+                opacity: 0;
+                transform: translateX(20px); /* Adjust as needed for slide direction */
+            }
+            .form-step-leave-from, .form-step-enter-to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive map styles */
+        .service-area-map {
+            position: relative;
+            width: 100%;
+            height: 200px; /* Base height */
+            background-color: #a3c4a3; /* Greenish tint for landscape */
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .service-area-map::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            width: 90%;
+            height: 80%;
+            background: 
+                linear-gradient(to right, #ccc 1px, transparent 1px),
+                linear-gradient(to bottom, #ccc 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.2; /* Grid lines */
+            z-index: 0;
+        }
+
+        .map-city {
+            position: absolute;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: white;
+            z-index: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .map-city.gj { top: 40%; left: 35%; background-color: var(--color-primary); }
+        .map-city.fruita { top: 50%; left: 15%; background-color: #6d28d9; /* Indigo */ }
+        .map-city.palisade { top: 30%; left: 60%; background-color: #059669; /* Emerald */ }
+        .map-city.clifton { top: 25%; left: 45%; background-color: #f59e0b; /* Amber */ }
+        .map-city.orchard-mesa { top: 60%; left: 45%; background-color: #dc2626; /* Red */ }
+
+        /* Icon styling for Lucide */
+        .lucide {
+            stroke-width: 1.75px;
+            color: var(--color-primary);
+        }
+        .emergency-toggle-switch {
+            width: 48px;
+            height: 28px;
+            background-color: #d1d5db;
+            border-radius: 9999px;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        .emergency-toggle-switch.checked {
+            background-color: var(--color-accent);
+        }
+        .emergency-toggle-switch-handle {
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 9999px;
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            transition: transform 0.3s;
+        }
+        .emergency-toggle-switch.checked .emergency-toggle-switch-handle {
+            transform: translateX(20px);
+        }
+
+        /* Additional specific styles for responsiveness and UX */
+        @media (min-width: 768px) {
+            .service-area-map {
+                height: 250px; /* Larger height on desktop */
+            }
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: 'var(--color-primary)',
+                        accent: 'var(--color-accent)',
+                        background: 'var(--color-background)',
+                    },
+                    fontFamily: {
+                        outfit: ['Outfit', 'sans-serif'],
+                    },
+                    keyframes: {
+                        'pulse-ring': {
+                            '0%': { transform: 'scale(0.33)' },
+                            '80%, 100%': { opacity: '0' },
+                        },
+                        'pulse-dot': {
+                            '0%': { transform: 'scale(0.8)' },
+                            '50%': { transform: 'scale(1)' },
+                            '100%': { transform: 'scale(0.8)' },
+                        },
+                    },
+                    animation: {
+                        'pulse-ring': 'pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+                        'pulse-dot': 'pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -0.4s infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body class="font-outfit antialiased">
+    <div id="app" class="min-h-screen flex flex-col items-center py-8 px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <header class="w-full max-w-2xl mx-auto text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-primary mb-2">Countryside Service</h1>
+            <p class="text-xl sm:text-2xl text-gray-700">Your Trusted Plumbing Experts in Grand Junction, CO</p>
+            <a href="tel:+19704342564" class="text-accent hover:underline font-bold text-lg">(970) 434-CLOG (2564)</a>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 sm:p-8 space-y-8">
+            <!-- Emergency Toggle -->
+            <section id="emergency-toggle-section" class="border-2 border-primary rounded-lg p-4 flex items-center justify-between transition-all duration-300">
+                <div class="flex items-center">
+                    <span class="text-3xl mr-3" id="emergency-icon">🚨</span>
+                    <p class="text-lg font-semibold">Is this an emergency?</p>
+                </div>
+                <label for="emergency-switch" class="flex items-center cursor-pointer">
+                    <div class="relative">
+                        <input type="checkbox" id="emergency-switch" class="sr-only">
+                        <div class="emergency-toggle-switch block bg-gray-300 w-12 h-7 rounded-full transition-colors duration-300"></div>
+                        <div class="emergency-toggle-switch-handle dot absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform duration-300"></div>
+                    </div>
+                </label>
+            </section>
+
+            <!-- Emergency Content (initially hidden) -->
+            <section id="emergency-content" class="hidden text-center p-6 bg-red-50 border-2 border-red-500 rounded-lg shadow-md transition-all duration-300 ease-in-out transform scale-95 opacity-0">
+                <p class="text-2xl sm:text-3xl font-bold text-red-700 mb-4 flex items-center justify-center">
+                    <span class="mr-3">🚨</span> For emergencies, call us NOW! <span class="ml-3">🚨</span>
+                </p>
+                <div class="relative inline-flex mb-6">
+                    <a href="tel:+19704342564" class="relative z-10 px-8 py-4 bg-red-700 text-white rounded-full text-3xl font-extrabold shadow-lg hover:bg-red-800 transition-colors duration-200 flex items-center justify-center">
+                        <i data-lucide="phone" class="w-8 h-8 mr-3"></i> (970) 434-CLOG
+                    </a>
+                    <span class="absolute -inset-0.5 bg-red-500 rounded-full animate-pulse-ring"></span>
+                    <span class="absolute -inset-0.5 bg-red-500 rounded-full animate-pulse-dot"></span>
+                </div>
+                <h3 class="text-xl font-semibold text-red-800 mb-3">Emergency Tips While You Wait:</h3>
+                <ul class="text-red-700 text-left space-y-2 max-w-md mx-auto">
+                    <li class="flex items-start">
+                        <i data-lucide="droplet-off" class="w-5 h-5 flex-shrink-0 mr-2 mt-1"></i>
+                        <span>Locate and shut off your main water valve to prevent further damage.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="plug-off" class="w-5 h-5 flex-shrink-0 mr-2 mt-1"></i>
+                        <span>If there's standing water, do NOT use electrical appliances.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="thermometer" class="w-5 h-5 flex-shrink-0 mr-2 mt-1"></i>
+                        <span>In winter, if pipes are frozen, avoid using open flames to thaw them.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 flex-shrink-0 mr-2 mt-1"></i>
+                        <span>Clear the area around the problem to ensure easy access for our team.</span>
+                    </li>
+                </ul>
+                <p class="text-sm text-red-600 mt-6">Our team is ready to assist you immediately.</p>
+            </section>
+
+            <!-- Service Request Form (initially visible, hidden if emergency is toggled) -->
+            <section id="service-form" class="space-y-6 transition-all duration-300 ease-in-out">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-primary">Service Request</h2>
+                    <div id="progress-indicator" class="text-sm text-gray-500">Step 1 of 5</div>
+                </div>
+
+                <!-- Form Steps Container -->
+                <div id="form-steps-container" class="relative overflow-hidden">
+                    <!-- Step 1: Service Category -->
+                    <div id="step-1" class="form-step transition-all duration-350 ease-in-out">
+                        <h3 class="text-xl font-semibold mb-4">What type of service do you need?</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Category Card Template -->
+                            <div class="category-card p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200"
+                                data-category="drain-cleaning">
+                                <i data-lucide="wrench" class="w-8 h-8 mx-auto mb-2 lucide-primary"></i>
+                                <p class="font-semibold text-lg">Drain Cleaning</p>
+                                <p class="text-sm text-gray-500">Clogged drains, slow drains, sewer backup</p>
+                            </div>
+                            <div class="category-card p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200"
+                                data-category="plumbing-repair">
+                                <i data-lucide="shower" class="w-8 h-8 mx-auto mb-2 lucide-primary"></i>
+                                <p class="font-semibold text-lg">Plumbing Repair</p>
+                                <p class="text-sm text-gray-500">Leaky faucet, running toilet, pipe repair</p>
+                            </div>
+                            <div class="category-card p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200"
+                                data-category="new-installation">
+                                <i data-lucide="building-2" class="w-8 h-8 mx-auto mb-2 lucide-primary"></i>
+                                <p class="font-semibold text-lg">New Installation</p>
+                                <p class="text-sm text-gray-500">Water heater, garbage disposal, fixtures</p>
+                            </div>
+                            <div class="category-card p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200"
+                                data-category="inspection">
+                                <i data-lucide="search" class="w-8 h-8 mx-auto mb-2 lucide-primary"></i>
+                                <p class="font-semibold text-lg">Inspection</p>
+                                <p class="text-sm text-gray-500">Sewer camera, plumbing inspection</p>
+                            </div>
+                            <div class="category-card p-4 border border-gray-200 rounded-lg text-center cursor-pointer hover:shadow-md hover:scale-105 transition-all duration-200"
+                                data-category="not-sure">
+                                <i data-lucide="help-circle" class="w-8 h-8 mx-auto mb-2 lucide-primary"></i>
+                                <p class="font-semibold text-lg">Not Sure</p>
+                                <p class="text-sm text-gray-500">Describe your problem</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Problem Details (Dynamic) -->
+                    <div id="step-2" class="form-step hidden">
+                        <h3 class="text-xl font-semibold mb-4">Tell us more about the problem.</h3>
+                        <div id="problem-details-fields" class="space-y-4">
+                            <!-- Fields will be injected here by JS -->
+                        </div>
+                        <div id="cost-estimate" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 hidden">
+                            <p class="font-semibold">Estimated Cost Range:</p>
+                            <p class="text-lg font-bold text-primary animate-in" id="estimate-value"></p>
+                            <p class="mt-2 text-xs text-gray-600">Final price confirmed after inspection.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Property Info -->
+                    <div id="step-3" class="form-step hidden">
+                        <h3 class="text-xl font-semibold mb-4">About Your Property</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="home-type" class="block text-sm font-medium text-gray-700">Home Type</label>
+                                <select id="home-type" name="home-type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                    <option value="">Select...</option>
+                                    <option value="house">House</option>
+                                    <option value="apartment">Apartment</option>
+                                    <option value="mobile-home">Mobile Home</option>
+                                    <option value="commercial">Commercial</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="home-age" class="block text-sm font-medium text-gray-700">Approximate Age of Home</label>
+                                <input type="number" id="home-age" name="home-age" placeholder="e.g., 1985" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="last-service" class="block text-sm font-medium text-gray-700">When was your last plumbing service?</label>
+                                <select id="last-service" name="last-service" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                    <option value="">Select...</option>
+                                    <option value="less-1-year">Less than 1 year ago</option>
+                                    <option value="1-3-years">1-3 years ago</option>
+                                    <option value="3-5-years">3-5 years ago</option>
+                                    <option value="over-5-years">Over 5 years ago</option>
+                                    <option value="never">Never</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Contact & Scheduling -->
+                    <div id="step-4" class="form-step hidden">
+                        <h3 class="text-xl font-semibold mb-4">Your Contact & Scheduling Info</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="user-name" class="block text-sm font-medium text-gray-700">Name <span class="text-red-500">*</span></label>
+                                <input type="text" id="user-name" name="user-name" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="user-phone" class="block text-sm font-medium text-gray-700">Phone <span class="text-red-500">*</span></label>
+                                <input type="tel" id="user-phone" name="user-phone" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="(970) XXX-XXXX">
+                            </div>
+                            <div>
+                                <label for="user-email" class="block text-sm font-medium text-gray-700">Email (Optional)</label>
+                                <input type="email" id="user-email" name="user-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="callback-time" class="block text-sm font-medium text-gray-700">Preferred Callback Time</label>
+                                <select id="callback-time" name="callback-time" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                    <option value="">Select...</option>
+                                    <option value="asap">ASAP</option>
+                                    <option value="morning">Morning (8 AM - 12 PM)</option>
+                                    <option value="afternoon">Afternoon (12 PM - 5 PM)</option>
+                                    <option value="evening">Evening (5 PM - 8 PM)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="best-day" class="block text-sm font-medium text-gray-700">Best Day</label>
+                                <select id="best-day" name="best-day" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                    <option value="">Select...</option>
+                                    <option value="today">Today</option>
+                                    <option value="tomorrow">Tomorrow</option>
+                                    <option value="this-week">Sometime This Week</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Confirmation -->
+                    <div id="step-5" class="form-step hidden">
+                        <h3 class="text-xl font-semibold mb-4 text-primary">Request Summary</h3>
+                        <div id="summary-content" class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-sm space-y-2">
+                            <!-- Summary details will be injected here -->
+                        </div>
+                        <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                            <p class="font-semibold text-lg text-green-700">Thank You! Your Request Has Been Sent.</p>
+                            <p class="mt-2 text-green-600">We'll call you within 2 hours during business hours (Mon-Fri, 8 AM - 5 PM).</p>
+                            <p class="mt-4 text-sm text-gray-600">
+                                Business Hours: Mon-Fri 8 AM - 5 PM | Sat 9 AM - 2 PM | Sun Closed
+                                <br>
+                                For immediate assistance outside these hours, please use our emergency line.
+                            </p>
+                        </div>
+                        <h3 class="text-lg font-semibold text-primary mt-8 mb-3">Tips for the Meantime:</h3>
+                        <ul class="text-gray-700 text-left space-y-2 text-sm">
+                            <li class="flex items-start">
+                                <i data-lucide="hand-platter" class="w-4 h-4 flex-shrink-0 mr-2 mt-1 text-primary"></i>
+                                <span>If it's a leak, place buckets or towels to catch water and minimize damage.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i data-lucide="water" class="w-4 h-4 flex-shrink-0 mr-2 mt-1 text-primary"></i>
+                                <span>Avoid using the affected fixture (e.g., don't flush a running toilet).</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i data-lucide="home" class="w-4 h-4 flex-shrink-0 mr-2 mt-1 text-primary"></i>
+                                <span>Ensure our technicians have clear access to the problem area.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i data-lucide="snowy" class="w-4 h-4 flex-shrink-0 mr-2 mt-1 text-primary"></i>
+                                <span><strong class="text-accent">Grand Junction Winter Tip:</strong> Keep faucets dripping slightly during extreme cold to prevent pipes from freezing and bursting.</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i data-lucide="mountain" class="w-4 h-4 flex-shrink-0 mr-2 mt-1 text-primary"></i>
+                                <span><strong class="text-accent">GJ Specific:</strong> Hard water buildup is common. Regular maintenance can help. Tree roots often impact older sewer lines.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons (Back/Next/Submit) -->
+                <div id="form-navigation" class="flex justify-between mt-6">
+                    <button id="back-button" class="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors duration-200 hidden">
+                        Back
+                    </button>
+                    <button id="next-button" class="px-6 py-2 bg-primary text-white rounded-md hover:bg-blue-700 transition-colors duration-200 ml-auto">
+                        Next
+                    </button>
+                    <button id="submit-button" class="px-6 py-2 bg-accent text-white rounded-md hover:bg-orange-700 transition-colors duration-200 ml-auto hidden">
+                        Submit Request
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Secondary Section: Common Costs Guide -->
+        <section class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 sm:p-8 mt-8 space-y-6">
+            <h2 class="text-2xl font-bold text-primary mb-4">Common Plumbing Costs (Grand Junction Area)</h2>
+            <p class="text-sm text-gray-600 mb-4">These are estimated ranges. Final price confirmed after inspection.</p>
+
+            <div id="cost-guide" class="space-y-4">
+                <!-- Cost Item Template -->
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="drain-cleaning">
+                        <span class="font-semibold text-lg">Drain Cleaning: <span class="text-primary">$99-299</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Severity and location of the clog (e.g., simple sink drain vs. main sewer line).</li>
+                            <li>Need for specialized equipment like hydro-jetting or camera inspection.</li>
+                            <li>Accessibility of the drain line.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="toilet-repair">
+                        <span class="font-semibold text-lg">Toilet Repair: <span class="text-primary">$75-200</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Type of repair (e.g., flapper replacement, fill valve, leak detection).</li>
+                            <li>Whether new components are needed and their cost.</li>
+                            <li>Complexity of troubleshooting.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="water-heater-replacement">
+                        <span class="font-semibold text-lg">Water Heater Replacement: <span class="text-primary">$800-2,500</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Type of water heater (tankless vs. traditional, gas vs. electric).</li>
+                            <li>Capacity and brand of the new unit.</li>
+                            <li>Any necessary system upgrades or code compliance modifications.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="faucet-installation">
+                        <span class="font-semibold text-lg">Faucet Installation: <span class="text-primary">$150-350</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Complexity of the installation (e.g., standard faucet vs. complex chef's faucet).</li>
+                            <li>Removal of old faucet, especially if corroded.</li>
+                            <li>Minor plumbing adjustments needed.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="sewer-camera-inspection">
+                        <span class="font-semibold text-lg">Sewer Camera Inspection: <span class="text-primary">$150-400</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Length and accessibility of the sewer line.</li>
+                            <li>Depth of the line and any obstructions.</li>
+                            <li>Recording/reporting requirements.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="cost-item border border-gray-200 rounded-lg overflow-hidden">
+                    <button class="w-full text-left p-4 flex justify-between items-center bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                        data-cost-id="main-line-repair">
+                        <span class="font-semibold text-lg">Main Line Repair: <span class="text-primary">$1,500-5,000+</span></span>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-gray-500 transition-transform duration-200"></i>
+                    </button>
+                    <div class="cost-details p-4 bg-gray-100 text-sm text-gray-700 hidden">
+                        <p class="font-semibold mb-2">What affects the price?</p>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Location and depth of the break.</li>
+                            <li>Extent of damage and type of repair needed (patch vs. full replacement).</li>
+                            <li>Excavation requirements and property restoration.</li>
+                            <li>Material costs (e.g., PVC, copper, PEX).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Secondary Section: Service Area Map -->
+        <section class="w-full max-w-2xl bg-white shadow-lg rounded-xl p-6 sm:p-8 mt-8 space-y-4">
+            <h2 class="text-2xl font-bold text-primary mb-4">Our Service Area</h2>
+            <p class="text-lg text-gray-700 text-center font-semibold mb-6">Serving all of Mesa County and the Western Slope</p>
+
+            <div class="service-area-map relative">
+                <span class="map-city gj">Grand Junction</span>
+                <span class="map-city fruita">Fruita</span>
+                <span class="map-city palisade">Palisade</span>
+                <span class="map-city clifton">Clifton</span>
+                <span class="map-city orchard-mesa">Orchard Mesa</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-4 text-center">We're proud to serve our local communities!</p>
+        </section>
+
+        <!-- Footer -->
+        <footer class="w-full max-w-2xl mx-auto mt-12 p-6 sm:p-8 bg-gray-800 text-white rounded-xl text-center space-y-4">
+            <div class="flex flex-wrap justify-center gap-4 text-sm font-semibold mb-4">
+                <span class="px-3 py-1 bg-primary rounded-full text-white shadow-md">Licensed & Insured</span>
+                <span class="px-3 py-1 bg-accent rounded-full text-white shadow-md">24/7 Emergency</span>
+                <span class="px-3 py-1 bg-primary rounded-full text-white shadow-md">Serving Mesa County</span>
+            </div>
+            <p class="text-lg font-bold">Countryside Service</p>
+            <p class="text-md">Grand Junction, CO</p>
+            <p class="text-2xl font-extrabold text-accent">
+                <a href="tel:+19704342564" class="hover:underline">(970) 434-CLOG</a>
+            </p>
+            <p class="text-md">
+                <a href="mailto:Office@434clog.com" class="hover:underline">Office@434clog.com</a>
+            </p>
+            <p class="text-sm text-gray-400 mt-4">&copy; 2024 Countryside Service. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Inline JavaScript -->
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        const emergencySwitch = document.getElementById('emergency-switch');
+        const emergencySection = document.getElementById('emergency-content');
+        const serviceFormSection = document.getElementById('service-form');
+        const toggleSection = document.getElementById('emergency-toggle-section');
+        const emergencyIcon = document.getElementById('emergency-icon');
+        const formSteps = Array.from(document.querySelectorAll('.form-step'));
+        const progressIndicator = document.getElementById('progress-indicator');
+        const backButton = document.getElementById('back-button');
+        const nextButton = document.getElementById('next-button');
+        const submitButton = document.getElementById('submit-button');
+        const formStepsContainer = document.getElementById('form-steps-container');
+        const problemDetailsFields = document.getElementById('problem-details-fields');
+        const costEstimateDisplay = document.getElementById('cost-estimate');
+        const estimateValue = document.getElementById('estimate-value');
+        const summaryContent = document.getElementById('summary-content');
+
+        let currentStep = 0;
+        let formData = {
+            category: '',
+            problem_details: {},
+            property_info: {},
+            contact_scheduling: {}
+        };
+        let costEstimates = {}; // Store cost estimates for dynamic display
+
+        const serviceCostRanges = {
+            'drain-cleaning-kitchen': '$99-199',
+            'drain-cleaning-bathroom': '$99-199',
+            'drain-cleaning-shower': '$99-199',
+            'drain-cleaning-floor': '$120-250',
+            'drain-cleaning-main-sewer': '$200-400',
+            'plumbing-repair-leak': '$100-300',
+            'plumbing-repair-drip': '$75-150',
+            'plumbing-repair-no-water': '$150-400',
+            'plumbing-repair-low-pressure': '$150-350',
+            'plumbing-repair-strange-noise': '$100-250',
+            'new-installation-water-heater': '$800-2500',
+            'new-installation-garbage-disposal': '$250-500',
+            'new-installation-fixtures': '$150-400',
+            'inspection-sewer-camera': '$150-400',
+            'inspection-plumbing-inspection': '$100-300',
+            'inspection-pre-purchase': '$200-500',
+            'not-sure': 'Varies based on problem'
+        };
+
+        const problemDetailConfigs = {
+            'drain-cleaning': [
+                {
+                    type: 'select',
+                    id: 'drain-location',
+                    label: 'Which drain is affected?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'kitchen', text: 'Kitchen Sink' },
+                        { value: 'bathroom', text: 'Bathroom Sink/Tub' },
+                        { value: 'shower', text: 'Shower Drain' },
+                        { value: 'floor', text: 'Floor Drain' },
+                        { value: 'main-sewer', text: 'Main Sewer Line' },
+                        { value: 'multiple', text: 'Multiple Drains' }
+                    ],
+                    costKey: (value) => `drain-cleaning-${value}`
+                },
+                {
+                    type: 'select',
+                    id: 'drain-severity',
+                    label: 'How bad is the problem?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'slow', text: 'Slow draining' },
+                        { value: 'won-drain', text: 'Completely blocked/won\'t drain' },
+                        { value: 'backing-up', text: 'Water backing up' },
+                        { value: 'multiple-drains-affected', text: 'Multiple drains affected' }
+                    ]
+                }
+            ],
+            'plumbing-repair': [
+                {
+                    type: 'select',
+                    id: 'repair-issue',
+                    label: 'What\'s happening?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'leak', text: 'Leak/Drip' },
+                        { value: 'no-water', text: 'No water (specific fixture)' },
+                        { value: 'low-pressure', text: 'Low water pressure' },
+                        { value: 'strange-noise', text: 'Strange noise' },
+                        { value: 'running-toilet', text: 'Running toilet' },
+                        { value: 'other', text: 'Other (please describe)' }
+                    ],
+                    costKey: (value) => value === 'running-toilet' ? 'toilet-repair' : `plumbing-repair-${value}`
+                },
+                {
+                    type: 'select',
+                    id: 'repair-location',
+                    label: 'Where is this happening?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'kitchen', text: 'Kitchen' },
+                        { value: 'bathroom', text: 'Bathroom' },
+                        { value: 'basement', text: 'Basement' },
+                        { value: 'outdoor', text: 'Outdoor/Yard' },
+                        { value: 'other', text: 'Other' }
+                    ]
+                },
+                {
+                    type: 'textarea',
+                    id: 'repair-description',
+                    label: 'Please describe the issue in more detail:',
+                    placeholder: 'e.g., Leaky faucet in the kitchen, slow drip from the cold water handle.'
+                }
+            ],
+            'new-installation': [
+                {
+                    type: 'select',
+                    id: 'installation-type',
+                    label: 'What are you looking to install?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'water-heater', text: 'Water Heater' },
+                        { value: 'garbage-disposal', text: 'Garbage Disposal' },
+                        { value: 'fixtures', text: 'Faucets/Fixtures' },
+                        { value: 'other', text: 'Other (please describe)' }
+                    ],
+                    costKey: (value) => {
+                        if (value === 'water-heater') return 'new-installation-water-heater';
+                        if (value === 'garbage-disposal') return 'new-installation-garbage-disposal';
+                        if (value === 'fixtures') return 'new-installation-fixtures';
+                        return null; // No specific cost for 'other' here, will use general for category
+                    }
+                },
+                {
+                    type: 'textarea',
+                    id: 'installation-details',
+                    label: 'Please provide any details about the installation:',
+                    placeholder: 'e.g., Replacing an old water heater, installing new bathroom faucets.'
+                }
+            ],
+            'inspection': [
+                {
+                    type: 'select',
+                    id: 'inspection-type',
+                    label: 'What type of inspection do you need?',
+                    options: [
+                        { value: '', text: 'Select...' },
+                        { value: 'sewer-camera', text: 'Sewer Camera Inspection' },
+                        { value: 'plumbing-inspection', text: 'General Plumbing Inspection' },
+                        { value: 'pre-purchase', text: 'Pre-purchase Home Inspection' },
+                        { value: 'other', text: 'Other (please describe)' }
+                    ],
+                    costKey: (value) => `inspection-${value}`
+                },
+                {
+                    type: 'textarea',
+                    id: 'inspection-reason',
+                    label: 'Reason for inspection (optional):',
+                    placeholder: 'e.g., Suspect a sewer line issue, buying a new home.'
+                }
+            ],
+            'not-sure': [
+                {
+                    type: 'textarea',
+                    id: 'problem-description',
+                    label: 'Please describe your plumbing problem in detail:',
+                    placeholder: 'e.g., My water bill is unusually high, I hear strange noises in the walls, but can\'t pinpoint the source.'
+                }
+            ]
+        };
+
+        function showStep(stepIndex) {
+            formSteps.forEach((step, index) => {
+                if (index === stepIndex) {
+                    step.classList.remove('hidden');
+                    step.classList.add('form-step-enter-from'); // Start animation
+                    setTimeout(() => {
+                        step.classList.remove('form-step-enter-from');
+                        step.classList.add('form-step-enter-to');
+                    }, 50); // Small delay to ensure reflow for animation
+                } else {
+                    if (!step.classList.contains('hidden')) {
+                        step.classList.add('form-step-leave-to'); // Start animation
+                        setTimeout(() => {
+                            step.classList.add('hidden');
+                            step.classList.remove('form-step-leave-to');
+                            step.classList.remove('form-step-enter-to'); // Clean up previous state
+                        }, 350); // Match CSS transition duration
+                    }
+                }
+            });
+
+            currentStep = stepIndex;
+            updateProgressIndicator();
+            updateNavigationButtons();
+            lucide.createIcons(); // Re-render icons if new ones are added
+        }
+
+        function updateProgressIndicator() {
+            progressIndicator.textContent = `Step ${currentStep + 1} of ${formSteps.length}`;
+        }
+
+        function updateNavigationButtons() {
+            backButton.classList.toggle('hidden', currentStep === 0 || currentStep === formSteps.length - 1);
+            nextButton.classList.toggle('hidden', currentStep === formSteps.length - 1);
+            submitButton.classList.toggle('hidden', currentStep !== formSteps.length - 1);
+
+            // Hide next button if a required field on the current step is empty (basic validation)
+            const currentStepElement = formSteps[currentStep];
+            const requiredFields = currentStepElement ? currentStepElement.querySelectorAll('[required]') : [];
+            let allRequiredFilled = true;
+            requiredFields.forEach(field => {
+                if (field.value.trim() === '') {
+                    allRequiredFilled = false;
+                }
+            });
+            // if (currentStep < formSteps.length - 1) { // Only for steps before confirmation
+            //     nextButton.disabled = !allRequiredFilled;
+            // }
+        }
+
+        function generateProblemDetailFields(category) {
+            problemDetailsFields.innerHTML = '';
+            costEstimateDisplay.classList.add('hidden');
+            estimateValue.textContent = '';
+            costEstimates = {}; // Reset estimates
+
+            const config = problemDetailConfigs[category];
+            if (!config) {
+                problemDetailsFields.innerHTML = `<p class="text-gray-600">Please describe your problem using the text field.</p>
+                    <div>
+                        <label for="generic-description" class="block text-sm font-medium text-gray-700">Problem Description</label>
+                        <textarea id="generic-description" name="generic-description" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" placeholder="Please describe your plumbing issue here..."></textarea>
+                    </div>`;
+                return;
+            }
+
+            config.forEach(fieldConfig => {
+                const div = document.createElement('div');
+                div.classList.add('form-field');
+
+                const label = document.createElement('label');
+                label.setAttribute('for', fieldConfig.id);
+                label.classList.add('block', 'text-sm', 'font-medium', 'text-gray-700');
+                label.textContent = fieldConfig.label;
+                if (fieldConfig.required) {
+                    label.innerHTML += ' <span class="text-red-500">*</span>';
+                }
+                div.appendChild(label);
+
+                let inputElement;
+                if (fieldConfig.type === 'select') {
+                    inputElement = document.createElement('select');
+                    inputElement.id = fieldConfig.id;
+                    inputElement.name = fieldConfig.id;
+                    inputElement.classList.add('mt-1', 'block', 'w-full', 'pl-3', 'pr-10', 'py-2', 'text-base', 'border-gray-300', 'focus:outline-none', 'focus:ring-primary', 'focus:border-primary', 'sm:text-sm', 'rounded-md');
+                    fieldConfig.options.forEach(optionConfig => {
+                        const option = document.createElement('option');
+                        option.value = optionConfig.value;
+                        option.textContent = optionConfig.text;
+                        inputElement.appendChild(option);
+                    });
+                } else if (fieldConfig.type === 'textarea') {
+                    inputElement = document.createElement('textarea');
+                    inputElement.id = fieldConfig.id;
+                    inputElement.name = fieldConfig.id;
+                    inputElement.rows = 4;
+                    inputElement.classList.add('mt-1', 'block', 'w-full', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'py-2', 'px-3', 'focus:outline-none', 'focus:ring-primary', 'focus:border-primary', 'sm:text-sm');
+                    inputElement.placeholder = fieldConfig.placeholder;
+                } else { // default to text input
+                    inputElement = document.createElement('input');
+                    inputElement.type = fieldConfig.type || 'text';
+                    inputElement.id = fieldConfig.id;
+                    inputElement.name = fieldConfig.id;
+                    inputElement.classList.add('mt-1', 'block', 'w-full', 'border', 'border-gray-300', 'rounded-md', 'shadow-sm', 'py-2', 'px-3', 'focus:outline-none', 'focus:ring-primary', 'focus:border-primary', 'sm:text-sm');
+                    inputElement.placeholder = fieldConfig.placeholder;
+                }
+
+                if (fieldConfig.required) {
+                    inputElement.setAttribute('required', 'true');
+                }
+
+                inputElement.addEventListener('change', (e) => {
+                    formData.problem_details[fieldConfig.id] = e.target.value;
+                    if (fieldConfig.costKey) {
+                        const key = fieldConfig.costKey(e.target.value);
+                        if (key && serviceCostRanges[key]) {
+                            costEstimates[fieldConfig.id] = serviceCostRanges[key];
+                        } else {
+                            delete costEstimates[fieldConfig.id];
+                        }
+                    }
+                    updateCostEstimateDisplay();
+                });
+                div.appendChild(inputElement);
+                problemDetailsFields.appendChild(div);
+            });
+        }
+
+        function updateCostEstimateDisplay() {
+            let displayedCost = 'N/A';
+            if (Object.keys(costEstimates).length > 0) {
+                // For simplicity, if multiple costs, just show the highest range or "Varies"
+                const allCosts = Object.values(costEstimates);
+                if (allCosts.length === 1) {
+                    displayedCost = allCosts[0];
+                } else {
+                    // Try to find a reasonable combined range or just say "Varies"
+                    const low = Math.min(...allCosts.map(c => parseInt(c.split('-')[0].replace('$', '')) || 0));
+                    const high = Math.max(...allCosts.map(c => parseInt(c.split('-')[1]?.replace('$', '').replace('+', '')) || 0));
+                    if (low || high) {
+                        displayedCost = `$${low}-${high || '?'}+`;
+                    } else {
+                        displayedCost = 'Varies based on selections';
+                    }
+                }
+            } else if (formData.category && problemDetailConfigs[formData.category] && !problemDetailConfigs[formData.category].some(f => f.costKey)) {
+                // If category has no specific cost keys, use a general category estimate if available
+                const generalCategoryCost = serviceCostRanges[formData.category];
+                if (generalCategoryCost) {
+                    displayedCost = generalCategoryCost;
+                }
+            }
+
+
+            if (displayedCost !== 'N/A' && displayedCost !== 'Varies based on selections') {
+                costEstimateDisplay.classList.remove('hidden');
+                // Animate count up if it's a number range
+                const currentText = estimateValue.textContent;
+                if (currentText !== displayedCost) {
+                    estimateValue.classList.remove('animate-in'); // Reset animation
+                    void estimateValue.offsetWidth; // Trigger reflow
+                    estimateValue.textContent = displayedCost;
+                    estimateValue.classList.add('animate-in');
+                }
+            } else {
+                costEstimateDisplay.classList.add('hidden');
+            }
+        }
+
+        function generateSummary() {
+            summaryContent.innerHTML = '';
+            let html = '<p class="font-bold text-base mb-2 text-primary">Your Service Request:</p>';
+
+            // Service Category
+            html += `<p><strong class="text-gray-800">Service Type:</strong> ${formData.category.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p>`;
+
+            // Problem Details
+            if (Object.keys(formData.problem_details).length > 0) {
+                html += '<p class="font-bold text-gray-800 mt-3 mb-1">Problem Details:</p>';
+                for (const key in formData.problem_details) {
+                    if (formData.problem_details[key]) {
+                        html += `<p>&nbsp;&nbsp;- ${key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: ${formData.problem_details[key]}</p>`;
+                    }
+                }
+            } else if (formData.category === 'not-sure' && document.getElementById('generic-description')?.value) {
+                html += `<p class="font-bold text-gray-800 mt-3 mb-1">Problem Description:</p>`;
+                html += `<p>&nbsp;&nbsp;- ${document.getElementById('generic-description').value}</p>`;
+            }
+
+            // Property Info
+            if (Object.keys(formData.property_info).length > 0 && Object.values(formData.property_info).some(val => val)) {
+                html += '<p class="font-bold text-gray-800 mt-3 mb-1">Property Information:</p>';
+                for (const key in formData.property_info) {
+                    if (formData.property_info[key]) {
+                        html += `<p>&nbsp;&nbsp;- ${key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: ${formData.property_info[key]}</p>`;
+                    }
+                }
+            }
+
+            // Contact & Scheduling
+            if (Object.keys(formData.contact_scheduling).length > 0 && Object.values(formData.contact_scheduling).some(val => val)) {
+                html += '<p class="font-bold text-gray-800 mt-3 mb-1">Contact & Scheduling:</p>';
+                for (const key in formData.contact_scheduling) {
+                    if (formData.contact_scheduling[key]) {
+                        html += `<p>&nbsp;&nbsp;- ${key.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}: ${formData.contact_scheduling[key]}</p>`;
+                    }
+                }
+            }
+
+            // Estimated Cost Range
+            let finalEstimatedCost = 'N/A';
+            if (Object.keys(costEstimates).length > 0) {
+                const allCosts = Object.values(costEstimates);
+                if (allCosts.length === 1) {
+                    finalEstimatedCost = allCosts[0];
+                } else {
+                    const low = Math.min(...allCosts.map(c => parseInt(c.split('-')[0].replace('$', '')) || 0));
+                    const high = Math.max(...allCosts.map(c => parseInt(c.split('-')[1]?.replace('$', '').replace('+', '')) || 0));
+                    if (low || high) {
+                        finalEstimatedCost = `$${low}-${high || '?'}+`;
+                    } else {
+                        finalEstimatedCost = 'Varies based on selections';
+                    }
+                }
+            } else if (formData.category && serviceCostRanges[formData.category]) {
+                finalEstimatedCost = serviceCostRanges[formData.category];
+            }
+
+
+            html += `<p class="mt-4 text-lg font-bold text-accent">Estimated Cost Range: ${finalEstimatedCost}</p>`;
+            html += `<p class="mt-2 text-xs text-gray-600">Final price confirmed after inspection.</p>`;
+
+            summaryContent.innerHTML = html;
+        }
+
+        // Event Listeners
+
+        // Emergency Toggle Logic
+        emergencySwitch.addEventListener('change', function() {
+            if (this.checked) {
+                // Emergency ON
+                emergencySection.classList.remove('hidden', 'opacity-0', 'scale-95');
+                serviceFormSection.classList.add('hidden');
+                toggleSection.classList.remove('border-primary');
+                toggleSection.classList.add('border-red-500', 'bg-red-50');
+                emergencyIcon.textContent = '🚨';
+                toggleSection.querySelector('.emergency-toggle-switch').classList.add('checked');
+            } else {
+                // Emergency OFF
+                emergencySection.classList.add('opacity-0', 'scale-95');
+                emergencySection.addEventListener('transitionend', function handler() {
+                    emergencySection.classList.add('hidden');
+                    emergencySection.removeEventListener('transitionend', handler);
+                }, { once: true });
+
+                serviceFormSection.classList.remove('hidden');
+                toggleSection.classList.add('border-primary');
+                toggleSection.classList.remove('border-red-500', 'bg-red-50');
+                emergencyIcon.textContent = '🛠️'; // Changed icon for non-emergency
+                toggleSection.querySelector('.emergency-toggle-switch').classList.remove('checked');
+
+                // Reset form to first step when coming out of emergency mode
+                showStep(0);
+            }
+            lucide.createIcons(); // Re-render icons if new ones are added/removed
+        });
+
+        // Category Selection
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.category-card').forEach(c => c.classList.remove('border-primary', 'bg-blue-50'));
+                card.classList.add('border-primary', 'bg-blue-50');
+                formData.category = card.dataset.category;
+                generateProblemDetailFields(formData.category);
+                updateCostEstimateDisplay();
+                showStep(1);
+            });
+        });
+
+        // Navigation Buttons
+        nextButton.addEventListener('click', () => {
+            // Basic validation for current step before moving
+            const currentStepElement = formSteps[currentStep];
+            const requiredFields = currentStepElement ? currentStepElement.querySelectorAll('[required]') : [];
+            let allRequiredFilled = true;
+            requiredFields.forEach(field => {
+                if (field.value.trim() === '') {
+                    allRequiredFilled = false;
+                    field.classList.add('border-red-500'); // Highlight missing fields
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            if (!allRequiredFilled) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            if (currentStep < formSteps.length - 1) {
+                // Capture data from current step before moving
+                // Step 2: Problem Details
+                if (currentStep === 1) {
+                    const genericDescription = document.getElementById('generic-description');
+                    if (genericDescription) {
+                        formData.problem_details['generic-description'] = genericDescription.value;
+                    } else {
+                        problemDetailsFields.querySelectorAll('select, textarea, input').forEach(field => {
+                            formData.problem_details[field.id] = field.value;
+                        });
+                    }
+                }
+                // Step 3: Property Info
+                if (currentStep === 2) {
+                    formData.property_info['home-type'] = document.getElementById('home-type').value;
+                    formData.property_info['home-age'] = document.getElementById('home-age').value;
+                    formData.property_info['last-service'] = document.getElementById('last-service').value;
+                }
+                // Step 4: Contact & Scheduling
+                if (currentStep === 3) {
+                    formData.contact_scheduling['user-name'] = document.getElementById('user-name').value;
+                    formData.contact_scheduling['user-phone'] = document.getElementById('user-phone').value;
+                    formData.contact_scheduling['user-email'] = document.getElementById('user-email').value;
+                    formData.contact_scheduling['callback-time'] = document.getElementById('callback-time').value;
+                    formData.contact_scheduling['best-day'] = document.getElementById('best-day').value;
+
+                    // Generate summary for the last step
+                    generateSummary();
+                }
+
+                showStep(currentStep + 1);
+            }
+        });
+
+        backButton.addEventListener('click', () => {
+            if (currentStep > 0) {
+                showStep(currentStep - 1);
+            }
+        });
+
+        submitButton.addEventListener('click', () => {
+            // In a real application, you would send formData to a server here.
+            // For this single-page tool, we just show the confirmation.
+            alert('Service request submitted! (Simulated)');
+            console.log('Form Data:', formData);
+            // Optionally, clear form or navigate to a thank you page
+        });
+
+        // Cost Guide Expand/Collapse
+        document.querySelectorAll('.cost-item button').forEach(button => {
+            button.addEventListener('click', () => {
+                const details = button.nextElementSibling;
+                const icon = button.querySelector('.lucide');
+                details.classList.toggle('hidden');
+                if (details.classList.contains('hidden')) {
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    icon.style.transform = 'rotate(180deg)';
+                }
+            });
+        });
+
+        // Initial setup
+        showStep(0);
+        updateProgressIndicator();
+        updateNavigationButtons();
+    </script>
+<script>// Anti-scrape protection — injected into all tool pages
+(function(){
+  // Disable right-click context menu
+
+  
+  
+  // Disable text selection on body (forms still selectable)
+  
+  
+  // Re-enable for inputs/textareas
+  document.querySelectorAll('input,textarea,select').forEach(function(el){
+    el.style.userSelect = 'auto'; el.style.webkitUserSelect = 'auto';
+  });
+  
+  // Disable drag
+  document.addEventListener('dragstart', function(e){ e.preventDefault(); });
+  
+  // Disable print
+  var style = document.createElement('style');
+  style.textContent = '@media print { body { display: none !important; } }';
+  document.head.appendChild(style);
+  
+  // Add invisible watermark
+  var wm = document.createElement('div');
+  wm.style.cssText = 'position:fixed;bottom:0;right:0;opacity:0.03;font-size:10px;pointer-events:none;z-index:99999;color:#000;';
+  wm.textContent = 'Licensed demo — bennycutools.com — ' + new Date().toISOString().slice(0,10);
+  document.body.appendChild(wm);
+  
+  // Detect devtools (basic)
+  var threshold = 160;
+  setInterval(function(){
+    if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;"><h1>This demo is proprietary. Please contact ben@bennycutools.com for licensing.</h1></div>';
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>

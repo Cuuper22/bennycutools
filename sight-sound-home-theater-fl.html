@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Theater Value Calculator | Sight and Sound Home Theater</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f0a29 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header:before {
+            content: '🎬';
+            position: absolute;
+            font-size: 120px;
+            opacity: 0.1;
+            right: -20px;
+            top: -20px;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            line-height: 1.6;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .main-content {
+            padding: 40px 30px;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #4c1d95;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #7c3aed;
+            font-weight: 600;
+        }
+        
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .input-group label {
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .input-group input,
+        .input-group select {
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        
+        .system-tiers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .tier-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .tier-card:hover {
+            border-color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+        }
+        
+        .tier-card.selected {
+            border-color: #7c3aed;
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+            color: white;
+        }
+        
+        .tier-card .tier-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .tier-card .tier-price {
+            font-size: 1.4em;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+        
+        .tier-card ul {
+            list-style: none;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+        
+        .tier-card ul li:before {
+            content: '✓ ';
+            font-weight: bold;
+        }
+        
+        .tier-card.selected ul li:before {
+            color: #fbbf24;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+        }
+        
+        .calculate-btn:active {
+            transform: translateY(0);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 40px;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #7c3aed 0%, #4c1d95 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+        }
+        
+        .result-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .result-card .big-number {
+            font-size: 3em;
+            font-weight: 800;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .result-card p {
+            font-size: 1.05em;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .comparison-item {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-item h4 {
+            color: #4c1d95;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .comparison-item .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #7c3aed;
+            margin: 10px 0;
+        }
+        
+        .comparison-item p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+        
+        .cost-comparison {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+        
+        .cost-comparison h4 {
+            color: #4c1d95;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+        
+        .cost-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .cost-row:last-child {
+            border-bottom: none;
+            padding-top: 20px;
+            margin-top: 10px;
+            border-top: 2px solid #7c3aed;
+        }
+        
+        .cost-row .label {
+            color: #4a5568;
+            font-weight: 500;
+        }
+        
+        .cost-row .value {
+            font-weight: 700;
+            color: #7c3aed;
+            font-size: 1.1em;
+        }
+        
+        .experience-benefits {
+            background: #fef3c7;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 25px;
+            border: 2px solid #f59e0b;
+        }
+        
+        .experience-benefits h4 {
+            color: #92400e;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .benefit-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            color: #78350f;
+        }
+        
+        .benefit-item:before {
+            content: '🎭';
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .timeline {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+        
+        .timeline h4 {
+            color: #4c1d95;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-bar {
+            position: relative;
+            height: 60px;
+            background: #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .timeline-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626 0%, #10b981 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1em;
+            transition: width 0.8s ease;
+        }
+        
+        .footer {
+            background: #f7fafc;
+            padding: 30px;
+            text-align: center;
+            color: #718096;
+            margin-top: 40px;
+        }
+        
+        .footer p {
+            margin-bottom: 10px;
+        }
+        
+        .footer strong {
+            color: #4c1d95;
+        }
+        
+        @media (max-width: 768px) {
+            .system-tiers {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .result-card .big-number {
+                font-size: 2.2em;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Home Theater Value Calculator</h1>
+            <p>See how a custom home theater pays for itself through savings, property value, and priceless experiences</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="section">
+                <div class="section-title">Choose Your System Tier</div>
+                <div class="system-tiers">
+                    <div class="tier-card" onclick="selectTier('good', 15000)">
+                        <div class="tier-title">Good</div>
+                        <div class="tier-price">$15,000</div>
+                        <ul>
+                            <li>5.1 Surround Sound</li>
+                            <li>65" 4K Display</li>
+                            <li>Quality AV Receiver</li>
+                            <li>Professional Install</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card selected" onclick="selectTier('better', 30000)">
+                        <div class="tier-title">Better</div>
+                        <div class="tier-price">$30,000</div>
+                        <ul>
+                            <li>7.1 Atmos Sound</li>
+                            <li>Projector + Screen</li>
+                            <li>Premium Components</li>
+                            <li>Lighting Control</li>
+                            <li>Multi-Room Audio</li>
+                        </ul>
+                    </div>
+                    <div class="tier-card" onclick="selectTier('best', 50000)">
+                        <div class="tier-title">Best</div>
+                        <div class="tier-price">$50,000</div>
+                        <ul>
+                            <li>9.2 Atmos Sound</li>
+                            <li>4K Laser Projector</li>
+                            <li>Acoustic Treatment</li>
+                            <li>Full Automation</li>
+                            <li>Theater Seating</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Your Current Entertainment Spending</div>
+                <div class="input-grid">
+                    <div class="input-group">
+                        <label for="familySize">Household Size</label>
+                        <select id="familySize">
+                            <option value="1">1 person</option>
+                            <option value="2">2 people</option>
+                            <option value="3">3 people</option>
+                            <option value="4" selected>4 people</option>
+                            <option value="5">5+ people</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="moviesPerMonth">Movie Theater Trips/Month</label>
+                        <input type="number" id="moviesPerMonth" value="2" placeholder="2">
+                    </div>
+                    <div class="input-group">
+                        <label for="ticketPrice">Avg Ticket Price ($)</label>
+                        <input type="number" id="ticketPrice" value="15" placeholder="15">
+                    </div>
+                    <div class="input-group">
+                        <label for="concessions">Concessions/Trip ($)</label>
+                        <input type="number" id="concessions" value="30" placeholder="30">
+                    </div>
+                    <div class="input-group">
+                        <label for="streaming">Monthly Streaming ($)</label>
+                        <input type="number" id="streaming" value="60" placeholder="60">
+                    </div>
+                    <div class="input-group">
+                        <label for="homeValue">Home Value ($)</label>
+                        <input type="number" id="homeValue" value="400000" placeholder="400000">
+                    </div>
+                </div>
+            </div>
+            
+            <button class="calculate-btn" onclick="calculateValue()">Calculate My Home Theater Value</button>
+            
+            <div class="results" id="results">
+                <div class="result-card">
+                    <h3>💎 15-Year Net Value</h3>
+                    <div class="big-number" id="netValue">$0</div>
+                    <p>Your home theater investment pays for itself through eliminated theater trips, increased property value, and 15+ years of unlimited premium entertainment for your family.</p>
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-item">
+                        <h4>Theater Investment</h4>
+                        <div class="value" id="theaterCost">$0</div>
+                        <p>One-time cost</p>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>Theater Trips Saved</h4>
+                        <div class="value" id="theaterSavings">$0</div>
+                        <p>15 years of tickets</p>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>Property Value Gain</h4>
+                        <div class="value" id="propertyGain">$0</div>
+                        <p>Resale increase</p>
+                    </div>
+                    <div class="comparison-item">
+                        <h4>Break-Even</h4>
+                        <div class="value" id="breakEven">0 yrs</div>
+                        <p>Payback period</p>
+                    </div>
+                </div>
+                
+                <div class="cost-comparison">
+                    <h4>🎥 15-Year Cost Comparison</h4>
+                    <div class="cost-row">
+                        <div class="label">Movie Theater Tickets</div>
+                        <div class="value" id="ticketTotal">$0</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="label">Concessions & Snacks</div>
+                        <div class="value" id="concessionTotal">$0</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="label">Streaming Services</div>
+                        <div class="value" id="streamingTotal">$0</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="label">Gas & Drive Time</div>
+                        <div class="value" id="transportTotal">$0</div>
+                    </div>
+                    <div class="cost-row">
+                        <div class="label"><strong>Total 15-Year Spending</strong></div>
+                        <div class="value" id="totalSpending">$0</div>
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <h4>⏰ Investment Payback Timeline</h4>
+                    <div class="timeline-bar">
+                        <div class="timeline-fill" id="timelineFill" style="width: 0%">
+                            <span id="timelineText">Year 0</span>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 15px; color: #4a5568;">
+                        After <strong id="paybackYears">0</strong> years, your theater is paid for. Then enjoy <strong id="profitYears">0</strong> more years of pure value.
+                    </div>
+                </div>
+                
+                <div class="cost-comparison" style="background: #f0fdf4; border: 2px solid #10b981;">
+                    <h4>📈 Property Value Impact</h4>
+                    <div class="cost-row" style="border: none;">
+                        <div class="label" style="color: #166534;">Home Value Increase (3-5%)</div>
+                        <div class="value" id="propertyValue" style="color: #10b981; font-size: 1.3em;">$0</div>
+                    </div>
+                    <p style="color: #166534; margin-top: 10px; font-size: 0.95em;">Professional home theaters increase property value by 3-5% in homes $400k+. Your investment directly adds to resale value, especially in Central Florida's competitive market.</p>
+                </div>
+                
+                <div class="experience-benefits">
+                    <h4>🌟 Priceless Benefits You Can't Measure</h4>
+                    <div class="benefit-item">Perfect viewing every time - no crying babies, no talking, no bad seats</div>
+                    <div class="benefit-item">Movie nights become family traditions - togetherness in your own space</div>
+                    <div class="benefit-item">Watch what you want, when you want - pause for bathroom breaks!</div>
+                    <div class="benefit-item">Entertain friends with epic sports/gaming experiences</div>
+                    <div class="benefit-item">15-20 year lifespan with minimal maintenance</div>
+                    <div class="benefit-item">Your Central Florida home becomes the neighborhood destination</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>This tool was built exclusively for Sight and Sound Home Theater</strong></p>
+            <p>Nearly 30 years serving Central Florida (Daytona • Orlando • Tampa)</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">Call 407-948-3844 for a free consultation</p>
+        </div>
+    </div>
+    
+    <script>
+        let selectedTierCost = 30000;
+        
+        function selectTier(tier, cost) {
+            selectedTierCost = cost;
+            document.querySelectorAll('.tier-card').forEach(card => card.classList.remove('selected'));
+            event.target.closest('.tier-card').classList.add('selected');
+        }
+        
+        function calculateValue() {
+            // Get input values
+            const familySize = parseInt(document.getElementById('familySize').value) || 1;
+            const moviesPerMonth = parseInt(document.getElementById('moviesPerMonth').value) || 0;
+            const ticketPrice = parseFloat(document.getElementById('ticketPrice').value) || 0;
+            const concessions = parseFloat(document.getElementById('concessions').value) || 0;
+            const streaming = parseFloat(document.getElementById('streaming').value) || 0;
+            const homeValue = parseFloat(document.getElementById('homeValue').value) || 0;
+            
+            const theaterCost = selectedTierCost;
+            
+            // 15-year calculations
+            const yearsCalculated = 15;
+            
+            // Theater trips calculations
+            const monthlyTheaterTickets = moviesPerMonth * familySize * ticketPrice;
+            const monthlyTheaterConcessions = moviesPerMonth * concessions;
+            const monthlyTheaterTransport = moviesPerMonth * 10; // $10 gas/parking per trip
+            
+            const totalTickets = monthlyTheaterTickets * 12 * yearsCalculated;
+            const totalConcessions = monthlyTheaterConcessions * 12 * yearsCalculated;
+            const totalStreaming = streaming * 12 * yearsCalculated;
+            const totalTransport = monthlyTheaterTransport * 12 * yearsCalculated;
+            
+            const totalSpending = totalTickets + totalConcessions + totalStreaming + totalTransport;
+            
+            // Property value increase (4% avg for $400k+ homes with theaters)
+            const propertyValueIncrease = homeValue * 0.04;
+            
+            // Net value calculation
+            const theaterSavings = totalTickets + totalConcessions + totalTransport;
+            const netValue = theaterSavings + propertyValueIncrease - theaterCost;
+            
+            // Payback period
+            const annualSavings = (monthlyTheaterTickets + monthlyTheaterConcessions + monthlyTheaterTransport) * 12;
+            const paybackYears = (theaterCost / annualSavings).toFixed(1);
+            const profitYears = (yearsCalculated - paybackYears).toFixed(1);
+            
+            // Update results
+            document.getElementById('netValue').textContent = '$' + netValue.toLocaleString();
+            document.getElementById('theaterCost').textContent = '$' + theaterCost.toLocaleString();
+            document.getElementById('theaterSavings').textContent = '$' + theaterSavings.toLocaleString();
+            document.getElementById('propertyGain').textContent = '$' + propertyValueIncrease.toLocaleString();
+            document.getElementById('breakEven').textContent = paybackYears + ' yrs';
+            
+            document.getElementById('ticketTotal').textContent = '$' + totalTickets.toLocaleString();
+            document.getElementById('concessionTotal').textContent = '$' + totalConcessions.toLocaleString();
+            document.getElementById('streamingTotal').textContent = '$' + totalStreaming.toLocaleString();
+            document.getElementById('transportTotal').textContent = '$' + totalTransport.toLocaleString();
+            document.getElementById('totalSpending').textContent = '$' + totalSpending.toLocaleString();
+            
+            document.getElementById('propertyValue').textContent = '+$' + propertyValueIncrease.toLocaleString();
+            
+            document.getElementById('paybackYears').textContent = paybackYears;
+            document.getElementById('profitYears').textContent = profitYears;
+            
+            // Timeline animation
+            const paybackPercent = (paybackYears / yearsCalculated) * 100;
+            setTimeout(() => {
+                document.getElementById('timelineFill').style.width = Math.min(paybackPercent, 100) + '%';
+                document.getElementById('timelineText').textContent = 'Paid off: Year ' + paybackYears;
+            }, 300);
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Auto-calculate on load for demo
+        window.addEventListener('load', function() {
+            setTimeout(calculateValue, 500);
+        });
+    </script>
+</body>
+</html>

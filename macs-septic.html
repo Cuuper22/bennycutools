@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Septic System Health Check — Mac's Septic LLC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        earth: { 50:'#fdf8f6',100:'#f2e8e5',200:'#eaddd7',300:'#d6c2b5',400:'#b8977e',500:'#7c5e3c',600:'#654b30',700:'#4e3924',800:'#372818',900:'#20170c' },
+                        safe: { 50:'#f0fdf4',100:'#dcfce7',200:'#bbf7d0',500:'#22c55e',600:'#16a34a' },
+                        warn: { 50:'#fffbeb',100:'#fef3c7',500:'#f59e0b',600:'#d97706' },
+                        danger: { 50:'#fef2f2',100:'#fee2e2',500:'#ef4444',600:'#dc2626' }
+                    },
+                    fontFamily: { 'inter': ['Inter','system-ui','sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0;transform:translateY(12px);} to { opacity:1;transform:translateY(0);} }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity:0;transform:translateY(24px);} to { opacity:1;transform:translateY(0);} }
+        .opt-btn { transition: all 0.3s ease; }
+        .opt-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1); }
+        .opt-btn.selected { border-color: #7c5e3c; background: #fdf8f6; }
+        .check-item { transition: all 0.2s ease; }
+        .check-item.checked { background: #fef2f2; border-color: #ef4444; }
+        .progress-fill { transition: width 0.5s ease; }
+        .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+        @keyframes pulseGlow { 0%,100% { box-shadow:0 0 0 0 rgba(124,94,60,0.3);} 50% { box-shadow:0 0 0 8px rgba(124,94,60,0);} }
+        .health-card { background: linear-gradient(135deg, #4e3924 0%, #20170c 100%); }
+        .health-meter { height: 16px; border-radius: 8px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 35%, #22c55e 70%, #22c55e 100%); overflow: hidden; position: relative; }
+        .health-needle { position: absolute; top: -4px; width: 6px; height: 24px; background: white; border-radius: 3px; transition: left 0.8s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <header class="bg-earth-500 text-white">
+        <div class="max-w-3xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Mac's Septic LLC</h1>
+                    <p class="text-earth-200 text-sm mt-1">Serving Indianapolis Since 1977 — 47 Years Strong</p>
+                </div>
+                <div class="text-right hidden sm:block">
+                    <div class="text-earth-200 text-sm font-medium">A+ BBB Rating</div>
+                    <p class="text-earth-300 text-xs">Family-Owned & Operated</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="bg-white border-b sticky top-0 z-40">
+        <div class="max-w-3xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-600" id="stepLabel">Step 1 of 3 — Maintenance History</span>
+                <span class="text-sm text-gray-400" id="stepPercent">33%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2">
+                <div class="bg-earth-500 h-2 rounded-full progress-fill" id="progressBar" style="width: 33%"></div>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+
+        <!-- Step 1: Last Pumped & Household -->
+        <div id="step1" class="fade-in">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-earth-100 rounded-2xl mb-4">
+                    <i data-lucide="activity" class="w-7 h-7 text-earth-500"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">When was your septic last pumped?</h2>
+                <p class="text-gray-500 mt-2">This is the #1 factor in septic system health</p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                <button onclick="selectOpt('lastPumped','1')" data-opt="lastPumped-1" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">✅</div>
+                    <div class="font-medium text-gray-700 text-sm">Within 1 year</div>
+                </button>
+                <button onclick="selectOpt('lastPumped','2')" data-opt="lastPumped-2" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">👍</div>
+                    <div class="font-medium text-gray-700 text-sm">1–3 years ago</div>
+                </button>
+                <button onclick="selectOpt('lastPumped','4')" data-opt="lastPumped-4" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">⚠️</div>
+                    <div class="font-medium text-gray-700 text-sm">3–5 years ago</div>
+                </button>
+                <button onclick="selectOpt('lastPumped','7')" data-opt="lastPumped-7" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">🚨</div>
+                    <div class="font-medium text-gray-700 text-sm">5–10 years ago</div>
+                </button>
+                <button onclick="selectOpt('lastPumped','10')" data-opt="lastPumped-10" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">😬</div>
+                    <div class="font-medium text-gray-700 text-sm">10+ years / Never</div>
+                </button>
+                <button onclick="selectOpt('lastPumped','unknown')" data-opt="lastPumped-unknown" class="opt-btn border-2 border-gray-200 rounded-xl p-4 text-center cursor-pointer bg-white">
+                    <div class="text-2xl mb-1">🤷</div>
+                    <div class="font-medium text-gray-700 text-sm">Don't know</div>
+                </button>
+            </div>
+
+            <!-- Household size -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+                <h3 class="font-semibold text-gray-900 mb-4">How many people in the household?</h3>
+                <div class="grid grid-cols-4 gap-3">
+                    <button onclick="selectOpt('people','1')" data-opt="people-1" class="opt-btn border-2 border-gray-200 rounded-xl p-3 text-center cursor-pointer bg-white font-bold text-gray-700">1–2</button>
+                    <button onclick="selectOpt('people','3')" data-opt="people-3" class="opt-btn border-2 border-gray-200 rounded-xl p-3 text-center cursor-pointer bg-white font-bold text-gray-700">3–4</button>
+                    <button onclick="selectOpt('people','5')" data-opt="people-5" class="opt-btn border-2 border-gray-200 rounded-xl p-3 text-center cursor-pointer bg-white font-bold text-gray-700">5–6</button>
+                    <button onclick="selectOpt('people','7')" data-opt="people-7" class="opt-btn border-2 border-gray-200 rounded-xl p-3 text-center cursor-pointer bg-white font-bold text-gray-700">7+</button>
+                </div>
+            </div>
+
+            <button onclick="goToStep(2)" id="step1Next" class="w-full bg-earth-500 hover:bg-earth-600 text-white font-semibold py-4 rounded-xl transition disabled:opacity-40" disabled>Continue →</button>
+        </div>
+
+        <!-- Step 2: Warning Signs -->
+        <div id="step2" class="hidden">
+            <div class="text-center mb-8 fade-in">
+                <div class="inline-flex items-center justify-center w-14 h-14 bg-warn-100 rounded-2xl mb-4">
+                    <i data-lucide="alert-triangle" class="w-7 h-7 text-warn-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">Notice any of these warning signs?</h2>
+                <p class="text-gray-500 mt-2">Select all that apply — or none if everything seems fine</p>
+            </div>
+
+            <div class="space-y-2 mb-8">
+                <button onclick="toggleSign('slow-drains')" data-sign="slow-drains" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">🚿 Slow drains throughout the house</span><p class="text-xs text-gray-400 mt-0.5">Sinks, showers, and toilets are sluggish</p></div>
+                </button>
+                <button onclick="toggleSign('odor')" data-sign="odor" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">💨 Sewage odor inside or outside</span><p class="text-xs text-gray-400 mt-0.5">Bad smell near drains, yard, or tank area</p></div>
+                </button>
+                <button onclick="toggleSign('soggy')" data-sign="soggy" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">💧 Soggy or wet spots in the yard</span><p class="text-xs text-gray-400 mt-0.5">Standing water or spongy ground near drain field</p></div>
+                </button>
+                <button onclick="toggleSign('green-grass')" data-sign="green-grass" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">🌿 Unusually green/lush grass over tank or drain field</span><p class="text-xs text-gray-400 mt-0.5">Greener than rest of yard — sign of sewage surfacing</p></div>
+                </button>
+                <button onclick="toggleSign('backup')" data-sign="backup" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">🚽 Sewage backup in lowest drains</span><p class="text-xs text-gray-400 mt-0.5">Basement drains or ground-floor toilets backing up</p></div>
+                </button>
+                <button onclick="toggleSign('gurgling')" data-sign="gurgling" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <div><span class="text-sm font-medium text-gray-800">🫧 Gurgling sounds in plumbing</span><p class="text-xs text-gray-400 mt-0.5">Bubbling or gurgling when flushing or running water</p></div>
+                </button>
+                <button onclick="toggleSign('none')" data-sign="none" class="check-item w-full border-2 border-gray-200 rounded-xl p-4 text-left cursor-pointer bg-white flex items-center gap-3">
+                    <div class="w-6 h-6 rounded-md border-2 border-gray-300 flex items-center justify-center flex-shrink-0 sign-box"><i data-lucide="check" class="w-4 h-4 text-white"></i></div>
+                    <span class="text-sm font-medium text-gray-800">✅ No warning signs — just checking</span>
+                </button>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="goToStep(1)" class="px-6 py-4 border-2 border-gray-200 rounded-xl text-gray-600 font-medium hover:bg-gray-50 transition">← Back</button>
+                <button onclick="goToStep(3)" class="flex-1 bg-earth-500 hover:bg-earth-600 text-white font-semibold py-4 rounded-xl transition">Get Health Report →</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Results -->
+        <div id="step3" class="hidden">
+            <div class="slide-up">
+                <div class="health-card rounded-3xl p-8 text-white mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="heart-pulse" class="w-5 h-5 text-earth-300"></i>
+                        <span class="text-earth-200 font-medium text-sm uppercase tracking-wide">Septic Health Score</span>
+                    </div>
+                    <div class="flex items-end gap-3 mb-4">
+                        <span class="text-6xl font-extrabold" id="healthScore">0</span>
+                        <span class="text-2xl text-earth-300 mb-2">/100</span>
+                    </div>
+                    <div class="health-meter mb-2">
+                        <div class="health-needle" id="healthNeedle" style="left: 50%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-earth-300 mb-4">
+                        <span>Critical</span><span>Needs Attention</span><span>Good</span><span>Excellent</span>
+                    </div>
+                    <p class="text-earth-200 text-sm" id="healthSummary">—</p>
+
+                    <div class="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 gap-4 text-sm">
+                        <div><span class="text-earth-300">Recommended Service</span><div class="font-bold text-lg mt-0.5" id="recService">—</div></div>
+                        <div><span class="text-earth-300">Estimated Cost</span><div class="font-bold text-lg mt-0.5" id="costRange">$0</div></div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Schedule -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-5 h-5 text-earth-500"></i>
+                        Your Pumping Schedule
+                    </h3>
+                    <div id="scheduleInfo" class="text-sm text-gray-600 space-y-2"></div>
+                </div>
+
+                <!-- Warning Details -->
+                <div id="warningDetails" class="bg-danger-50 border border-red-200 rounded-2xl p-6 mb-6 hidden">
+                    <h3 class="font-semibold text-red-900 mb-3 flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+                        Warning Signs Detected
+                    </h3>
+                    <div id="warningList" class="text-sm text-red-700 space-y-2"></div>
+                </div>
+
+                <!-- Indiana tip -->
+                <div class="bg-blue-50 border border-blue-200 rounded-2xl p-6 mb-6">
+                    <div class="flex items-start gap-3">
+                        <div class="text-2xl">🌽</div>
+                        <div>
+                            <div class="font-semibold text-blue-900">Indiana Septic Fact</div>
+                            <div class="text-sm text-blue-700 mt-1">Indiana requires septic inspections when selling a home (Indiana Administrative Code 410 IAC 6-8.3). Regular maintenance protects your property value and avoids costly surprises during home sales. Mac's Septic has been keeping Indianapolis systems healthy since 1977.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="bg-white rounded-2xl border-2 border-earth-200 p-6 mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-2">Schedule Service with Mac's Septic</h3>
+                    <p class="text-gray-500 text-sm mb-5">47 years of family service. A+ BBB rated. Fair pricing with no surprises.</p>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                                <input type="text" id="bookName" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-earth-500 focus:border-earth-500 outline-none transition" placeholder="Your name">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input type="tel" id="bookPhone" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-earth-500 focus:border-earth-500 outline-none transition" placeholder="(317) 555-1234">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Address (for service)</label>
+                            <input type="text" id="bookAddress" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-earth-500 focus:border-earth-500 outline-none transition" placeholder="Your address">
+                        </div>
+                        <button onclick="submitBooking()" class="w-full bg-earth-500 hover:bg-earth-600 text-white font-bold py-4 rounded-xl transition pulse-glow flex items-center justify-center gap-2">
+                            <i data-lucide="calendar" class="w-5 h-5"></i>
+                            Schedule My Pumping
+                        </button>
+                    </div>
+                </div>
+
+                <div class="text-center py-4">
+                    <a href="tel:3172471974" class="inline-flex items-center gap-2 text-earth-500 font-bold text-xl hover:text-earth-600 transition">
+                        <i data-lucide="phone" class="w-5 h-5"></i>
+                        (317) 247-1974
+                    </a>
+                </div>
+
+                <button onclick="startOver()" class="w-full border-2 border-gray-200 rounded-xl text-gray-600 font-medium py-4 hover:bg-gray-50 transition mt-4">Start Over</button>
+            </div>
+        </div>
+
+        <div id="thankYou" class="hidden text-center py-12">
+            <div class="slide-up">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-safe-100 rounded-full mb-6">
+                    <i data-lucide="check-circle-2" class="w-10 h-10 text-safe-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Service Request Sent!</h2>
+                <p class="text-gray-500 max-w-md mx-auto">Mac's Septic will reach out to schedule your appointment. They've been serving Indianapolis since 1977 — you're in good hands.</p>
+                <button onclick="startOver()" class="mt-8 text-earth-600 font-medium hover:text-earth-700 transition">Run another check →</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-earth-800 text-white mt-16">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-6">
+                <div>
+                    <h3 class="font-bold text-lg">Mac's Septic LLC</h3>
+                    <p class="text-earth-200 text-sm mt-1">5829 W 10th St, Indianapolis, IN 46224</p>
+                    <p class="text-earth-200 text-sm">(317) 247-1974</p>
+                    <p class="text-earth-200 text-sm">Family-Owned Since 1977 • A+ BBB Rating</p>
+                </div>
+                <div class="text-sm text-earth-300">
+                    <p>Serving Indianapolis & Surrounding Counties</p>
+                    <p class="mt-2 text-earth-300 text-xs opacity-60">Health scores are estimates. Professional inspection recommended for definitive assessment.<br>Demo tool by <a href="https://bennycutools.com" class="underline hover:text-white">BennyCu Tools</a>.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let state = { lastPumped: null, people: null, signs: new Set() };
+
+        function selectOpt(key, val) {
+            state[key] = val;
+            document.querySelectorAll(`[data-opt^="${key}-"]`).forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-opt="${key}-${val}"]`).classList.add('selected');
+            checkStep1();
+        }
+
+        function toggleSign(sign) {
+            const el = document.querySelector(`[data-sign="${sign}"]`);
+            if (state.signs.has(sign)) {
+                state.signs.delete(sign);
+                el.classList.remove('checked');
+                el.querySelector('.sign-box').style.background = '';
+                el.querySelector('.sign-box').style.borderColor = '';
+            } else {
+                if (sign === 'none') { state.signs.clear(); document.querySelectorAll('[data-sign]').forEach(e => { e.classList.remove('checked'); e.querySelector('.sign-box').style.background=''; e.querySelector('.sign-box').style.borderColor=''; }); }
+                else state.signs.delete('none');
+                state.signs.add(sign);
+                el.classList.add('checked');
+                el.querySelector('.sign-box').style.background = sign === 'none' ? '#22c55e' : '#ef4444';
+                el.querySelector('.sign-box').style.borderColor = sign === 'none' ? '#22c55e' : '#ef4444';
+            }
+        }
+
+        function checkStep1() { document.getElementById('step1Next').disabled = !(state.lastPumped && state.people); }
+
+        function calculateHealth() {
+            let score = 100;
+            const lp = state.lastPumped;
+            if (lp === '1') score -= 0;
+            else if (lp === '2') score -= 10;
+            else if (lp === '4') score -= 25;
+            else if (lp === '7') score -= 45;
+            else if (lp === '10') score -= 65;
+            else if (lp === 'unknown') score -= 40;
+
+            const ppl = parseInt(state.people);
+            if (ppl >= 7) score -= 10;
+            else if (ppl >= 5) score -= 5;
+
+            const signPenalties = { 'slow-drains': 10, 'odor': 15, 'soggy': 20, 'green-grass': 12, 'backup': 25, 'gurgling': 8 };
+            state.signs.forEach(s => { if (signPenalties[s]) score -= signPenalties[s]; });
+            if (state.signs.has('none')) score += 5;
+
+            return Math.max(5, Math.min(100, score));
+        }
+
+        function goToStep(step) {
+            for (let i=1;i<=3;i++) document.getElementById('step'+i).classList.add('hidden');
+            document.getElementById('thankYou').classList.add('hidden');
+            const target = document.getElementById('step'+step);
+            target.classList.remove('hidden'); target.classList.add('fade-in');
+            const labels = ['','Step 1 of 3 — Maintenance History','Step 2 of 3 — Warning Signs','Step 3 of 3 — Health Report'];
+            const pcts = ['','33','66','100'];
+            document.getElementById('stepLabel').textContent = labels[step];
+            document.getElementById('stepPercent').textContent = pcts[step]+'%';
+            document.getElementById('progressBar').style.width = pcts[step]+'%';
+            if (step===3) renderReport();
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function renderReport() {
+            const score = calculateHealth();
+            document.getElementById('healthScore').textContent = score;
+            document.getElementById('healthNeedle').style.left = score+'%';
+
+            let summary, service, costLow, costHigh;
+            if (score >= 80) {
+                summary = "Your septic system appears to be in good condition. Continue regular maintenance to keep it that way. Mac's Septic recommends pumping every 3 years for most households.";
+                service = 'Routine Pumping'; costLow = 250; costHigh = 400;
+            } else if (score >= 60) {
+                summary = "Your system is approaching the time for service. Don't wait until problems appear — preventive pumping now will save you thousands in potential repairs.";
+                service = 'Pumping Recommended'; costLow = 275; costHigh = 450;
+            } else if (score >= 35) {
+                summary = "Your septic system needs attention soon. The warning signs you're seeing suggest the tank may be full or the drain field may be struggling. Professional inspection is recommended.";
+                service = 'Inspection + Pumping'; costLow = 350; costHigh = 650;
+            } else {
+                summary = "Your system is showing signs of distress. Multiple warning signs combined with overdue maintenance could indicate drain field failure, which costs $5,000-$20,000 to replace. Getting pumped NOW could prevent catastrophic failure.";
+                service = 'Emergency Inspection'; costLow = 400; costHigh = 800;
+            }
+
+            document.getElementById('healthSummary').textContent = summary;
+            document.getElementById('recService').textContent = service;
+            document.getElementById('costRange').textContent = '$'+costLow+' – $'+costHigh;
+
+            // Schedule
+            const ppl = parseInt(state.people);
+            const interval = ppl >= 5 ? 2 : 3;
+            document.getElementById('scheduleInfo').innerHTML = `
+                <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span class="text-gray-500">Household size</span><span class="font-medium text-gray-900">${ppl >= 7 ? '7+' : ppl >= 5 ? '5-6' : ppl >= 3 ? '3-4' : '1-2'} people</span></div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span class="text-gray-500">Recommended pump frequency</span><span class="font-medium text-gray-900">Every ${interval} years</span></div>
+                <div class="flex justify-between p-3 bg-gray-50 rounded-xl"><span class="text-gray-500">Average pump cost</span><span class="font-medium text-gray-900">$275 – $400</span></div>
+                <div class="flex justify-between p-3 bg-safe-50 rounded-xl"><span class="text-safe-700">💡 Cost of pump every ${interval} years</span><span class="font-semibold text-safe-700">~$${Math.round(350/interval)}/year</span></div>
+                <div class="flex justify-between p-3 bg-danger-50 rounded-xl"><span class="text-red-700">⚠️ Cost if system fails</span><span class="font-semibold text-red-700">$5,000–$20,000+</span></div>
+            `;
+
+            // Warning details
+            if (state.signs.size > 0 && !state.signs.has('none')) {
+                document.getElementById('warningDetails').classList.remove('hidden');
+                const warnText = {
+                    'slow-drains': 'Slow drains throughout the house often indicate a full tank or drain field saturation. This is usually the first sign.',
+                    'odor': 'Sewage odor means gases are escaping — the tank may be full or venting improperly. This can also indicate a cracked tank.',
+                    'soggy': 'Wet spots in the yard near the drain field suggest effluent is surfacing. This is a sign of drain field failure — the most expensive repair.',
+                    'green-grass': 'Unusually green grass over the tank or drain field means nutrient-rich sewage is reaching root level. The system is not processing properly.',
+                    'backup': 'Sewage backup is the most serious sign. The tank is likely full or the outlet is blocked. This requires immediate attention to prevent property damage.',
+                    'gurgling': 'Gurgling sounds indicate air in the plumbing lines, often caused by a full tank pushing back against the drainage system.'
+                };
+                document.getElementById('warningList').innerHTML = Array.from(state.signs).filter(s=>s!=='none').map(s=>`<p>• ${warnText[s]||''}</p>`).join('');
+            } else {
+                document.getElementById('warningDetails').classList.add('hidden');
+            }
+
+            lucide.createIcons();
+        }
+
+        function submitBooking() {
+            const name = document.getElementById('bookName').value.trim();
+            const phone = document.getElementById('bookPhone').value.trim();
+            if (!name||!phone) { alert('Please enter your name and phone.'); return; }
+
+            const subs = JSON.parse(localStorage.getItem('macs-submissions')||'[]');
+            subs.push({ name, phone, address: document.getElementById('bookAddress').value, ...state, signs: Array.from(state.signs), score: calculateHealth(), timestamp: new Date().toISOString() });
+            localStorage.setItem('macs-submissions', JSON.stringify(subs));
+
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('thankYou').classList.remove('hidden');
+            window.scrollTo({top:0,behavior:'smooth'});
+        }
+
+        function startOver() {
+            state = { lastPumped: null, people: null, signs: new Set() };
+            document.querySelectorAll('.opt-btn,.check-item').forEach(el=>el.classList.remove('selected','checked'));
+            document.querySelectorAll('.sign-box').forEach(el=>{el.style.background='';el.style.borderColor='';});
+            document.getElementById('step1Next').disabled = true;
+            document.getElementById('bookName').value='';
+            document.getElementById('bookPhone').value='';
+            document.getElementById('bookAddress').value='';
+            goToStep(1);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+    </script>
+</body>
+</html>

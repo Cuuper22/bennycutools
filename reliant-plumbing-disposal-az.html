@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garbage Disposal ROI & Savings Calculator - Phoenix</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #0f7c6f 0%, #2d9f7f 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 25px;
+        }
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 0.95em;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #38ef7d;
+        }
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .calculate-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(56, 239, 125, 0.4);
+        }
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        .results.visible {
+            display: block;
+        }
+        .result-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .result-card h2 {
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+        .result-card .big-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .comparison-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .comparison-card.recommended {
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        .comparison-card h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .comparison-card .price {
+            font-size: 2em;
+            font-weight: bold;
+            color: #11998e;
+            margin: 10px 0;
+        }
+        .comparison-card ul {
+            list-style: none;
+            margin-top: 15px;
+        }
+        .comparison-card li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .savings-breakdown {
+            background: #f7fafc;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .savings-breakdown h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        .savings-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .savings-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #11998e;
+        }
+        .timeline {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        .timeline h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        .timeline-bar {
+            background: #e2e8f0;
+            height: 40px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .timeline-fill {
+            background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: width 1s ease;
+        }
+        .info-box {
+            background: #e6fffa;
+            border-left: 4px solid #11998e;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .info-box strong {
+            color: #0d7963;
+        }
+        .benefit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .benefit-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            text-align: center;
+        }
+        .benefit-item .icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .benefit-item h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        .benefit-item p {
+            color: #718096;
+            font-size: 0.9em;
+        }
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+            .result-card .big-number {
+                font-size: 2.2em;
+            }
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>♻️ Garbage Disposal ROI Calculator</h1>
+            <p>Calculate Your 10-Year Savings in Phoenix</p>
+        </div>
+
+        <div class="content">
+            <div class="input-section">
+                <h2 style="margin-bottom: 25px; color: #2d3748;">Enter Your Household Details</h2>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Household Size (number of people)</label>
+                        <input type="number" id="householdSize" value="4" min="1" max="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Current Disposal Status</label>
+                        <select id="disposalStatus">
+                            <option value="none">No Disposal (installing first time)</option>
+                            <option value="old" selected>Old Disposal (10+ years)</option>
+                            <option value="broken">Broken/Malfunctioning</option>
+                            <option value="working">Working (under 5 years old)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Monthly Water Bill ($)</label>
+                        <input type="number" id="waterBill" value="80" min="30" step="5">
+                    </div>
+                    <div class="input-group">
+                        <label>Monthly Trash Service ($)</label>
+                        <input type="number" id="trashCost" value="40" min="20" step="5">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Disposal Unit Preference</label>
+                    <select id="unitType">
+                        <option value="budget">Budget (1/3 HP - basic)</option>
+                        <option value="midrange" selected>Mid-Range (1/2 HP - recommended)</option>
+                        <option value="premium">Premium (3/4 HP - heavy use)</option>
+                    </select>
+                </div>
+
+                <button class="calculate-btn" onclick="calculateROI()">Calculate My Savings</button>
+            </div>
+
+            <div class="results" id="results">
+                <div class="result-card">
+                    <h2>Your 10-Year Total Savings</h2>
+                    <div class="big-number" id="totalSavings">$0</div>
+                    <p>Net savings after installation cost</p>
+                </div>
+
+                <div class="info-box">
+                    <strong>Payback Period:</strong> <span id="paybackPeriod">0 years</span> | 
+                    <strong>Food Waste Diverted:</strong> <span id="foodWasteDiverted">0 lbs</span> over 10 years
+                </div>
+
+                <div class="benefit-grid">
+                    <div class="benefit-item">
+                        <div class="icon">💧</div>
+                        <h4>Water Savings</h4>
+                        <p id="waterSavings">$0/year</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">🗑️</div>
+                        <h4>Trash Reduction</h4>
+                        <p id="trashSavings">$0/year</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">🔧</div>
+                        <h4>Avoided Plumber Calls</h4>
+                        <p id="plumberSavings">$0 over 10 yrs</p>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="icon">🌱</div>
+                        <h4>Environmental Impact</h4>
+                        <p id="environmentalImpact">Landfill reduction</p>
+                    </div>
+                </div>
+
+                <div class="comparison-grid" id="comparisonGrid"></div>
+
+                <div class="savings-breakdown">
+                    <h3>💰 10-Year Savings Breakdown</h3>
+                    <div class="savings-item">
+                        <span>Water Savings (efficient disposal):</span>
+                        <span id="totalWaterSavings">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Trash Service Savings (30% less waste):</span>
+                        <span id="totalTrashSavings">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Avoided Plumber Calls (clogs prevented):</span>
+                        <span id="totalPlumberSavings">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Total Value Created:</span>
+                        <span id="totalValue">$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Installation Cost:</span>
+                        <span id="installCost">-$0</span>
+                    </div>
+                    <div class="savings-item">
+                        <span>Net 10-Year Savings:</span>
+                        <span id="netSavings">$0</span>
+                    </div>
+                </div>
+
+                <div class="timeline">
+                    <h3>⏱️ Payback Timeline</h3>
+                    <p style="color: #4a5568; margin-bottom: 15px;">Time until your savings equal the installation cost</p>
+                    <div class="timeline-bar">
+                        <div class="timeline-fill" id="timelineFill" style="width: 0%">
+                            <span id="timelineText"></span>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: #718096; font-size: 0.9em;">
+                        <span>Today</span>
+                        <span>10 Years</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>♻️ Phoenix Environmental Impact:</strong> Your garbage disposal diverts <span id="poundsPerYear">0</span> lbs of food waste per year from Arizona landfills, reducing methane emissions and supporting Phoenix's sustainability goals. Modern InSinkErator disposals use minimal water (less than 1 gallon/day) and grind food waste that flows to water treatment plants where it's converted to renewable energy and fertilizer — a far greener choice than landfills in Arizona's desert climate.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateROI() {
+            // Get inputs
+            const householdSize = parseInt(document.getElementById('householdSize').value);
+            const disposalStatus = document.getElementById('disposalStatus').value;
+            const waterBill = parseFloat(document.getElementById('waterBill').value);
+            const trashCost = parseFloat(document.getElementById('trashCost').value);
+            const unitType = document.getElementById('unitType').value;
+
+            // Installation costs (including labor)
+            const installCosts = {
+                'budget': 280,      // 1/3 HP basic unit
+                'midrange': 420,    // 1/2 HP standard unit
+                'premium': 650      // 3/4 HP heavy-duty unit
+            };
+            const installCost = installCosts[unitType];
+
+            // Food waste calculation (lbs per person per year that goes to disposal)
+            const foodWastePerPersonPerYear = 150; // Average 150 lbs/person/year of food scraps
+            const totalFoodWastePerYear = foodWastePerPersonPerYear * householdSize;
+            const totalFoodWaste10Years = totalFoodWastePerYear * 10;
+
+            // Water savings (modern disposals use 75% less water than old units)
+            let annualWaterSavings = 0;
+            if (disposalStatus === 'old') {
+                // Old disposal wastes 2-5 gallons/day, new uses 0.5-1 gallon/day
+                const dailyWaterSaved = 3; // gallons
+                const phoenixWaterRate = 0.004; // $0.004 per gallon (Phoenix average)
+                annualWaterSavings = dailyWaterSaved * 365 * phoenixWaterRate * householdSize * 0.5;
+            } else if (disposalStatus === 'none' || disposalStatus === 'broken') {
+                // No water savings (either no disposal or broken so not used)
+                annualWaterSavings = 0;
+            }
+
+            // Trash service savings (30% of household waste is food scraps)
+            const foodWastePercentage = 0.30;
+            let annualTrashSavings = 0;
+            if (disposalStatus === 'none' || disposalStatus === 'broken') {
+                // Can downsize trash bin or reduce frequency
+                annualTrashSavings = trashCost * 12 * 0.15; // 15% reduction in trash costs
+            }
+
+            // Avoided plumber calls (food clogs without disposal)
+            let plumberCallsAvoided10Years = 0;
+            if (disposalStatus === 'none' || disposalStatus === 'broken') {
+                // Without disposal, food goes down drain → clogs every 2-3 years
+                plumberCallsAvoided10Years = 4; // 4 calls over 10 years
+            } else if (disposalStatus === 'old') {
+                // Old disposals fail/clog more often
+                plumberCallsAvoided10Years = 2; // 2 calls over 10 years
+            }
+            const plumberCallCost = 250; // Average Phoenix plumber call
+            const totalPlumberSavings = plumberCallsAvoided10Years * plumberCallCost;
+
+            // Total savings
+            const totalWaterSavings = annualWaterSavings * 10;
+            const totalTrashSavings = annualTrashSavings * 10;
+            const totalValue = totalWaterSavings + totalTrashSavings + totalPlumberSavings;
+            const netSavings = totalValue - installCost;
+
+            // Payback period (years)
+            const annualTotalSavings = annualWaterSavings + annualTrashSavings + (totalPlumberSavings / 10);
+            const paybackYears = installCost / annualTotalSavings;
+
+            // Display results
+            document.getElementById('totalSavings').textContent = '$' + Math.round(netSavings).toLocaleString();
+            document.getElementById('paybackPeriod').textContent = paybackYears.toFixed(1) + ' years';
+            document.getElementById('foodWasteDiverted').textContent = Math.round(totalFoodWaste10Years).toLocaleString() + ' lbs';
+
+            document.getElementById('waterSavings').textContent = '$' + Math.round(annualWaterSavings).toLocaleString() + '/year';
+            document.getElementById('trashSavings').textContent = '$' + Math.round(annualTrashSavings).toLocaleString() + '/year';
+            document.getElementById('plumberSavings').textContent = '$' + Math.round(totalPlumberSavings).toLocaleString();
+            document.getElementById('environmentalImpact').textContent = Math.round(totalFoodWastePerYear).toLocaleString() + ' lbs/year';
+            document.getElementById('poundsPerYear').textContent = Math.round(totalFoodWastePerYear).toLocaleString();
+
+            document.getElementById('totalWaterSavings').textContent = '$' + Math.round(totalWaterSavings).toLocaleString();
+            document.getElementById('totalTrashSavings').textContent = '$' + Math.round(totalTrashSavings).toLocaleString();
+            document.getElementById('totalPlumberSavings').textContent = '$' + Math.round(totalPlumberSavings).toLocaleString();
+            document.getElementById('totalValue').textContent = '$' + Math.round(totalValue).toLocaleString();
+            document.getElementById('installCost').textContent = '-$' + installCost.toLocaleString();
+            document.getElementById('netSavings').textContent = '$' + Math.round(netSavings).toLocaleString();
+
+            // Timeline visualization
+            const timelinePercent = Math.min((paybackYears / 10) * 100, 100);
+            document.getElementById('timelineFill').style.width = timelinePercent + '%';
+            document.getElementById('timelineText').textContent = paybackYears.toFixed(1) + ' years';
+
+            // Comparison cards
+            const comparisonGrid = document.getElementById('comparisonGrid');
+            const budgetCost = installCosts['budget'];
+            const midrangeCost = installCosts['midrange'];
+            const premiumCost = installCosts['premium'];
+
+            const budgetBadge = (unitType === 'budget') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+            const midrangeBadge = (unitType === 'midrange') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+            const premiumBadge = (unitType === 'premium') ? '<span class="badge">✓ YOUR SELECTION</span>' : '';
+
+            comparisonGrid.innerHTML = `
+                <div class="comparison-card ${unitType === 'budget' ? 'recommended' : ''}">
+                    ${budgetBadge}
+                    <h3>Budget (1/3 HP)</h3>
+                    <div class="price">$${budgetCost}</div>
+                    <ul>
+                        <li>Basic grinding power</li>
+                        <li>1-2 person household</li>
+                        <li>Lifespan: 8-10 years</li>
+                        <li>Light use only</li>
+                        <li>Noisy operation</li>
+                        <li>2-year warranty</li>
+                        <li>Best for: singles/couples</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card ${unitType === 'midrange' ? 'recommended' : ''}">
+                    ${midrangeBadge}
+                    <h3>Mid-Range (1/2 HP)</h3>
+                    <div class="price">$${midrangeCost}</div>
+                    <ul>
+                        <li>Standard grinding power</li>
+                        <li>3-5 person household</li>
+                        <li>Lifespan: 10-12 years</li>
+                        <li>Daily use recommended</li>
+                        <li>Quiet operation</li>
+                        <li>5-year warranty</li>
+                        <li>✓ Best value for families</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card ${unitType === 'premium' ? 'recommended' : ''}">
+                    ${premiumBadge}
+                    <h3>Premium (3/4 HP)</h3>
+                    <div class="price">$${premiumCost}</div>
+                    <ul>
+                        <li>Heavy-duty grinding power</li>
+                        <li>5+ person household</li>
+                        <li>Lifespan: 12-15 years</li>
+                        <li>Heavy daily use</li>
+                        <li>Ultra-quiet operation</li>
+                        <li>8-year warranty</li>
+                        <li>Best for: large families</li>
+                    </ul>
+                </div>
+
+                <div class="comparison-card">
+                    <h3>🚫 No Disposal</h3>
+                    <div class="price">$0</div>
+                    <ul>
+                        <li>Food waste in trash (smells)</li>
+                        <li>Higher trash bills</li>
+                        <li>Drain clogs (no grinding)</li>
+                        <li>$250+ plumber calls</li>
+                        <li>More landfill waste</li>
+                        <li>10-yr cost: <strong>$${Math.round(totalValue).toLocaleString()}</strong></li>
+                        <li>❌ Hidden costs add up</li>
+                    </ul>
+                </div>
+            `;
+
+            // Show results
+            document.getElementById('results').classList.add('visible');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // Calculate on page load with defaults
+        window.addEventListener('load', () => {
+            calculateROI();
+        });
+    </script>
+</body>
+</html>

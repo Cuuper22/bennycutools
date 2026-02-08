@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Split ROI Calculator | Red Rock Mechanical</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #134e5e 0%, #71b280 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #3a7bd5;
+            box-shadow: 0 0 0 3px rgba(58,123,213,0.1);
+        }
+        
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .calculate-btn {
+            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(58,123,213,0.3);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .savings-card {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(17,153,142,0.3);
+        }
+        
+        .savings-card h2 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            opacity: 0.95;
+        }
+        
+        .savings-amount {
+            font-size: 3.5em;
+            font-weight: 700;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .savings-subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .comparison-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .comparison-card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        .comparison-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .comparison-item:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-label {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        .comparison-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .benefits-section {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .benefits-section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+        
+        .benefit-item {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .benefit-icon {
+            font-size: 1.8em;
+            margin-right: 15px;
+        }
+        
+        .benefit-text {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .rebate-box {
+            background: #d1f4e0;
+            border: 2px solid #38ef7d;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .rebate-box h4 {
+            color: #1d7a4a;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .rebate-box p {
+            color: #1d7a4a;
+            line-height: 1.6;
+        }
+        
+        .climate-note {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .climate-note h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .climate-note p {
+            color: #1976d2;
+            line-height: 1.6;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .cta-section h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .cta-section p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }
+        
+        .cta-btn {
+            background: white;
+            color: #3a7bd5;
+            padding: 15px 40px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1em;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        
+        .cta-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.6em;
+            }
+            
+            .input-row, .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .savings-amount {
+                font-size: 2.5em;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❄️🔥 Mini Split ROI Calculator</h1>
+            <p>See how much you'll save with ductless heating & cooling</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-section">
+                <h2 style="color: #2c3e50; margin-bottom: 25px;">Enter Your Project Details</h2>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="projectType">Project Type</label>
+                        <select id="projectType" onchange="updateForm()">
+                            <option value="addition">Home Addition</option>
+                            <option value="replace">Replace Existing System</option>
+                            <option value="zone">Add Zone Control</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="squareFeet">Square Feet to Heat/Cool</label>
+                        <input type="number" id="squareFeet" value="500" min="100" max="5000" step="100">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="currentSystem">Current Heating Type</label>
+                        <select id="currentSystem">
+                            <option value="oil">Oil Heat</option>
+                            <option value="propane">Propane</option>
+                            <option value="electric">Electric Baseboard</option>
+                            <option value="gas">Natural Gas</option>
+                            <option value="none">None (New Addition)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="annualBill">Current Annual Heating Cost ($)</label>
+                        <input type="number" id="annualBill" value="2800" step="100" min="0">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="miniSplitCost">Mini Split Install Cost ($)</label>
+                        <input type="number" id="miniSplitCost" value="5000" step="100" min="0">
+                    </div>
+                    
+                    <div class="input-group" id="ductworkGroup">
+                        <label for="ductworkCost">Ductwork Extension Cost ($)</label>
+                        <input type="number" id="ductworkCost" value="12000" step="100" min="0">
+                    </div>
+                </div>
+                
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="electricRate">Electric Rate ($/kWh)</label>
+                        <input type="number" id="electricRate" value="0.18" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="rebateAmount">Available Rebates ($)</label>
+                        <input type="number" id="rebateAmount" value="800" step="100" min="0">
+                    </div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateROI()">Calculate My Savings</button>
+            </div>
+            
+            <div class="results" id="results">
+                <div class="savings-card">
+                    <h2>15-Year Total Savings</h2>
+                    <div class="savings-amount" id="totalSavings">$0</div>
+                    <div class="savings-subtitle">Compared to traditional HVAC approach</div>
+                </div>
+                
+                <div class="rebate-box">
+                    <h4>💰 Vermont Efficiency Rebates Available</h4>
+                    <p id="rebateInfo">Green Mountain Power and Efficiency Vermont offer rebates of $300-1,200 for cold climate heat pumps. Red Rock Mechanical can help you maximize all available incentives.</p>
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h3>🏠 Traditional Approach</h3>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Installation Cost</span>
+                            <span class="comparison-value" id="traditionalInstall">$0</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">15-Year Energy Cost</span>
+                            <span class="comparison-value" id="traditionalEnergy">$0</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Efficiency</span>
+                            <span class="comparison-value">60-78% AFUE</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Total 15-Year Cost</span>
+                            <span class="comparison-value" id="traditionalTotal">$0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h3>⚡ Mini Split System</h3>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Installation Cost</span>
+                            <span class="comparison-value" id="miniSplitInstall">$0</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">15-Year Energy Cost</span>
+                            <span class="comparison-value" id="miniSplitEnergy">$0</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Efficiency</span>
+                            <span class="comparison-value">250-350% COP</span>
+                        </div>
+                        <div class="comparison-item">
+                            <span class="comparison-label">Total 15-Year Cost</span>
+                            <span class="comparison-value" id="miniSplitTotal">$0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="climate-note">
+                    <h4>❄️ Vermont Cold Climate Advantage</h4>
+                    <p>Modern cold climate heat pumps work efficiently down to -15°F and continue providing heat even at -25°F. With Vermont's average winter temps of 15-30°F, mini splits deliver 250-350% efficiency — meaning they produce 2.5-3.5 units of heat for every unit of electricity consumed. That's 3-5x more efficient than oil, propane, or electric baseboard.</p>
+                </div>
+                
+                <div class="benefits-section">
+                    <h3>Additional Benefits Beyond Energy Savings</h3>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🎯</div>
+                        <div class="benefit-text">Zone control - heat/cool only rooms you're using (save 20-30%)</div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🔇</div>
+                        <div class="benefit-text">Whisper-quiet operation (19-35 dB vs 50-70 dB furnace)</div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🌡️</div>
+                        <div class="benefit-text">Both heating AND cooling in one system</div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">💨</div>
+                        <div class="benefit-text">No ductwork means no energy loss (30% typical duct loss eliminated)</div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🌿</div>
+                        <div class="benefit-text">Reduce carbon footprint by 40-60% vs oil/propane</div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon">🏡</div>
+                        <div class="benefit-text">Perfect for additions - no expensive ductwork extension needed</div>
+                    </div>
+                </div>
+                
+                <div id="scenarioDetails" style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin: 20px 0;">
+                    <h3 style="color: #2c3e50; margin-bottom: 15px;">Your Scenario Breakdown</h3>
+                    <p id="scenarioText" style="color: #2c3e50; line-height: 1.8;"></p>
+                </div>
+                
+                <div class="cta-section">
+                    <h3>Ready to Make the Switch?</h3>
+                    <p>Red Rock Mechanical has been installing cold climate heat pumps in Vermont for 23+ years</p>
+                    <a href="https://www.redrockmechanical.net/contact" class="cta-btn">Request Free Estimate</a>
+                    <p style="margin-top: 15px; font-size: 0.95em;">Family-owned • Expert installation • Serving Burlington & Northwest VT</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Calculations based on Vermont climate conditions, current utility rates, and DOE efficiency ratings. Individual results may vary.</p>
+            <p style="margin-top: 10px;">© 2026 Red Rock Mechanical, LLC | Burlington, VT</p>
+        </div>
+    </div>
+    
+    <script>
+        function updateForm() {
+            const projectType = document.getElementById('projectType').value;
+            const ductworkGroup = document.getElementById('ductworkGroup');
+            
+            if (projectType === 'addition') {
+                ductworkGroup.style.display = 'block';
+                document.getElementById('ductworkCost').value = 12000;
+            } else if (projectType === 'replace') {
+                ductworkGroup.style.display = 'block';
+                document.getElementById('ductworkCost').value = 8000;
+                document.querySelector('#ductworkGroup label').textContent = 'New Furnace/AC Cost ($)';
+            } else {
+                ductworkGroup.style.display = 'none';
+            }
+        }
+        
+        function calculateROI() {
+            // Get inputs
+            const projectType = document.getElementById('projectType').value;
+            const squareFeet = parseInt(document.getElementById('squareFeet').value);
+            const currentSystem = document.getElementById('currentSystem').value;
+            const annualBill = parseFloat(document.getElementById('annualBill').value);
+            const miniSplitCost = parseFloat(document.getElementById('miniSplitCost').value);
+            const ductworkCost = parseFloat(document.getElementById('ductworkCost').value);
+            const electricRate = parseFloat(document.getElementById('electricRate').value);
+            const rebateAmount = parseFloat(document.getElementById('rebateAmount').value);
+            
+            // Energy efficiency factors
+            let currentEfficiency = 0.65; // Default oil/propane
+            if (currentSystem === 'electric') currentEfficiency = 1.0;
+            if (currentSystem === 'gas') currentEfficiency = 0.80;
+            if (currentSystem === 'none') currentEfficiency = 0.70; // Assume would use propane/oil
+            
+            const miniSplitCOP = 3.0; // 300% efficiency typical for cold climate
+            
+            // Energy savings calculation
+            let annualEnergyCost;
+            if (currentSystem === 'none') {
+                // New addition - estimate based on square feet
+                annualEnergyCost = squareFeet * 1.2; // $1.20 per sq ft typical for VT
+            } else {
+                annualEnergyCost = annualBill;
+            }
+            
+            // Mini split uses electricity - convert to equivalent BTU cost
+            const miniSplitAnnualCost = annualEnergyCost * currentEfficiency / miniSplitCOP;
+            const annualSavings = annualEnergyCost - miniSplitAnnualCost;
+            
+            // 15-year calculations
+            const traditionalEnergy15yr = annualEnergyCost * 15;
+            const miniSplitEnergy15yr = miniSplitAnnualCost * 15;
+            
+            const traditionalInstallCost = projectType === 'zone' ? 0 : ductworkCost;
+            const miniSplitInstallCost = miniSplitCost - rebateAmount;
+            
+            const traditionalTotal = traditionalInstallCost + traditionalEnergy15yr;
+            const miniSplitTotal = miniSplitInstallCost + miniSplitEnergy15yr;
+            
+            const totalSavings = traditionalTotal - miniSplitTotal;
+            
+            // Update display
+            document.getElementById('totalSavings').textContent = '$' + Math.round(totalSavings).toLocaleString();
+            document.getElementById('traditionalInstall').textContent = '$' + Math.round(traditionalInstallCost).toLocaleString();
+            document.getElementById('traditionalEnergy').textContent = '$' + Math.round(traditionalEnergy15yr).toLocaleString();
+            document.getElementById('traditionalTotal').textContent = '$' + Math.round(traditionalTotal).toLocaleString();
+            document.getElementById('miniSplitInstall').textContent = '$' + Math.round(miniSplitInstallCost).toLocaleString();
+            document.getElementById('miniSplitEnergy').textContent = '$' + Math.round(miniSplitEnergy15yr).toLocaleString();
+            document.getElementById('miniSplitTotal').textContent = '$' + Math.round(miniSplitTotal).toLocaleString();
+            
+            // Scenario text
+            let scenarioText = '';
+            if (projectType === 'addition') {
+                scenarioText = `You're adding ${squareFeet} sq ft to your home. Traditional approach would cost $${ductworkCost.toLocaleString()} to extend ductwork, plus $${Math.round(annualEnergyCost).toLocaleString()}/year to heat/cool it. Mini split costs only $${miniSplitCost.toLocaleString()} installed (net $${miniSplitInstallCost.toLocaleString()} after rebates), saves $${Math.round(annualSavings).toLocaleString()}/year on energy, and includes both heating AND cooling. Over 15 years, you save $${Math.round(totalSavings).toLocaleString()} while getting superior comfort and zone control.`;
+            } else if (projectType === 'replace') {
+                scenarioText = `Replacing your ${currentSystem} system. New furnace/AC would cost $${ductworkCost.toLocaleString()} installed, continuing $${Math.round(annualEnergyCost).toLocaleString()}/year energy costs. Mini split costs $${miniSplitCost.toLocaleString()} (net $${miniSplitInstallCost.toLocaleString()} after rebates), cuts energy to $${Math.round(miniSplitAnnualCost).toLocaleString()}/year (${Math.round(annualSavings/annualEnergyCost*100)}% savings). Over 15 years, you save $${Math.round(totalSavings).toLocaleString()} while enjoying whisper-quiet operation and perfect temperature control.`;
+            } else {
+                scenarioText = `Adding zone control with mini split for ${squareFeet} sq ft. Instead of heating/cooling unused space, you control only the rooms you use. Mini split costs $${miniSplitCost.toLocaleString()} (net $${miniSplitInstallCost.toLocaleString()} after rebates), saves $${Math.round(annualSavings).toLocaleString()}/year by not heating/cooling the whole house. Over 15 years, you save $${Math.round(totalSavings).toLocaleString()} while gaining independent temperature control for different areas.`;
+            }
+            document.getElementById('scenarioText').textContent = scenarioText;
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Calculate on page load with defaults
+        window.addEventListener('load', function() {
+            updateForm();
+            calculateROI();
+        });
+    </script>
+</body>
+</html>

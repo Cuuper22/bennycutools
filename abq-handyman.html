@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Project Planner & Cost Estimator — The ABQ Handyman</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 50:'#eef2ff',100:'#e0e7ff',500:'#1e3a5f',600:'#1a3050',700:'#152742',800:'#111e33',900:'#0c1525' },
+                        patriot: { 50:'#fef2f2',100:'#fee2e2',500:'#dc2626',600:'#b91c1c',700:'#991b1b' },
+                        trust: { 50:'#f0fdf4',100:'#dcfce7',500:'#22c55e',600:'#16a34a' }
+                    },
+                    fontFamily: { 'inter': ['Inter','system-ui','sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity:0;transform:translateY(12px); } to { opacity:1;transform:translateY(0); } }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity:0;transform:translateY(24px); } to { opacity:1;transform:translateY(0); } }
+        .task-btn { transition: all 0.2s ease; }
+        .task-btn:hover { box-shadow: 0 4px 12px -2px rgba(0,0,0,0.08); }
+        .task-btn.added { border-color: #22c55e; background: #f0fdf4; }
+        .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+        @keyframes pulseGlow { 0%,100% { box-shadow:0 0 0 0 rgba(220,38,38,0.3); } 50% { box-shadow:0 0 0 8px rgba(220,38,38,0); } }
+        .estimate-card { background: linear-gradient(135deg, #1e3a5f 0%, #0c1525 100%); }
+    </style>
+
+    <style>
+    /* Kimi UI/UX Improvements */
+    .fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .radio-option, [class*="option"], [class*="choice"] { 
+        min-height: 52px; transition: all 0.15s ease !important; 
+    }
+    .radio-option:active, [class*="option"]:active { transform: scale(0.98); }
+    .btn-primary:active, [class*="btn"]:active { transform: translateY(1px); }
+    /* Better progress bar */
+    [class*="progress"] { height: 6px !important; border-radius: 3px; }
+    </style>
+    
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <header class="bg-navy-500 text-white">
+        <div class="max-w-3xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">🔧 The ABQ Handyman</h1>
+                    <p class="text-navy-100 text-sm mt-1">Veteran-Owned • Albuquerque & Rio Rancho, NM</p>
+                </div>
+                <div class="hidden sm:flex items-center gap-2 bg-patriot-500/20 rounded-full px-3 py-1.5">
+                    <span class="text-sm">🇺🇸</span>
+                    <span class="text-patriot-100 text-xs font-medium">Veteran-Owned</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-3xl mx-auto px-4 py-8">
+        <!-- Intro -->
+        <div class="text-center mb-8 fade-in">
+            <div class="inline-flex items-center justify-center w-14 h-14 bg-patriot-100 rounded-2xl mb-4">
+                <i data-lucide="clipboard-list" class="w-7 h-7 text-patriot-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">Build Your Project List</h2>
+            <p class="text-gray-500 mt-2">Add everything you need done — get an instant cost estimate</p>
+        </div>
+
+        <!-- Task Selection -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+            <h3 class="font-semibold text-gray-900 mb-1">What needs to be done?</h3>
+            <p class="text-sm text-gray-400 mb-4">Tap to add tasks to your list. Add multiples of the same item.</p>
+
+            <div class="space-y-6">
+                <!-- Plumbing -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i data-lucide="droplets" class="w-3.5 h-3.5"></i> Plumbing
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <button onclick="addTask('faucet')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🚰</span><span class="text-sm font-medium text-gray-800">Faucet Installation</span></div>
+                            <span class="text-xs text-gray-400">$125–$225</span>
+                        </button>
+                        <button onclick="addTask('toilet')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🚽</span><span class="text-sm font-medium text-gray-800">Toilet Repair/Install</span></div>
+                            <span class="text-xs text-gray-400">$100–$250</span>
+                        </button>
+                        <button onclick="addTask('waterheater')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🔥</span><span class="text-sm font-medium text-gray-800">Water Heater Service</span></div>
+                            <span class="text-xs text-gray-400">$100–$300</span>
+                        </button>
+                        <button onclick="addTask('disposal')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>♻️</span><span class="text-sm font-medium text-gray-800">Garbage Disposal Install</span></div>
+                            <span class="text-xs text-gray-400">$150–$275</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Electrical -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> Electrical & Fixtures
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <button onclick="addTask('ceilingfan')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🌀</span><span class="text-sm font-medium text-gray-800">Ceiling Fan Install</span></div>
+                            <span class="text-xs text-gray-400">$100–$200</span>
+                        </button>
+                        <button onclick="addTask('light')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>💡</span><span class="text-sm font-medium text-gray-800">Light Fixture Install</span></div>
+                            <span class="text-xs text-gray-400">$75–$175</span>
+                        </button>
+                        <button onclick="addTask('outlet')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🔌</span><span class="text-sm font-medium text-gray-800">Outlet/Switch Repair</span></div>
+                            <span class="text-xs text-gray-400">$65–$125</span>
+                        </button>
+                        <button onclick="addTask('thermostat')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🌡️</span><span class="text-sm font-medium text-gray-800">Smart Thermostat Install</span></div>
+                            <span class="text-xs text-gray-400">$75–$150</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mounting & Assembly -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i data-lucide="monitor" class="w-3.5 h-3.5"></i> Mounting & Assembly
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <button onclick="addTask('tv')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>📺</span><span class="text-sm font-medium text-gray-800">TV Wall Mount</span></div>
+                            <span class="text-xs text-gray-400">$100–$200</span>
+                        </button>
+                        <button onclick="addTask('shelves')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>📚</span><span class="text-sm font-medium text-gray-800">Shelf/Cabinet Mounting</span></div>
+                            <span class="text-xs text-gray-400">$60–$150</span>
+                        </button>
+                        <button onclick="addTask('furniture')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🛏️</span><span class="text-sm font-medium text-gray-800">Furniture Assembly</span></div>
+                            <span class="text-xs text-gray-400">$75–$175</span>
+                        </button>
+                        <button onclick="addTask('curtain')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🪟</span><span class="text-sm font-medium text-gray-800">Curtain Rod/Blinds</span></div>
+                            <span class="text-xs text-gray-400">$50–$100</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Repairs -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i data-lucide="hammer" class="w-3.5 h-3.5"></i> Repairs & Maintenance
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <button onclick="addTask('drywall')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🧱</span><span class="text-sm font-medium text-gray-800">Drywall Repair</span></div>
+                            <span class="text-xs text-gray-400">$75–$200</span>
+                        </button>
+                        <button onclick="addTask('door')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🚪</span><span class="text-sm font-medium text-gray-800">Door Repair/Adjust</span></div>
+                            <span class="text-xs text-gray-400">$75–$175</span>
+                        </button>
+                        <button onclick="addTask('caulk')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🛁</span><span class="text-sm font-medium text-gray-800">Caulking/Grouting</span></div>
+                            <span class="text-xs text-gray-400">$60–$125</span>
+                        </button>
+                        <button onclick="addTask('paint')" class="task-btn border-2 border-gray-200 rounded-xl p-3 text-left bg-white flex items-center justify-between">
+                            <div class="flex items-center gap-2"><span>🎨</span><span class="text-sm font-medium text-gray-800">Touch-Up Painting</span></div>
+                            <span class="text-xs text-gray-400">$100–$250</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Your Project List -->
+        <div class="bg-white rounded-2xl border-2 border-navy-200 p-6 mb-6" id="projectList">
+            <h3 class="font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                <span class="flex items-center gap-2"><i data-lucide="list-checks" class="w-5 h-5 text-navy-500"></i> Your Project List</span>
+                <span class="text-sm text-gray-400" id="taskCount">0 tasks</span>
+            </h3>
+            <div id="taskList" class="space-y-2 mb-4">
+                <div class="text-center py-6 text-gray-300">
+                    <p class="text-sm">Tap tasks above to build your list</p>
+                </div>
+            </div>
+            <div id="totalSection" class="hidden border-t border-gray-200 pt-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold text-gray-900">Estimated Total</span>
+                    <span class="text-2xl font-extrabold text-navy-500" id="totalRange">$0 – $0</span>
+                </div>
+                <div class="flex items-center justify-between text-sm text-gray-500">
+                    <span>Estimated Time</span>
+                    <span id="timeEstimate">—</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-2">Multi-task visits save you money — Wesley often bundles jobs at a reduced rate.</p>
+            </div>
+        </div>
+
+        <!-- Get Exact Quote CTA -->
+        <div id="ctaSection" class="hidden">
+            <div class="estimate-card rounded-3xl p-8 text-white mb-8 slide-up">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="calculator" class="w-5 h-5 text-patriot-300"></i>
+                    <span class="text-patriot-200 font-medium text-sm uppercase tracking-wide">Your Project Estimate</span>
+                </div>
+                <div class="flex items-end gap-3 mb-2">
+                    <span class="text-5xl font-extrabold" id="estLow">$0</span>
+                    <span class="text-2xl font-light text-navy-200 mb-1">—</span>
+                    <span class="text-5xl font-extrabold" id="estHigh">$0</span>
+                </div>
+                <p class="text-navy-200 text-sm" id="estSummary">—</p>
+
+                <div class="mt-4 bg-trust-500/20 rounded-xl p-3 text-sm text-trust-100">
+                    💡 <strong>Multi-task discount:</strong> Booking multiple tasks in one visit typically saves 10-15% vs. separate appointments.
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="bg-white rounded-2xl border-2 border-patriot-200 p-6 mb-6">
+                <h3 class="font-semibold text-gray-900 mb-2">Get Your Exact Quote from Wesley</h3>
+                <p class="text-gray-500 text-sm mb-5">Veteran-owned. Licensed & insured. No hidden fees — just honest, upfront pricing.</p>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <input type="text" id="quoteName" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-patriot-500 focus:border-patriot-500 outline-none transition" placeholder="Your name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" id="quotePhone" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-patriot-500 focus:border-patriot-500 outline-none transition" placeholder="(505) 555-1234">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Area</label>
+                        <select id="quoteArea" class="w-full border border-gray-300 rounded-xl px-4 py-3 bg-white focus:ring-2 focus:ring-patriot-500 focus:border-patriot-500 outline-none transition">
+                            <option value="">Select area...</option>
+                            <option>Albuquerque — NE Heights</option>
+                            <option>Albuquerque — NW/West Side</option>
+                            <option>Albuquerque — SE/South Valley</option>
+                            <option>Albuquerque — Downtown/UNM</option>
+                            <option>Rio Rancho</option>
+                            <option>Corrales</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="quoteNotes" rows="2" class="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-patriot-500 focus:border-patriot-500 outline-none transition resize-none" placeholder="Any details about the jobs..."></textarea>
+                    </div>
+                    <button onclick="submitQuote()" class="w-full bg-patriot-500 hover:bg-patriot-600 text-white font-bold py-4 rounded-xl transition pulse-glow flex items-center justify-center gap-2">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                        Request Free Estimate
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center py-4">
+                <p class="text-gray-400 text-sm mb-2">Want to talk now?</p>
+                <a href="tel:5052891102" class="inline-flex items-center gap-2 text-navy-500 font-bold text-xl hover:text-navy-600 transition">
+                    <i data-lucide="phone" class="w-5 h-5"></i>
+                    (505) 289-1102
+                </a>
+                <p class="text-gray-400 text-xs mt-1">M-F 9am–6pm, Sat 12–4pm</p>
+            </div>
+        </div>
+
+        <!-- Thank You -->
+        <div id="thankYou" class="hidden text-center py-12">
+            <div class="slide-up">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-trust-100 rounded-full mb-6">
+                    <i data-lucide="check-circle-2" class="w-10 h-10 text-trust-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Estimate Request Sent!</h2>
+                <p class="text-gray-500 max-w-md mx-auto">Wesley at The ABQ Handyman will reach out with an exact quote. He's known for fast, honest responses.</p>
+                <button onclick="startOver()" class="mt-8 text-patriot-600 font-medium hover:text-patriot-700 transition">Plan another project →</button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-navy-800 text-white mt-16">
+        <div class="max-w-3xl mx-auto px-4 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-6">
+                <div>
+                    <h3 class="font-bold text-lg">🔧 The ABQ Handyman LLC</h3>
+                    <p class="text-navy-100 text-sm mt-1">Albuquerque, NM 87113</p>
+                    <p class="text-navy-100 text-sm">(505) 289-1102</p>
+                    <p class="text-navy-100 text-sm">🇺🇸 Veteran-Owned • Licensed & Insured</p>
+                </div>
+                <div class="text-sm text-navy-100">
+                    <p>Serving Albuquerque & Rio Rancho, NM</p>
+                    <p class="mt-2 text-navy-100 text-xs opacity-60">Estimates are approximate. Final pricing confirmed after assessment.<br>Demo tool by <a href="https://bennycutools.com" class="underline hover:text-white">BennyCu Tools</a>.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const TASKS = {
+            faucet: { name: 'Faucet Installation', icon: '🚰', low: 125, high: 225, hours: 1.5 },
+            toilet: { name: 'Toilet Repair/Install', icon: '🚽', low: 100, high: 250, hours: 1.5 },
+            waterheater: { name: 'Water Heater Service', icon: '🔥', low: 100, high: 300, hours: 2 },
+            disposal: { name: 'Garbage Disposal Install', icon: '♻️', low: 150, high: 275, hours: 1.5 },
+            ceilingfan: { name: 'Ceiling Fan Install', icon: '🌀', low: 100, high: 200, hours: 1.5 },
+            light: { name: 'Light Fixture Install', icon: '💡', low: 75, high: 175, hours: 1 },
+            outlet: { name: 'Outlet/Switch Repair', icon: '🔌', low: 65, high: 125, hours: 0.75 },
+            thermostat: { name: 'Smart Thermostat Install', icon: '🌡️', low: 75, high: 150, hours: 1 },
+            tv: { name: 'TV Wall Mount', icon: '📺', low: 100, high: 200, hours: 1.5 },
+            shelves: { name: 'Shelf/Cabinet Mounting', icon: '📚', low: 60, high: 150, hours: 1 },
+            furniture: { name: 'Furniture Assembly', icon: '🛏️', low: 75, high: 175, hours: 1.5 },
+            curtain: { name: 'Curtain Rod/Blinds', icon: '🪟', low: 50, high: 100, hours: 0.75 },
+            drywall: { name: 'Drywall Repair', icon: '🧱', low: 75, high: 200, hours: 1.5 },
+            door: { name: 'Door Repair/Adjust', icon: '🚪', low: 75, high: 175, hours: 1 },
+            caulk: { name: 'Caulking/Grouting', icon: '🛁', low: 60, high: 125, hours: 1 },
+            paint: { name: 'Touch-Up Painting', icon: '🎨', low: 100, high: 250, hours: 2 }
+        };
+
+        let myTasks = []; // array of task keys
+
+        function addTask(key) {
+            myTasks.push(key);
+            renderList();
+        }
+
+        function removeTask(index) {
+            myTasks.splice(index, 1);
+            renderList();
+        }
+
+        function renderList() {
+            const list = document.getElementById('taskList');
+            const count = document.getElementById('taskCount');
+            const total = document.getElementById('totalSection');
+            const cta = document.getElementById('ctaSection');
+
+            count.textContent = myTasks.length + ' task' + (myTasks.length !== 1 ? 's' : '');
+
+            if (myTasks.length === 0) {
+                list.innerHTML = '<div class="text-center py-6 text-gray-300"><p class="text-sm">Tap tasks above to build your list</p></div>';
+                total.classList.add('hidden');
+                cta.classList.add('hidden');
+                return;
+            }
+
+            let totalLow = 0, totalHigh = 0, totalHours = 0;
+            list.innerHTML = myTasks.map((key, i) => {
+                const t = TASKS[key];
+                totalLow += t.low;
+                totalHigh += t.high;
+                totalHours += t.hours;
+                return `
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <span>${t.icon}</span>
+                            <span class="text-sm font-medium text-gray-800">${t.name}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm text-gray-500">$${t.low}–$${t.high}</span>
+                            <button onclick="removeTask(${i})" class="w-7 h-7 rounded-full bg-red-50 flex items-center justify-center text-red-400 hover:bg-red-100 hover:text-red-600 transition text-xs font-bold">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Multi-task discount
+            let discount = 0;
+            if (myTasks.length >= 4) discount = 0.15;
+            else if (myTasks.length >= 2) discount = 0.10;
+
+            if (discount > 0) {
+                totalLow = Math.round(totalLow * (1 - discount));
+                totalHigh = Math.round(totalHigh * (1 - discount));
+            }
+
+            document.getElementById('totalRange').textContent = `$${totalLow} – $${totalHigh}`;
+            const hours = Math.ceil(totalHours * (1 - discount * 0.5));
+            document.getElementById('timeEstimate').textContent = hours <= 4 ? `${hours}–${hours+1} hours (half day)` : hours <= 8 ? `${hours}–${hours+1} hours (full day)` : `${Math.ceil(hours/8)} days`;
+            total.classList.remove('hidden');
+
+            // Show CTA section
+            cta.classList.remove('hidden');
+            document.getElementById('estLow').textContent = '$' + totalLow;
+            document.getElementById('estHigh').textContent = '$' + totalHigh;
+            document.getElementById('estSummary').textContent = `${myTasks.length} task${myTasks.length > 1 ? 's' : ''}, ~${hours} hours${discount > 0 ? ` (${Math.round(discount*100)}% multi-task discount applied)` : ''}`;
+        }
+
+        function submitQuote() {
+            const name = document.getElementById('quoteName').value.trim();
+            const phone = document.getElementById('quotePhone').value.trim();
+            if (!name || !phone) { alert('Please enter your name and phone.'); return; }
+
+            const subs = JSON.parse(localStorage.getItem('abq-submissions') || '[]');
+            subs.push({
+                name, phone,
+                area: document.getElementById('quoteArea').value,
+                notes: document.getElementById('quoteNotes').value,
+                tasks: myTasks.map(k => TASKS[k].name),
+                taskCount: myTasks.length,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('abq-submissions', JSON.stringify(subs));
+
+            document.getElementById('ctaSection').classList.add('hidden');
+            document.getElementById('projectList').classList.add('hidden');
+            document.querySelector('.bg-white.rounded-2xl.border.border-gray-200.p-6.mb-6').classList.add('hidden');
+            document.getElementById('thankYou').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function startOver() {
+            myTasks = [];
+            renderList();
+            document.querySelectorAll('.bg-white.rounded-2xl').forEach(el => el.classList.remove('hidden'));
+            document.getElementById('projectList').classList.remove('hidden');
+            document.getElementById('thankYou').classList.add('hidden');
+            document.getElementById('quoteName').value = '';
+            document.getElementById('quotePhone').value = '';
+            document.getElementById('quoteArea').value = '';
+            document.getElementById('quoteNotes').value = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { lucide.createIcons(); });
+    </script>
+</body>
+</html>
