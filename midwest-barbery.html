@@ -1129,9 +1129,25 @@
         max-height: calc(100vh - 40px);
       }
     }
+
+    /* Prefers Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      #bct-demo-disclaimer, nav, .bottom-nav, .tab-bar, .demo-banner, button:not(.print-keep) { display: none !important; }
+      body { padding: 0 !important; background: white !important; color: black !important; }
+    }
   </style>
 </head>
 <body>
+  <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100000;" onfocus="this.style.position='fixed';this.style.left='16px';this.style.top='16px';this.style.width='auto';this.style.height='auto';this.style.overflow='visible';this.style.background='#fff';this.style.padding='8px 16px';this.style.borderRadius='4px';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';this.style.fontSize='14px';this.style.color='#333';this.style.textDecoration='none';" onblur="this.style.position='absolute';this.style.left='-9999px';this.style.width='1px';this.style.height='1px';this.style.overflow='hidden';">Skip to main content</a>
   <!-- Access Gate -->
   <div id="accessGate">
     <div class="gate-container">
@@ -1155,7 +1171,7 @@
   </div>
 
   <!-- Main App -->
-  <div id="app">
+  <div id="app" role="main">
     <header class="app-header">
       <div class="barber-strip"></div>
       <div class="header-row" style="margin-top:12px;">
@@ -2272,14 +2288,18 @@ ${card.notes ? 'Notes: ' + card.notes : ''}
     }
 
     async function init() {
-      // Always use memory fallback for instant demo data
-      useMemoryFallback = true;
-      memoryClients = JSON.parse(JSON.stringify(demoClients));
-      memoryCards = JSON.parse(JSON.stringify(demoCards));
-      document.getElementById('demoBanner').style.display = 'flex';
-      
-      // Try to init IndexedDB in background (non-blocking)
-      openDB().then(() => loadDemoData()).catch(() => {});
+      // First-visit detection for demo data
+      if (!localStorage.getItem('midwest-barbery-visited')) {
+        localStorage.setItem('midwest-barbery-visited', 'true');
+        // Always use memory fallback for instant demo data
+        useMemoryFallback = true;
+        memoryClients = JSON.parse(JSON.stringify(demoClients));
+        memoryCards = JSON.parse(JSON.stringify(demoCards));
+        document.getElementById('demoBanner').style.display = 'flex';
+        
+        // Try to init IndexedDB in background (non-blocking)
+        openDB().then(() => loadDemoData()).catch(() => {});
+      }
       
       await renderClientList();
       initCanvas();
