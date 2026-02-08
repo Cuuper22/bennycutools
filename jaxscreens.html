@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ScreenScope - On-Site Enclosure Visualizer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #046BD2;
+      --primary-dark: #0356A8;
+      --secondary: #6C6C89;
+      --accent: #FF6B35;
+      --surface: #FFFFFF;
+      --surface-alt: #F8F9FA;
+      --border: #E2E4E9;
+      --text: #1A1D26;
+      --text-muted: #6C6C89;
+      --success: #059669;
+      --warning: #D97706;
+      --error: #DC2626;
+      --white-frame: rgba(255, 255, 255, 0.85);
+      --bronze-frame: rgba(139, 90, 43, 0.85);
+      --beige-frame: rgba(210, 180, 140, 0.85);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--surface-alt);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* Access Gate */
+    #access-gate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    .gate-card {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px 24px;
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .gate-logo {
+      width: 64px;
+      height: 64px;
+      background: var(--primary);
+      border-radius: 12px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .gate-logo svg {
+      width: 36px;
+      height: 36px;
+      color: white;
+    }
+
+    .gate-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .gate-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    /* Step transitions */
+    .view {
+      display: none;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .view.active {
+      display: block;
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Card animations */
+    .capture-hero, .options-section, .pricing-card, .proposal-preview, .project-card {
+      animation: cardSlideIn 0.3s ease-out;
+    }
+
+    @keyframes cardSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 4px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .gate-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .gate-btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .gate-btn:active {
+      transform: scale(0.98);
+    }
+
+    .gate-error {
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .gate-error.show {
+      display: block;
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg {
+      width: 20px;
+      height: 20px;
+      color: white;
+    }
+
+    .brand-text {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--surface-alt);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .icon-btn:hover {
+      background: var(--border);
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--secondary);
+    }
+
+    /* Demo Banner */
+    #demo-banner {
+      background: linear-gradient(90deg, var(--primary) 0%, #0078E8 100%);
+      color: white;
+      padding: 10px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #demo-banner button {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+    }
+
+    #demo-banner button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Step Indicator */
+    .step-indicator {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    .step-dot.active {
+      background: var(--primary);
+    }
+
+    .step-dot.complete {
+      background: var(--success);
+    }
+
+    /* View Containers - transitions added above */
+
+    /* Capture View */
+    #capture-view {
+      text-align: center;
+    }
+
+    .capture-hero {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 32px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .capture-hero h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .capture-hero p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .camera-preview-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #1A1D26;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    #camera-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .camera-grid {
+      position: absolute;
+      inset: 16px;
+      border: 2px dashed rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+    }
+
+    .camera-placeholder {
+      color: rgba(255, 255, 255, 0.7);
+      text-align: center;
+    }
+
+    .camera-placeholder svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 8px;
+      opacity: 0.7;
+    }
+
+    .capture-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Projects List */
+    .projects-section {
+      margin-top: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .project-count {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .project-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+      border: 1px solid var(--border);
+    }
+
+    .project-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .project-card:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .project-thumb {
+      width: 72px;
+      height: 54px;
+      border-radius: 8px;
+      background: var(--surface-alt);
+      object-fit: cover;
+    }
+
+    .project-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .project-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .project-address {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .project-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .project-status.draft {
+      background: #FEF3C7;
+      color: #92400E;
+    }
+
+    .project-status.ready {
+      background: #D1FAE5;
+      color: #065F46;
+    }
+
+    .project-price {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    /* Overlay View */
+    #overlay-view {
+      text-align: center;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    #overlay-canvas {
+      width: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    .canvas-instructions {
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+
+    .tools-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding: 4px 0;
+    }
+
+    .tool-btn {
+      padding: 10px 16px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+
+    .tool-btn:hover {
+      border-color: var(--primary);
+    }
+
+    .tool-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .tool-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .tool-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Customize View */
+    #customize-view {
+      padding-bottom: 80px;
+    }
+
+    .preview-card {
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .preview-image {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+    }
+
+    .options-section {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .option-label {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .option-value {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .option-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      padding: 10px 16px;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .chip:hover {
+      border-color: var(--primary);
+    }
+
+    .chip.selected {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .chip:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .chip.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .chip.disabled::after {
+      content: 'Pro';
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--accent);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .color-chips {
+      display: flex;
+      gap: 12px;
+    }
+
+    .color-chip {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: 3px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .color-chip:hover {
+      transform: scale(1.05);
+    }
+
+    .color-chip.selected {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
+    }
+
+    .color-chip:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+    }
+
+    .color-chip.white {
+      background: #FFFFFF;
+      border: 3px solid #E2E4E9;
+    }
+
+    .color-chip.bronze {
+      background: linear-gradient(135deg, #8B5A2B 0%, #A67B5B 100%);
+    }
+
+    .color-chip.beige {
+      background: linear-gradient(135deg, #D2B48C 0%, #E8D4B8 100%);
+    }
+
+    .color-chip.custom {
+      background: linear-gradient(135deg, #FF6B35 0%, #FF8F66 50%, #046BD2 100%);
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .color-chip.custom::after {
+      content: 'Pro';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--accent);
+      color: white;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+
+    .slider-container {
+      padding: 8px 0;
+    }
+
+    .slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .slider:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+    }
+
+    /* Pricing View */
+    #pricing-view {
+      padding-bottom: 100px;
+    }
+
+    .pricing-card {
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .pricing-header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .pricing-header h3 {
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .total-price {
+      font-size: 36px;
+      font-weight: 800;
+    }
+
+    .pricing-body {
+      padding: 16px;
+    }
+
+    .line-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .line-item:last-child {
+      border-bottom: none;
+    }
+
+    .line-label {
+      color: var(--text-muted);
+    }
+
+    .line-value {
+      font-weight: 600;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+
+    .line-item.subtotal {
+      border-top: 2px solid var(--border);
+      margin-top: 8px;
+      padding-top: 16px;
+      font-weight: 600;
+    }
+
+    .line-item.subtotal .line-label {
+      color: var(--text);
+    }
+
+    .dimensions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .dimension-input {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .dimension-input label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dimension-input input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+    }
+
+    .dimension-input input:focus {
+      outline: none;
+    }
+
+    .dimension-input:focus-within {
+      border-color: var(--primary);
+    }
+
+    /* Proposal View */
+    #proposal-view {
+      padding-bottom: 100px;
+    }
+
+    .proposal-preview {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .proposal-header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .proposal-logo {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 10px;
+      margin: 0 auto 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .proposal-logo svg {
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+
+    .proposal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .proposal-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .proposal-image {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .proposal-details {
+      font-size: 14px;
+    }
+
+    .proposal-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .proposal-row:last-child {
+      border-bottom: none;
+    }
+
+    .proposal-total {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px solid var(--primary);
+      text-align: right;
+    }
+
+    .signature-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .signature-line {
+      border-bottom: 1px solid var(--text);
+      height: 40px;
+      margin-bottom: 4px;
+    }
+
+    .signature-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .watermark {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .upgrade-prompt {
+      background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .upgrade-prompt svg {
+      width: 24px;
+      height: 24px;
+      color: var(--warning);
+      flex-shrink: 0;
+    }
+
+    .upgrade-text {
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .upgrade-text strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    /* Fixed Bottom Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      z-index: 50;
+    }
+
+    .bottom-bar-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Projects Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 20px;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 380px) {
+      .dimensions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .capture-actions {
+        flex-direction: column;
+      }
+    }
+
+    /* Hidden class */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Screen reader only */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Access Gate -->
+  <div id="access-gate" role="dialog" aria-labelledby="gate-title" aria-modal="true">
+    <div class="gate-card">
+      <div class="gate-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="9" y1="21" x2="9" y2="9"/>
+        </svg>
+      </div>
+      <h1 id="gate-title" class="gate-title">ScreenScope</h1>
+      <p class="gate-subtitle">Type in your access code to get started</p>
+      <input type="text" id="access-input" class="gate-input" placeholder="_ _ _ _ _ _ _ _" maxlength="20" aria-label="Access code" autocomplete="off">
+      <button id="access-btn" class="gate-btn">Open Tool</button>
+      <p id="gate-error" class="gate-error" role="alert">Invalid access code. Try again.</p>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="hidden">
+    <!-- Demo Banner -->
+    <div id="demo-banner" role="status" aria-live="polite">
+      <span>Sample Jacksonville projects loaded</span>
+      <button id="dismiss-banner" aria-label="Dismiss demo banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Header -->
+    <header>
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <span class="brand-text">ScreenScope</span>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" id="projects-btn" aria-label="View saved projects">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+            </svg>
+          </button>
+          <button class="icon-btn" id="settings-btn" aria-label="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+      <!-- Step Indicator -->
+      <div class="step-indicator" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="5" aria-label="Project progress">
+        <div class="step-dot active" data-step="1"></div>
+        <div class="step-dot" data-step="2"></div>
+        <div class="step-dot" data-step="3"></div>
+        <div class="step-dot" data-step="4"></div>
+        <div class="step-dot" data-step="5"></div>
+      </div>
+
+      <!-- View 1: Capture -->
+      <section id="capture-view" class="view active" aria-label="Capture photo">
+        <div class="capture-hero">
+          <h2>Snap a Photo</h2>
+          <p>Take a picture of the patio or pool area you're quoting</p>
+          
+          <div class="camera-preview-container">
+            <video id="camera-preview" autoplay playsinline aria-label="Camera preview"></video>
+            <canvas id="capture-canvas" style="display: none;"></canvas>
+            <div class="camera-overlay">
+              <div class="camera-grid"></div>
+              <div class="camera-placeholder" id="camera-placeholder">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <p>Tap here to turn on camera</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="capture-actions">
+            <button class="btn btn-secondary" id="upload-btn" aria-label="Upload photo from gallery">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Upload
+            </button>
+            <button class="btn btn-primary" id="capture-btn" aria-label="Take photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Capture
+            </button>
+          </div>
+          <input type="file" id="file-input" accept="image/*" class="hidden" aria-hidden="true">
+        </div>
+
+        <!-- Recent Projects -->
+        <div class="projects-section">
+          <div class="section-header">
+            <h3 class="section-title">Recent Projects</h3>
+            <span class="project-count" id="project-count">3 of 5</span>
+          </div>
+          <div id="projects-list" role="list" aria-label="Recent projects"></div>
+        </div>
+      </section>
+
+      <!-- View 2: Overlay -->
+      <section id="overlay-view" class="view" aria-label="Draw enclosure">
+        <h2 class="sr-only">Draw the enclosure outline</h2>
+        <div class="canvas-container">
+          <canvas id="overlay-canvas" aria-label="Drawing canvas for enclosure outline"></canvas>
+          <div class="canvas-instructions" id="canvas-instructions" aria-live="polite">Tap each corner to outline the enclosure</div>
+        </div>
+
+        <div class="tools-bar" role="toolbar" aria-label="Drawing tools">
+          <button class="tool-btn active" id="draw-tool" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+              <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            </svg>
+            Draw
+          </button>
+          <button class="tool-btn" id="undo-tool" aria-label="Undo last point">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 7v6h6"/>
+              <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+            </svg>
+            Undo
+          </button>
+          <button class="tool-btn" id="clear-tool" aria-label="Clear drawing">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            Clear
+          </button>
+          <button class="tool-btn" id="complete-tool" aria-label="Complete outline">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Done
+          </button>
+        </div>
+      </section>
+
+      <!-- View 3: Customize -->
+      <section id="customize-view" class="view" aria-label="Customize enclosure">
+        <div class="preview-card">
+          <canvas id="preview-canvas" class="preview-image" aria-label="Enclosure preview"></canvas>
+        </div>
+
+        <div class="options-section">
+          <div class="option-label">
+            <span>Frame Color</span>
+          </div>
+          <div class="color-chips" role="radiogroup" aria-label="Frame color selection">
+            <button class="color-chip white selected" data-color="white" role="radio" aria-checked="true" aria-label="White frame"></button>
+            <button class="color-chip bronze" data-color="bronze" role="radio" aria-checked="false" aria-label="Bronze frame"></button>
+            <button class="color-chip beige" data-color="beige" role="radio" aria-checked="false" aria-label="Beige frame"></button>
+            <button class="color-chip custom" data-color="custom" role="radio" aria-checked="false" aria-label="Custom color - Pro feature" aria-disabled="true"></button>
+          </div>
+        </div>
+
+        <div class="options-section">
+          <div class="option-label">
+            <span>Enclosure Type</span>
+          </div>
+          <div class="option-chips" role="radiogroup" aria-label="Enclosure type selection">
+            <button class="chip selected" data-type="patio" role="radio" aria-checked="true">Patio Screen</button>
+            <button class="chip" data-type="pool" role="radio" aria-checked="false">Pool Cage</button>
+            <button class="chip" data-type="lanai" role="radio" aria-checked="false">Lanai</button>
+          </div>
+        </div>
+
+        <div class="options-section">
+          <div class="option-label">
+            <span>Roof Style</span>
+          </div>
+          <div class="option-chips" role="radiogroup" aria-label="Roof style selection">
+            <button class="chip selected" data-roof="flat" role="radio" aria-checked="true">Flat</button>
+            <button class="chip" data-roof="gable" role="radio" aria-checked="false">Gable</button>
+            <button class="chip" data-roof="shed" role="radio" aria-checked="false">Shed</button>
+          </div>
+        </div>
+
+        <div class="options-section">
+          <div class="option-label">
+            <span>Wall Height</span>
+            <span class="option-value" id="height-value">8 ft</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" class="slider" id="height-slider" min="4" max="12" value="8" step="1" aria-label="Wall height in feet">
+          </div>
+        </div>
+      </section>
+
+      <!-- View 4: Pricing -->
+      <section id="pricing-view" class="view" aria-label="Project pricing">
+        <div class="dimensions-grid">
+          <div class="dimension-input">
+            <label for="dim-width">Width</label>
+            <input type="number" id="dim-width" value="20" min="4" max="100" aria-label="Width in feet"> ft
+          </div>
+          <div class="dimension-input">
+            <label for="dim-depth">Depth</label>
+            <input type="number" id="dim-depth" value="15" min="4" max="100" aria-label="Depth in feet"> ft
+          </div>
+          <div class="dimension-input">
+            <label for="dim-height">Height</label>
+            <input type="number" id="dim-height" value="8" min="4" max="20" aria-label="Height in feet"> ft
+          </div>
+        </div>
+
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h3>Estimated Total</h3>
+            <div class="total-price" id="total-price">$8,450</div>
+          </div>
+          <div class="pricing-body">
+            <div class="line-item">
+              <span class="line-label">Screen mesh (300 sq ft)</span>
+              <span class="line-value" id="mesh-cost">$1,200</span>
+            </div>
+            <div class="line-item">
+              <span class="line-label">Aluminum framing (180 LF)</span>
+              <span class="line-value" id="frame-cost">$2,700</span>
+            </div>
+            <div class="line-item">
+              <span class="line-label">Screen door (36")</span>
+              <span class="line-value" id="door-cost">$450</span>
+            </div>
+            <div class="line-item">
+              <span class="line-label">Hardware & fasteners</span>
+              <span class="line-value" id="hardware-cost">$350</span>
+            </div>
+            <div class="line-item">
+              <span class="line-label">Labor (16 hrs @ $75/hr)</span>
+              <span class="line-value" id="labor-cost">$1,200</span>
+            </div>
+            <div class="line-item subtotal">
+              <span class="line-label">Materials Subtotal</span>
+              <span class="line-value" id="materials-subtotal">$4,700</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- View 5: Proposal -->
+      <section id="proposal-view" class="view" aria-label="Generate proposal">
+        <div class="upgrade-prompt">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <div class="upgrade-text">
+            <strong>Add your logo to proposals</strong>
+            <span>Upgrade to Pro for custom branding</span>
+          </div>
+        </div>
+
+        <div class="proposal-preview" id="proposal-content">
+          <div class="proposal-header">
+            <div class="proposal-logo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="9" y1="21" x2="9" y2="9"/>
+              </svg>
+            </div>
+            <h3 class="proposal-title">Screen Enclosure Proposal</h3>
+            <p class="proposal-subtitle">Prepared by JaxScreens</p>
+          </div>
+
+          <canvas id="proposal-image" class="proposal-image" aria-label="Project visualization"></canvas>
+
+          <div class="proposal-details">
+            <div class="proposal-row">
+              <span>Customer</span>
+              <span id="prop-customer">Johnson Residence</span>
+            </div>
+            <div class="proposal-row">
+              <span>Location</span>
+              <span id="prop-location">Ponte Vedra, FL</span>
+            </div>
+            <div class="proposal-row">
+              <span>Enclosure Type</span>
+              <span id="prop-type">Patio Screen</span>
+            </div>
+            <div class="proposal-row">
+              <span>Dimensions</span>
+              <span id="prop-dimensions">20' x 15' x 8'</span>
+            </div>
+            <div class="proposal-row">
+              <span>Frame Color</span>
+              <span id="prop-color">White</span>
+            </div>
+            <div class="proposal-total">
+              Total: <span id="prop-total">$8,450</span>
+            </div>
+          </div>
+
+          <div class="signature-section">
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
+              By signing below, you agree to the terms outlined in this proposal. A 50% deposit is required to begin work.
+            </p>
+            <div class="signature-line"></div>
+            <span class="signature-label">Customer Signature / Date</span>
+          </div>
+
+          <div class="watermark">
+            Generated with ScreenScope
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-secondary" id="share-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Share
+          </button>
+          <button class="btn btn-primary" id="pdf-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Download PDF
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-bar" id="bottom-bar">
+      <div class="bottom-bar-inner">
+        <button class="btn btn-secondary" id="back-btn">Back</button>
+        <button class="btn btn-primary" id="next-btn">Next Step</button>
+      </div>
+    </div>
+
+    <!-- Projects Modal -->
+    <div class="modal-overlay" id="projects-modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <div class="modal-content">
+        <div class="modal-handle"></div>
+        <h2 id="modal-title" class="modal-title">Saved Projects</h2>
+        <div id="modal-projects-list" role="list"></div>
+        <button class="btn btn-primary" id="new-project-btn" style="width: 100%; margin-top: 16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Project
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- Legal Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by JaxScreens. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20JaxScreens" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+
+  <script>
+    // ========================================
+    // ScreenScope - On-Site Enclosure Visualizer
+    // ========================================
+    
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key))) {
+        e.preventDefault();
+      }
+    });
+
+    const APP_CONFIG = {
+      accessKey: 'scrn2026',
+      accessHash: -404875378,
+      maxFreeProjects: 5,
+      laborRate: 75,
+      materials: {
+        meshPerSqFt: 4,
+        framePerLF: 15,
+        door: 450,
+        hardware: 350
+      }
+    };
+
+    // State
+    let state = {
+      authenticated: false,
+      currentStep: 1,
+      currentProject: null,
+      projects: [],
+      cameraStream: null,
+      capturedImage: null,
+      overlayPoints: [],
+      settings: {
+        frameColor: 'white',
+        enclosureType: 'patio',
+        roofStyle: 'flat',
+        wallHeight: 8
+      },
+      dimensions: {
+        width: 20,
+        depth: 15,
+        height: 8
+      }
+    };
+
+    // Demo projects for Jacksonville area
+    const DEMO_PROJECTS = [
+      {
+        id: 'demo-1',
+        name: 'Johnson Residence',
+        address: 'Ponte Vedra, FL',
+        status: 'ready',
+        price: 12850,
+        settings: { frameColor: 'white', enclosureType: 'pool', roofStyle: 'gable', wallHeight: 10 },
+        dimensions: { width: 30, depth: 25, height: 10 },
+        createdAt: Date.now() - 86400000
+      },
+      {
+        id: 'demo-2',
+        name: 'Martinez Patio',
+        address: 'San Marco, FL',
+        status: 'draft',
+        price: 8450,
+        settings: { frameColor: 'bronze', enclosureType: 'patio', roofStyle: 'flat', wallHeight: 8 },
+        dimensions: { width: 20, depth: 15, height: 8 },
+        createdAt: Date.now() - 172800000
+      },
+      {
+        id: 'demo-3',
+        name: 'Wilson Lanai',
+        address: 'Riverside, FL',
+        status: 'ready',
+        price: 6200,
+        settings: { frameColor: 'beige', enclosureType: 'lanai', roofStyle: 'shed', wallHeight: 9 },
+        dimensions: { width: 16, depth: 12, height: 9 },
+        createdAt: Date.now() - 432000000
+      }
+    ];
+
+    // DOM Elements
+    const els = {
+      accessGate: document.getElementById('access-gate'),
+      accessInput: document.getElementById('access-input'),
+      accessBtn: document.getElementById('access-btn'),
+      gateError: document.getElementById('gate-error'),
+      app: document.getElementById('app'),
+      demoBanner: document.getElementById('demo-banner'),
+      dismissBanner: document.getElementById('dismiss-banner'),
+      cameraPreview: document.getElementById('camera-preview'),
+      cameraPlaceholder: document.getElementById('camera-placeholder'),
+      captureCanvas: document.getElementById('capture-canvas'),
+      overlayCanvas: document.getElementById('overlay-canvas'),
+      previewCanvas: document.getElementById('preview-canvas'),
+      proposalImage: document.getElementById('proposal-image'),
+      captureBtn: document.getElementById('capture-btn'),
+      uploadBtn: document.getElementById('upload-btn'),
+      fileInput: document.getElementById('file-input'),
+      projectsList: document.getElementById('projects-list'),
+      projectCount: document.getElementById('project-count'),
+      stepDots: document.querySelectorAll('.step-dot'),
+      views: document.querySelectorAll('.view'),
+      backBtn: document.getElementById('back-btn'),
+      nextBtn: document.getElementById('next-btn'),
+      bottomBar: document.getElementById('bottom-bar'),
+      projectsBtn: document.getElementById('projects-btn'),
+      projectsModal: document.getElementById('projects-modal'),
+      modalProjectsList: document.getElementById('modal-projects-list'),
+      newProjectBtn: document.getElementById('new-project-btn'),
+      canvasInstructions: document.getElementById('canvas-instructions'),
+      drawTool: document.getElementById('draw-tool'),
+      undoTool: document.getElementById('undo-tool'),
+      clearTool: document.getElementById('clear-tool'),
+      completeTool: document.getElementById('complete-tool'),
+      colorChips: document.querySelectorAll('.color-chip'),
+      typeChips: document.querySelectorAll('[data-type]'),
+      roofChips: document.querySelectorAll('[data-roof]'),
+      heightSlider: document.getElementById('height-slider'),
+      heightValue: document.getElementById('height-value'),
+      dimWidth: document.getElementById('dim-width'),
+      dimDepth: document.getElementById('dim-depth'),
+      dimHeight: document.getElementById('dim-height'),
+      totalPrice: document.getElementById('total-price'),
+      meshCost: document.getElementById('mesh-cost'),
+      frameCost: document.getElementById('frame-cost'),
+      doorCost: document.getElementById('door-cost'),
+      hardwareCost: document.getElementById('hardware-cost'),
+      laborCost: document.getElementById('labor-cost'),
+      materialsSubtotal: document.getElementById('materials-subtotal'),
+      shareBtn: document.getElementById('share-btn'),
+      pdfBtn: document.getElementById('pdf-btn'),
+      toast: document.getElementById('toast'),
+      propCustomer: document.getElementById('prop-customer'),
+      propLocation: document.getElementById('prop-location'),
+      propType: document.getElementById('prop-type'),
+      propDimensions: document.getElementById('prop-dimensions'),
+      propColor: document.getElementById('prop-color'),
+      propTotal: document.getElementById('prop-total')
+    };
+
+    // ========================================
+    // Authentication
+    // ========================================
+
+    function hashCode(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return hash;
+    }
+
+    function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get('key');
+      
+      if (key && hashCode(key) === APP_CONFIG.accessHash) {
+        authenticate();
+        return;
+      }
+      
+      const stored = localStorage.getItem('screenscope_auth');
+      if (stored && hashCode(stored) === APP_CONFIG.accessHash) {
+        authenticate();
+      }
+    }
+
+    function authenticate() {
+      state.authenticated = true;
+      els.accessGate.classList.add('hidden');
+      els.app.classList.remove('hidden');
+      loadProjects();
+    }
+
+    els.accessBtn.addEventListener('click', () => {
+      const key = els.accessInput.value.trim();
+      if (hashCode(key) === APP_CONFIG.accessHash) {
+        localStorage.setItem('screenscope_auth', key);
+        authenticate();
+      } else {
+        els.gateError.classList.add('show');
+        els.accessInput.focus();
+      }
+    });
+
+    els.accessInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') els.accessBtn.click();
+    });
+
+    els.accessInput.addEventListener('input', () => {
+      els.gateError.classList.remove('show');
+    });
+
+    // ========================================
+    // Project Management
+    // ========================================
+
+    function loadProjects() {
+      const stored = localStorage.getItem('screenscope_projects');
+      if (stored) {
+        state.projects = JSON.parse(stored);
+      }
+      
+      // Auto-load demo data if no projects exist
+      if (state.projects.length === 0) {
+        state.projects = [...DEMO_PROJECTS];
+        saveProjects();
+        els.demoBanner.style.display = 'flex';
+      } else {
+        els.demoBanner.style.display = 'none';
+      }
+      
+      renderProjects();
+    }
+
+    function saveProjects() {
+      localStorage.setItem('screenscope_projects', JSON.stringify(state.projects));
+      renderProjects();
+    }
+
+    function renderProjects() {
+      const count = state.projects.length;
+      els.projectCount.textContent = `${count} of ${APP_CONFIG.maxFreeProjects}`;
+      
+      const html = state.projects.slice(0, 3).map(p => renderProjectCard(p)).join('');
+      els.projectsList.innerHTML = html || '<p style="text-align:center;color:var(--text-muted);padding:20px;">No jobs saved yet. Take your first photo to get started.</p>';
+      
+      // Also update modal
+      els.modalProjectsList.innerHTML = state.projects.map(p => renderProjectCard(p)).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', () => loadProject(card.dataset.id));
+      });
+    }
+
+    function renderProjectCard(project) {
+      const statusClass = project.status === 'ready' ? 'ready' : 'draft';
+      const statusText = project.status === 'ready' ? 'Ready' : 'In Progress';
+      const price = formatCurrency(project.price || 0);
+      
+      return `
+        <div class="project-card" data-id="${project.id}" role="listitem" tabindex="0">
+          <div class="project-thumb" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); display: flex; align-items: center; justify-content: center;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <div class="project-info">
+            <div class="project-name">${project.name}</div>
+            <div class="project-address">${project.address}</div>
+            <span class="project-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="project-price">${price}</div>
+        </div>
+      `;
+    }
+
+    function loadProject(id) {
+      const project = state.projects.find(p => p.id === id);
+      if (!project) return;
+      
+      state.currentProject = project;
+      state.settings = { ...project.settings };
+      state.dimensions = { ...project.dimensions };
+      
+      // Update UI
+      updateSettingsUI();
+      calculatePricing();
+      updateProposalDetails();
+      
+      closeProjectsModal();
+      goToStep(project.status === 'ready' ? 5 : 3);
+      showToast(`Loaded: ${project.name}`);
+    }
+
+    function createNewProject() {
+      if (state.projects.length >= APP_CONFIG.maxFreeProjects) {
+        showToast('5 of 5 projects used. Upgrade to Pro!');
+        return;
+      }
+      
+      state.currentProject = {
+        id: 'proj-' + Date.now(),
+        name: 'New Project',
+        address: 'Jacksonville, FL',
+        status: 'draft',
+        price: 0,
+        settings: { ...state.settings },
+        dimensions: { ...state.dimensions },
+        createdAt: Date.now()
+      };
+      
+      closeProjectsModal();
+      goToStep(1);
+    }
+
+    function saveCurrentProject() {
+      if (!state.currentProject) {
+        createNewProject();
+      }
+      
+      state.currentProject.settings = { ...state.settings };
+      state.currentProject.dimensions = { ...state.dimensions };
+      state.currentProject.price = calculateTotalPrice();
+      
+      const idx = state.projects.findIndex(p => p.id === state.currentProject.id);
+      if (idx >= 0) {
+        state.projects[idx] = state.currentProject;
+      } else {
+        state.projects.unshift(state.currentProject);
+      }
+      
+      saveProjects();
+    }
+
+    // ========================================
+    // Camera & Capture
+    // ========================================
+
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+        });
+        state.cameraStream = stream;
+        els.cameraPreview.srcObject = stream;
+        els.cameraPlaceholder.style.display = 'none';
+      } catch (err) {
+        console.error('Camera access denied:', err);
+        showToast('Camera blocked. Tap Upload to pick a photo instead.');
+      }
+    }
+
+    function stopCamera() {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream = null;
+      }
+    }
+
+    function capturePhoto() {
+      if (!state.cameraStream) {
+        startCamera();
+        return;
+      }
+      
+      const video = els.cameraPreview;
+      const canvas = els.captureCanvas;
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 960;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      
+      state.capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+      stopCamera();
+      goToStep(2);
+    }
+
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        state.capturedImage = event.target.result;
+        goToStep(2);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ========================================
+    // Canvas Overlay Drawing
+    // ========================================
+
+    function initOverlayCanvas() {
+      const canvas = els.overlayCanvas;
+      const container = canvas.parentElement;
+      
+      // Load captured image
+      const img = new Image();
+      img.onload = () => {
+        const ratio = img.width / img.height;
+        canvas.width = container.clientWidth * 2;
+        canvas.height = (container.clientWidth / ratio) * 2;
+        canvas.style.height = (container.clientWidth / ratio) + 'px';
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        state.overlayPoints = [];
+        drawOverlay();
+      };
+      img.src = state.capturedImage || createPlaceholderImage();
+    }
+
+    function createPlaceholderImage() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 600;
+      const ctx = canvas.getContext('2d');
+      
+      // Gradient sky
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, 300);
+      skyGrad.addColorStop(0, '#87CEEB');
+      skyGrad.addColorStop(1, '#E0F4FF');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, 800, 300);
+      
+      // Grass
+      ctx.fillStyle = '#7CB342';
+      ctx.fillRect(0, 300, 800, 300);
+      
+      // Patio area (concrete)
+      ctx.fillStyle = '#D0D0D0';
+      ctx.fillRect(150, 320, 500, 250);
+      
+      // House wall
+      ctx.fillStyle = '#F5E6D3';
+      ctx.fillRect(0, 100, 800, 220);
+      
+      // Window
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(300, 150, 200, 120);
+      ctx.strokeStyle = '#FFF';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(300, 150, 200, 120);
+      ctx.beginPath();
+      ctx.moveTo(400, 150);
+      ctx.lineTo(400, 270);
+      ctx.moveTo(300, 210);
+      ctx.lineTo(500, 210);
+      ctx.stroke();
+      
+      // Door
+      ctx.fillStyle = '#8B4513';
+      ctx.fillRect(550, 140, 80, 180);
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(610, 230, 6, 0, Math.PI * 2);
+      ctx.fill();
+      
+      return canvas.toDataURL();
+    }
+
+    function drawOverlay() {
+      const canvas = els.overlayCanvas;
+      const ctx = canvas.getContext('2d');
+      
+      // Redraw image
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        if (state.overlayPoints.length === 0) return;
+        
+        // Get frame color
+        const colors = {
+          white: 'rgba(255, 255, 255, 0.85)',
+          bronze: 'rgba(139, 90, 43, 0.85)',
+          beige: 'rgba(210, 180, 140, 0.85)'
+        };
+        const frameColor = colors[state.settings.frameColor] || colors.white;
+        
+        // Draw semi-transparent fill
+        ctx.fillStyle = 'rgba(100, 100, 100, 0.15)';
+        ctx.beginPath();
+        ctx.moveTo(state.overlayPoints[0].x, state.overlayPoints[0].y);
+        for (let i = 1; i < state.overlayPoints.length; i++) {
+          ctx.lineTo(state.overlayPoints[i].x, state.overlayPoints[i].y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        
+        // Draw frame lines
+        ctx.strokeStyle = frameColor;
+        ctx.lineWidth = 8;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(state.overlayPoints[0].x, state.overlayPoints[0].y);
+        for (let i = 1; i < state.overlayPoints.length; i++) {
+          ctx.lineTo(state.overlayPoints[i].x, state.overlayPoints[i].y);
+        }
+        if (state.overlayPoints.length > 2) {
+          ctx.closePath();
+        }
+        ctx.stroke();
+        
+        // Draw screen mesh pattern (vertical lines)
+        if (state.overlayPoints.length >= 4) {
+          ctx.strokeStyle = 'rgba(50, 50, 50, 0.1)';
+          ctx.lineWidth = 1;
+          const minX = Math.min(...state.overlayPoints.map(p => p.x));
+          const maxX = Math.max(...state.overlayPoints.map(p => p.x));
+          const minY = Math.min(...state.overlayPoints.map(p => p.y));
+          const maxY = Math.max(...state.overlayPoints.map(p => p.y));
+          
+          for (let x = minX; x < maxX; x += 20) {
+            ctx.beginPath();
+            ctx.moveTo(x, minY);
+            ctx.lineTo(x, maxY);
+            ctx.stroke();
+          }
+          for (let y = minY; y < maxY; y += 20) {
+            ctx.beginPath();
+            ctx.moveTo(minX, y);
+            ctx.lineTo(maxX, y);
+            ctx.stroke();
+          }
+        }
+        
+        // Draw corner dots
+        ctx.fillStyle = frameColor;
+        state.overlayPoints.forEach((p, i) => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#333';
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(i + 1, p.x, p.y);
+          ctx.fillStyle = frameColor;
+        });
+      };
+      img.src = state.capturedImage || createPlaceholderImage();
+    }
+
+    function handleCanvasTap(e) {
+      e.preventDefault();
+      const canvas = els.overlayCanvas;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      const touch = e.touches ? e.touches[0] : e;
+      const x = (touch.clientX - rect.left) * scaleX;
+      const y = (touch.clientY - rect.top) * scaleY;
+      
+      state.overlayPoints.push({ x, y });
+      drawOverlay();
+      
+      if (state.overlayPoints.length === 1) {
+        els.canvasInstructions.textContent = 'Keep tapping corners to finish the outline';
+      } else if (state.overlayPoints.length >= 4) {
+        els.canvasInstructions.textContent = 'Tap Done when the outline looks right';
+      }
+    }
+
+    function undoLastPoint() {
+      if (state.overlayPoints.length > 0) {
+        state.overlayPoints.pop();
+        drawOverlay();
+      }
+    }
+
+    function clearOverlay() {
+      state.overlayPoints = [];
+      drawOverlay();
+      els.canvasInstructions.textContent = 'Tap each corner to outline the enclosure';
+    }
+
+    function completeOverlay() {
+      if (state.overlayPoints.length < 3) {
+        showToast('Tap at least 3 corners first');
+        return;
+      }
+      goToStep(3);
+    }
+
+    // ========================================
+    // Customization
+    // ========================================
+
+    function updateSettingsUI() {
+      // Frame color
+      els.colorChips.forEach(chip => {
+        const isSelected = chip.dataset.color === state.settings.frameColor;
+        chip.classList.toggle('selected', isSelected);
+        chip.setAttribute('aria-checked', isSelected);
+      });
+      
+      // Enclosure type
+      els.typeChips.forEach(chip => {
+        const isSelected = chip.dataset.type === state.settings.enclosureType;
+        chip.classList.toggle('selected', isSelected);
+        chip.setAttribute('aria-checked', isSelected);
+      });
+      
+      // Roof style
+      els.roofChips.forEach(chip => {
+        const isSelected = chip.dataset.roof === state.settings.roofStyle;
+        chip.classList.toggle('selected', isSelected);
+        chip.setAttribute('aria-checked', isSelected);
+      });
+      
+      // Height
+      els.heightSlider.value = state.settings.wallHeight;
+      els.heightValue.textContent = state.settings.wallHeight + ' ft';
+      
+      // Dimensions
+      els.dimWidth.value = state.dimensions.width;
+      els.dimDepth.value = state.dimensions.depth;
+      els.dimHeight.value = state.dimensions.height;
+    }
+
+    function initCustomizeView() {
+      const canvas = els.previewCanvas;
+      const container = canvas.parentElement;
+      
+      const img = new Image();
+      img.onload = () => {
+        const ratio = img.width / img.height;
+        canvas.width = container.clientWidth * 2;
+        canvas.height = (container.clientWidth / ratio) * 2;
+        canvas.style.height = (container.clientWidth / ratio) + 'px';
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Draw the captured image with overlay
+        const overlayCanvas = els.overlayCanvas;
+        ctx.drawImage(overlayCanvas, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = state.capturedImage || createPlaceholderImage();
+      
+      updateSettingsUI();
+    }
+
+    function updatePreviewCanvas() {
+      // Redraw overlay with new colors
+      drawOverlay();
+      
+      setTimeout(() => {
+        const canvas = els.previewCanvas;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(els.overlayCanvas, 0, 0, canvas.width, canvas.height);
+      }, 100);
+    }
+
+    // ========================================
+    // Pricing Calculation
+    // ========================================
+
+    function calculatePricing() {
+      const { width, depth, height } = state.dimensions;
+      
+      // Calculate areas
+      const roofArea = width * depth;
+      const wallArea = (2 * width * height) + (2 * depth * height);
+      const totalScreenArea = roofArea + wallArea;
+      const linearFeet = (2 * width) + (2 * depth) + (4 * height);
+      
+      // Calculate labor hours (roughly 1 hour per 25 sq ft)
+      const laborHours = Math.ceil(totalScreenArea / 25);
+      
+      // Calculate costs
+      const meshCost = totalScreenArea * APP_CONFIG.materials.meshPerSqFt;
+      const frameCost = linearFeet * APP_CONFIG.materials.framePerLF;
+      const doorCost = APP_CONFIG.materials.door;
+      const hardwareCost = APP_CONFIG.materials.hardware;
+      const laborCost = laborHours * APP_CONFIG.laborRate;
+      
+      const materialsSubtotal = meshCost + frameCost + doorCost + hardwareCost;
+      const total = materialsSubtotal + laborCost;
+      
+      // Update UI
+      els.meshCost.textContent = formatCurrency(meshCost);
+      els.frameCost.textContent = formatCurrency(frameCost);
+      els.doorCost.textContent = formatCurrency(doorCost);
+      els.hardwareCost.textContent = formatCurrency(hardwareCost);
+      els.laborCost.textContent = formatCurrency(laborCost);
+      els.materialsSubtotal.textContent = formatCurrency(materialsSubtotal);
+      els.totalPrice.textContent = formatCurrency(total);
+      
+      // Update line item descriptions
+      els.meshCost.previousElementSibling.textContent = `Screen mesh (${totalScreenArea} sq ft)`;
+      els.frameCost.previousElementSibling.textContent = `Aluminum framing (${linearFeet} LF)`;
+      els.laborCost.previousElementSibling.textContent = `Labor (${laborHours} hrs @ $${APP_CONFIG.laborRate}/hr)`;
+      
+      return total;
+    }
+
+    function calculateTotalPrice() {
+      const { width, depth, height } = state.dimensions;
+      const roofArea = width * depth;
+      const wallArea = (2 * width * height) + (2 * depth * height);
+      const totalScreenArea = roofArea + wallArea;
+      const linearFeet = (2 * width) + (2 * depth) + (4 * height);
+      const laborHours = Math.ceil(totalScreenArea / 25);
+      
+      const meshCost = totalScreenArea * APP_CONFIG.materials.meshPerSqFt;
+      const frameCost = linearFeet * APP_CONFIG.materials.framePerLF;
+      const total = meshCost + frameCost + APP_CONFIG.materials.door + APP_CONFIG.materials.hardware + (laborHours * APP_CONFIG.laborRate);
+      
+      return Math.round(total);
+    }
+
+    function formatCurrency(amount) {
+      return '$' + Math.round(amount).toLocaleString();
+    }
+
+    // ========================================
+    // Proposal Generation
+    // ========================================
+
+    function updateProposalDetails() {
+      const project = state.currentProject || {
+        name: 'New Project',
+        address: 'Jacksonville, FL'
+      };
+      
+      els.propCustomer.textContent = project.name;
+      els.propLocation.textContent = project.address;
+      els.propType.textContent = {
+        patio: 'Patio Screen',
+        pool: 'Pool Cage',
+        lanai: 'Lanai'
+      }[state.settings.enclosureType] || 'Patio Screen';
+      els.propDimensions.textContent = `${state.dimensions.width}' x ${state.dimensions.depth}' x ${state.dimensions.height}'`;
+      els.propColor.textContent = state.settings.frameColor.charAt(0).toUpperCase() + state.settings.frameColor.slice(1);
+      els.propTotal.textContent = formatCurrency(calculateTotalPrice());
+      
+      // Copy preview canvas to proposal image
+      const proposalCanvas = els.proposalImage;
+      const previewCanvas = els.previewCanvas;
+      proposalCanvas.width = previewCanvas.width;
+      proposalCanvas.height = previewCanvas.height;
+      proposalCanvas.style.height = 'auto';
+      const ctx = proposalCanvas.getContext('2d');
+      ctx.drawImage(previewCanvas, 0, 0);
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      const project = state.currentProject || { name: 'New Project', address: 'Jacksonville, FL' };
+      
+      // Header
+      doc.setFillColor(4, 107, 210);
+      doc.rect(0, 0, 210, 40, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Screen Enclosure Proposal', 105, 20, { align: 'center' });
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Prepared by JaxScreens', 105, 32, { align: 'center' });
+      
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+      
+      // Project image
+      try {
+        const imgData = els.proposalImage.toDataURL('image/jpeg', 0.8);
+        doc.addImage(imgData, 'JPEG', 20, 50, 170, 85);
+      } catch (e) {
+        console.error('Could not add image to PDF:', e);
+      }
+      
+      // Details
+      let y = 145;
+      doc.setFontSize(11);
+      
+      const details = [
+        ['Customer', project.name],
+        ['Location', project.address],
+        ['Enclosure Type', { patio: 'Patio Screen', pool: 'Pool Cage', lanai: 'Lanai' }[state.settings.enclosureType]],
+        ['Dimensions', `${state.dimensions.width}' x ${state.dimensions.depth}' x ${state.dimensions.height}'`],
+        ['Frame Color', state.settings.frameColor.charAt(0).toUpperCase() + state.settings.frameColor.slice(1)],
+        ['Roof Style', state.settings.roofStyle.charAt(0).toUpperCase() + state.settings.roofStyle.slice(1)]
+      ];
+      
+      details.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'normal');
+        doc.text(label + ':', 20, y);
+        doc.setFont('helvetica', 'bold');
+        doc.text(value, 80, y);
+        y += 8;
+      });
+      
+      // Pricing
+      y += 10;
+      doc.setFillColor(240, 240, 240);
+      doc.rect(20, y - 5, 170, 50, 'F');
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('Pricing Breakdown', 25, y + 5);
+      
+      y += 15;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const total = calculateTotalPrice();
+      const { width, depth, height } = state.dimensions;
+      const roofArea = width * depth;
+      const wallArea = (2 * width * height) + (2 * depth * height);
+      const totalScreenArea = roofArea + wallArea;
+      const linearFeet = (2 * width) + (2 * depth) + (4 * height);
+      const laborHours = Math.ceil(totalScreenArea / 25);
+      
+      doc.text(`Screen mesh (${totalScreenArea} sq ft)`, 25, y);
+      doc.text(formatCurrency(totalScreenArea * 4), 180, y, { align: 'right' });
+      y += 6;
+      doc.text(`Aluminum framing (${linearFeet} LF)`, 25, y);
+      doc.text(formatCurrency(linearFeet * 15), 180, y, { align: 'right' });
+      y += 6;
+      doc.text('Screen door & hardware', 25, y);
+      doc.text(formatCurrency(800), 180, y, { align: 'right' });
+      y += 6;
+      doc.text(`Labor (${laborHours} hrs)`, 25, y);
+      doc.text(formatCurrency(laborHours * 75), 180, y, { align: 'right' });
+      
+      y += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('Total:', 25, y);
+      doc.setTextColor(4, 107, 210);
+      doc.text(formatCurrency(total), 180, y, { align: 'right' });
+      
+      // Signature area
+      doc.setTextColor(0, 0, 0);
+      y += 20;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text('By signing below, you agree to the terms outlined in this proposal. A 50% deposit is required to begin work.', 20, y);
+      
+      y += 15;
+      doc.line(20, y, 100, y);
+      doc.setFontSize(8);
+      doc.text('Customer Signature / Date', 20, y + 5);
+      
+      // Watermark
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated with ScreenScope', 105, 285, { align: 'center' });
+      
+      // Download
+      doc.save(`proposal-${project.name.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+      showToast('PDF downloaded');
+    }
+
+    async function shareProposal() {
+      const project = state.currentProject || { name: 'New Project' };
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Screen Enclosure Proposal - ${project.name}`,
+            text: `Here's your screen enclosure proposal from JaxScreens. Total: ${formatCurrency(calculateTotalPrice())}`,
+            url: window.location.href
+          });
+          showToast('Shared successfully');
+        } catch (e) {
+          if (e.name !== 'AbortError') {
+            showToast('Could not share');
+          }
+        }
+      } else {
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(
+            `Screen Enclosure Proposal for ${project.name}\nTotal: ${formatCurrency(calculateTotalPrice())}\n\nContact JaxScreens: (904) 305-7903`
+          );
+          showToast('Copied to clipboard');
+        } catch (e) {
+          showToast('Could not share');
+        }
+      }
+    }
+
+    // ========================================
+    // Navigation
+    // ========================================
+
+    function goToStep(step) {
+      state.currentStep = step;
+      
+      // Update step dots
+      els.stepDots.forEach((dot, i) => {
+        dot.classList.remove('active', 'complete');
+        if (i + 1 < step) {
+          dot.classList.add('complete');
+        } else if (i + 1 === step) {
+          dot.classList.add('active');
+        }
+      });
+      
+      // Update progress bar aria
+      document.querySelector('.step-indicator').setAttribute('aria-valuenow', step);
+      
+      // Show correct view
+      els.views.forEach((view, i) => {
+        view.classList.toggle('active', i + 1 === step);
+      });
+      
+      // Update bottom bar visibility and labels
+      els.backBtn.style.display = step === 1 ? 'none' : 'flex';
+      els.nextBtn.textContent = step === 5 ? 'Save Project' : 'Next Step';
+      
+      // View-specific initialization
+      switch (step) {
+        case 1:
+          stopCamera();
+          break;
+        case 2:
+          initOverlayCanvas();
+          break;
+        case 3:
+          initCustomizeView();
+          break;
+        case 4:
+          calculatePricing();
+          break;
+        case 5:
+          updateProposalDetails();
+          if (state.currentProject) {
+            state.currentProject.status = 'ready';
+          }
+          break;
+      }
+    }
+
+    function handleNext() {
+      if (state.currentStep === 5) {
+        saveCurrentProject();
+        showToast('Project saved');
+        return;
+      }
+      
+      if (state.currentStep < 5) {
+        goToStep(state.currentStep + 1);
+      }
+    }
+
+    function handleBack() {
+      if (state.currentStep > 1) {
+        goToStep(state.currentStep - 1);
+      }
+    }
+
+    // ========================================
+    // UI Helpers
+    // ========================================
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      setTimeout(() => els.toast.classList.remove('show'), 2500);
+    }
+
+    function openProjectsModal() {
+      els.projectsModal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeProjectsModal() {
+      els.projectsModal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // ========================================
+    // Event Listeners
+    // ========================================
+
+    // Demo banner
+    els.dismissBanner.addEventListener('click', () => {
+      els.demoBanner.style.display = 'none';
+    });
+
+    // Camera & capture
+    els.captureBtn.addEventListener('click', capturePhoto);
+    els.uploadBtn.addEventListener('click', () => els.fileInput.click());
+    els.fileInput.addEventListener('change', handleFileUpload);
+    els.cameraPlaceholder.addEventListener('click', startCamera);
+
+    // Overlay canvas
+    els.overlayCanvas.addEventListener('click', handleCanvasTap);
+    els.overlayCanvas.addEventListener('touchstart', handleCanvasTap);
+    els.undoTool.addEventListener('click', undoLastPoint);
+    els.clearTool.addEventListener('click', clearOverlay);
+    els.completeTool.addEventListener('click', completeOverlay);
+
+    // Customization
+    els.colorChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (chip.dataset.color === 'custom') {
+          showToast('Custom colors in Pro');
+          return;
+        }
+        state.settings.frameColor = chip.dataset.color;
+        updateSettingsUI();
+        updatePreviewCanvas();
+      });
+    });
+
+    els.typeChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        state.settings.enclosureType = chip.dataset.type;
+        updateSettingsUI();
+      });
+    });
+
+    els.roofChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        state.settings.roofStyle = chip.dataset.roof;
+        updateSettingsUI();
+      });
+    });
+
+    els.heightSlider.addEventListener('input', (e) => {
+      state.settings.wallHeight = parseInt(e.target.value);
+      state.dimensions.height = state.settings.wallHeight;
+      els.heightValue.textContent = e.target.value + ' ft';
+    });
+
+    // Dimensions
+    [els.dimWidth, els.dimDepth, els.dimHeight].forEach(input => {
+      input.addEventListener('input', () => {
+        state.dimensions.width = parseInt(els.dimWidth.value) || 20;
+        state.dimensions.depth = parseInt(els.dimDepth.value) || 15;
+        state.dimensions.height = parseInt(els.dimHeight.value) || 8;
+        calculatePricing();
+      });
+    });
+
+    // Navigation
+    els.nextBtn.addEventListener('click', handleNext);
+    els.backBtn.addEventListener('click', handleBack);
+
+    // Projects modal
+    els.projectsBtn.addEventListener('click', openProjectsModal);
+    els.projectsModal.addEventListener('click', (e) => {
+      if (e.target === els.projectsModal) closeProjectsModal();
+    });
+    els.newProjectBtn.addEventListener('click', createNewProject);
+
+    // Proposal actions
+    els.shareBtn.addEventListener('click', shareProposal);
+    els.pdfBtn.addEventListener('click', generatePDF);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && els.projectsModal.classList.contains('show')) {
+        closeProjectsModal();
+      }
+      // Arrow key navigation for stepper
+      if (e.key === 'ArrowRight' && e.altKey && state.currentStep < 5) {
+        e.preventDefault();
+        handleNext();
+      }
+      if (e.key === 'ArrowLeft' && e.altKey && state.currentStep > 1) {
+        e.preventDefault();
+        handleBack();
+      }
+    });
+    
+    // Add keyboard hint for screen readers
+    const srHint = document.createElement('div');
+    srHint.className = 'sr-only';
+    srHint.setAttribute('role', 'note');
+    srHint.textContent = 'Tip: Use Alt + Left or Right arrow keys to move between steps';
+    document.body.appendChild(srHint);
+
+    // ========================================
+    // Initialize
+    // ========================================
+    checkAuth();
+  </script>
+</body>
+</html>
