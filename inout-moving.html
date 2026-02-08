@@ -1,0 +1,2759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>LoadPlanner Pro | In & Out Moving</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: oklch(0.45 0.18 240);
+      --primary-light: oklch(0.55 0.15 240);
+      --primary-dark: oklch(0.35 0.20 240);
+      --secondary: oklch(0.75 0.12 50);
+      --secondary-light: oklch(0.85 0.10 50);
+      --accent: oklch(0.65 0.22 145);
+      --success: oklch(0.55 0.18 145);
+      --warning: oklch(0.70 0.18 80);
+      --error: oklch(0.55 0.22 25);
+      --bg: oklch(0.985 0.005 240);
+      --bg-card: oklch(1 0 0);
+      --bg-elevated: oklch(0.98 0.005 240);
+      --text: oklch(0.20 0.02 240);
+      --text-muted: oklch(0.50 0.02 240);
+      --border: oklch(0.88 0.01 240);
+      --shadow-color: 240 15% 20%;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font-sans: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 100px !important;
+      line-height: 1.5;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Typography scale */
+    h1 { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+    h2 { font-size: 1.375rem; font-weight: 600; line-height: 1.3; }
+    h3 { font-size: 1.125rem; font-weight: 600; line-height: 1.4; }
+    p { font-size: 1rem; line-height: 1.6; }
+    small { font-size: 0.875rem; }
+
+    /* Animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    @keyframes confetti {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(-200px) rotate(720deg); }
+    }
+
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes truckDrive {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+      70% { transform: scale(1.05) translateY(-5px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @keyframes slideUpFade {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes draw {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Gate screen */
+    #gate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10000;
+    }
+
+    #gate.hidden { display: none; }
+
+    .gate-logo {
+      width: 100px;
+      height: 100px;
+      background: var(--bg-card);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow:
+        0 4px 6px -1px hsl(var(--shadow-color) / 0.1),
+        0 10px 15px -3px hsl(var(--shadow-color) / 0.15),
+        0 20px 25px -5px hsl(var(--shadow-color) / 0.2);
+      animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .gate-logo svg {
+      width: 56px;
+      height: 56px;
+      color: var(--primary);
+    }
+
+    .gate-title {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      animation: fadeUp 0.5s ease-out 0.2s both;
+    }
+
+    .gate-subtitle {
+      color: rgba(255,255,255,0.8);
+      font-size: 1rem;
+      text-align: center;
+      margin-bottom: 32px;
+      animation: fadeUp 0.5s ease-out 0.3s both;
+    }
+
+    .gate-input-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      animation: fadeUp 0.5s ease-out 0.4s both;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1rem;
+      font-family: var(--font-mono);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      text-align: center;
+      letter-spacing: 0.2em;
+      transition: all 0.2s ease;
+    }
+
+    .gate-input::placeholder {
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.1em;
+    }
+
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      background: rgba(255,255,255,0.15);
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+    }
+
+    .gate-input.error {
+      border-color: var(--error);
+      animation: shake 0.4s ease;
+    }
+
+    .gate-btn {
+      width: 100%;
+      max-width: 320px;
+      margin-top: 16px;
+      padding: 16px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--bg-card);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      animation: fadeUp 0.5s ease-out 0.5s both;
+    }
+
+    .gate-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px hsl(var(--shadow-color) / 0.2);
+    }
+
+    .gate-btn:active {
+      transform: scale(0.97);
+    }
+
+    .gate-btn:focus-visible {
+      outline: 3px solid var(--secondary);
+      outline-offset: 3px;
+    }
+
+    /* App container */
+    #app {
+      display: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    #app.visible { display: block; }
+
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+      animation: fadeUp 0.4s ease-out;
+    }
+
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-logo svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .header-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+      transition: color 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-elevated);
+      border-color: var(--primary-light);
+    }
+
+    .icon-btn:hover svg { color: var(--primary); }
+
+    .icon-btn:active { transform: scale(0.95); }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: white;
+      padding: 8px 16px;
+      z-index: 99999;
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: 0 0 var(--radius-sm) 0;
+      transition: top 0.2s ease;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    /* Demo banner */
+    .demo-banner {
+      background: linear-gradient(90deg, var(--secondary-light), var(--secondary));
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: slideInRight 0.5s ease-out;
+    }
+
+    .demo-banner.hidden { display: none; }
+
+    .demo-banner p {
+      font-size: 0.8rem;
+      color: var(--text);
+      flex: 1;
+      line-height: 1.4;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .demo-banner strong { font-weight: 600; }
+
+    .demo-close {
+      width: 28px;
+      height: 28px;
+      background: rgba(0,0,0,0.1);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .demo-close:hover { background: rgba(0,0,0,0.2); }
+
+    .demo-close:focus-visible {
+      outline: 2px solid var(--text);
+      outline-offset: 2px;
+    }
+
+    .demo-close svg {
+      width: 14px;
+      height: 14px;
+      color: var(--text);
+    }
+
+    /* Main layout */
+    main {
+      padding: 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Section titles */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      animation: fadeUp 0.5s ease-out;
+    }
+
+    .section-title svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary);
+    }
+
+    .section-title h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    /* Truck visualizer card */
+    .truck-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow:
+        0 1px 2px hsl(var(--shadow-color) / 0.05),
+        0 4px 8px hsl(var(--shadow-color) / 0.08),
+        0 12px 24px hsl(var(--shadow-color) / 0.12),
+        0 24px 48px hsl(var(--shadow-color) / 0.08);
+      animation: fadeUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .truck-card:hover {
+      transform: translateY(-4px) rotateX(2deg);
+      box-shadow:
+        0 4px 8px hsl(var(--shadow-color) / 0.06),
+        0 8px 16px hsl(var(--shadow-color) / 0.1),
+        0 16px 32px hsl(var(--shadow-color) / 0.14),
+        0 32px 64px hsl(var(--shadow-color) / 0.1);
+    }
+
+    .truck-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .truck-selector {
+      display: flex;
+      gap: 8px;
+    }
+
+    .truck-tab {
+      padding: 8px 16px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .truck-tab.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .truck-tab:hover:not(.active) {
+      background: var(--bg);
+      border-color: var(--primary-light);
+    }
+
+    .truck-tab:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .truck-stats {
+      display: flex;
+      gap: 16px;
+      margin-left: auto;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--primary);
+      animation: countUp 0.4s ease-out;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Canvas container */
+    .truck-canvas-wrap {
+      position: relative;
+      background: 
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-elevated) 100%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      min-height: 280px;
+      overflow: hidden;
+    }
+
+    .truck-empty-state {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      pointer-events: none;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+      z-index: 5;
+    }
+
+    .truck-empty-state.has-items {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .truck-empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+      animation: float 3s ease-in-out infinite;
+      color: var(--text-muted);
+    }
+
+    .truck-empty-state p {
+      font-size: 0.875rem;
+      text-align: center;
+      max-width: 200px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    #truckCanvas {
+      display: block;
+      width: 100%;
+      touch-action: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    .truck-fill-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--border);
+    }
+
+    .truck-fill-progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), var(--accent));
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .truck-fill-label {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: var(--bg-card);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      box-shadow: 0 2px 8px hsl(var(--shadow-color) / 0.1);
+    }
+
+    /* Items panel */
+    .items-panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+      box-shadow:
+        0 1px 2px hsl(var(--shadow-color) / 0.05),
+        0 4px 8px hsl(var(--shadow-color) / 0.08);
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+    }
+
+    .item-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      user-select: none;
+      -webkit-user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .item-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .item-btn:hover {
+      transform: translateY(-4px) scale(1.02);
+      box-shadow: 
+        0 4px 12px hsl(var(--shadow-color) / 0.1),
+        0 8px 24px hsl(var(--shadow-color) / 0.08);
+      border-color: var(--primary);
+    }
+
+    .item-btn:hover::before {
+      opacity: 0.05;
+    }
+
+    .item-btn:hover .item-icon svg {
+      color: var(--primary);
+      transform: scale(1.1);
+    }
+
+    .item-btn:active {
+      transform: translateY(-2px) scale(0.98);
+      transition-duration: 0.1s;
+    }
+
+    .item-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .item-icon {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .item-icon svg {
+      width: 32px;
+      height: 32px;
+      color: var(--primary);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .item-name {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-align: center;
+      color: var(--text);
+    }
+
+    .item-size {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    /* Quote section */
+    .quote-section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s both;
+      box-shadow:
+        0 1px 2px hsl(var(--shadow-color) / 0.05),
+        0 4px 8px hsl(var(--shadow-color) / 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .quote-section:hover {
+      box-shadow:
+        0 2px 4px hsl(var(--shadow-color) / 0.06),
+        0 8px 16px hsl(var(--shadow-color) / 0.1);
+    }
+
+    .quote-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px oklch(0.45 0.18 240 / 0.15);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .quote-total {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      color: white;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 
+        0 4px 6px oklch(0.45 0.18 240 / 0.2),
+        0 10px 20px oklch(0.45 0.18 240 / 0.15);
+    }
+
+    .quote-total::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .quote-total-label {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .quote-total-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      animation: countUp 0.4s ease-out;
+    }
+
+    .quote-breakdown {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-top: 8px;
+    }
+
+    /* Action buttons */
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.4) 0%, transparent 60%);
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.3s ease, transform 0.5s ease;
+    }
+
+    .btn:active::after {
+      opacity: 1;
+      transform: scale(2);
+      transition: opacity 0.1s ease, transform 0s;
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover svg {
+      transform: translateX(-2px);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      flex: 1;
+      min-width: 140px;
+      box-shadow: 
+        0 2px 4px oklch(0.45 0.18 240 / 0.2),
+        0 4px 8px oklch(0.45 0.18 240 / 0.15);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      transform: translateY(-3px);
+      box-shadow: 
+        0 4px 8px oklch(0.45 0.18 240 / 0.25),
+        0 8px 16px oklch(0.45 0.18 240 / 0.2),
+        0 16px 32px oklch(0.45 0.18 240 / 0.15);
+    }
+
+    .btn-primary:active {
+      transform: translateY(-1px) scale(0.98);
+      box-shadow: 0 2px 4px oklch(0.45 0.18 240 / 0.2);
+    }
+
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px hsl(var(--shadow-color) / 0.1);
+    }
+
+    .btn-secondary:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    /* Jobs list */
+    .jobs-section {
+      margin-bottom: 24px;
+      animation: fadeUp 0.5s ease-out 0.4s both;
+    }
+
+    .job-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+    }
+
+    .job-card:nth-child(1) { animation-delay: 0ms; }
+    .job-card:nth-child(2) { animation-delay: 60ms; }
+    .job-card:nth-child(3) { animation-delay: 120ms; }
+    .job-card:nth-child(4) { animation-delay: 180ms; }
+    .job-card:nth-child(5) { animation-delay: 240ms; }
+    .job-card:nth-child(6) { animation-delay: 300ms; }
+
+    .job-card:hover {
+      border-color: var(--primary-light);
+      box-shadow: 
+        0 4px 12px hsl(var(--shadow-color) / 0.08),
+        0 8px 24px hsl(var(--shadow-color) / 0.06);
+      transform: translateY(-2px);
+    }
+
+    .job-status {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .job-status.pending {
+      background: oklch(0.95 0.05 80);
+    }
+
+    .job-status.pending svg { color: var(--warning); }
+
+    .job-status.confirmed {
+      background: oklch(0.92 0.06 145);
+    }
+
+    .job-status.confirmed svg { color: var(--success); }
+
+    .job-status svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .job-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .job-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .job-badge {
+      font-size: 0.625rem;
+      font-weight: 600;
+      padding: 2px 6px;
+      background: var(--secondary-light);
+      color: var(--text);
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .job-address {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .job-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .job-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .job-meta svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .job-quote {
+      font-family: var(--font-mono);
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      animation: fadeUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .empty-illustration {
+      width: 160px;
+      height: 120px;
+      margin: 0 auto 24px;
+      animation: float 4s ease-in-out infinite;
+      color: var(--text-muted);
+    }
+
+    .empty-illustration svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Crew section - upsell */
+    .crew-section {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 20px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease-out 0.5s both;
+    }
+
+    .crew-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 60%, oklch(0.95 0.03 240) 100%);
+      pointer-events: none;
+    }
+
+    .crew-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .crew-badge {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      background: oklch(0.90 0.02 240);
+      color: var(--text-muted);
+      border-radius: 20px;
+    }
+
+    .crew-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      opacity: 0.6;
+    }
+
+    .crew-member {
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-elevated);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border);
+    }
+
+    .crew-avatar {
+      width: 48px;
+      height: 48px;
+      background: var(--border);
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .crew-avatar svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-muted);
+    }
+
+    .crew-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    /* Toast notifications */
+    #toast-container {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 8px 24px hsl(var(--shadow-color) / 0.25);
+      animation: fadeUp 0.3s ease-out;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 9500;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.visible .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    /* Settings menu */
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .settings-item:last-child { border-bottom: none; }
+
+    .settings-label {
+      font-weight: 500;
+    }
+
+    .settings-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0;
+      z-index: 100;
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+    }
+
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .nav-item span {
+      font-size: 0.625rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-item.active {
+      color: var(--primary);
+    }
+
+    .nav-item:hover {
+      color: var(--primary-light);
+    }
+
+    .nav-item:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Tab content */
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Desktop layout */
+    @media (min-width: 1024px) {
+      .bottom-nav { display: none; }
+
+      .desktop-nav {
+        display: flex;
+        gap: 8px;
+      }
+
+      .desktop-nav .nav-btn {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .desktop-nav .nav-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .desktop-nav .nav-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+      }
+
+      .desktop-nav .nav-btn:hover:not(.active) {
+        border-color: var(--primary-light);
+      }
+
+      body { padding-bottom: 80px !important; }
+
+      main {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 24px;
+        padding: 24px;
+      }
+
+      .main-panel { order: 1; }
+      .side-panel { order: 2; }
+
+      .truck-canvas-wrap {
+        min-height: 400px;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      .desktop-nav { display: none; }
+    }
+
+    /* Print styles */
+    @media print {
+      body { padding-bottom: 0 !important; }
+      .bottom-nav, #bct-demo-disclaimer, .demo-banner, .app-header { display: none !important; }
+      .truck-card, .quote-section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Gate screen -->
+  <div id="gate">
+    <div class="gate-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="2"/>
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+        <circle cx="5.5" cy="18.5" r="2.5"/>
+        <circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    </div>
+    <h1 class="gate-title">LoadPlanner Pro</h1>
+    <p class="gate-subtitle">Built for In & Out Moving & Delivery</p>
+    <div class="gate-input-wrap">
+      <input type="text" id="accessKey" class="gate-input" placeholder="Enter access key" aria-label="Access key" autocomplete="off" autocapitalize="off">
+    </div>
+    <button id="gateSubmit" class="gate-btn">Unlock Tool</button>
+  </div>
+
+  <!-- Main app -->
+  <div id="app">
+    <header class="app-header">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="2"/>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/>
+          <circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1 class="header-title">LoadPlanner Pro</h1>
+        <p class="header-subtitle">Visual load estimator</p>
+      </div>
+      <div class="header-actions">
+        <nav class="desktop-nav" role="navigation" aria-label="Main navigation">
+          <button class="nav-btn active" data-tab="load" aria-current="page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            Load
+          </button>
+          <button class="nav-btn" data-tab="jobs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+            Jobs
+          </button>
+          <button class="nav-btn" data-tab="crew">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            Crew
+          </button>
+        </nav>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Demo banner -->
+    <div class="demo-banner" id="demoBanner">
+      <p><strong>Demo:</strong> Sample jobs for Hickory area. Tap X to clear.</p>
+      <button class="demo-close" id="clearDemo" aria-label="Clear demo data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <main id="main-content">
+      <!-- Load tab -->
+      <div class="tab-content active main-panel" id="tab-load">
+        <!-- Truck visualizer -->
+        <div class="truck-card">
+          <div class="truck-header">
+            <div class="truck-selector" role="tablist" aria-label="Truck selection">
+              <button class="truck-tab active" role="tab" aria-selected="true" data-truck="26">26-ft Truck</button>
+              <button class="truck-tab" role="tab" aria-selected="false" data-truck="16">16-ft Truck</button>
+            </div>
+            <div class="truck-stats">
+              <div class="stat">
+                <div class="stat-value" id="cuftUsed">0</div>
+                <div class="stat-label">cu. ft</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value" id="weightUsed">0</div>
+                <div class="stat-label">lbs</div>
+              </div>
+            </div>
+          </div>
+          <div class="truck-canvas-wrap">
+            <div class="truck-empty-state" id="truckEmptyState">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="3" width="15" height="13" rx="2"/>
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/>
+                <circle cx="18.5" cy="18.5" r="2.5"/>
+                <line x1="8" y1="8" x2="8" y2="11" stroke-dasharray="2 2"/>
+                <line x1="12" y1="8" x2="12" y2="11" stroke-dasharray="2 2"/>
+              </svg>
+              <p>Tap items below to load the truck</p>
+            </div>
+            <canvas id="truckCanvas" aria-label="Visual truck loading area. Drag furniture items here."></canvas>
+            <div class="truck-fill-bar">
+              <div class="truck-fill-progress" id="fillProgress" style="width: 0%"></div>
+            </div>
+            <div class="truck-fill-label" id="fillLabel">0% full</div>
+          </div>
+        </div>
+
+        <!-- Items panel -->
+        <div class="items-panel">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 7h-9"/>
+              <path d="M14 17H5"/>
+              <circle cx="17" cy="17" r="3"/>
+              <circle cx="7" cy="7" r="3"/>
+            </svg>
+            <h2>Add Items</h2>
+          </div>
+          <div class="items-grid" id="itemsGrid">
+            <!-- Items populated by JS -->
+          </div>
+        </div>
+
+        <!-- Quote section -->
+        <section class="quote-section" aria-labelledby="quoteTitle">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            <h2 id="quoteTitle">Quick Quote</h2>
+          </div>
+          <div class="quote-row">
+            <div class="form-group">
+              <label class="form-label" for="customerName">Customer Name</label>
+              <input type="text" id="customerName" class="form-input" placeholder="John Smith">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="moveDate">Move Date</label>
+              <input type="date" id="moveDate" class="form-input">
+            </div>
+          </div>
+          <div class="quote-row">
+            <div class="form-group">
+              <label class="form-label" for="fromAddr">From Address</label>
+              <input type="text" id="fromAddr" class="form-input" placeholder="123 Main St, Hickory">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="toAddr">To Address</label>
+              <input type="text" id="toAddr" class="form-input" placeholder="456 Oak Ave, Newton">
+            </div>
+          </div>
+          <div class="quote-row">
+            <div class="form-group">
+              <label class="form-label" for="crewSize">Crew Size</label>
+              <select id="crewSize" class="form-input">
+                <option value="2">2 Movers</option>
+                <option value="3" selected>3 Movers</option>
+                <option value="4">4 Movers</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="estHours">Estimated Hours</label>
+              <input type="number" id="estHours" class="form-input" placeholder="4" min="1" max="24" step="0.5" value="4">
+            </div>
+          </div>
+
+          <div class="quote-total">
+            <div class="quote-total-label">Estimated Total</div>
+            <div class="quote-total-value" id="totalQuote">$480</div>
+            <div class="quote-breakdown" id="quoteBreakdown">3 movers x 4 hrs @ $40/hr</div>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-primary" id="saveQuote">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+              Save Quote
+            </button>
+            <button class="btn btn-secondary" id="shareQuote">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Share
+            </button>
+            <button class="btn btn-secondary" id="downloadPDF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              PDF
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <!-- Jobs tab -->
+      <div class="tab-content side-panel" id="tab-jobs">
+        <section class="jobs-section" aria-labelledby="jobsTitle">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M16 13H8"/>
+              <path d="M16 17H8"/>
+              <path d="M10 9H8"/>
+            </svg>
+            <h2 id="jobsTitle">Saved Jobs</h2>
+          </div>
+          <div id="jobsList">
+            <!-- Jobs populated by JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Crew tab - upsell -->
+      <div class="tab-content" id="tab-crew">
+        <section class="crew-section" aria-labelledby="crewTitle">
+          <div class="crew-header">
+            <div class="section-title" style="margin-bottom:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                <path d="M16 3.13a4 4 0 010 7.75"/>
+              </svg>
+              <h2 id="crewTitle">Crew Dispatch</h2>
+            </div>
+            <span class="crew-badge">Coming Soon</span>
+          </div>
+          <p style="color:var(--text-muted);margin-bottom:16px;font-size:0.9rem;">Assign jobs to Nathan, Brandon, Tyler, and Z with real-time sync across devices.</p>
+          <div class="crew-grid">
+            <div class="crew-member">
+              <div class="crew-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="crew-name">Nathan</div>
+            </div>
+            <div class="crew-member">
+              <div class="crew-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="crew-name">Brandon</div>
+            </div>
+            <div class="crew-member">
+              <div class="crew-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="crew-name">Tyler</div>
+            </div>
+            <div class="crew-member">
+              <div class="crew-avatar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+              <div class="crew-name">Z</div>
+            </div>
+          </div>
+          <p style="color:var(--text-muted);margin-top:16px;font-size:0.8rem;text-align:center;">Want crew dispatch with SMS notifications? Ask about the full version.</p>
+        </section>
+      </div>
+    </main>
+
+    <!-- Bottom navigation (mobile) -->
+    <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-item active" data-tab="load" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13" rx="2"/>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/>
+          <circle cx="5.5" cy="18.5" r="2.5"/>
+          <circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        <span>Load</span>
+      </button>
+      <button class="nav-item" data-tab="jobs">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <path d="M14 2v6h6"/>
+          <path d="M16 13H8"/>
+          <path d="M16 17H8"/>
+          <path d="M10 9H8"/>
+        </svg>
+        <span>Jobs</span>
+      </button>
+      <button class="nav-item" data-tab="crew">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+          <path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        <span>Crew</span>
+      </button>
+      <button class="nav-item" id="mobileSettings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <!-- Toast container -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Settings modal -->
+    <div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 class="modal-title" id="settingsModalTitle">Settings</h2>
+          <button class="icon-btn" id="closeSettings" aria-label="Close settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Hourly Rate</div>
+              <div class="settings-desc">Per-mover hourly rate</div>
+            </div>
+            <input type="number" id="hourlyRate" class="form-input" style="width:100px;text-align:right" value="40" min="20" max="200">
+          </div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Export Data</div>
+              <div class="settings-desc">Download all jobs as JSON</div>
+            </div>
+            <button class="btn btn-secondary" id="exportData" style="padding:8px 16px">Export</button>
+          </div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Import Data</div>
+              <div class="settings-desc">Restore from backup</div>
+            </div>
+            <label class="btn btn-secondary" style="padding:8px 16px;cursor:pointer">
+              Import
+              <input type="file" id="importData" accept=".json" style="display:none">
+            </label>
+          </div>
+          <div class="settings-item">
+            <div>
+              <div class="settings-label">Clear All Data</div>
+              <div class="settings-desc">Remove all saved jobs</div>
+            </div>
+            <button class="btn btn-secondary" id="clearAllData" style="padding:8px 16px;color:var(--error)">Clear</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMO DISCLAIMER - Legal Notice -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);border-top:1px solid #ddd;padding:8px 20px;font-size:10px;line-height:1.4;color:#555;z-index:99999;box-shadow:0 -2px 10px rgba(0,0,0,0.05);text-align:center;box-sizing:border-box;">
+    <p style="margin:0 0 6px 0;display:block;"><strong style="color:#222;">DEMO:</strong> By BennyCuTools.</p>
+    <p style="margin:0 0 6px 0;display:block;">Not affiliated with In & Out Moving.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20In%20%26%20Out%20Moving&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:500;white-space:nowrap;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Delete Demo
+    </a>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== CONFIG =====
+      const ACCESS_KEY = 'iomv2026';
+      const VALID_HASH = 1271242449;
+      const DB_NAME = 'loadplanner_inout';
+      const STORE_NAME = 'jobs';
+      const SETTINGS_KEY = 'loadplanner_settings';
+
+      // Hash function
+      function hash(s) {
+        let h = 0;
+        for (let i = 0; i < s.length; i++) {
+          h = ((h << 5) - h) + s.charCodeAt(i);
+          h |= 0;
+        }
+        return h;
+      }
+
+      // ===== AUTH =====
+      const gate = document.getElementById('gate');
+      const app = document.getElementById('app');
+      const keyInput = document.getElementById('accessKey');
+      const gateBtn = document.getElementById('gateSubmit');
+
+      // Check URL param for auto-auth
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlKey = urlParams.get('key');
+
+      if (urlKey && hash(urlKey) === VALID_HASH) {
+        localStorage.setItem('lp_auth', 'true');
+        unlockApp();
+      } else if (localStorage.getItem('lp_auth') === 'true') {
+        unlockApp();
+      }
+
+      gateBtn.addEventListener('click', tryUnlock);
+      keyInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') tryUnlock();
+      });
+
+      function tryUnlock() {
+        const val = keyInput.value.trim();
+        if (hash(val) === VALID_HASH) {
+          localStorage.setItem('lp_auth', 'true');
+          unlockApp();
+        } else {
+          keyInput.classList.add('error');
+          setTimeout(() => keyInput.classList.remove('error'), 500);
+        }
+      }
+
+      function unlockApp() {
+        gate.classList.add('hidden');
+        app.classList.add('visible');
+        initApp();
+      }
+
+      // ===== FURNITURE ITEMS =====
+      const ITEMS = [
+        { id: 'sofa', name: 'Sofa', cuft: 50, weight: 150, w: 80, h: 35, color: '#4A90D9' },
+        { id: 'bed', name: 'Bed (Queen)', cuft: 65, weight: 120, w: 75, h: 50, color: '#7B68EE' },
+        { id: 'dresser', name: 'Dresser', cuft: 35, weight: 100, w: 50, h: 40, color: '#8B4513' },
+        { id: 'table', name: 'Dining Table', cuft: 30, weight: 80, w: 55, h: 35, color: '#CD853F' },
+        { id: 'chair', name: 'Chair', cuft: 12, weight: 25, w: 25, h: 30, color: '#D2691E' },
+        { id: 'bookshelf', name: 'Bookshelf', cuft: 25, weight: 60, w: 35, h: 55, color: '#A0522D' },
+        { id: 'tv', name: 'TV (60")', cuft: 10, weight: 40, w: 45, h: 8, color: '#333' },
+        { id: 'fridge', name: 'Refrigerator', cuft: 40, weight: 200, w: 35, h: 60, color: '#C0C0C0' },
+        { id: 'washer', name: 'Washer', cuft: 25, weight: 150, w: 30, h: 40, color: '#D3D3D3' },
+        { id: 'boxes5', name: 'Boxes (5)', cuft: 15, weight: 50, w: 35, h: 35, color: '#DEB887' },
+        { id: 'mattress', name: 'Mattress', cuft: 45, weight: 80, w: 75, h: 15, color: '#FFF8DC' },
+        { id: 'desk', name: 'Desk', cuft: 25, weight: 70, w: 55, h: 30, color: '#8B7355' }
+      ];
+
+      // Truck dimensions (visual)
+      const TRUCKS = {
+        26: { cuft: 1682, maxWeight: 10000, visualW: 340, visualH: 180 },
+        16: { cuft: 800, maxWeight: 6000, visualW: 240, visualH: 150 }
+      };
+
+      let currentTruck = 26;
+      let loadedItems = [];
+      let jobs = [];
+      let settings = { hourlyRate: 40 };
+      let db = null;
+
+      // Matter.js
+      let Engine, Render, World, Bodies, Body, Mouse, MouseConstraint, Events;
+      let engine, render, world;
+
+      // ===== INIT APP =====
+      function initApp() {
+        loadSettings();
+        initDB().then(() => {
+          loadJobs();
+          checkFirstVisit();
+        });
+        initMatter();
+        renderItemsPanel();
+        setupEventListeners();
+        updateQuote();
+      }
+
+      // ===== INDEXEDDB =====
+      function initDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, 1);
+          req.onupgradeneeded = e => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = e => {
+            db = e.target.result;
+            resolve();
+          };
+          req.onerror = e => reject(e);
+        });
+      }
+
+      function saveJob(job) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(job);
+          tx.oncomplete = () => resolve();
+          tx.onerror = e => reject(e);
+        });
+      }
+
+      function deleteJob(id) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).delete(id);
+          tx.oncomplete = () => resolve();
+          tx.onerror = e => reject(e);
+        });
+      }
+
+      function getAllJobs() {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = e => reject(e);
+        });
+      }
+
+      function clearAllJobs() {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).clear();
+          tx.oncomplete = () => resolve();
+          tx.onerror = e => reject(e);
+        });
+      }
+
+      async function loadJobs() {
+        jobs = await getAllJobs();
+        renderJobs();
+      }
+
+      // ===== SETTINGS =====
+      function loadSettings() {
+        try {
+          const saved = localStorage.getItem(SETTINGS_KEY);
+          if (saved) settings = JSON.parse(saved);
+        } catch (e) {}
+        document.getElementById('hourlyRate').value = settings.hourlyRate;
+      }
+
+      function saveSettings() {
+        settings.hourlyRate = parseInt(document.getElementById('hourlyRate').value) || 40;
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      }
+
+      // ===== DEMO DATA =====
+      function checkFirstVisit() {
+        const visited = localStorage.getItem('lp_visited');
+        if (!visited && jobs.length === 0) {
+          loadDemoData();
+          localStorage.setItem('lp_visited', 'true');
+        } else if (jobs.some(j => j.isDemo)) {
+          document.getElementById('demoBanner').classList.remove('hidden');
+        } else {
+          document.getElementById('demoBanner').classList.add('hidden');
+        }
+      }
+
+      async function loadDemoData() {
+        const demoJobs = [
+          {
+            id: 'demo1',
+            isDemo: true,
+            customerName: 'Johnson Family',
+            moveDate: getTodayPlus(2),
+            fromAddr: '1245 Highland Ave, Hickory',
+            toAddr: '892 Springs Rd, Newton',
+            crewSize: 3,
+            estHours: 5,
+            truckSize: 26,
+            cuft: 420,
+            weight: 1800,
+            quote: 600,
+            status: 'confirmed',
+            createdAt: Date.now() - 86400000
+          },
+          {
+            id: 'demo2',
+            isDemo: true,
+            customerName: 'Sarah Mitchell',
+            moveDate: getTodayPlus(5),
+            fromAddr: '2100 Lenoir Rhyne Blvd, Hickory',
+            toAddr: '550 Main Ave NW, Conover',
+            crewSize: 2,
+            estHours: 3,
+            truckSize: 16,
+            cuft: 280,
+            weight: 1200,
+            quote: 240,
+            status: 'pending',
+            createdAt: Date.now() - 7200000
+          },
+          {
+            id: 'demo3',
+            isDemo: true,
+            customerName: 'First Baptist Church',
+            moveDate: getTodayPlus(8),
+            fromAddr: '301 Main St, Hudson',
+            toAddr: '1755 Tate Blvd SE, Hickory',
+            crewSize: 4,
+            estHours: 7,
+            truckSize: 26,
+            cuft: 680,
+            weight: 3200,
+            quote: 1120,
+            status: 'confirmed',
+            createdAt: Date.now() - 172800000
+          }
+        ];
+
+        for (const job of demoJobs) {
+          await saveJob(job);
+        }
+        await loadJobs();
+        document.getElementById('demoBanner').classList.remove('hidden');
+        showToast('Sample data loaded for Hickory area', 'success');
+      }
+
+      function getTodayPlus(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+      }
+
+      async function clearDemoData() {
+        const demoIds = jobs.filter(j => j.isDemo).map(j => j.id);
+        for (const id of demoIds) {
+          await deleteJob(id);
+        }
+        await loadJobs();
+        document.getElementById('demoBanner').classList.add('hidden');
+        showToast('Demo data cleared', 'success');
+      }
+
+      // ===== MATTER.JS PHYSICS =====
+      function initMatter() {
+        Engine = Matter.Engine;
+        Render = Matter.Render;
+        World = Matter.World;
+        Bodies = Matter.Bodies;
+        Body = Matter.Body;
+        Mouse = Matter.Mouse;
+        MouseConstraint = Matter.MouseConstraint;
+        Events = Matter.Events;
+
+        setupCanvas();
+      }
+
+      function setupCanvas() {
+        const canvas = document.getElementById('truckCanvas');
+        const wrap = canvas.parentElement;
+        const rect = wrap.getBoundingClientRect();
+        const w = rect.width;
+        const h = Math.max(280, Math.min(400, window.innerHeight * 0.35));
+
+        canvas.width = w;
+        canvas.height = h;
+
+        if (engine) {
+          World.clear(world);
+          Engine.clear(engine);
+        }
+
+        engine = Engine.create();
+        world = engine.world;
+        engine.world.gravity.y = 1;
+
+        render = Render.create({
+          canvas: canvas,
+          engine: engine,
+          options: {
+            width: w,
+            height: h,
+            wireframes: false,
+            background: 'transparent',
+            pixelRatio: window.devicePixelRatio || 1
+          }
+        });
+
+        // Truck outline
+        const truck = TRUCKS[currentTruck];
+        const truckW = truck.visualW;
+        const truckH = truck.visualH;
+        const truckX = w / 2;
+        const truckY = h - truckH / 2 - 20;
+
+        // Floor and walls (static)
+        const floor = Bodies.rectangle(truckX, truckY + truckH/2 + 5, truckW + 20, 10, {
+          isStatic: true,
+          render: { fillStyle: '#3a82ce' }
+        });
+        const leftWall = Bodies.rectangle(truckX - truckW/2 - 5, truckY, 10, truckH, {
+          isStatic: true,
+          render: { fillStyle: '#3a82ce' }
+        });
+        const rightWall = Bodies.rectangle(truckX + truckW/2 + 5, truckY, 10, truckH, {
+          isStatic: true,
+          render: { fillStyle: '#3a82ce' }
+        });
+
+        World.add(world, [floor, leftWall, rightWall]);
+
+        // Mouse control
+        const mouse = Mouse.create(canvas);
+        const mouseConstraint = MouseConstraint.create(engine, {
+          mouse: mouse,
+          constraint: {
+            stiffness: 0.2,
+            render: { visible: false }
+          }
+        });
+        World.add(world, mouseConstraint);
+
+        // Keep mouse sync with canvas
+        render.mouse = mouse;
+
+        // Re-add existing items
+        const prevItems = [...loadedItems];
+        loadedItems = [];
+        for (const item of prevItems) {
+          addItemToTruck(item.itemData, false);
+        }
+
+        Render.run(render);
+        Matter.Runner.run(Matter.Runner.create(), engine);
+
+        updateStats();
+      }
+
+      function addItemToTruck(itemData, animate = true) {
+        const canvas = document.getElementById('truckCanvas');
+        const w = canvas.width;
+        const h = canvas.height;
+        const truck = TRUCKS[currentTruck];
+
+        // Scale item to fit visually
+        const scale = 0.9;
+        const itemW = itemData.w * scale;
+        const itemH = itemData.h * scale;
+
+        // Random x within truck bounds
+        const truckX = w / 2;
+        const minX = truckX - truck.visualW / 2 + itemW / 2 + 15;
+        const maxX = truckX + truck.visualW / 2 - itemW / 2 - 15;
+        const x = minX + Math.random() * (maxX - minX);
+        const y = 30; // Drop from top
+
+        const body = Bodies.rectangle(x, y, itemW, itemH, {
+          restitution: 0.2,
+          friction: 0.8,
+          frictionStatic: 1,
+          render: {
+            fillStyle: itemData.color,
+            strokeStyle: '#222',
+            lineWidth: 1
+          },
+          label: itemData.name
+        });
+
+        World.add(world, body);
+        loadedItems.push({ body, itemData });
+
+        if (animate) {
+          // Add entry animation via velocity
+          Body.setVelocity(body, { x: (Math.random() - 0.5) * 2, y: 3 });
+        }
+
+        updateStats();
+      }
+
+      function clearTruck() {
+        for (const item of loadedItems) {
+          World.remove(world, item.body);
+        }
+        loadedItems = [];
+        updateStats();
+      }
+
+      function updateStats() {
+        const truck = TRUCKS[currentTruck];
+        let totalCuft = 0;
+        let totalWeight = 0;
+
+        for (const item of loadedItems) {
+          totalCuft += item.itemData.cuft;
+          totalWeight += item.itemData.weight;
+        }
+
+        const percent = Math.min(100, Math.round((totalCuft / truck.cuft) * 100));
+
+        // Animate numbers
+        animateValue('cuftUsed', totalCuft);
+        animateValue('weightUsed', totalWeight);
+
+        document.getElementById('fillProgress').style.width = percent + '%';
+        document.getElementById('fillLabel').textContent = percent + '% full';
+
+        // Toggle empty state visibility
+        const emptyState = document.getElementById('truckEmptyState');
+        if (emptyState) {
+          if (loadedItems.length > 0) {
+            emptyState.classList.add('has-items');
+          } else {
+            emptyState.classList.remove('has-items');
+          }
+        }
+
+        // Change color based on fill
+        const progressBar = document.getElementById('fillProgress');
+        if (percent > 90) {
+          progressBar.style.background = 'linear-gradient(90deg, var(--error), oklch(0.65 0.20 30))';
+        } else if (percent > 70) {
+          progressBar.style.background = 'linear-gradient(90deg, var(--warning), oklch(0.70 0.18 60))';
+        } else {
+          progressBar.style.background = 'linear-gradient(90deg, var(--success), var(--accent))';
+        }
+      }
+
+      function animateValue(id, value) {
+        const el = document.getElementById(id);
+        const current = parseInt(el.textContent) || 0;
+        const diff = value - current;
+        const duration = 300;
+        const start = performance.now();
+
+        function tick(now) {
+          const elapsed = now - start;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.round(current + diff * eased);
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+
+      // ===== ITEMS PANEL =====
+      function renderItemsPanel() {
+        const grid = document.getElementById('itemsGrid');
+        grid.innerHTML = ITEMS.map(item => `
+          <button class="item-btn" data-item="${item.id}" aria-label="Add ${item.name} to truck">
+            <div class="item-icon">
+              ${getItemIcon(item.id)}
+            </div>
+            <span class="item-name">${item.name}</span>
+            <span class="item-size">${item.cuft} cu.ft</span>
+          </button>
+        `).join('');
+
+        grid.querySelectorAll('.item-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const itemId = btn.dataset.item;
+            const item = ITEMS.find(i => i.id === itemId);
+            if (item) {
+              addItemToTruck(item);
+              showToast(`Added ${item.name}`, 'success');
+            }
+          });
+        });
+      }
+
+      function getItemIcon(id) {
+        const icons = {
+          sofa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 11v6a2 2 0 002 2h12a2 2 0 002-2v-6"/><path d="M4 11V9a4 4 0 014-4h8a4 4 0 014 4v2"/><path d="M2 11h20"/></svg>',
+          bed: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 9v8h20V9"/><path d="M2 13h20"/><rect x="4" y="5" width="16" height="4" rx="1"/></svg>',
+          dresser: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg>',
+          table: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="20" height="3" rx="1"/><line x1="4" y1="11" x2="4" y2="20"/><line x1="20" y1="11" x2="20" y2="20"/></svg>',
+          chair: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 11V7a2 2 0 012-2h8a2 2 0 012 2v4"/><rect x="4" y="11" width="16" height="4" rx="1"/><line x1="7" y1="15" x2="7" y2="21"/><line x1="17" y1="15" x2="17" y2="21"/></svg>',
+          bookshelf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="14" x2="20" y2="14"/><line x1="8" y1="8" x2="8" y2="2"/><line x1="14" y1="14" x2="14" y2="8"/></svg>',
+          tv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="18" x2="12" y2="21"/></svg>',
+          fridge: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="4" y1="9" x2="20" y2="9"/><line x1="17" y1="5" x2="17" y2="7"/><line x1="17" y1="12" x2="17" y2="16"/></svg>',
+          washer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="18" height="20" rx="2"/><circle cx="12" cy="14" r="5"/><circle cx="12" cy="14" r="2"/><circle cx="7" cy="5" r="1"/><circle cx="10" cy="5" r="1"/></svg>',
+          boxes5: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v3"/><path d="M21 8v13H3V8"/><path d="M3 8l9 4 9-4"/></svg>',
+          mattress: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="8" width="20" height="8" rx="2"/><path d="M4 8c0-2 2-4 8-4s8 2 8 4"/></svg>',
+          desk: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="4" rx="1"/><line x1="4" y1="11" x2="4" y2="20"/><line x1="20" y1="11" x2="20" y2="20"/><rect x="6" y="11" width="6" height="5"/></svg>'
+        };
+        return icons[id] || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';
+      }
+
+      // ===== QUOTE =====
+      function updateQuote() {
+        const crew = parseInt(document.getElementById('crewSize').value) || 3;
+        const hours = parseFloat(document.getElementById('estHours').value) || 4;
+        const rate = settings.hourlyRate;
+        const total = crew * hours * rate;
+
+        document.getElementById('totalQuote').textContent = '$' + total.toLocaleString();
+        document.getElementById('quoteBreakdown').textContent = `${crew} movers x ${hours} hrs @ $${rate}/hr`;
+      }
+
+      // ===== SAVE JOB =====
+      async function handleSaveQuote() {
+        const customerName = document.getElementById('customerName').value.trim();
+        const moveDate = document.getElementById('moveDate').value;
+        const fromAddr = document.getElementById('fromAddr').value.trim();
+        const toAddr = document.getElementById('toAddr').value.trim();
+
+        if (!customerName) {
+          showToast('Enter customer name', 'error');
+          document.getElementById('customerName').focus();
+          return;
+        }
+
+        let totalCuft = 0;
+        let totalWeight = 0;
+        for (const item of loadedItems) {
+          totalCuft += item.itemData.cuft;
+          totalWeight += item.itemData.weight;
+        }
+
+        const crew = parseInt(document.getElementById('crewSize').value) || 3;
+        const hours = parseFloat(document.getElementById('estHours').value) || 4;
+        const quote = crew * hours * settings.hourlyRate;
+
+        const job = {
+          id: 'job_' + Date.now(),
+          customerName,
+          moveDate: moveDate || getTodayPlus(7),
+          fromAddr: fromAddr || 'Hickory, NC',
+          toAddr: toAddr || 'Newton, NC',
+          crewSize: crew,
+          estHours: hours,
+          truckSize: currentTruck,
+          cuft: totalCuft,
+          weight: totalWeight,
+          quote,
+          status: 'pending',
+          createdAt: Date.now(),
+          isDemo: false
+        };
+
+        await saveJob(job);
+        await loadJobs();
+
+        // Clear form
+        document.getElementById('customerName').value = '';
+        document.getElementById('fromAddr').value = '';
+        document.getElementById('toAddr').value = '';
+        clearTruck();
+
+        showToast('Quote saved!', 'success');
+        switchTab('jobs');
+      }
+
+      // ===== SHARE =====
+      async function handleShare() {
+        const customerName = document.getElementById('customerName').value.trim() || 'Customer';
+        const crew = parseInt(document.getElementById('crewSize').value) || 3;
+        const hours = parseFloat(document.getElementById('estHours').value) || 4;
+        const total = crew * hours * settings.hourlyRate;
+        const from = document.getElementById('fromAddr').value.trim() || 'Hickory';
+        const to = document.getElementById('toAddr').value.trim() || 'Newton';
+
+        let cuft = 0;
+        for (const item of loadedItems) cuft += item.itemData.cuft;
+        const fill = Math.round((cuft / TRUCKS[currentTruck].cuft) * 100);
+
+        const text = `Moving Estimate for ${customerName}
+
+From: ${from}
+To: ${to}
+
+Truck: ${currentTruck}-ft (${fill}% full)
+Crew: ${crew} movers
+Est. Time: ${hours} hours
+
+Estimated Total: $${total}
+
+In & Out Moving & Delivery
+(828) 728-1141`;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: 'Moving Estimate', text });
+            showToast('Shared!', 'success');
+          } catch (e) {
+            fallbackCopy(text);
+          }
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied to clipboard', 'success');
+        }).catch(() => {
+          showToast('Could not copy', 'error');
+        });
+      }
+
+      // ===== PDF =====
+      function handlePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const customerName = document.getElementById('customerName').value.trim() || 'Customer';
+        const moveDate = document.getElementById('moveDate').value || getTodayPlus(7);
+        const from = document.getElementById('fromAddr').value.trim() || 'Hickory, NC';
+        const to = document.getElementById('toAddr').value.trim() || 'Newton, NC';
+        const crew = parseInt(document.getElementById('crewSize').value) || 3;
+        const hours = parseFloat(document.getElementById('estHours').value) || 4;
+        const total = crew * hours * settings.hourlyRate;
+
+        let cuft = 0, weight = 0;
+        for (const item of loadedItems) {
+          cuft += item.itemData.cuft;
+          weight += item.itemData.weight;
+        }
+        const fill = Math.round((cuft / TRUCKS[currentTruck].cuft) * 100);
+
+        // Header
+        doc.setFillColor(58, 130, 206);
+        doc.rect(0, 0, 220, 35, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.text('In & Out Moving & Delivery', 20, 20);
+        doc.setFontSize(10);
+        doc.text('(828) 728-1141  |  Hickory, NC', 20, 28);
+
+        // Title
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(18);
+        doc.text('Moving Estimate', 20, 50);
+
+        // Customer info
+        doc.setFontSize(12);
+        doc.text(`Customer: ${customerName}`, 20, 65);
+        doc.text(`Move Date: ${moveDate}`, 20, 75);
+        doc.text(`From: ${from}`, 20, 85);
+        doc.text(`To: ${to}`, 20, 95);
+
+        // Load details
+        doc.setFontSize(14);
+        doc.text('Load Details', 20, 115);
+        doc.setFontSize(11);
+        doc.text(`Truck Size: ${currentTruck}-foot`, 25, 125);
+        doc.text(`Estimated Volume: ${cuft} cu. ft (${fill}% full)`, 25, 133);
+        doc.text(`Estimated Weight: ${weight} lbs`, 25, 141);
+
+        // Items list
+        if (loadedItems.length > 0) {
+          doc.text('Items:', 25, 153);
+          let y = 161;
+          const itemCounts = {};
+          for (const i of loadedItems) {
+            itemCounts[i.itemData.name] = (itemCounts[i.itemData.name] || 0) + 1;
+          }
+          for (const [name, count] of Object.entries(itemCounts)) {
+            doc.text(`  - ${name}${count > 1 ? ' x' + count : ''}`, 30, y);
+            y += 7;
+            if (y > 270) break;
+          }
+        }
+
+        // Pricing
+        doc.setFillColor(240, 240, 240);
+        doc.rect(15, 200, 180, 45, 'F');
+        doc.setFontSize(14);
+        doc.text('Pricing', 20, 212);
+        doc.setFontSize(11);
+        doc.text(`Crew: ${crew} movers`, 25, 222);
+        doc.text(`Estimated Hours: ${hours}`, 25, 230);
+        doc.text(`Rate: $${settings.hourlyRate}/mover/hr`, 25, 238);
+
+        doc.setFontSize(16);
+        doc.setTextColor(58, 130, 206);
+        doc.text(`Estimated Total: $${total}`, 120, 235);
+
+        // Footer
+        doc.setTextColor(100, 100, 100);
+        doc.setFontSize(9);
+        doc.text('This is an estimate. Final price may vary based on actual conditions.', 20, 260);
+        doc.text('Thank you for choosing In & Out Moving!', 20, 267);
+
+        doc.save(`Quote_${customerName.replace(/\s+/g, '_')}_${moveDate}.pdf`);
+        showToast('PDF downloaded', 'success');
+      }
+
+      // ===== JOBS LIST =====
+      function renderJobs() {
+        const list = document.getElementById('jobsList');
+
+        if (jobs.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-illustration">
+                <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="20" y="30" width="120" height="70" rx="4" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                  <polygon points="140,50 160,50 170,60 170,80 140,80" stroke="currentColor" stroke-width="2" opacity="0.3" transform="scale(0.8) translate(-10, -5)"/>
+                  <circle cx="50" cy="100" r="10" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                  <circle cx="120" cy="100" r="10" stroke="currentColor" stroke-width="2" opacity="0.3"/>
+                  <line x1="40" y1="55" x2="100" y2="55" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                  <line x1="40" y1="70" x2="80" y2="70" stroke="currentColor" stroke-width="2" opacity="0.2"/>
+                </svg>
+              </div>
+              <h3 class="empty-title">No saved jobs yet</h3>
+              <p class="empty-text">Build a visual load estimate in the Load tab, then save it as a job.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Sort by date descending
+        const sorted = [...jobs].sort((a, b) => b.createdAt - a.createdAt);
+
+        list.innerHTML = sorted.map((job, i) => `
+          <article class="job-card" style="animation-delay: ${i * 60}ms" data-id="${job.id}">
+            <div class="job-status ${job.status}">
+              ${job.status === 'confirmed' ?
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' :
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+              }
+            </div>
+            <div class="job-info">
+              <div class="job-name">
+                ${job.customerName}
+                ${job.isDemo ? '<span class="job-badge">Demo</span>' : ''}
+              </div>
+              <div class="job-address">${job.fromAddr} to ${job.toAddr}</div>
+              <div class="job-meta">
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  ${formatDate(job.moveDate)}
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                  ${job.truckSize}ft
+                </span>
+                <span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                  ${job.crewSize}
+                </span>
+              </div>
+            </div>
+            <div class="job-quote">$${job.quote}</div>
+          </article>
+        `).join('');
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return 'TBD';
+        const d = new Date(dateStr + 'T12:00:00');
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
+      // ===== TABS =====
+      function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.nav-item, .nav-btn').forEach(el => {
+          el.classList.remove('active');
+          el.removeAttribute('aria-current');
+        });
+
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.querySelectorAll(`[data-tab="${tab}"]`).forEach(el => {
+          el.classList.add('active');
+          el.setAttribute('aria-current', 'page');
+        });
+
+        // Resize canvas when switching to load tab
+        if (tab === 'load') {
+          setTimeout(() => setupCanvas(), 50);
+        }
+      }
+
+      // ===== TOAST =====
+      function showToast(msg, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        toast.innerHTML = `
+          ${type === 'success' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' :
+            type === 'error' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' :
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'}
+          <span>${msg}</span>
+        `;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+          setTimeout(() => toast.remove(), 200);
+        }, 3000);
+      }
+
+      // ===== RIPPLE EFFECT =====
+      function addRippleEffect(btn) {
+        btn.addEventListener('mousedown', e => {
+          const rect = btn.getBoundingClientRect();
+          const x = ((e.clientX - rect.left) / rect.width) * 100;
+          const y = ((e.clientY - rect.top) / rect.height) * 100;
+          btn.style.setProperty('--ripple-x', x + '%');
+          btn.style.setProperty('--ripple-y', y + '%');
+        });
+      }
+
+      // ===== EVENT LISTENERS =====
+      function setupEventListeners() {
+        // Add ripple to all buttons
+        document.querySelectorAll('.btn').forEach(addRippleEffect);
+
+        // Tabs
+        document.querySelectorAll('[data-tab]').forEach(btn => {
+          btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        // Truck tabs
+        document.querySelectorAll('.truck-tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            document.querySelectorAll('.truck-tab').forEach(b => {
+              b.classList.remove('active');
+              b.setAttribute('aria-selected', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+            currentTruck = parseInt(btn.dataset.truck);
+            clearTruck();
+            setupCanvas();
+          });
+        });
+
+        // Quote inputs
+        ['crewSize', 'estHours'].forEach(id => {
+          document.getElementById(id).addEventListener('change', updateQuote);
+        });
+
+        // Action buttons
+        document.getElementById('saveQuote').addEventListener('click', handleSaveQuote);
+        document.getElementById('shareQuote').addEventListener('click', handleShare);
+        document.getElementById('downloadPDF').addEventListener('click', handlePDF);
+
+        // Demo banner
+        document.getElementById('clearDemo').addEventListener('click', clearDemoData);
+
+        // Settings modal
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+          document.getElementById('settingsModal').classList.add('visible');
+        });
+        document.getElementById('mobileSettings').addEventListener('click', () => {
+          document.getElementById('settingsModal').classList.add('visible');
+        });
+        document.getElementById('closeSettings').addEventListener('click', () => {
+          document.getElementById('settingsModal').classList.remove('visible');
+          saveSettings();
+          updateQuote();
+        });
+        document.getElementById('settingsModal').addEventListener('click', e => {
+          if (e.target.id === 'settingsModal') {
+            document.getElementById('settingsModal').classList.remove('visible');
+            saveSettings();
+            updateQuote();
+          }
+        });
+
+        // Settings actions
+        document.getElementById('hourlyRate').addEventListener('change', () => {
+          saveSettings();
+          updateQuote();
+        });
+
+        document.getElementById('exportData').addEventListener('click', async () => {
+          const data = {
+            jobs: await getAllJobs(),
+            settings,
+            exportedAt: new Date().toISOString()
+          };
+          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `loadplanner_backup_${Date.now()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Data exported', 'success');
+        });
+
+        document.getElementById('importData').addEventListener('change', async e => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (data.jobs) {
+              for (const job of data.jobs) {
+                await saveJob(job);
+              }
+            }
+            if (data.settings) {
+              settings = { ...settings, ...data.settings };
+              saveSettings();
+              document.getElementById('hourlyRate').value = settings.hourlyRate;
+            }
+            await loadJobs();
+            showToast('Data imported', 'success');
+          } catch (err) {
+            showToast('Invalid backup file', 'error');
+          }
+          e.target.value = '';
+        });
+
+        document.getElementById('clearAllData').addEventListener('click', async () => {
+          if (confirm('Delete all saved jobs? This cannot be undone.')) {
+            await clearAllJobs();
+            jobs = [];
+            renderJobs();
+            showToast('All data cleared', 'success');
+          }
+        });
+
+        // Resize handler
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+          clearTimeout(resizeTimeout);
+          resizeTimeout = setTimeout(() => {
+            if (document.getElementById('tab-load').classList.contains('active')) {
+              setupCanvas();
+            }
+          }, 200);
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>
