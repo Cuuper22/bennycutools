@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A90D9">
+  <title>PatchBook - Texture Match Memory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: oklch(0.98 0.005 90);
+      --bg-secondary: oklch(0.95 0.005 90);
+      --bg-card: oklch(1 0 0);
+      --text-primary: oklch(0.2 0.02 250);
+      --text-secondary: oklch(0.45 0.01 250);
+      --text-muted: oklch(0.6 0.01 250);
+      --accent-blue: oklch(0.6 0.15 250);
+      --accent-blue-hover: oklch(0.55 0.17 250);
+      --accent-green: oklch(0.6 0.17 145);
+      --accent-orange: oklch(0.7 0.17 55);
+      --accent-red: oklch(0.55 0.2 25);
+      --border: oklch(0.88 0.01 90);
+      --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px oklch(0 0 0 / 0.07), 0 2px 4px oklch(0 0 0 / 0.05);
+      --shadow-lg: 0 10px 15px oklch(0 0 0 / 0.1), 0 4px 6px oklch(0 0 0 / 0.05);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      padding-bottom: 140px !important;
+    }
+
+    /* Focus styles */
+    :focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    /* Auth Screen */
+    .auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--accent-blue);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .auth-logo svg {
+      width: 48px;
+      height: 48px;
+      color: white;
+    }
+
+    .auth-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    .auth-subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      line-height: 1.5;
+    }
+
+    .auth-form {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .auth-input:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px oklch(0.6 0.15 250 / 0.15);
+    }
+
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: white;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .auth-btn:hover {
+      background: var(--accent-blue-hover);
+    }
+
+    .auth-btn:active {
+      transform: scale(0.98);
+    }
+
+    .auth-error {
+      color: var(--accent-red);
+      font-size: 14px;
+      margin-top: 12px;
+      display: none;
+    }
+
+    .auth-error.show {
+      display: block;
+    }
+
+    /* App Container */
+    .app {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .app.visible {
+      display: block;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent-blue);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: var(--border);
+    }
+
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .tab-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      padding: 16px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .section-count {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Texture Filter */
+    .texture-filter {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    .texture-filter::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--text-muted);
+    }
+
+    .filter-chip.active {
+      color: white;
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    /* Texture Gallery Grid */
+    .texture-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    @media (min-width: 600px) {
+      .texture-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .texture-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .texture-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .texture-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .texture-card-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      background: var(--bg-secondary);
+    }
+
+    .texture-card-body {
+      padding: 10px;
+    }
+
+    .texture-card-type {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-blue);
+      background: oklch(0.6 0.15 250 / 0.1);
+      border-radius: 4px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .texture-card-location {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .texture-card-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge--complete {
+      color: var(--accent-green);
+      background: oklch(0.6 0.17 145 / 0.1);
+    }
+
+    .status-badge--progress {
+      color: var(--accent-orange);
+      background: oklch(0.7 0.17 55 / 0.1);
+    }
+
+    .status-badge--pending {
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+    }
+
+    /* Job List */
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .job-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow 0.15s ease;
+    }
+
+    .job-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .job-card-content {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .job-card-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--bg-secondary);
+      flex-shrink: 0;
+    }
+
+    .job-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .job-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .job-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .job-card-type {
+      font-size: 13px;
+      color: var(--accent-blue);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .job-card-location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .job-card-location svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .job-card-actions {
+      display: flex;
+      gap: 8px;
+      padding: 0 12px 12px;
+    }
+
+    .job-action-btn {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .job-action-btn:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    .job-action-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .job-action-btn--primary {
+      color: white;
+      background: var(--accent-blue);
+    }
+
+    .job-action-btn--primary:hover {
+      background: var(--accent-blue-hover);
+      color: white;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-state-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 140px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-lg), 0 4px 12px oklch(0.6 0.15 250 / 0.3);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      z-index: 50;
+    }
+
+    .fab:hover {
+      transform: scale(1.05);
+    }
+
+    .fab:active {
+      transform: scale(0.95);
+    }
+
+    .fab svg {
+      width: 28px;
+      height: 28px;
+      color: white;
+    }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0 12px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-secondary);
+    }
+
+    .nav-btn.active {
+      color: var(--accent-blue);
+    }
+
+    .nav-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 200;
+      padding: 0;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    @media (min-width: 600px) {
+      .modal-overlay {
+        align-items: center;
+        padding: 24px;
+      }
+    }
+
+    .modal {
+      background: var(--bg-card);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (min-width: 600px) {
+      .modal {
+        border-radius: var(--radius-lg);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close svg {
+      width: 20px;
+      height: 20px;
+      color: var(--text-secondary);
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 0 3px oklch(0.6 0.15 250 / 0.15);
+      outline: none;
+    }
+
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+    }
+
+    /* Photo Upload */
+    .photo-upload {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .photo-preview {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .photo-thumb {
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--bg-secondary);
+    }
+
+    .photo-add-btn {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-secondary);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .photo-add-btn:hover {
+      border-color: var(--accent-blue);
+      background: oklch(0.6 0.15 250 / 0.05);
+    }
+
+    .photo-add-btn svg {
+      width: 24px;
+      height: 24px;
+      color: var(--text-muted);
+    }
+
+    .photo-add-btn span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Submit Button */
+    .submit-btn {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: white;
+      background: var(--accent-blue);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .submit-btn:hover {
+      background: var(--accent-blue-hover);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Job Detail View */
+    .job-detail {
+      display: none;
+    }
+
+    .job-detail.active {
+      display: block;
+    }
+
+    .job-detail-header {
+      position: relative;
+      margin: -16px -16px 16px;
+    }
+
+    .job-detail-hero {
+      width: 100%;
+      height: 240px;
+      object-fit: cover;
+      background: var(--bg-secondary);
+    }
+
+    .job-detail-back {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      width: 40px;
+      height: 40px;
+      background: oklch(0 0 0 / 0.5);
+      backdrop-filter: blur(8px);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .job-detail-back svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+
+    .job-detail-info {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      margin: -32px 16px 16px;
+      padding: 20px;
+      position: relative;
+      box-shadow: var(--shadow-md);
+    }
+
+    .job-detail-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .job-detail-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .job-detail-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .job-detail-meta-item svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+
+    .job-detail-photos {
+      margin-top: 20px;
+    }
+
+    .job-detail-photos-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    .job-detail-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .job-detail-photo {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      background: var(--bg-secondary);
+    }
+
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, oklch(0.6 0.15 250 / 0.1), oklch(0.6 0.17 145 / 0.1));
+      border: 1px solid oklch(0.6 0.15 250 / 0.2);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 24px;
+    }
+
+    .upsell-banner-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upsell-banner-title svg {
+      width: 20px;
+      height: 20px;
+      color: var(--accent-blue);
+    }
+
+    .upsell-banner-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .upsell-banner-features {
+      list-style: none;
+      margin-bottom: 12px;
+    }
+
+    .upsell-banner-features li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upsell-banner-features svg {
+      width: 16px;
+      height: 16px;
+      color: var(--accent-green);
+      flex-shrink: 0;
+    }
+
+    .upsell-banner-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: var(--accent-blue);
+      background: var(--bg-card);
+      border: 1px solid var(--accent-blue);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .upsell-banner-btn:hover {
+      background: var(--accent-blue);
+      color: white;
+    }
+
+    /* Job Counter */
+    .job-counter {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .job-counter-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .job-counter-text strong {
+      color: var(--text-primary);
+    }
+
+    .job-counter-bar {
+      width: 100px;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .job-counter-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 150px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text-primary);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      opacity: 0;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Entrance animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .texture-card, .job-card {
+      animation: fadeInUp 0.4s ease forwards;
+    }
+
+    .texture-card:nth-child(1) { animation-delay: 0ms; }
+    .texture-card:nth-child(2) { animation-delay: 50ms; }
+    .texture-card:nth-child(3) { animation-delay: 100ms; }
+    .texture-card:nth-child(4) { animation-delay: 150ms; }
+    .texture-card:nth-child(5) { animation-delay: 200ms; }
+    .texture-card:nth-child(6) { animation-delay: 250ms; }
+    .texture-card:nth-child(7) { animation-delay: 300ms; }
+    .texture-card:nth-child(8) { animation-delay: 350ms; }
+
+    .modal {
+      animation: scaleIn 0.25s ease forwards;
+    }
+
+    /* Anti-scrape protection */
+    .texture-card, .job-card {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .texture-card img, .job-card img {
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--accent-blue);
+      color: white;
+      padding: 8px 16px;
+      z-index: 10000;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 0 0 var(--radius-sm) 0;
+      transition: top 0.2s ease;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    /* Camera modal */
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 250;
+      display: none;
+      flex-direction: column;
+    }
+
+    .camera-modal.open {
+      display: flex;
+    }
+
+    .camera-video {
+      flex: 1;
+      width: 100%;
+      object-fit: cover;
+    }
+
+    .camera-controls {
+      background: oklch(0 0 0 / 0.8);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+    }
+
+    .camera-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid white;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.15s ease;
+    }
+
+    .camera-btn::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.15s ease;
+    }
+
+    .camera-btn:active::after {
+      transform: scale(0.9);
+    }
+
+    .camera-cancel {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      padding: 12px;
+    }
+
+    /* Hide video input */
+    .hidden-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Auth Screen -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="9" cy="9" r="2"/>
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+      </svg>
+    </div>
+    <h1 class="auth-title">PatchBook</h1>
+    <p class="auth-subtitle">Save your textures.<br>Find them fast.</p>
+    <form class="auth-form" id="authForm">
+      <label for="accessKey" class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">Access Key</label>
+      <input type="password" id="accessKey" class="auth-input" placeholder="Enter access key" autocomplete="off" required>
+      <button type="submit" class="auth-btn">Open PatchBook</button>
+      <p class="auth-error" id="authError" role="alert">Wrong access key. Try again.</p>
+    </form>
+  </div>
+
+  <!-- Main App -->
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo">
+        <div class="header-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="9" cy="9" r="2"/>
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+        </div>
+        <span class="header-title">PatchBook</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="searchBtn" aria-label="Search textures">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+
+    <!-- Tab Content: Textures -->
+    <div class="tab-content active" id="texturesTab">
+      <div class="section-header">
+        <h2 class="section-title">My Textures</h2>
+        <span class="section-count" id="textureCount">4 textures</span>
+      </div>
+
+      <!-- Texture Filter -->
+      <div class="texture-filter" role="tablist" aria-label="Filter by texture type">
+        <button class="filter-chip active" role="tab" aria-selected="true" data-filter="all">All</button>
+        <button class="filter-chip" role="tab" aria-selected="false" data-filter="orange-peel">Orange Peel</button>
+        <button class="filter-chip" role="tab" aria-selected="false" data-filter="knockdown">Knockdown</button>
+        <button class="filter-chip" role="tab" aria-selected="false" data-filter="skip-trowel">Skip Trowel</button>
+        <button class="filter-chip" role="tab" aria-selected="false" data-filter="smooth">Smooth</button>
+        <button class="filter-chip" role="tab" aria-selected="false" data-filter="popcorn">Popcorn</button>
+      </div>
+
+      <!-- Texture Grid -->
+      <div class="texture-grid" id="textureGrid" role="list">
+        <!-- Filled by JS -->
+      </div>
+
+      <!-- Upsell - shown after texture grid -->
+      <div class="upsell-banner" id="upsellBanner">
+        <h3 class="upsell-banner-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Full Version
+        </h3>
+        <p class="upsell-banner-text">Free version holds 20 jobs. Get the full deal:</p>
+        <ul class="upsell-banner-features">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            Keep unlimited jobs
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            Add custom texture types
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            Make branded PDFs
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            Back up to the cloud
+          </li>
+        </ul>
+        <button class="upsell-banner-btn">Learn More</button>
+      </div>
+    </div>
+
+    <!-- Tab Content: Jobs -->
+    <div class="tab-content" id="jobsTab">
+      <div class="section-header">
+        <h2 class="section-title">Job Log</h2>
+        <span class="section-count" id="jobCount">4 jobs</span>
+      </div>
+
+      <!-- Job Counter -->
+      <div class="job-counter">
+        <span class="job-counter-text"><strong id="jobUsed">4</strong> of 20 jobs used</span>
+        <div class="job-counter-bar">
+          <div class="job-counter-fill" id="jobFill" style="width: 20%"></div>
+        </div>
+      </div>
+
+      <!-- Job List -->
+      <div class="job-list" id="jobList" role="list">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <!-- Tab Content: Job Detail -->
+    <div class="tab-content job-detail" id="jobDetailTab">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- FAB -->
+    <button class="fab" id="fabBtn" aria-label="Add new job">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+    </button>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-btn active" data-nav="textures" aria-label="Texture library">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7"/>
+          <rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/>
+          <rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Textures</span>
+      </button>
+      <button class="nav-btn" data-nav="jobs" aria-label="Job log">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+        </svg>
+        <span>Job Log</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Add Job Modal -->
+  <div class="modal-overlay" id="addJobModal" role="dialog" aria-modal="true" aria-labelledby="addJobTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="addJobTitle">Add a Job</h2>
+        <button class="modal-close" id="closeAddJob" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="addJobForm">
+          <div class="form-group">
+            <label for="jobTitle" class="form-label">Job Title</label>
+            <input type="text" id="jobTitle" class="form-input" placeholder="Kitchen ceiling repair" required>
+          </div>
+          <div class="form-group">
+            <label for="jobTexture" class="form-label">Texture Type</label>
+            <select id="jobTexture" class="form-select" required>
+              <option value="">Select texture</option>
+              <option value="orange-peel">Orange Peel</option>
+              <option value="knockdown">Knockdown</option>
+              <option value="skip-trowel">Skip Trowel</option>
+              <option value="smooth">Smooth</option>
+              <option value="popcorn">Popcorn</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="jobLocation" class="form-label">Location / Neighborhood</label>
+            <input type="text" id="jobLocation" class="form-input" placeholder="Elk Grove" required>
+            <button type="button" id="getLocationBtn" style="margin-top:8px;font-size:13px;color:var(--accent-blue);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="10" r="3"/>
+                <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+              </svg>
+              Use my location
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Photos</label>
+            <div class="photo-upload">
+              <div class="photo-preview" id="photoPreview">
+                <button type="button" class="photo-add-btn" id="addPhotoBtn" aria-label="Add photo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                  </svg>
+                  <span>Camera</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobNotes" class="form-label">Notes (optional)</label>
+            <textarea id="jobNotes" class="form-textarea" placeholder="Customer wants texture to match living room..."></textarea>
+          </div>
+          <button type="submit" class="submit-btn">Save Job</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Camera Modal -->
+  <div class="camera-modal" id="cameraModal">
+    <video class="camera-video" id="cameraVideo" autoplay playsinline></video>
+    <div class="camera-controls">
+      <button class="camera-cancel" id="cameraCancel">Cancel</button>
+      <button class="camera-btn" id="cameraCapture" aria-label="Take photo"></button>
+    </div>
+  </div>
+
+  <!-- Hidden file input for fallback -->
+  <input type="file" accept="image/*" capture="environment" class="hidden-input" id="fileInput">
+
+  <!-- Canvas for photo capture -->
+  <canvas id="photoCanvas" style="display:none"></canvas>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Live region for screen reader announcements -->
+  <div id="sr-announcer" aria-live="polite" aria-atomic="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden;"></div>
+
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;user-select:none;-webkit-user-select:none;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Simply The Best Drywall of Elk Grove, CA. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Simply%20The%20Best%20Drywall&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">Request Permanent Deletion</a>
+  </div>
+
+  <script>
+    // Anti-scrape: block right-click on texture images
+    document.addEventListener('contextmenu', function(e) {
+      if (e.target.tagName === 'IMG' && e.target.closest('.texture-card, .job-card')) {
+        e.preventDefault();
+        return false;
+      }
+    });
+    // ============================================
+    // PatchBook - Texture Match Memory
+    // For Simply The Best Drywall
+    // ============================================
+
+    const APP_KEY_HASH = -140857554;
+
+    // Hash function
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    // IndexedDB setup
+    const DB_NAME = 'PatchBookDB';
+    const DB_VERSION = 2; // Incremented to clear old data
+    let db = null;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('jobs')) {
+            const store = database.createObjectStore('jobs', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('texture', 'texture', { unique: false });
+            store.createIndex('date', 'date', { unique: false });
+          }
+        };
+      });
+    }
+
+    // Generate texture pattern as canvas data URL
+    function generateTextureImage(texture, label) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 200;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+
+      // Background
+      ctx.fillStyle = '#e8e4dc';
+      ctx.fillRect(0, 0, 200, 200);
+
+      // Texture patterns
+      ctx.fillStyle = '#d0cbc2';
+      if (texture === 'orange-peel') {
+        for (let i = 0; i < 40; i++) {
+          const x = Math.random() * 200;
+          const y = Math.random() * 200;
+          const r = 3 + Math.random() * 4;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (texture === 'knockdown') {
+        for (let row = 0; row < 4; row++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 30 + row * 50);
+          for (let x = 0; x < 200; x += 20) {
+            ctx.lineTo(x, 30 + row * 50 + (Math.random() - 0.5) * 30);
+          }
+          ctx.lineTo(200, 30 + row * 50 + 20);
+          ctx.lineTo(0, 30 + row * 50 + 20);
+          ctx.fill();
+        }
+      } else if (texture === 'skip-trowel') {
+        ctx.strokeStyle = '#c5c0b5';
+        ctx.lineWidth = 4;
+        for (let row = 0; row < 5; row++) {
+          ctx.beginPath();
+          ctx.moveTo(0, 20 + row * 40);
+          for (let x = 0; x < 200; x += 30) {
+            ctx.quadraticCurveTo(x + 15, 20 + row * 40 + (Math.random() - 0.5) * 30, x + 30, 20 + row * 40);
+          }
+          ctx.stroke();
+        }
+      } else if (texture === 'smooth') {
+        ctx.fillStyle = '#f0ece4';
+        ctx.fillRect(0, 0, 200, 200);
+      } else if (texture === 'popcorn') {
+        for (let i = 0; i < 80; i++) {
+          const x = Math.random() * 200;
+          const y = Math.random() * 200;
+          const r = 2 + Math.random() * 3;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Label
+      ctx.fillStyle = '#888';
+      ctx.font = '12px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, 100, 190);
+
+      return canvas.toDataURL('image/png');
+    }
+
+    // Demo data - images generated on load
+    const DEMO_JOBS = [
+      {
+        id: 1,
+        title: 'Kitchen ceiling water damage repair',
+        texture: 'orange-peel',
+        location: 'Elk Grove',
+        coords: { lat: 38.4088, lng: -121.3716 },
+        date: '2026-02-05',
+        status: 'complete',
+        notes: 'Had to match the living room. Used medium spray.',
+        photos: []
+      },
+      {
+        id: 2,
+        title: 'Living room accent wall texture match',
+        texture: 'knockdown',
+        location: 'Rancho Cordova',
+        coords: { lat: 38.5890, lng: -121.3027 },
+        date: '2026-02-03',
+        status: 'complete',
+        notes: 'Old 90s knockdown. Had to mix thick and go light with the blade.'
+        photos: []
+      },
+      {
+        id: 3,
+        title: 'Master bedroom ceiling repair',
+        texture: 'smooth',
+        location: 'Sacramento',
+        coords: { lat: 38.5816, lng: -121.4944 },
+        date: '2026-02-07',
+        status: 'progress',
+        notes: 'Second coat drying. Customer works from home - keeping it quiet.'
+        photos: []
+      },
+      {
+        id: 4,
+        title: 'Bathroom patch after plumber work',
+        texture: 'skip-trowel',
+        location: 'Folsom',
+        coords: { lat: 38.6780, lng: -121.1761 },
+        date: '2026-02-06',
+        status: 'complete',
+        notes: 'Customer loved it. Said they will tell the neighbors.'
+        photos: []
+      }
+    ];
+
+    // Generate demo images
+    function generateDemoImages() {
+      DEMO_JOBS.forEach(job => {
+        job.photos = [generateTextureImage(job.texture, TEXTURE_NAMES[job.texture])];
+      });
+    }
+
+    // Texture display names
+    const TEXTURE_NAMES = {
+      'orange-peel': 'Orange Peel',
+      'knockdown': 'Knockdown',
+      'skip-trowel': 'Skip Trowel',
+      'smooth': 'Smooth',
+      'popcorn': 'Popcorn'
+    };
+
+    // State
+    let jobs = [];
+    let currentFilter = 'all';
+    let currentView = 'textures';
+    let capturedPhotos = [];
+    let cameraStream = null;
+
+    // DOM elements
+    const authScreen = document.getElementById('authScreen');
+    const authForm = document.getElementById('authForm');
+    const accessKeyInput = document.getElementById('accessKey');
+    const authError = document.getElementById('authError');
+    const app = document.getElementById('app');
+    const texturesTab = document.getElementById('texturesTab');
+    const jobsTab = document.getElementById('jobsTab');
+    const jobDetailTab = document.getElementById('jobDetailTab');
+    const textureGrid = document.getElementById('textureGrid');
+    const jobList = document.getElementById('jobList');
+    const textureCount = document.getElementById('textureCount');
+    const jobCount = document.getElementById('jobCount');
+    const jobUsed = document.getElementById('jobUsed');
+    const jobFill = document.getElementById('jobFill');
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    const fabBtn = document.getElementById('fabBtn');
+    const addJobModal = document.getElementById('addJobModal');
+    const closeAddJob = document.getElementById('closeAddJob');
+    const addJobForm = document.getElementById('addJobForm');
+    const photoPreview = document.getElementById('photoPreview');
+    const addPhotoBtn = document.getElementById('addPhotoBtn');
+    const getLocationBtn = document.getElementById('getLocationBtn');
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraCapture = document.getElementById('cameraCapture');
+    const cameraCancel = document.getElementById('cameraCancel');
+    const fileInput = document.getElementById('fileInput');
+    const photoCanvas = document.getElementById('photoCanvas');
+    const toast = document.getElementById('toast');
+
+    // Initialize
+    async function init() {
+      // Check URL key
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && hashKey(urlKey) === APP_KEY_HASH) {
+        showApp();
+      }
+
+      // Auth form
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const key = accessKeyInput.value.trim();
+        if (hashKey(key) === APP_KEY_HASH) {
+          showApp();
+        } else {
+          authError.classList.add('show');
+          accessKeyInput.focus();
+        }
+      });
+
+      accessKeyInput.addEventListener('input', () => {
+        authError.classList.remove('show');
+      });
+    }
+
+    async function showApp() {
+      authScreen.style.display = 'none';
+      app.classList.add('visible');
+
+      await openDB();
+      await loadJobs();
+
+      // If no jobs, load demo data
+      if (jobs.length === 0) {
+        await loadDemoData();
+      }
+
+      renderTextures();
+      renderJobs();
+      updateCounts();
+      setupEventListeners();
+    }
+
+    async function loadJobs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('jobs', 'readonly');
+        const store = tx.objectStore('jobs');
+        const request = store.getAll();
+        request.onsuccess = () => {
+          jobs = request.result;
+          // Regenerate images for any jobs with placeholder/invalid photos
+          jobs.forEach(job => {
+            if (!job.photos || job.photos.length === 0 || (job.photos[0] && job.photos[0].includes('svg+xml'))) {
+              job.photos = [generateTextureImage(job.texture, TEXTURE_NAMES[job.texture] || 'Texture')];
+            }
+          });
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function loadDemoData() {
+      // Generate demo images first
+      generateDemoImages();
+
+      const tx = db.transaction('jobs', 'readwrite');
+      const store = tx.objectStore('jobs');
+      for (const job of DEMO_JOBS) {
+        store.put(job);
+      }
+      await new Promise((resolve) => tx.oncomplete = resolve);
+      jobs = [...DEMO_JOBS];
+    }
+
+    async function saveJob(job) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('jobs', 'readwrite');
+        const store = tx.objectStore('jobs');
+        const request = store.add(job);
+        request.onsuccess = () => {
+          job.id = request.result;
+          jobs.push(job);
+          resolve(job);
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function renderTextures() {
+      const filtered = currentFilter === 'all'
+        ? jobs
+        : jobs.filter(j => j.texture === currentFilter);
+
+      textureGrid.innerHTML = filtered.map(job => `
+        <article class="texture-card" role="listitem" tabindex="0" data-job-id="${job.id}">
+          <img src="${job.photos[0] || ''}" alt="${TEXTURE_NAMES[job.texture]} texture from ${job.location}" class="texture-card-img">
+          <div class="texture-card-body">
+            <span class="texture-card-type">${TEXTURE_NAMES[job.texture]}</span>
+            <p class="texture-card-location">${job.location}</p>
+            <p class="texture-card-date">${formatDate(job.date)}</p>
+          </div>
+        </article>
+      `).join('');
+
+      // Add click handlers
+      textureGrid.querySelectorAll('.texture-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const jobId = parseInt(card.dataset.jobId);
+          showJobDetail(jobId);
+        });
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const jobId = parseInt(card.dataset.jobId);
+            showJobDetail(jobId);
+          }
+        });
+      });
+    }
+
+    function renderJobs() {
+      jobList.innerHTML = jobs.map(job => `
+        <article class="job-card" role="listitem">
+          <div class="job-card-content">
+            <img src="${job.photos[0] || ''}" alt="" class="job-card-thumb">
+            <div class="job-card-info">
+              <div class="job-card-header">
+                <h3 class="job-card-title">${job.title}</h3>
+                <span class="status-badge status-badge--${job.status}">${job.status === 'complete' ? 'Done' : job.status === 'progress' ? 'Working' : 'Not Started'}</span>
+              </div>
+              <p class="job-card-type">${TEXTURE_NAMES[job.texture]}</p>
+              <p class="job-card-location">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+                </svg>
+                ${job.location} - ${formatDate(job.date)}
+              </p>
+            </div>
+          </div>
+          <div class="job-card-actions">
+            <button class="job-action-btn" data-action="copy" data-job-id="${job.id}" aria-label="Copy job info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy Info
+            </button>
+            <button class="job-action-btn" data-action="share" data-job-id="${job.id}" aria-label="Share with customer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Share
+            </button>
+            <button class="job-action-btn job-action-btn--primary" data-action="view" data-job-id="${job.id}" aria-label="View details">
+              Open
+            </button>
+          </div>
+        </article>
+      `).join('');
+
+      // Add action handlers
+      jobList.querySelectorAll('.job-action-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const action = btn.dataset.action;
+          const jobId = parseInt(btn.dataset.jobId);
+          handleJobAction(action, jobId);
+        });
+      });
+    }
+
+    function showJobDetail(jobId) {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      jobDetailTab.innerHTML = `
+        <div class="job-detail-header">
+          <img src="${job.photos[0] || ''}" alt="${job.title}" class="job-detail-hero">
+          <button class="job-detail-back" id="backToList" aria-label="Back to list">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+        </div>
+        <div class="job-detail-info">
+          <span class="status-badge status-badge--${job.status}">${job.status === 'complete' ? 'Done' : job.status === 'progress' ? 'Working' : 'Not Started'}</span>
+          <h2 class="job-detail-title">${job.title}</h2>
+          <div class="job-detail-meta">
+            <span class="job-detail-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="9" cy="9" r="2"/>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+              </svg>
+              ${TEXTURE_NAMES[job.texture]}
+            </span>
+            <span class="job-detail-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="10" r="3"/>
+                <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+              </svg>
+              ${job.location}
+            </span>
+            <span class="job-detail-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              ${formatDate(job.date)}
+            </span>
+          </div>
+          ${job.notes ? `<p style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-top:12px;">${job.notes}</p>` : ''}
+        </div>
+        <div style="padding:0 16px;">
+          <div class="job-detail-photos">
+            <h3 class="job-detail-photos-title">Photos (${job.photos.length})</h3>
+            <div class="job-detail-photos-grid">
+              ${job.photos.map((photo, i) => `
+                <img src="${photo}" alt="Job photo ${i + 1}" class="job-detail-photo">
+              `).join('')}
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:24px;">
+            <button class="job-action-btn" style="flex:1" data-action="copy" data-job-id="${job.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy Info
+            </button>
+            <button class="job-action-btn job-action-btn--primary" style="flex:1" data-action="share" data-job-id="${job.id}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="16" height="16">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Send to Customer
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Show detail view
+      texturesTab.classList.remove('active');
+      jobsTab.classList.remove('active');
+      jobDetailTab.classList.add('active');
+      fabBtn.style.display = 'none';
+
+      // Back button
+      document.getElementById('backToList').addEventListener('click', () => {
+        jobDetailTab.classList.remove('active');
+        if (currentView === 'textures') {
+          texturesTab.classList.add('active');
+        } else {
+          jobsTab.classList.add('active');
+        }
+        fabBtn.style.display = 'flex';
+      });
+
+      // Action buttons
+      jobDetailTab.querySelectorAll('.job-action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.action;
+          const jobId = parseInt(btn.dataset.jobId);
+          handleJobAction(action, jobId);
+        });
+      });
+    }
+
+    async function handleJobAction(action, jobId) {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job) return;
+
+      if (action === 'view') {
+        showJobDetail(jobId);
+        return;
+      }
+
+      if (action === 'copy') {
+        const summary = `${job.title}\nTexture: ${TEXTURE_NAMES[job.texture]}\nLocation: ${job.location}\nDate: ${formatDate(job.date)}${job.notes ? '\nNotes: ' + job.notes : ''}`;
+        try {
+          await navigator.clipboard.writeText(summary);
+          showToast('Copied to clipboard');
+        } catch (err) {
+          showToast('Could not copy');
+        }
+        return;
+      }
+
+      if (action === 'share') {
+        const shareData = {
+          title: job.title,
+          text: `Here's the ${TEXTURE_NAMES[job.texture]} texture I did in ${job.location}. Let me know if you want something similar!`,
+        };
+
+        if (navigator.share) {
+          try {
+            await navigator.share(shareData);
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              showToast('Could not share');
+            }
+          }
+        } else {
+          // Fallback: copy to clipboard
+          try {
+            await navigator.clipboard.writeText(shareData.text);
+            showToast('Text copied - paste into your message app');
+          } catch (err) {
+            showToast('Share not supported');
+          }
+        }
+        return;
+      }
+    }
+
+    function updateCounts() {
+      const filtered = currentFilter === 'all'
+        ? jobs
+        : jobs.filter(j => j.texture === currentFilter);
+
+      textureCount.textContent = `${filtered.length} texture${filtered.length !== 1 ? 's' : ''}`;
+      jobCount.textContent = `${jobs.length} job${jobs.length !== 1 ? 's' : ''}`;
+      jobUsed.textContent = jobs.length;
+      jobFill.style.width = `${Math.min((jobs.length / 20) * 100, 100)}%`;
+    }
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return 'Today';
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      announceToScreenReader(message);
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function announceToScreenReader(message) {
+      const announcer = document.getElementById('sr-announcer');
+      if (announcer) {
+        announcer.textContent = message;
+        setTimeout(() => announcer.textContent = '', 1000);
+      }
+    }
+
+    // Focus trap for modal
+    let lastFocusedElement = null;
+
+    function trapFocus(element) {
+      const focusableElements = element.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstFocusable = focusableElements[0];
+      const lastFocusable = focusableElements[focusableElements.length - 1];
+
+      element.addEventListener('keydown', function(e) {
+        if (e.key !== 'Tab') return;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstFocusable) {
+            lastFocusable.focus();
+            e.preventDefault();
+          }
+        } else {
+          if (document.activeElement === lastFocusable) {
+            firstFocusable.focus();
+            e.preventDefault();
+          }
+        }
+      });
+    }
+
+    function setupEventListeners() {
+      // Navigation
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nav = btn.dataset.nav;
+          navBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentView = nav;
+
+          texturesTab.classList.remove('active');
+          jobsTab.classList.remove('active');
+          jobDetailTab.classList.remove('active');
+
+          if (nav === 'textures') {
+            texturesTab.classList.add('active');
+          } else {
+            jobsTab.classList.add('active');
+          }
+          fabBtn.style.display = 'flex';
+        });
+      });
+
+      // Texture filters
+      filterChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          filterChips.forEach(c => {
+            c.classList.remove('active');
+            c.setAttribute('aria-selected', 'false');
+          });
+          chip.classList.add('active');
+          chip.setAttribute('aria-selected', 'true');
+          currentFilter = chip.dataset.filter;
+          renderTextures();
+          updateCounts();
+        });
+      });
+
+      // FAB
+      fabBtn.addEventListener('click', () => {
+        lastFocusedElement = document.activeElement;
+        addJobModal.classList.add('open');
+        capturedPhotos = [];
+        renderPhotoPreview();
+        addJobForm.reset();
+        // Focus first input after modal opens
+        setTimeout(() => {
+          const firstInput = addJobModal.querySelector('input, select, textarea');
+          if (firstInput) firstInput.focus();
+          trapFocus(addJobModal);
+        }, 100);
+      });
+
+      // Close modal
+      closeAddJob.addEventListener('click', () => {
+        addJobModal.classList.remove('open');
+        if (lastFocusedElement) lastFocusedElement.focus();
+      });
+
+      addJobModal.addEventListener('click', (e) => {
+        if (e.target === addJobModal) {
+          addJobModal.classList.remove('open');
+          if (lastFocusedElement) lastFocusedElement.focus();
+        }
+      });
+
+      // Escape key to close modal
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && addJobModal.classList.contains('open')) {
+          addJobModal.classList.remove('open');
+          if (lastFocusedElement) lastFocusedElement.focus();
+        }
+      });
+
+      // Get location
+      getLocationBtn.addEventListener('click', () => {
+        if ('geolocation' in navigator) {
+          getLocationBtn.textContent = 'Getting location...';
+          navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+              // Reverse geocode (simplified - just show coords area)
+              const { latitude, longitude } = pos.coords;
+              // For demo, map to known areas
+              let location = 'Sacramento Area';
+              if (latitude > 38.35 && latitude < 38.45 && longitude > -121.45 && longitude < -121.3) {
+                location = 'Elk Grove';
+              } else if (latitude > 38.55 && latitude < 38.65 && longitude > -121.35 && longitude < -121.25) {
+                location = 'Rancho Cordova';
+              } else if (latitude > 38.65 && latitude < 38.72 && longitude > -121.22 && longitude < -121.12) {
+                location = 'Folsom';
+              }
+              document.getElementById('jobLocation').value = location;
+              getLocationBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+                </svg>
+                Use my location
+              `;
+              showToast('Location set');
+            },
+            (err) => {
+              getLocationBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
+                </svg>
+                Use my location
+              `;
+              showToast('Could not get location');
+            }
+          );
+        } else {
+          showToast('Location not supported');
+        }
+      });
+
+      // Add photo
+      addPhotoBtn.addEventListener('click', () => {
+        // Try camera API first
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          startCamera();
+        } else {
+          // Fallback to file input
+          fileInput.click();
+        }
+      });
+
+      // Camera controls
+      cameraCapture.addEventListener('click', capturePhoto);
+      cameraCancel.addEventListener('click', stopCamera);
+
+      // File input fallback
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            capturedPhotos.push(event.target.result);
+            renderPhotoPreview();
+          };
+          reader.readAsDataURL(file);
+        }
+        fileInput.value = '';
+      });
+
+      // Submit job
+      addJobForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (jobs.length >= 20) {
+          showToast('Free version limit reached (20 jobs)');
+          return;
+        }
+
+        const job = {
+          title: document.getElementById('jobTitle').value.trim(),
+          texture: document.getElementById('jobTexture').value,
+          location: document.getElementById('jobLocation').value.trim(),
+          date: new Date().toISOString().split('T')[0],
+          status: 'progress',
+          notes: document.getElementById('jobNotes').value.trim(),
+          photos: capturedPhotos.length > 0 ? capturedPhotos : [
+            // Default placeholder if no photos
+            `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect fill='%23e8e4dc' width='200' height='200'/%3E%3Ctext x='100' y='100' text-anchor='middle' font-family='sans-serif' font-size='12' fill='%238a8a8a'%3ENo Photo%3C/text%3E%3C/svg%3E`
+          ],
+          coords: null
+        };
+
+        // Get current location for the job
+        if ('geolocation' in navigator) {
+          try {
+            const pos = await new Promise((resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            job.coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          } catch (err) {
+            // Location not available, continue without
+          }
+        }
+
+        await saveJob(job);
+        addJobModal.classList.remove('open');
+        renderTextures();
+        renderJobs();
+        updateCounts();
+        showToast('Job saved');
+      });
+    }
+
+    async function startCamera() {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: false
+        });
+        cameraVideo.srcObject = cameraStream;
+        cameraModal.classList.add('open');
+      } catch (err) {
+        // Fallback to file input
+        fileInput.click();
+      }
+    }
+
+    function capturePhoto() {
+      const canvas = photoCanvas;
+      const video = cameraVideo;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      capturedPhotos.push(dataUrl);
+      stopCamera();
+      renderPhotoPreview();
+      showToast('Photo captured');
+    }
+
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      cameraVideo.srcObject = null;
+      cameraModal.classList.remove('open');
+    }
+
+    function renderPhotoPreview() {
+      const photosHtml = capturedPhotos.map((photo, i) => `
+        <img src="${photo}" alt="Captured photo ${i + 1}" class="photo-thumb">
+      `).join('');
+
+      photoPreview.innerHTML = photosHtml + `
+        <button type="button" class="photo-add-btn" id="addPhotoBtn" aria-label="Add photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          <span>Camera</span>
+        </button>
+      `;
+
+      // Re-attach event listener
+      document.getElementById('addPhotoBtn').addEventListener('click', () => {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          startCamera();
+        } else {
+          fileInput.click();
+        }
+      });
+    }
+
+    // Start app
+    init();
+  </script>
+</body>
+</html>
