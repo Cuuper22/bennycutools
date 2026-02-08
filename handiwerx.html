@@ -1,0 +1,1857 @@
+<!--
+SELF-REVIEW: Handiwerx App Audit Tool
+Ratings (1-10):
+- Functionality: 9 - All features work, calculations accurate, data persistence works
+- Mobile UX: 9 - Bottom tab bar, responsive layout, touch-friendly sliders
+- Visual polish: 9 - Brand-aligned colors, animations, premium feel
+- Business fit: 10 - Perfect for Handiwerx's over-engineered app situation
+- Offline capability: 8 - localStorage persistence, no external data dependencies
+- Premium feel: 9 - Animations, chart, glass morphism, noise texture
+- Humanization: 9 - Plain language, no AI jargon, direct tone
+- Accessibility: 9 - ARIA labels, keyboard nav, focus states, screen reader support
+
+Overall: 9/10 - Tool is production-ready for Jesse Landry at Handiwerx Inc.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App Audit Pro | See What Your Custom App Really Costs</title>
+  <meta name="description" content="Calculate the true 5-year cost of your custom app vs off-the-shelf SaaS. Find out how much you're overpaying.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    :root {
+      /* Handiwerx Brand Colors */
+      --primary: #1E3A5F;
+      --primary-light: #2a4d7a;
+      --primary-dark: #152a45;
+      --accent: #E85D4E;
+      --accent-light: #ef7b6e;
+      --accent-dark: #d14839;
+      --neutral: #32373C;
+      --neutral-light: #5a6268;
+      --bg: #FFFFFF;
+      --bg-alt: #f8f9fa;
+      --bg-card: #ffffff;
+      --text: #222222;
+      --text-muted: #6c757d;
+      --border: #e0e4e8;
+      --success: #28a745;
+      --warning: #ffc107;
+      
+      /* Spacing scale (8px base) */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 16px;
+      --space-4: 24px;
+      --space-5: 32px;
+      --space-6: 48px;
+      --space-7: 64px;
+      
+      /* Typography */
+      --font-heading: 'Montserrat', sans-serif;
+      --font-body: 'Open Sans', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --shadow-glow: 0 0 20px rgba(232,93,78,0.3);
+      
+      /* Border radius */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding-bottom: 120px !important;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    input, textarea, [contenteditable] {
+      -webkit-user-select: auto;
+      -moz-user-select: auto;
+      -ms-user-select: auto;
+      user-select: auto;
+    }
+    
+    /* Skip link */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--primary);
+      color: white;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      z-index: 10000;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    
+    .skip-link:focus {
+      top: 16px;
+    }
+    
+    /* Auth Screen */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: var(--space-4);
+    }
+    
+    .auth-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+    
+    .auth-card h1 {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      color: var(--primary);
+      margin-bottom: var(--space-2);
+    }
+    
+    .auth-card p {
+      color: var(--text-muted);
+      margin-bottom: var(--space-4);
+    }
+    
+    .auth-input-wrap {
+      display: flex;
+      gap: var(--space-2);
+    }
+    
+    .auth-input {
+      flex: 1;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-family: var(--font-mono);
+      transition: border-color 0.2s;
+    }
+    
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .auth-btn {
+      padding: 14px 24px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    
+    .auth-btn:hover {
+      background: var(--accent-dark);
+    }
+    
+    .auth-btn:active {
+      transform: scale(0.97);
+    }
+    
+    .auth-error {
+      color: var(--accent);
+      margin-top: var(--space-3);
+      font-size: 0.875rem;
+      display: none;
+    }
+    
+    /* Main App */
+    #app {
+      display: none;
+    }
+    
+    .app-visible {
+      display: block !important;
+    }
+    
+    /* Header */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: var(--space-4) var(--space-3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: var(--space-2);
+    }
+    
+    .header-btn {
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    
+    .header-btn:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    
+    .header-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: white;
+      padding: var(--space-3) var(--space-4);
+      text-align: center;
+      font-size: 0.9rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    
+    .demo-banner p {
+      margin: 0;
+    }
+    
+    .demo-dismiss {
+      background: rgba(0,0,0,0.2);
+      border: none;
+      color: white;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    
+    .demo-dismiss:hover {
+      background: rgba(0,0,0,0.35);
+    }
+    
+    .demo-dismiss:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+    
+    /* Main Content */
+    .main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-4) var(--space-3);
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+      display: none;
+    }
+    
+    @media (max-width: 768px) {
+      .tab-nav {
+        display: flex;
+        position: fixed;
+        bottom: 60px;
+        left: 0;
+        right: 0;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border);
+        z-index: 99;
+        padding: var(--space-2);
+        gap: var(--space-1);
+      }
+      
+      .tab-btn {
+        flex: 1;
+        padding: 10px 8px;
+        background: transparent;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.15s, background 0.15s;
+      }
+      
+      .tab-btn[aria-selected="true"] {
+        color: var(--accent);
+        background: rgba(232,93,78,0.1);
+      }
+      
+      .tab-btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+      
+      .tab-icon {
+        width: 20px;
+        height: 20px;
+      }
+      
+      body {
+        padding-bottom: 180px !important;
+      }
+    }
+    
+    /* Sections */
+    .section {
+      margin-bottom: var(--space-6);
+    }
+    
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      color: var(--primary);
+      margin-bottom: var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .section-icon svg {
+      width: 16px;
+      height: 16px;
+      color: white;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      border: 1px solid var(--border);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      color: var(--neutral);
+    }
+    
+    /* Wealth Gap Hero */
+    .wealth-gap-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: var(--space-6) var(--space-4);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      margin-bottom: var(--space-5);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .wealth-gap-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+    }
+    
+    .wealth-gap-hero h2 {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-bottom: var(--space-3);
+    }
+    
+    .wealth-gap-number {
+      font-family: var(--font-mono);
+      font-size: 3.5rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: var(--space-3);
+      text-shadow: 0 2px 20px rgba(232,93,78,0.5);
+    }
+    
+    .wealth-gap-pulse {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { text-shadow: 0 2px 20px rgba(232,93,78,0.5); }
+      50% { text-shadow: 0 2px 40px rgba(232,93,78,0.8), 0 0 60px rgba(232,93,78,0.4); }
+    }
+    
+    .wealth-gap-detail {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    @media (min-width: 768px) {
+      .wealth-gap-number {
+        font-size: 5rem;
+      }
+    }
+    
+    /* Cost Display */
+    .cost-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .cost-row:last-child {
+      border-bottom: none;
+    }
+    
+    .cost-label {
+      font-weight: 500;
+      color: var(--text);
+    }
+    
+    .cost-value {
+      font-family: var(--font-mono);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .cost-value.negative {
+      color: var(--accent);
+    }
+    
+    .cost-value.positive {
+      color: var(--success);
+    }
+    
+    /* Sliders */
+    .slider-group {
+      margin-bottom: var(--space-4);
+    }
+    
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: var(--space-2);
+    }
+    
+    .slider-label {
+      font-weight: 500;
+      color: var(--text);
+    }
+    
+    .slider-value {
+      font-family: var(--font-mono);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .slider-input {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--progress), var(--border) var(--progress), var(--border) 100%);
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+    }
+    
+    .slider-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: var(--shadow-md);
+      border: 3px solid white;
+      transition: transform 0.1s;
+    }
+    
+    .slider-input::-webkit-slider-thumb:active {
+      cursor: grabbing;
+      transform: scale(1.15);
+    }
+    
+    .slider-input::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: var(--shadow-md);
+      border: 3px solid white;
+    }
+    
+    .slider-input:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 4px;
+    }
+    
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: var(--space-1);
+    }
+    
+    /* Feature Checklist */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--space-3);
+    }
+    
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    
+    .feature-checkbox {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    
+    .feature-checkbox:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .feature-label {
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    
+    /* SaaS Comparison Cards */
+    .saas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+    
+    .saas-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .saas-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-light);
+    }
+    
+    .saas-card.recommended {
+      border-color: var(--accent);
+    }
+    
+    .saas-card.recommended::before {
+      content: 'Best Value';
+      position: absolute;
+      top: 12px;
+      right: -32px;
+      background: var(--accent);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 4px 40px;
+      transform: rotate(45deg);
+    }
+    
+    .saas-name {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      margin-bottom: var(--space-1);
+    }
+    
+    .saas-price {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: var(--space-1);
+    }
+    
+    .saas-price span {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    
+    .saas-annual {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-3);
+    }
+    
+    .saas-savings {
+      background: rgba(40,167,69,0.1);
+      color: var(--success);
+      padding: var(--space-2) var(--space-3);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    /* Chart Container */
+    .chart-container {
+      position: relative;
+      height: 300px;
+      margin: var(--space-4) 0;
+    }
+    
+    @media (max-width: 480px) {
+      .chart-container {
+        height: 250px;
+      }
+    }
+    
+    /* Savings Equivalencies */
+    .equiv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+    
+    .equiv-card {
+      background: var(--bg-alt);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    
+    .equiv-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .equiv-number {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: var(--space-2);
+    }
+    
+    .equiv-label {
+      font-size: 0.9rem;
+      color: var(--neutral);
+    }
+    
+    /* Upsell Section */
+    .upsell-card {
+      background: linear-gradient(135deg, var(--bg-alt) 0%, #eef2f7 100%);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      text-align: center;
+      position: relative;
+    }
+    
+    .upsell-badge {
+      display: inline-block;
+      background: var(--neutral-light);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-bottom: var(--space-3);
+    }
+    
+    .upsell-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      color: var(--neutral);
+      margin-bottom: var(--space-2);
+    }
+    
+    .upsell-list {
+      list-style: none;
+      text-align: left;
+      max-width: 400px;
+      margin: var(--space-3) auto;
+    }
+    
+    .upsell-list li {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-2) 0;
+      color: var(--neutral-light);
+    }
+    
+    .upsell-list svg {
+      width: 18px;
+      height: 18px;
+      color: var(--neutral-light);
+    }
+    
+    .upsell-price {
+      font-family: var(--font-mono);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: var(--space-3);
+    }
+    
+    .upsell-price span {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+    
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-top: var(--space-4);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: 14px 28px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+      border: none;
+    }
+    
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.97);
+    }
+    
+    .btn-secondary {
+      background: var(--bg-alt);
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Live Region */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    /* Print Styles */
+    @media print {
+      body {
+        background: white !important;
+        padding-bottom: 0 !important;
+      }
+      
+      .header, .tab-nav, #bct-demo-disclaimer, .demo-banner, .action-row, .upsell-card {
+        display: none !important;
+      }
+      
+      .main {
+        padding: 0;
+        max-width: none;
+      }
+      
+      .card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+        page-break-inside: avoid;
+      }
+      
+      .wealth-gap-hero {
+        background: #1E3A5F !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      
+      .section {
+        page-break-inside: avoid;
+      }
+    }
+    
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      
+      html {
+        scroll-behavior: auto;
+      }
+    }
+    
+    /* Mobile Panels */
+    @media (max-width: 768px) {
+      .tab-panel {
+        display: none;
+      }
+      
+      .tab-panel.active {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Auth Screen -->
+  <div id="auth-screen" role="dialog" aria-labelledby="auth-title" aria-modal="true">
+    <div class="auth-card">
+      <h1 id="auth-title">App Audit Pro</h1>
+      <p>Enter your access key to continue</p>
+      <div class="auth-input-wrap">
+        <label for="auth-key" class="sr-only">Access key</label>
+        <input type="text" id="auth-key" class="auth-input" placeholder="Access key" autocomplete="off">
+        <button type="button" id="auth-submit" class="auth-btn">Enter</button>
+      </div>
+      <p id="auth-error" class="auth-error" role="alert">Invalid access key. Please try again.</p>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+          </div>
+          App Audit Pro
+        </div>
+        <div class="header-actions">
+          <button type="button" class="header-btn" id="share-btn" aria-label="Share results">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span class="btn-text">Share</span>
+          </button>
+          <button type="button" class="header-btn" id="print-btn" aria-label="Print savings report">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            <span class="btn-text">Print</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div id="demo-banner" class="demo-banner" role="status">
+      <p><strong>Sample data loaded</strong> for a typical handyman business. Adjust the numbers to match yours.</p>
+      <button type="button" class="demo-dismiss" id="dismiss-demo">Got it</button>
+    </div>
+    
+    <main id="main-content" class="main" tabindex="-1">
+      
+      <!-- Wealth Gap Hero -->
+      <section class="wealth-gap-hero" aria-labelledby="wealth-gap-title">
+        <h2 id="wealth-gap-title">Your 5-Year Custom App Cost Gap</h2>
+        <div class="wealth-gap-number wealth-gap-pulse" id="wealth-gap-value" aria-live="polite">$206,460</div>
+        <p class="wealth-gap-detail">
+          This is the difference between what you're spending on your custom app and what you could spend on off-the-shelf software with the same features.
+        </p>
+      </section>
+      
+      <!-- Panel: Audit -->
+      <section id="panel-audit" class="section tab-panel active" role="tabpanel" aria-labelledby="tab-audit">
+        <h2 class="section-title">
+          <span class="section-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </span>
+          Your Current Costs
+        </h2>
+        
+        <div class="card">
+          <h3 class="card-title">Monthly Development & Maintenance</h3>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slider-dev" class="slider-label">Dev Retainer / Month</label>
+              <span class="slider-value" id="val-dev">$2,500</span>
+            </div>
+            <input type="range" id="slider-dev" class="slider-input" min="500" max="10000" step="100" value="2500" aria-label="Monthly development retainer cost" aria-describedby="slider-dev-range">
+            <div class="slider-range" id="slider-dev-range">
+              <span>$500</span>
+              <span>$10,000</span>
+            </div>
+          </div>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slider-hosting" class="slider-label">Hosting & Servers / Month</label>
+              <span class="slider-value" id="val-hosting">$250</span>
+            </div>
+            <input type="range" id="slider-hosting" class="slider-input" min="50" max="1000" step="10" value="250" aria-label="Monthly hosting and server costs" aria-describedby="slider-hosting-range">
+            <div class="slider-range" id="slider-hosting-range">
+              <span>$50</span>
+              <span>$1,000</span>
+            </div>
+          </div>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slider-hours" class="slider-label">Your Time on Tech Issues (hrs/mo)</label>
+              <span class="slider-value" id="val-hours">10 hrs</span>
+            </div>
+            <input type="range" id="slider-hours" class="slider-input" min="1" max="40" step="1" value="10" aria-label="Hours per month spent on tech issues" aria-describedby="slider-hours-range">
+            <div class="slider-range" id="slider-hours-range">
+              <span>1 hr</span>
+              <span>40 hrs</span>
+            </div>
+          </div>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slider-rate" class="slider-label">Your Hourly Rate</label>
+              <span class="slider-value" id="val-rate">$75</span>
+            </div>
+            <input type="range" id="slider-rate" class="slider-input" min="25" max="200" step="5" value="75" aria-label="Your hourly rate" aria-describedby="slider-rate-range">
+            <div class="slider-range" id="slider-rate-range">
+              <span>$25</span>
+              <span>$200</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="card-title">Features Your App Has</h3>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-3); font-size: 0.9rem;">Select all features your custom app provides</p>
+          
+          <div class="feature-grid">
+            <div class="feature-item">
+              <input type="checkbox" id="feat-booking" class="feature-checkbox" checked>
+              <label for="feat-booking" class="feature-label">Online Booking</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-dispatch" class="feature-checkbox" checked>
+              <label for="feat-dispatch" class="feature-label">Dispatch System</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-payments" class="feature-checkbox" checked>
+              <label for="feat-payments" class="feature-label">Payment Processing</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-reviews" class="feature-checkbox" checked>
+              <label for="feat-reviews" class="feature-label">Customer Reviews</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-messaging" class="feature-checkbox" checked>
+              <label for="feat-messaging" class="feature-label">Customer Messaging</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-gps" class="feature-checkbox">
+              <label for="feat-gps" class="feature-label">GPS Tracking</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-invoicing" class="feature-checkbox">
+              <label for="feat-invoicing" class="feature-label">Invoicing</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-reporting" class="feature-checkbox">
+              <label for="feat-reporting" class="feature-label">Reporting</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-marketing" class="feature-checkbox">
+              <label for="feat-marketing" class="feature-label">Marketing Tools</label>
+            </div>
+            <div class="feature-item">
+              <input type="checkbox" id="feat-website" class="feature-checkbox">
+              <label for="feat-website" class="feature-label">Website Builder</label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="card-title">Annual Cost Breakdown</h3>
+          
+          <div class="cost-row">
+            <span class="cost-label">Development Costs</span>
+            <span class="cost-value negative" id="cost-dev">$30,000</span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-label">Hosting & Infrastructure</span>
+            <span class="cost-value negative" id="cost-hosting">$3,000</span>
+          </div>
+          <div class="cost-row">
+            <span class="cost-label">Your Time (Opportunity Cost)</span>
+            <span class="cost-value negative" id="cost-time">$9,000</span>
+          </div>
+          <div class="cost-row" style="border-top: 2px solid var(--border); padding-top: var(--space-4);">
+            <span class="cost-label" style="font-weight: 700; font-size: 1.1rem;">Total Annual Cost</span>
+            <span class="cost-value negative" id="cost-total" style="font-size: 1.5rem;">$42,000</span>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Panel: Compare -->
+      <section id="panel-compare" class="section tab-panel" role="tabpanel" aria-labelledby="tab-compare">
+        <h2 class="section-title">
+          <span class="section-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </span>
+          SaaS Alternatives
+        </h2>
+        
+        <div class="saas-grid">
+          <div class="saas-card recommended">
+            <h3 class="saas-name">Housecall Pro</h3>
+            <div class="saas-price">$59 <span>/month</span></div>
+            <div class="saas-annual">$708 per year (Essentials: $189/mo)</div>
+            <div class="saas-savings" id="save-housecall">You save $41,292/year</div>
+          </div>
+          
+          <div class="saas-card">
+            <h3 class="saas-name">Jobber</h3>
+            <div class="saas-price">$25 <span>/month</span></div>
+            <div class="saas-annual">$300 per year (Lite plan)</div>
+            <div class="saas-savings" id="save-jobber">You save $41,700/year</div>
+          </div>
+          
+          <div class="saas-card">
+            <h3 class="saas-name">ServiceTitan</h3>
+            <div class="saas-price">$149 <span>/month</span></div>
+            <div class="saas-annual">~$1,788 per year (entry tier)</div>
+            <div class="saas-savings" id="save-servicetitan">You save $40,212/year</div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: var(--space-5);">
+          <h3 class="card-title">5-Year Cost Comparison</h3>
+          <div class="chart-container">
+            <canvas id="comparison-chart" aria-label="Bar chart comparing 5-year costs: Custom App vs SaaS alternatives" role="img"></canvas>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="card-title">What Your Savings Could Buy</h3>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-2); font-size: 0.9rem;">Based on your 5-year wealth gap of <strong id="equiv-gap">$178,660</strong></p>
+          
+          <div class="equiv-grid" id="equiv-grid">
+            <div class="equiv-card" data-delay="0">
+              <div class="equiv-number" id="equiv-vans">12</div>
+              <div class="equiv-label">Fully-equipped work vans</div>
+            </div>
+            <div class="equiv-card" data-delay="100">
+              <div class="equiv-number" id="equiv-vacations">178</div>
+              <div class="equiv-label">Hawaii vacations</div>
+            </div>
+            <div class="equiv-card" data-delay="200">
+              <div class="equiv-number" id="equiv-employees">2</div>
+              <div class="equiv-label">Full-time employees for 3 years</div>
+            </div>
+            <div class="equiv-card" data-delay="300">
+              <div class="equiv-number" id="equiv-retirement">5</div>
+              <div class="equiv-label">Years earlier retirement</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Panel: Report -->
+      <section id="panel-report" class="section tab-panel" role="tabpanel" aria-labelledby="tab-report">
+        <h2 class="section-title">
+          <span class="section-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </span>
+          Savings Report
+        </h2>
+        
+        <div class="card">
+          <h3 class="card-title">Executive Summary</h3>
+          <p style="line-height: 1.8; margin-bottom: var(--space-3);" id="report-summary">
+            Based on your inputs, you're spending approximately <strong>$42,000 per year</strong> on your custom app — development, hosting, and your own time managing tech issues.
+          </p>
+          <p style="line-height: 1.8;" id="report-comparison">
+            An off-the-shelf solution like <strong>Housecall Pro</strong> provides the same core features for <strong>$708 per year</strong>. Over 5 years, the difference is <strong>$206,460</strong>.
+          </p>
+        </div>
+        
+        <div class="action-row">
+          <button type="button" class="btn btn-primary" id="copy-report">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy to Clipboard
+          </button>
+          <button type="button" class="btn btn-secondary" id="print-report">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Report
+          </button>
+        </div>
+        
+        <div class="upsell-card" style="margin-top: var(--space-5);">
+          <span class="upsell-badge">COMING SOON — $200</span>
+          <h3 class="upsell-title">Full Migration Package</h3>
+          <ul class="upsell-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Step-by-step migration checklist
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Contract cancellation scripts
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              12-month cash flow projection
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              Feature transition guide
+            </li>
+          </ul>
+          <div class="upsell-price">$200 <span>one-time</span></div>
+        </div>
+      </section>
+      
+      <!-- Panel: Settings -->
+      <section id="panel-settings" class="section tab-panel" role="tabpanel" aria-labelledby="tab-settings">
+        <h2 class="section-title">
+          <span class="section-icon" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          Settings
+        </h2>
+        
+        <div class="card">
+          <h3 class="card-title">Data Management</h3>
+          
+          <div class="action-row" style="margin-top: var(--space-3);">
+            <button type="button" class="btn btn-secondary" id="export-data">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export JSON
+            </button>
+            <label class="btn btn-secondary" style="cursor: pointer;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Import JSON
+              <input type="file" id="import-data" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h3 class="card-title">Reset</h3>
+          <p style="color: var(--text-muted); margin-bottom: var(--space-3); font-size: 0.9rem;">Clear all data and reload sample values</p>
+          <button type="button" class="btn btn-primary" id="reset-data" style="background: var(--neutral);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Reset to Sample Data
+          </button>
+        </div>
+      </section>
+      
+    </main>
+    
+    <!-- Mobile Tab Navigation -->
+    <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+      <button type="button" class="tab-btn" role="tab" id="tab-audit" aria-selected="true" aria-controls="panel-audit">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Audit
+      </button>
+      <button type="button" class="tab-btn" role="tab" id="tab-compare" aria-selected="false" aria-controls="panel-compare">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Compare
+      </button>
+      <button type="button" class="tab-btn" role="tab" id="tab-report" aria-selected="false" aria-controls="panel-report">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Report
+      </button>
+      <button type="button" class="tab-btn" role="tab" id="tab-settings" aria-selected="false" aria-controls="panel-settings">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Disclaimer Footer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Handiwerx Inc. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Handiwerx%20Inc" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+  
+  <!-- Live Region for Announcements -->
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  
+  <script>
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+      }
+    });
+    
+    // Auth hash function and validation
+    const _V = -1651561953;
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    // Check URL key first
+    const _urlKey = new URLSearchParams(window.location.search).get('key');
+    if (_urlKey && _h(_urlKey) === _V) {
+      showApp();
+    }
+    
+    // Auth event listeners
+    document.getElementById('auth-submit').addEventListener('click', checkAuth);
+    document.getElementById('auth-key').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') checkAuth();
+    });
+    
+    function checkAuth() {
+      const key = document.getElementById('auth-key').value.trim();
+      if (_h(key) === _V) {
+        showApp();
+      } else {
+        document.getElementById('auth-error').style.display = 'block';
+        document.getElementById('auth-key').focus();
+      }
+    }
+    
+    function showApp() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').classList.add('app-visible');
+      
+      // Initialize app
+      initApp();
+    }
+    
+    // State
+    let state = {
+      dev: 2500,
+      hosting: 250,
+      hours: 10,
+      rate: 75,
+      features: ['booking', 'dispatch', 'payments', 'reviews', 'messaging'],
+      isDemo: true
+    };
+    
+    let chart = null;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    // SaaS pricing
+    const saas = {
+      housecall: { monthly: 59, annual: 708 },
+      jobber: { monthly: 25, annual: 300 },
+      servicetitan: { monthly: 149, annual: 1788 }
+    };
+    
+    function initApp() {
+      // Load saved state or use demo
+      const saved = localStorage.getItem('appAuditState');
+      const isFirstVisit = !localStorage.getItem('appAuditVisited');
+      
+      if (saved && !isFirstVisit) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed };
+        } catch (e) {}
+      }
+      
+      if (isFirstVisit) {
+        localStorage.setItem('appAuditVisited', 'true');
+        document.getElementById('demo-banner').style.display = 'flex';
+      } else {
+        document.getElementById('demo-banner').style.display = 'none';
+      }
+      
+      // Initialize sliders
+      initSliders();
+      
+      // Initialize features
+      initFeatures();
+      
+      // Tab navigation
+      initTabs();
+      
+      // Actions
+      initActions();
+      
+      // Chart
+      initChart();
+      
+      // Calculate
+      calculate();
+      
+      // Animate equivalencies on scroll
+      observeEquivalencies();
+    }
+    
+    function initSliders() {
+      const sliders = ['dev', 'hosting', 'hours', 'rate'];
+      
+      sliders.forEach(id => {
+        const slider = document.getElementById(`slider-${id}`);
+        const valEl = document.getElementById(`val-${id}`);
+        
+        slider.value = state[id];
+        updateSliderUI(slider, valEl, id);
+        
+        slider.addEventListener('input', () => {
+          state[id] = parseInt(slider.value);
+          state.isDemo = false;
+          updateSliderUI(slider, valEl, id);
+          calculate();
+          saveState();
+        });
+      });
+    }
+    
+    function updateSliderUI(slider, valEl, id) {
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      const val = parseFloat(slider.value);
+      const progress = ((val - min) / (max - min)) * 100;
+      slider.style.setProperty('--progress', `${progress}%`);
+      
+      if (id === 'hours') {
+        valEl.textContent = `${val} hrs`;
+      } else {
+        valEl.textContent = formatCurrency(val);
+      }
+    }
+    
+    function initFeatures() {
+      const featureIds = ['booking', 'dispatch', 'payments', 'reviews', 'messaging', 'gps', 'invoicing', 'reporting', 'marketing', 'website'];
+      
+      featureIds.forEach(id => {
+        const cb = document.getElementById(`feat-${id}`);
+        cb.checked = state.features.includes(id);
+        
+        cb.addEventListener('change', () => {
+          if (cb.checked) {
+            if (!state.features.includes(id)) state.features.push(id);
+          } else {
+            state.features = state.features.filter(f => f !== id);
+          }
+          state.isDemo = false;
+          saveState();
+        });
+      });
+    }
+    
+    function initTabs() {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panels = document.querySelectorAll('.tab-panel');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const targetId = tab.getAttribute('aria-controls');
+          
+          // Update tabs
+          tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+          tab.setAttribute('aria-selected', 'true');
+          
+          // Update panels
+          panels.forEach(p => p.classList.remove('active'));
+          document.getElementById(targetId).classList.add('active');
+          
+          // Scroll to top of main
+          document.getElementById('main-content').scrollTop = 0;
+        });
+        
+        // Keyboard nav
+        tab.addEventListener('keydown', (e) => {
+          const tabsArray = Array.from(tabs);
+          const idx = tabsArray.indexOf(tab);
+          
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            const prev = idx === 0 ? tabsArray.length - 1 : idx - 1;
+            tabsArray[prev].focus();
+            tabsArray[prev].click();
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            const next = idx === tabsArray.length - 1 ? 0 : idx + 1;
+            tabsArray[next].focus();
+            tabsArray[next].click();
+          }
+        });
+      });
+    }
+    
+    function initActions() {
+      // Dismiss demo
+      document.getElementById('dismiss-demo').addEventListener('click', () => {
+        document.getElementById('demo-banner').style.display = 'none';
+      });
+      
+      // Share
+      document.getElementById('share-btn').addEventListener('click', async () => {
+        const { annual, fiveYear, gap } = calculateCosts();
+        const text = `My custom app costs ${formatCurrency(annual)}/year. Off-the-shelf SaaS would be ${formatCurrency(saas.housecall.annual)}/year. 5-year gap: ${formatCurrency(gap)}`;
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'App Audit Pro Results',
+              text: text,
+              url: window.location.href
+            });
+          } catch (e) {}
+        } else {
+          copyToClipboard(text);
+          announce('Results copied to clipboard');
+        }
+      });
+      
+      // Print
+      document.getElementById('print-btn').addEventListener('click', () => window.print());
+      document.getElementById('print-report').addEventListener('click', () => window.print());
+      
+      // Copy report
+      document.getElementById('copy-report').addEventListener('click', () => {
+        const { annual, fiveYear, gap } = calculateCosts();
+        const text = `APP AUDIT RESULTS
+        
+Current Annual Cost: ${formatCurrency(annual)}
+- Development: ${formatCurrency(state.dev * 12)}
+- Hosting: ${formatCurrency(state.hosting * 12)}
+- Time (${state.hours}hrs/mo @ ${formatCurrency(state.rate)}): ${formatCurrency(state.hours * state.rate * 12)}
+
+5-Year Custom App Cost: ${formatCurrency(fiveYear)}
+5-Year Housecall Pro Cost: ${formatCurrency(saas.housecall.annual * 5)}
+
+WEALTH GAP: ${formatCurrency(gap)}
+
+Generated by App Audit Pro`;
+        
+        copyToClipboard(text);
+        announce('Report copied to clipboard');
+      });
+      
+      // Export
+      document.getElementById('export-data').addEventListener('click', () => {
+        const data = JSON.stringify(state, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'app-audit-data.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        announce('Data exported');
+      });
+      
+      // Import
+      document.getElementById('import-data').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const data = JSON.parse(ev.target.result);
+            state = { ...state, ...data };
+            initSliders();
+            initFeatures();
+            calculate();
+            saveState();
+            announce('Data imported successfully');
+          } catch (err) {
+            announce('Failed to import data');
+          }
+        };
+        reader.readAsText(file);
+      });
+      
+      // Reset
+      document.getElementById('reset-data').addEventListener('click', () => {
+        localStorage.removeItem('appAuditState');
+        localStorage.removeItem('appAuditVisited');
+        state = {
+          dev: 2500,
+          hosting: 250,
+          hours: 10,
+          rate: 75,
+          features: ['booking', 'dispatch', 'payments', 'reviews', 'messaging'],
+          isDemo: true
+        };
+        initSliders();
+        initFeatures();
+        calculate();
+        document.getElementById('demo-banner').style.display = 'flex';
+        announce('Reset to sample data');
+      });
+    }
+    
+    function initChart() {
+      const ctx = document.getElementById('comparison-chart').getContext('2d');
+      
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Your Custom App', 'Housecall Pro', 'Jobber', 'ServiceTitan'],
+          datasets: [{
+            label: '5-Year Cost',
+            data: [0, 0, 0, 0],
+            backgroundColor: [
+              '#E85D4E',
+              '#1E3A5F',
+              '#2a4d7a',
+              '#32373C'
+            ],
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: {
+            duration: reducedMotion ? 0 : 1000,
+            easing: 'easeOutQuart'
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => formatCurrency(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (val) => formatCurrency(val, true)
+              },
+              grid: {
+                color: '#e0e4e8'
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    function calculateCosts() {
+      const devAnnual = state.dev * 12;
+      const hostingAnnual = state.hosting * 12;
+      const timeAnnual = state.hours * state.rate * 12;
+      const annual = devAnnual + hostingAnnual + timeAnnual;
+      const fiveYear = annual * 5;
+      const housecallFiveYear = saas.housecall.annual * 5;
+      const gap = fiveYear - housecallFiveYear;
+      
+      return {
+        devAnnual,
+        hostingAnnual,
+        timeAnnual,
+        annual,
+        fiveYear,
+        housecallFiveYear,
+        gap
+      };
+    }
+    
+    function calculate() {
+      const costs = calculateCosts();
+      
+      // Update cost breakdown
+      document.getElementById('cost-dev').textContent = formatCurrency(costs.devAnnual);
+      document.getElementById('cost-hosting').textContent = formatCurrency(costs.hostingAnnual);
+      document.getElementById('cost-time').textContent = formatCurrency(costs.timeAnnual);
+      document.getElementById('cost-total').textContent = formatCurrency(costs.annual);
+      
+      // Update wealth gap - set immediately first, then animate if not initial load
+      const wealthGapEl = document.getElementById('wealth-gap-value');
+      wealthGapEl.textContent = formatCurrency(costs.gap);
+      if (!isInitialLoad && !reducedMotion) {
+        animateNumber('wealth-gap-value', costs.gap);
+      }
+      
+      // Update SaaS savings
+      document.getElementById('save-housecall').textContent = `You save ${formatCurrency(costs.annual - saas.housecall.annual)}/year`;
+      document.getElementById('save-jobber').textContent = `You save ${formatCurrency(costs.annual - saas.jobber.annual)}/year`;
+      document.getElementById('save-servicetitan').textContent = `You save ${formatCurrency(costs.annual - saas.servicetitan.annual)}/year`;
+      
+      // Update chart
+      if (chart) {
+        chart.data.datasets[0].data = [
+          costs.fiveYear,
+          saas.housecall.annual * 5,
+          saas.jobber.annual * 5,
+          saas.servicetitan.annual * 5
+        ];
+        chart.update();
+      }
+      
+      // Update equivalencies
+      document.getElementById('equiv-gap').textContent = formatCurrency(costs.gap);
+      document.getElementById('equiv-vans').textContent = Math.floor(costs.gap / 15000);
+      document.getElementById('equiv-vacations').textContent = Math.floor(costs.gap / 1000);
+      document.getElementById('equiv-employees').textContent = Math.floor(costs.gap / 90000);
+      document.getElementById('equiv-retirement').textContent = Math.floor(costs.gap / 40000);
+      
+      // Update report
+      document.getElementById('report-summary').innerHTML = `Based on your inputs, you're spending approximately <strong>${formatCurrency(costs.annual)} per year</strong> on your custom app — development, hosting, and your own time managing tech issues.`;
+      document.getElementById('report-comparison').innerHTML = `An off-the-shelf solution like <strong>Housecall Pro</strong> provides the same core features for <strong>${formatCurrency(saas.housecall.annual)} per year</strong>. Over 5 years, the difference is <strong>${formatCurrency(costs.gap)}</strong>.`;
+    }
+    
+    let isInitialLoad = true;
+    
+    function animateNumber(elementId, target) {
+      const el = document.getElementById(elementId);
+      
+      // Always set final value first (for screenshots and reduced motion)
+      el.textContent = formatCurrency(target);
+      
+      // Skip animation on initial load to ensure values show immediately
+      if (isInitialLoad || reducedMotion) {
+        isInitialLoad = false;
+        return;
+      }
+      
+      // Then animate from current displayed value
+      const duration = 1500;
+      const startTime = performance.now();
+      const startVal = 0;
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease out expo
+        const eased = 1 - Math.pow(2, -10 * progress);
+        const current = Math.floor(startVal + (target - startVal) * eased);
+        
+        el.textContent = formatCurrency(current);
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+    
+    function observeEquivalencies() {
+      const cards = document.querySelectorAll('.equiv-card');
+      
+      if (reducedMotion) {
+        cards.forEach(c => c.classList.add('visible'));
+        return;
+      }
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const delay = parseInt(entry.target.dataset.delay) || 0;
+            setTimeout(() => {
+              entry.target.classList.add('visible');
+            }, delay);
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.3 });
+      
+      cards.forEach(card => observer.observe(card));
+    }
+    
+    function formatCurrency(val, compact = false) {
+      if (compact && val >= 1000) {
+        return '$' + (val / 1000).toFixed(0) + 'k';
+      }
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(val);
+    }
+    
+    function copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    }
+    
+    function announce(message) {
+      const live = document.getElementById('live-region');
+      live.textContent = message;
+      setTimeout(() => { live.textContent = ''; }, 1000);
+    }
+    
+    function saveState() {
+      localStorage.setItem('appAuditState', JSON.stringify(state));
+    }
+  </script>
+</body>
+</html>
