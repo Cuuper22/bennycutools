@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="Fence stain color preview tool for JB Fence Stain and Restoration">
+  <meta name="robots" content="noindex, nofollow">
+  <title>FencePhoto Pro — Stain Color Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Anti-scrape protection */
+    .app { user-select: none; -webkit-user-select: none; }
+    .app input, .app textarea, .app button { user-select: auto; -webkit-user-select: auto; }
+    
+    /* Grain texture overlay */
+    .app::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    
+    /* Entrance animations */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    
+    .header { animation: slideUp 0.4s ease-out; }
+    .tab-content.active { animation: fadeIn 0.3s ease-out; }
+    .stain-btn { animation: slideUp 0.3s ease-out backwards; }
+    .stain-btn:nth-child(1) { animation-delay: 0.05s; }
+    .stain-btn:nth-child(2) { animation-delay: 0.1s; }
+    .stain-btn:nth-child(3) { animation-delay: 0.15s; }
+    .stain-btn:nth-child(4) { animation-delay: 0.2s; }
+    .stain-btn:nth-child(5) { animation-delay: 0.25s; }
+    .stain-btn:nth-child(6) { animation-delay: 0.3s; }
+    .stain-btn:nth-child(7) { animation-delay: 0.35s; }
+    .stain-btn:nth-child(8) { animation-delay: 0.4s; }
+    
+    /* Micro-interactions */
+    .btn-primary:active { transform: scale(0.97); }
+    .stain-btn:hover:not(.active) { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .gallery-item { transition: transform 0.2s, box-shadow 0.2s; }
+    .gallery-item:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    
+    /* Prefers reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    :root {
+      --brown-dark: oklch(0.35 0.06 55);
+      --brown-primary: oklch(0.45 0.08 60);
+      --brown-medium: oklch(0.55 0.07 58);
+      --brown-light: oklch(0.75 0.04 60);
+      --cream: oklch(0.97 0.01 90);
+      --cream-dark: oklch(0.92 0.02 85);
+      --green-accent: oklch(0.45 0.10 155);
+      --green-light: oklch(0.55 0.08 155);
+      --text-dark: oklch(0.25 0.03 50);
+      --text-muted: oklch(0.50 0.02 50);
+      --white: oklch(1 0 0);
+      --error: oklch(0.55 0.20 25);
+      --warning: oklch(0.70 0.15 85);
+      --success: oklch(0.55 0.15 145);
+      --shadow-sm: 0 1px 3px oklch(0.25 0.02 50 / 0.1);
+      --shadow-md: 0 4px 12px oklch(0.25 0.02 50 / 0.12);
+      --shadow-lg: 0 8px 24px oklch(0.25 0.02 50 / 0.15);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+    
+    html, body {
+      height: 100%;
+      font-family: 'Source Sans 3', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      background: var(--cream);
+      color: var(--text-dark);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    h1, h2, h3 {
+      font-family: 'Bitter', serif;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--white);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    @media (min-width: 768px) {
+      .app { max-width: 768px; }
+    }
+    
+    /* Header */
+    .header {
+      padding: 16px;
+      background: var(--brown-primary);
+      color: var(--white);
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 1.25rem;
+      margin-bottom: 2px;
+    }
+    
+    .header p {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+    
+    /* Main Content */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 72px;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 16px;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      background: var(--white);
+      border-top: 1px solid var(--cream-dark);
+      box-shadow: 0 -2px 12px oklch(0.25 0.02 50 / 0.08);
+      z-index: 100;
+    }
+    
+    @media (min-width: 768px) {
+      .tab-bar { max-width: 768px; }
+    }
+    
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: color 0.15s, transform 0.1s;
+    }
+    
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--green-accent);
+      outline-offset: -2px;
+    }
+    
+    .tab-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .tab-btn.active {
+      color: var(--brown-primary);
+    }
+    
+    .tab-btn svg {
+      width: 24px;
+      height: 24px;
+      stroke-width: 1.75;
+    }
+    
+    .tab-btn.locked {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+    
+    .tab-btn.locked::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      width: 10px;
+      height: 10px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 15v2m0 0v2m0-2h2m-2 0H10m9-7V9a5 5 0 00-10 0v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2z'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+    
+    /* Camera/Stain Tab */
+    .camera-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--text-dark);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    
+    .camera-container video,
+    .camera-container canvas,
+    .camera-container img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    #overlayCanvas {
+      pointer-events: none;
+    }
+    
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--cream);
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .camera-placeholder svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+    
+    .camera-placeholder p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    /* Slider Comparison */
+    .comparison-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+      touch-action: none;
+    }
+    
+    .comparison-wrapper img,
+    .comparison-wrapper canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .comparison-after {
+      clip-path: inset(0 0 0 50%);
+    }
+    
+    .comparison-handle {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 100%;
+      background: var(--white);
+      box-shadow: 0 0 8px oklch(0 0 0 / 0.4);
+      cursor: ew-resize;
+      z-index: 10;
+    }
+    
+    .comparison-handle::before,
+    .comparison-handle::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 32px;
+      height: 32px;
+      background: var(--white);
+      border-radius: 50%;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .comparison-handle::before { top: calc(50% - 40px); }
+    .comparison-handle::after { bottom: calc(50% - 40px); }
+    
+    .comparison-labels {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 5;
+    }
+    
+    .comparison-labels span {
+      padding: 4px 10px;
+      background: oklch(0 0 0 / 0.6);
+      color: var(--white);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Stain Colors */
+    .section-title {
+      font-size: 1rem;
+      color: var(--brown-dark);
+      margin-bottom: 12px;
+    }
+    
+    .stain-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .stain-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 4px;
+      background: var(--cream);
+      border: 2px solid transparent;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    
+    .stain-btn:focus-visible {
+      outline: 2px solid var(--green-accent);
+      outline-offset: 2px;
+    }
+    
+    .stain-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .stain-btn.active {
+      border-color: var(--brown-primary);
+      background: var(--white);
+    }
+    
+    .stain-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      box-shadow: inset 0 1px 2px oklch(0 0 0 / 0.15);
+    }
+    
+    .stain-btn span {
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      text-align: center;
+      line-height: 1.2;
+    }
+    
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    
+    .btn:focus-visible {
+      outline: 2px solid var(--green-accent);
+      outline-offset: 2px;
+    }
+    
+    .btn:active {
+      transform: scale(0.97);
+    }
+    
+    .btn-primary {
+      background: var(--brown-primary);
+      color: var(--white);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .btn-secondary {
+      background: var(--cream);
+      color: var(--brown-primary);
+      border: 2px solid var(--brown-light);
+    }
+    
+    .btn-green {
+      background: var(--green-accent);
+      color: var(--white);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .btn-row .btn {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 0.9rem;
+    }
+    
+    /* Quote Tab */
+    .quote-section {
+      background: var(--cream);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .quote-section h3 {
+      font-size: 0.9rem;
+      color: var(--brown-dark);
+      margin-bottom: 12px;
+    }
+    
+    .input-group {
+      margin-bottom: 14px;
+    }
+    
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-dark);
+      margin-bottom: 6px;
+    }
+    
+    .input-group input,
+    .input-group select {
+      width: 100%;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 1rem;
+      border: 2px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+    
+    .input-group input:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: var(--brown-primary);
+    }
+    
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .toggle-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: var(--white);
+      border: 2px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .toggle-btn:focus-visible {
+      outline: 2px solid var(--green-accent);
+      outline-offset: 2px;
+    }
+    
+    .toggle-btn.active {
+      background: var(--brown-primary);
+      border-color: var(--brown-primary);
+      color: var(--white);
+    }
+    
+    /* Quote Result */
+    .quote-result {
+      background: var(--brown-primary);
+      color: var(--white);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    
+    .quote-result p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .quote-result .total {
+      font-family: 'Bitter', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+    
+    .quote-result .range {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+    
+    /* Weather Tab */
+    .weather-card {
+      background: linear-gradient(135deg, var(--green-accent), var(--green-light));
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .weather-card.warning {
+      background: linear-gradient(135deg, var(--warning), oklch(0.75 0.12 80));
+      color: var(--text-dark);
+    }
+    
+    .weather-card.error {
+      background: linear-gradient(135deg, var(--error), oklch(0.60 0.18 30));
+    }
+    
+    .weather-location {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    
+    .weather-temp {
+      font-family: 'Bitter', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    
+    .weather-conditions {
+      font-size: 1rem;
+      margin-bottom: 16px;
+    }
+    
+    .weather-detail {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+    }
+    
+    .weather-detail svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.9;
+    }
+    
+    .weather-status {
+      margin-top: 16px;
+      padding: 12px;
+      background: oklch(1 0 0 / 0.2);
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+    }
+    
+    .weather-status.good { background: oklch(0.5 0.15 145 / 0.3); }
+    .weather-status.bad { background: oklch(0.55 0.2 25 / 0.3); }
+    
+    /* Gallery */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .gallery-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .gallery-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .gallery-item .badge {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      padding: 4px 8px;
+      background: oklch(0 0 0 / 0.7);
+      color: var(--white);
+      font-size: 0.7rem;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    
+    .gallery-item .delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: oklch(0 0 0 / 0.6);
+      border: none;
+      border-radius: 50%;
+      color: var(--white);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    
+    .gallery-item:hover .delete-btn,
+    .gallery-item:focus-within .delete-btn {
+      opacity: 1;
+    }
+    
+    /* Recoat Tab (Locked) */
+    .locked-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 48px 24px;
+      background: var(--cream);
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+    }
+    
+    .locked-content svg {
+      width: 64px;
+      height: 64px;
+      color: var(--brown-light);
+      margin-bottom: 16px;
+    }
+    
+    .locked-content h2 {
+      font-size: 1.25rem;
+      color: var(--brown-dark);
+      margin-bottom: 8px;
+    }
+    
+    .locked-content p {
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      max-width: 280px;
+    }
+    
+    .upgrade-features {
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    
+    .upgrade-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+    }
+    
+    .upgrade-features svg {
+      width: 18px;
+      height: 18px;
+      color: var(--green-accent);
+      margin: 0;
+    }
+    
+    /* Demo Data Badge */
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--warning);
+      color: var(--text-dark);
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 88px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 12px 20px;
+      background: var(--text-dark);
+      color: var(--white);
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      z-index: 200;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--text-muted);
+    }
+    
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+    
+    /* Legal Footer */
+    .legal-footer {
+      padding: 16px;
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--cream-dark);
+    }
+    
+    /* Demo disclaimer - fixed at bottom above tab bar */
+    #bct-demo-disclaimer {
+      position: fixed;
+      bottom: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      padding: 10px 16px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #666;
+      z-index: 9999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 16px;
+      text-align: center;
+    }
+    
+    @media (min-width: 768px) {
+      #bct-demo-disclaimer { max-width: 768px; }
+    }
+    
+    #bct-demo-disclaimer p { margin: 0; max-width: 700px; }
+    #bct-demo-disclaimer strong { color: #333; }
+    #bct-demo-disclaimer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    /* Loading spinner */
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--cream);
+      border-top-color: var(--brown-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Auth gate hidden by default */
+    .auth-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .auth-gate h1 {
+      font-size: 1.5rem;
+      color: var(--brown-dark);
+      margin-bottom: 8px;
+    }
+    
+    .auth-gate p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    
+    .auth-gate input {
+      width: 100%;
+      max-width: 280px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      text-align: center;
+      letter-spacing: 2px;
+      border: 2px solid var(--cream-dark);
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+    }
+    
+    .auth-gate input:focus {
+      outline: none;
+      border-color: var(--brown-primary);
+    }
+    
+    .hidden { display: none !important; }
+    
+    /* Focus visible for accessibility */
+    *:focus { outline: none; }
+    *:focus-visible {
+      outline: 2px solid var(--green-accent);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Gate -->
+  <div id="authGate" class="auth-gate">
+    <h1>FencePhoto Pro</h1>
+    <p>Enter your access key to get started</p>
+    <input type="text" id="authInput" placeholder="Access Key" autocomplete="off" aria-label="Enter access key">
+    <button class="btn btn-primary" onclick="checkAuth()">Unlock Tool</button>
+    <p id="authError" class="hidden" style="color: var(--error); margin-top: 12px;">That key doesn't work. Try again.</p>
+  </div>
+
+  <!-- Main App -->
+  <div id="mainApp" class="app hidden">
+    <header class="header">
+      <h1>FencePhoto Pro</h1>
+      <p>Stain Preview & Quote Builder</p>
+    </header>
+    
+    <!-- Demo Disclaimer -->
+    <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+      <p><strong>DEMO NOTICE:</strong> This tool was built by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by JB Fence Stain and Restoration. All brand references are used solely for demonstration purposes.</p>
+      <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20JB%20Fence%20Stain%20and%20Restoration&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo.">Request Permanent Deletion</a>
+    </div>
+
+    <main class="main" role="main">
+      <!-- Stain Tab -->
+      <div id="tabStain" class="tab-content active" role="tabpanel" aria-labelledby="btnStain">
+        <div class="demo-badge" id="demoBadge" role="status" aria-live="polite">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Demo loaded — snap a photo to start your own project
+        </div>
+
+        <!-- Camera/Image Container -->
+        <div class="camera-container" id="cameraContainer">
+          <video id="cameraFeed" autoplay playsinline muted class="hidden"></video>
+          <canvas id="capturedImage" class="hidden"></canvas>
+          <canvas id="overlayCanvas" class="hidden"></canvas>
+          <div id="cameraPlaceholder" class="camera-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            <p>Point your camera at a fence and tap "Start Camera"</p>
+          </div>
+        </div>
+
+        <!-- Comparison Slider (hidden until photo taken) -->
+        <div id="comparisonWrapper" class="comparison-wrapper hidden">
+          <canvas id="beforeCanvas"></canvas>
+          <canvas id="afterCanvas" class="comparison-after"></canvas>
+          <div id="comparisonHandle" class="comparison-handle"></div>
+          <div class="comparison-labels">
+            <span>Before</span>
+            <span>After</span>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button id="btnStartCamera" class="btn btn-primary" aria-label="Start camera">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            Start Camera
+          </button>
+          <button id="btnCapture" class="btn btn-green hidden" aria-label="Take photo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+            Capture
+          </button>
+          <button id="btnReset" class="btn btn-secondary hidden" aria-label="New photo">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            New Photo
+          </button>
+        </div>
+
+        <h3 class="section-title">Choose a Stain Color</h3>
+        <div class="stain-grid" role="radiogroup" aria-label="Stain colors">
+          <button class="stain-btn active" data-color="cedar" data-rgb="180,120,70" role="radio" aria-checked="true">
+            <div class="stain-swatch" style="background: oklch(0.55 0.10 55);"></div>
+            <span>Cedar</span>
+          </button>
+          <button class="stain-btn" data-color="redwood" data-rgb="140,60,50" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.45 0.14 30);"></div>
+            <span>Redwood</span>
+          </button>
+          <button class="stain-btn" data-color="walnut" data-rgb="85,55,40" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.35 0.06 50);"></div>
+            <span>Dark Walnut</span>
+          </button>
+          <button class="stain-btn" data-color="gray" data-rgb="120,115,110" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.55 0.01 80);"></div>
+            <span>Weathered Gray</span>
+          </button>
+          <button class="stain-btn" data-color="natural" data-rgb="200,170,130" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.72 0.07 70);"></div>
+            <span>Natural</span>
+          </button>
+          <button class="stain-btn" data-color="honey" data-rgb="210,160,80" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.70 0.12 80);"></div>
+            <span>Honey Gold</span>
+          </button>
+          <button class="stain-btn" data-color="espresso" data-rgb="55,40,35" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.28 0.04 45);"></div>
+            <span>Espresso</span>
+          </button>
+          <button class="stain-btn" data-color="driftwood" data-rgb="155,140,120" role="radio" aria-checked="false">
+            <div class="stain-swatch" style="background: oklch(0.62 0.04 70);"></div>
+            <span>Driftwood</span>
+          </button>
+        </div>
+
+        <button id="btnSaveProject" class="btn btn-primary" style="width: 100%;" aria-label="Save to gallery">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save to Gallery
+        </button>
+
+        <!-- Saved Gallery -->
+        <h3 class="section-title" style="margin-top: 24px;">Saved Projects</h3>
+        <div id="galleryGrid" class="gallery-grid">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+
+      <!-- Quote Tab -->
+      <div id="tabQuote" class="tab-content" role="tabpanel" aria-labelledby="btnQuote">
+        <h2 class="section-title" style="font-size: 1.25rem; margin-bottom: 16px;">Build Your Quote</h2>
+
+        <div class="toggle-group" role="radiogroup" aria-label="Project type">
+          <button class="toggle-btn active" data-type="fence" role="radio" aria-checked="true">Fence</button>
+          <button class="toggle-btn" data-type="deck" role="radio" aria-checked="false">Deck</button>
+          <button class="toggle-btn" data-type="pergola" role="radio" aria-checked="false">Pergola</button>
+        </div>
+
+        <div class="quote-section">
+          <h3>Measurements</h3>
+          <div id="fenceMeasure" class="input-group">
+            <label for="linearFeet">Linear Feet of Fence</label>
+            <input type="number" id="linearFeet" placeholder="e.g., 200" min="1" inputmode="numeric">
+          </div>
+          <div id="deckMeasure" class="input-group hidden">
+            <label for="sqFeet">Square Feet</label>
+            <input type="number" id="sqFeet" placeholder="e.g., 320" min="1" inputmode="numeric">
+          </div>
+        </div>
+
+        <div class="quote-section">
+          <h3>Stain Type</h3>
+          <div class="toggle-group" role="radiogroup" aria-label="Stain type">
+            <button class="toggle-btn" data-stain="transparent" role="radio" aria-checked="false">Transparent</button>
+            <button class="toggle-btn active" data-stain="semi" role="radio" aria-checked="true">Semi-Trans</button>
+            <button class="toggle-btn" data-stain="solid" role="radio" aria-checked="false">Solid</button>
+          </div>
+        </div>
+
+        <div class="quote-section">
+          <h3>Number of Coats</h3>
+          <div class="toggle-group" role="radiogroup" aria-label="Number of coats">
+            <button class="toggle-btn" data-coats="1" role="radio" aria-checked="false">1 Coat</button>
+            <button class="toggle-btn active" data-coats="2" role="radio" aria-checked="true">2 Coats</button>
+          </div>
+        </div>
+
+        <div id="quoteResult" class="quote-result">
+          <p>Estimated Total</p>
+          <div class="total">$0</div>
+          <p class="range">Range: $0 – $0</p>
+        </div>
+
+        <button id="btnCopyQuote" class="btn btn-primary" style="width: 100%;" aria-label="Copy quote to clipboard">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+          Copy Quote to Clipboard
+        </button>
+
+        <!-- Demo Projects -->
+        <h3 class="section-title" style="margin-top: 24px;">Recent Quotes (Demo)</h3>
+        <div id="demoQuotes">
+          <div class="quote-section" style="padding: 12px 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>6ft Privacy Fence</strong>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">200 linear ft · Cedar</p>
+              </div>
+              <strong style="color: var(--green-accent);">$800</strong>
+            </div>
+          </div>
+          <div class="quote-section" style="padding: 12px 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>Back Deck</strong>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">320 sqft · Dark Walnut</p>
+              </div>
+              <strong style="color: var(--green-accent);">$960</strong>
+            </div>
+          </div>
+          <div class="quote-section" style="padding: 12px 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <strong>Pergola Restoration</strong>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">150 sqft · Redwood</p>
+              </div>
+              <strong style="color: var(--green-accent);">$525</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weather Tab -->
+      <div id="tabWeather" class="tab-content" role="tabpanel" aria-labelledby="btnWeather">
+        <h2 class="section-title" style="font-size: 1.25rem; margin-bottom: 16px;">Check the Weather</h2>
+        
+        <div id="weatherCard" class="weather-card">
+          <p class="weather-location">Checking location...</p>
+          <div class="weather-temp">--°F</div>
+          <p class="weather-conditions">Loading weather data</p>
+          <div class="weather-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+            <span id="weatherHumidity">Humidity: --%</span>
+          </div>
+          <div class="weather-detail">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+            <span id="weatherWind">Wind: -- mph</span>
+          </div>
+          <div id="weatherStatus" class="weather-status good">
+            Checking conditions...
+          </div>
+        </div>
+
+        <button id="btnRefreshWeather" class="btn btn-secondary" style="width: 100%;" aria-label="Refresh weather">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Refresh Weather
+        </button>
+
+        <div class="quote-section" style="margin-top: 24px;">
+          <h3>Ideal Staining Conditions</h3>
+          <ul style="padding-left: 20px; font-size: 0.9rem; color: var(--text-dark);">
+            <li style="margin-bottom: 8px;">Temperature: 50–90°F (best: 65–85°F)</li>
+            <li style="margin-bottom: 8px;">Humidity: Below 85%</li>
+            <li style="margin-bottom: 8px;">No rain expected for 24–48 hours</li>
+            <li style="margin-bottom: 8px;">Low wind (under 15 mph)</li>
+            <li>Wood surface dry to touch</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Recoat Tab (Locked) -->
+      <div id="tabRecoat" class="tab-content" role="tabpanel" aria-labelledby="btnRecoat">
+        <div class="locked-content">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h2>Recoat Scheduler</h2>
+          <p>Keep tabs on your jobs and get reminders when fences are due for another coat.</p>
+          <ul class="upgrade-features">
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              25+ stain brand colors
+            </li>
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Custom color matching
+            </li>
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Branded PDF proposals
+            </li>
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Customer database
+            </li>
+            <li>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              Recoating reminders (18 mo)
+            </li>
+          </ul>
+          <button class="btn btn-green">
+            Get the Full Version — $200
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+      <button id="btnStain" class="tab-btn active" data-tab="tabStain" role="tab" aria-selected="true" aria-controls="tabStain">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+        Stain
+      </button>
+      <button id="btnQuote" class="tab-btn" data-tab="tabQuote" role="tab" aria-selected="false" aria-controls="tabQuote">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Quote
+      </button>
+      <button id="btnWeather" class="tab-btn" data-tab="tabWeather" role="tab" aria-selected="false" aria-controls="tabWeather">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        Weather
+      </button>
+      <button id="btnRecoat" class="tab-btn locked" data-tab="tabRecoat" role="tab" aria-selected="false" aria-controls="tabRecoat" style="position: relative;">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Recoat
+      </button>
+    </nav>
+
+    <footer class="legal-footer">
+      Built for JB Fence Stain and Restoration · Midland, TX<br>
+      Estimates are rough figures — final price depends on actual conditions.
+    </footer>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    // Auth
+    const AUTH_HASH = -379797077;
+    function hashCode(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    function checkAuth() {
+      const input = document.getElementById('authInput').value.trim();
+      if (hashCode(input) === AUTH_HASH) {
+        localStorage.setItem('fencephoto_auth', input);
+        showApp();
+      } else {
+        document.getElementById('authError').classList.remove('hidden');
+      }
+    }
+
+    function showApp() {
+      document.getElementById('authGate').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      loadDemoData();
+      initWeather();
+    }
+
+    // Check URL param or localStorage
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const key = params.get('key') || localStorage.getItem('fencephoto_auth');
+      if (key && hashCode(key) === AUTH_HASH) {
+        localStorage.setItem('fencephoto_auth', key);
+        showApp();
+      }
+      // Enter key on auth input
+      document.getElementById('authInput').addEventListener('keyup', e => {
+        if (e.key === 'Enter') checkAuth();
+      });
+    })();
+
+    // State
+    let stream = null;
+    let capturedImageData = null;
+    let selectedStainColor = { r: 180, g: 120, b: 70 };
+    let projects = JSON.parse(localStorage.getItem('fencephoto_projects') || '[]');
+    let quoteSettings = { type: 'fence', stain: 'semi', coats: 2 };
+
+    // DOM refs
+    const cameraFeed = document.getElementById('cameraFeed');
+    const capturedCanvas = document.getElementById('capturedImage');
+    const overlayCanvas = document.getElementById('overlayCanvas');
+    const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+    const comparisonWrapper = document.getElementById('comparisonWrapper');
+    const beforeCanvas = document.getElementById('beforeCanvas');
+    const afterCanvas = document.getElementById('afterCanvas');
+    const comparisonHandle = document.getElementById('comparisonHandle');
+    const btnStartCamera = document.getElementById('btnStartCamera');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnReset = document.getElementById('btnReset');
+    const demoBadge = document.getElementById('demoBadge');
+
+    // Tab navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Stain color selection
+    document.querySelectorAll('.stain-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.stain-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-checked', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
+        const rgb = btn.dataset.rgb.split(',').map(Number);
+        selectedStainColor = { r: rgb[0], g: rgb[1], b: rgb[2] };
+        if (capturedImageData) {
+          applyStainOverlay();
+          updateComparison();
+        }
+      });
+    });
+
+    // Camera
+    btnStartCamera.addEventListener('click', async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
+        });
+        cameraFeed.srcObject = stream;
+        cameraFeed.classList.remove('hidden');
+        cameraPlaceholder.classList.add('hidden');
+        btnStartCamera.classList.add('hidden');
+        btnCapture.classList.remove('hidden');
+        demoBadge.classList.add('hidden');
+        comparisonWrapper.classList.add('hidden');
+      } catch (err) {
+        showToast('Camera blocked. Allow camera access in your browser settings.');
+      }
+    });
+
+    btnCapture.addEventListener('click', () => {
+      const ctx = capturedCanvas.getContext('2d');
+      capturedCanvas.width = cameraFeed.videoWidth;
+      capturedCanvas.height = cameraFeed.videoHeight;
+      ctx.drawImage(cameraFeed, 0, 0);
+      capturedImageData = ctx.getImageData(0, 0, capturedCanvas.width, capturedCanvas.height);
+
+      // Stop stream
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+
+      cameraFeed.classList.add('hidden');
+      capturedCanvas.classList.remove('hidden');
+      overlayCanvas.classList.remove('hidden');
+      overlayCanvas.width = capturedCanvas.width;
+      overlayCanvas.height = capturedCanvas.height;
+      applyStainOverlay();
+
+      btnCapture.classList.add('hidden');
+      btnReset.classList.remove('hidden');
+
+      // Setup comparison
+      setupComparison();
+    });
+
+    btnReset.addEventListener('click', () => {
+      capturedImageData = null;
+      capturedCanvas.classList.add('hidden');
+      overlayCanvas.classList.add('hidden');
+      cameraPlaceholder.classList.remove('hidden');
+      comparisonWrapper.classList.add('hidden');
+      btnReset.classList.add('hidden');
+      btnStartCamera.classList.remove('hidden');
+    });
+
+    function applyStainOverlay() {
+      if (!capturedImageData) return;
+      const ctx = overlayCanvas.getContext('2d');
+      const imageData = new ImageData(
+        new Uint8ClampedArray(capturedImageData.data),
+        capturedImageData.width,
+        capturedImageData.height
+      );
+      const data = imageData.data;
+      const { r, g, b } = selectedStainColor;
+
+      for (let i = 0; i < data.length; i += 4) {
+        // Get luminance
+        const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+        // Blend stain color with original, preserving grain via luminance
+        const blend = 0.45;
+        data[i] = Math.round(data[i] * (1 - blend) + r * lum * blend);
+        data[i + 1] = Math.round(data[i + 1] * (1 - blend) + g * lum * blend);
+        data[i + 2] = Math.round(data[i + 2] * (1 - blend) + b * lum * blend);
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    function setupComparison() {
+      // Before canvas
+      beforeCanvas.width = capturedImageData.width;
+      beforeCanvas.height = capturedImageData.height;
+      beforeCanvas.getContext('2d').putImageData(capturedImageData, 0, 0);
+
+      // After canvas
+      afterCanvas.width = overlayCanvas.width;
+      afterCanvas.height = overlayCanvas.height;
+      updateComparison();
+
+      comparisonWrapper.classList.remove('hidden');
+      document.getElementById('cameraContainer').classList.add('hidden');
+
+      // Handle dragging
+      let isDragging = false;
+      const updateSlider = (x) => {
+        const rect = comparisonWrapper.getBoundingClientRect();
+        let percent = ((x - rect.left) / rect.width) * 100;
+        percent = Math.max(0, Math.min(100, percent));
+        afterCanvas.style.clipPath = `inset(0 0 0 ${percent}%)`;
+        comparisonHandle.style.left = `${percent}%`;
+      };
+
+      comparisonHandle.addEventListener('mousedown', () => isDragging = true);
+      comparisonHandle.addEventListener('touchstart', () => isDragging = true);
+      document.addEventListener('mouseup', () => isDragging = false);
+      document.addEventListener('touchend', () => isDragging = false);
+      document.addEventListener('mousemove', e => { if (isDragging) updateSlider(e.clientX); });
+      document.addEventListener('touchmove', e => { if (isDragging) updateSlider(e.touches[0].clientX); });
+    }
+
+    function updateComparison() {
+      const ctx = afterCanvas.getContext('2d');
+      ctx.drawImage(overlayCanvas, 0, 0);
+    }
+
+    // Save project
+    document.getElementById('btnSaveProject').addEventListener('click', () => {
+      if (!capturedImageData && projects.length === 0) {
+        showToast('Take a photo first');
+        return;
+      }
+
+      const activeStain = document.querySelector('.stain-btn.active');
+      const stainName = activeStain.querySelector('span').textContent;
+      const thumbnail = overlayCanvas.toDataURL('image/jpeg', 0.6);
+
+      projects.unshift({
+        id: Date.now(),
+        stain: stainName,
+        thumbnail,
+        date: new Date().toLocaleDateString()
+      });
+
+      // Limit to 5 in free version
+      if (projects.length > 5) {
+        projects = projects.slice(0, 5);
+        showToast('Free version limits you to 5 projects');
+      } else {
+        showToast('Saved to your gallery');
+      }
+
+      localStorage.setItem('fencephoto_projects', JSON.stringify(projects));
+      renderGallery();
+    });
+
+    function renderGallery() {
+      const grid = document.getElementById('galleryGrid');
+      if (projects.length === 0) {
+        grid.innerHTML = '<div class="empty-state"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg><p>No saved projects yet. Take a photo to get started.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = projects.map(p => `
+        <div class="gallery-item">
+          <img src="${p.thumbnail}" alt="${p.stain} stain preview">
+          <span class="badge">${p.stain}</span>
+          <button class="delete-btn" onclick="deleteProject(${p.id})" aria-label="Delete project">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    window.deleteProject = function(id) {
+      projects = projects.filter(p => p.id !== id);
+      localStorage.setItem('fencephoto_projects', JSON.stringify(projects));
+      renderGallery();
+      showToast('Project removed');
+    };
+
+    // Quote calculator
+    function setupQuoteCalc() {
+      const typeToggles = document.querySelectorAll('.toggle-btn[data-type]');
+      const stainToggles = document.querySelectorAll('.toggle-btn[data-stain]');
+      const coatToggles = document.querySelectorAll('.toggle-btn[data-coats]');
+      const linearInput = document.getElementById('linearFeet');
+      const sqInput = document.getElementById('sqFeet');
+
+      typeToggles.forEach(btn => btn.addEventListener('click', () => {
+        typeToggles.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked', 'false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
+        quoteSettings.type = btn.dataset.type;
+        document.getElementById('fenceMeasure').classList.toggle('hidden', btn.dataset.type !== 'fence');
+        document.getElementById('deckMeasure').classList.toggle('hidden', btn.dataset.type === 'fence');
+        updateQuote();
+      }));
+
+      stainToggles.forEach(btn => btn.addEventListener('click', () => {
+        stainToggles.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked', 'false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
+        quoteSettings.stain = btn.dataset.stain;
+        updateQuote();
+      }));
+
+      coatToggles.forEach(btn => btn.addEventListener('click', () => {
+        coatToggles.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-checked', 'false'); });
+        btn.classList.add('active');
+        btn.setAttribute('aria-checked', 'true');
+        quoteSettings.coats = parseInt(btn.dataset.coats);
+        updateQuote();
+      }));
+
+      linearInput.addEventListener('input', updateQuote);
+      sqInput.addEventListener('input', updateQuote);
+    }
+
+    function updateQuote() {
+      const { type, stain, coats } = quoteSettings;
+      let units = 0;
+      let lowRate, highRate;
+
+      if (type === 'fence') {
+        units = parseFloat(document.getElementById('linearFeet').value) || 0;
+        lowRate = 3;
+        highRate = 6;
+      } else {
+        units = parseFloat(document.getElementById('sqFeet').value) || 0;
+        lowRate = 2;
+        highRate = 4;
+      }
+
+      // Stain type multiplier
+      const stainMult = stain === 'solid' ? 1.15 : stain === 'transparent' ? 0.9 : 1;
+      // Coat multiplier
+      const coatMult = coats === 2 ? 1.3 : 1;
+
+      const low = Math.round(units * lowRate * stainMult * coatMult);
+      const high = Math.round(units * highRate * stainMult * coatMult);
+      const mid = Math.round((low + high) / 2);
+
+      document.querySelector('.quote-result .total').textContent = `$${mid.toLocaleString()}`;
+      document.querySelector('.quote-result .range').textContent = `Range: $${low.toLocaleString()} – $${high.toLocaleString()}`;
+    }
+
+    document.getElementById('btnCopyQuote').addEventListener('click', async () => {
+      const total = document.querySelector('.quote-result .total').textContent;
+      const range = document.querySelector('.quote-result .range').textContent;
+      const type = quoteSettings.type.charAt(0).toUpperCase() + quoteSettings.type.slice(1);
+      const text = `${type} Staining Quote: ${total} (${range})`;
+      
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast('Quote copied to clipboard');
+      } catch {
+        showToast('Could not copy. Try again.');
+      }
+    });
+
+    // Weather
+    async function initWeather() {
+      const card = document.getElementById('weatherCard');
+      try {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+        });
+        
+        const { latitude, longitude } = pos.coords;
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`);
+        const data = await res.json();
+        
+        const temp = Math.round(data.current.temperature_2m);
+        const humidity = data.current.relative_humidity_2m;
+        const wind = Math.round(data.current.wind_speed_10m);
+        const code = data.current.weather_code;
+
+        // Weather description
+        const weatherDesc = {
+          0: 'Clear sky',
+          1: 'Mainly clear',
+          2: 'Partly cloudy',
+          3: 'Overcast',
+          45: 'Foggy',
+          48: 'Depositing rime fog',
+          51: 'Light drizzle',
+          53: 'Moderate drizzle',
+          55: 'Dense drizzle',
+          61: 'Slight rain',
+          63: 'Moderate rain',
+          65: 'Heavy rain',
+          80: 'Slight rain showers',
+          81: 'Moderate rain showers',
+          82: 'Violent rain showers',
+          95: 'Thunderstorm'
+        };
+
+        document.querySelector('.weather-location').textContent = `${data.timezone.replace('_', ' ')}`;
+        document.querySelector('.weather-temp').textContent = `${temp}°F`;
+        document.querySelector('.weather-conditions').textContent = weatherDesc[code] || 'Conditions vary';
+        document.getElementById('weatherHumidity').textContent = `Humidity: ${humidity}%`;
+        document.getElementById('weatherWind').textContent = `Wind: ${wind} mph`;
+
+        // Staining conditions check
+        const status = document.getElementById('weatherStatus');
+        const issues = [];
+        if (temp > 95) issues.push(`Too hot (${temp}°F)`);
+        if (temp < 50) issues.push(`Too cold (${temp}°F)`);
+        if (humidity > 85) issues.push(`High humidity (${humidity}%)`);
+        if (wind > 15) issues.push(`Too windy (${wind} mph)`);
+        if (code >= 51) issues.push('Rain expected');
+
+        if (issues.length === 0) {
+          status.className = 'weather-status good';
+          status.textContent = 'Good conditions for staining';
+          card.className = 'weather-card';
+        } else {
+          status.className = 'weather-status bad';
+          status.textContent = issues.join(' · ');
+          card.className = 'weather-card warning';
+        }
+
+      } catch (err) {
+        document.querySelector('.weather-location').textContent = 'Midland, TX (default)';
+        document.querySelector('.weather-temp').textContent = '78°F';
+        document.querySelector('.weather-conditions').textContent = 'Partly cloudy';
+        document.getElementById('weatherHumidity').textContent = 'Humidity: 35%';
+        document.getElementById('weatherWind').textContent = 'Wind: 8 mph';
+        document.getElementById('weatherStatus').textContent = 'Good conditions for staining';
+        document.getElementById('weatherStatus').className = 'weather-status good';
+      }
+    }
+
+    document.getElementById('btnRefreshWeather').addEventListener('click', initWeather);
+
+    // Demo data
+    function loadDemoData() {
+      // Pre-load a demo image if no projects exist
+      if (projects.length === 0) {
+        // Create a demo wood texture
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 300;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw wood-like gradient
+        const grad = ctx.createLinearGradient(0, 0, 400, 0);
+        grad.addColorStop(0, '#a08060');
+        grad.addColorStop(0.3, '#c0a080');
+        grad.addColorStop(0.5, '#b09070');
+        grad.addColorStop(0.7, '#d0b090');
+        grad.addColorStop(1, '#a08060');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 400, 300);
+        
+        // Add grain lines
+        ctx.strokeStyle = 'rgba(80,50,30,0.3)';
+        for (let i = 0; i < 20; i++) {
+          ctx.beginPath();
+          ctx.moveTo(0, i * 15 + Math.random() * 10);
+          ctx.bezierCurveTo(100, i * 15 + Math.random() * 20, 300, i * 15 - Math.random() * 20, 400, i * 15 + Math.random() * 10);
+          ctx.stroke();
+        }
+
+        projects = [{
+          id: 1,
+          stain: 'Cedar',
+          thumbnail: canvas.toDataURL('image/jpeg', 0.8),
+          date: 'Demo'
+        }];
+      }
+      
+      renderGallery();
+      setupQuoteCalc();
+      
+      // Set demo quote values
+      document.getElementById('linearFeet').value = 200;
+      updateQuote();
+    }
+
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    
+    // Trap focus in auth gate until unlocked
+    (function setupAuthFocusTrap() {
+      const authGate = document.getElementById('authGate');
+      const authInput = document.getElementById('authInput');
+      const authBtn = authGate.querySelector('button');
+      
+      authGate.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          if (e.shiftKey && document.activeElement === authInput) {
+            e.preventDefault();
+            authBtn.focus();
+          } else if (!e.shiftKey && document.activeElement === authBtn) {
+            e.preventDefault();
+            authInput.focus();
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
