@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Jackson Permit Patrol — Tim Ferguson Plumbing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23d1242b'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white'%3E🏛️%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   CSS RESET & VARIABLES
+   ═══════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red: #d1242b;
+  --red-hover: #b91c22;
+  --red-glow: rgba(209, 36, 43, 0.25);
+  --red-subtle: rgba(209, 36, 43, 0.08);
+  --dark: #1a1a1a;
+  --dark-card: #242424;
+  --dark-elevated: #2c2c2c;
+  --dark-border: #3a3a3a;
+  --dark-input: #333333;
+  --white: #ffffff;
+  --white-90: rgba(255,255,255,0.9);
+  --white-70: rgba(255,255,255,0.7);
+  --white-50: rgba(255,255,255,0.5);
+  --white-30: rgba(255,255,255,0.3);
+  --white-10: rgba(255,255,255,0.1);
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.12);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.12);
+  --error: #ef4444;
+  --error-bg: rgba(239,68,68,0.12);
+  --info: #3b82f6;
+  --info-bg: rgba(59,130,246,0.12);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.3);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-heading: 'Oswald', sans-serif;
+  --font-body: 'Roboto', sans-serif;
+  --tab-height: 64px;
+  --header-height: 56px;
+}
+
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: var(--font-body);
+  background: var(--dark);
+  color: var(--white);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Re-enable text selection for inputs and content users need to copy */
+input, textarea, .form-input, .form-textarea, .share-link-box .sl-url {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ═══════════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════════ */
+h1, h2, h3, h4, h5 { font-family: var(--font-heading); font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.1rem; }
+
+/* ═══════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════ */
+.app-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: var(--header-height);
+  background: linear-gradient(135deg, var(--dark-card) 0%, #1e1e1e 100%);
+  border-bottom: 2px solid var(--red);
+  display: flex; align-items: center; padding: 0 16px;
+  box-shadow: 0 2px 16px rgba(209,36,43,0.15);
+}
+.app-header .logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.app-header .logo-icon {
+  width: 32px; height: 32px; background: var(--red); border-radius: var(--radius-xs);
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  box-shadow: 0 0 12px var(--red-glow);
+}
+.app-header .logo-text {
+  font-family: var(--font-heading); font-weight: 700; font-size: 0.85rem;
+  text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1;
+}
+.app-header .logo-text span { color: var(--red); display: block; font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; }
+.header-actions { margin-left: auto; display: flex; gap: 8px; }
+.header-btn {
+  width: 36px; height: 36px; border-radius: var(--radius-xs); border: 1px solid var(--dark-border);
+  background: var(--dark-elevated); color: var(--white-70); display: flex; align-items: center;
+  justify-content: center; cursor: pointer; transition: var(--transition); font-size: 16px;
+}
+.header-btn:hover { background: var(--dark-input); color: var(--white); border-color: var(--red); }
+
+/* ═══════════════════════════════════════════
+   BOTTOM TAB BAR (Mobile)
+   ═══════════════════════════════════════════ */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+  height: var(--tab-height);
+  background: linear-gradient(0deg, var(--dark-card) 0%, #222 100%);
+  border-top: 1px solid var(--dark-border);
+  display: flex; align-items: stretch; padding-bottom: env(safe-area-inset-bottom, 0);
+  box-shadow: 0 -2px 16px rgba(0,0,0,0.4);
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; cursor: pointer; color: var(--white-50); transition: var(--transition);
+  border: none; background: none; font-family: var(--font-body); position: relative;
+  -webkit-tap-highlight-color: transparent; min-height: 44px;
+}
+.tab-item::before {
+  content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 0; height: 2px; background: var(--red); border-radius: 0 0 2px 2px; transition: var(--transition);
+}
+.tab-item.active { color: var(--red); }
+.tab-item.active::before { width: 32px; }
+.tab-item .tab-icon { font-size: 20px; line-height: 1; }
+.tab-item .tab-label { font-size: 0.6rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ═══════════════════════════════════════════
+   DESKTOP NAV (≥1024px)
+   ═══════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .tab-bar { display: none; }
+  .app-header { padding: 0 32px; }
+  .desktop-nav { display: flex !important; gap: 4px; margin-left: 32px; }
+  .desktop-nav-item {
+    padding: 8px 16px; border-radius: var(--radius-xs); cursor: pointer;
+    font-family: var(--font-heading); font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--white-70); transition: var(--transition);
+    border: none; background: none; white-space: nowrap;
+  }
+  .desktop-nav-item:hover { color: var(--white); background: var(--white-10); }
+  .desktop-nav-item.active { color: var(--red); background: var(--red-subtle); }
+  .main-content { padding-bottom: 32px !important; max-width: 900px; margin: 0 auto; }
+}
+.desktop-nav { display: none; }
+
+/* ═══════════════════════════════════════════
+   MAIN CONTENT
+   ═══════════════════════════════════════════ */
+.main-content {
+  padding: calc(var(--header-height) + 16px) 16px calc(var(--tab-height) + 16px);
+  min-height: 100dvh;
+}
+.view { display: none; animation: fadeIn 0.25s ease; }
+.view.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-6px); } 40%,80% { transform: translateX(6px); } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 var(--red-glow); } 50% { box-shadow: 0 0 16px 4px var(--red-glow); } }
+
+.shake { animation: shake 0.4s ease; }
+
+/* ═══════════════════════════════════════════
+   CARDS & PANELS
+   ═══════════════════════════════════════════ */
+.card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 16px; transition: var(--transition); position: relative; overflow: hidden;
+}
+.card:hover { border-color: var(--white-30); }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+
+/* ═══════════════════════════════════════════
+   FORM ELEMENTS
+   ═══════════════════════════════════════════ */
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block; font-family: var(--font-heading); font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--white-70);
+  margin-bottom: 6px; font-weight: 500;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 12px 14px; background: var(--dark-input);
+  border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  color: var(--white); font-family: var(--font-body); font-size: 16px;
+  transition: var(--transition); outline: none; -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow);
+}
+.form-input.invalid, .form-select.invalid { border-color: var(--error); }
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select { cursor: pointer; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L2 5h12z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: var(--radius-sm); font-family: var(--font-heading);
+  font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  cursor: pointer; transition: var(--transition); border: none; min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary {
+  background: var(--red); color: var(--white); box-shadow: 0 2px 8px var(--red-glow);
+}
+.btn-primary:hover { background: var(--red-hover); transform: translateY(-1px); box-shadow: 0 4px 16px var(--red-glow); }
+.btn-primary:active { transform: translateY(0); }
+.btn-secondary {
+  background: var(--dark-elevated); color: var(--white-90); border: 1px solid var(--dark-border);
+}
+.btn-secondary:hover { border-color: var(--white-50); background: var(--dark-input); }
+.btn-outline {
+  background: transparent; color: var(--red); border: 1px solid var(--red);
+}
+.btn-outline:hover { background: var(--red-subtle); }
+.btn-sm { padding: 8px 14px; font-size: 0.75rem; min-height: 36px; }
+.btn-block { width: 100%; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════
+   STATUS PIPELINE (Domino's Tracker)
+   ═══════════════════════════════════════════ */
+.status-pipeline {
+  display: flex; align-items: center; margin: 16px 0; position: relative;
+}
+.status-stage {
+  flex: 1; text-align: center; position: relative; z-index: 1;
+}
+.status-dot {
+  width: 28px; height: 28px; border-radius: 50%; margin: 0 auto 6px;
+  border: 3px solid var(--dark-border); background: var(--dark); transition: var(--transition);
+  display: flex; align-items: center; justify-content: center; font-size: 12px;
+}
+.status-stage.completed .status-dot { background: var(--success); border-color: var(--success); color: var(--white); }
+.status-stage.active .status-dot { background: var(--red); border-color: var(--red); animation: pulseGlow 2s infinite; color: var(--white); }
+.status-stage.failed .status-dot { background: var(--error); border-color: var(--error); color: var(--white); }
+.status-label {
+  font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--white-50); font-weight: 500; line-height: 1.2;
+}
+.status-stage.completed .status-label, .status-stage.active .status-label { color: var(--white-90); }
+.status-connector {
+  position: absolute; top: 14px; left: 0; right: 0; height: 3px;
+  background: var(--dark-border); z-index: 0;
+}
+.status-connector-fill {
+  height: 100%; background: var(--success); transition: width 0.6s ease; border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════
+   PERMIT CARDS (List View)
+   ═══════════════════════════════════════════ */
+.permit-card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius);
+  padding: 16px; margin-bottom: 12px; cursor: pointer; transition: var(--transition);
+  animation: slideUp 0.3s ease backwards; position: relative; overflow: hidden;
+}
+.permit-card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+}
+.permit-card[data-status="submitted"]::before { background: var(--info); }
+.permit-card[data-status="scheduled"]::before { background: var(--warning); }
+.permit-card[data-status="assigned"]::before { background: var(--red); }
+.permit-card[data-status="passed"]::before { background: var(--success); }
+.permit-card[data-status="failed"]::before { background: var(--error); }
+.permit-card:hover { border-color: var(--white-30); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.permit-card:active { transform: translateY(0); }
+.permit-card .pc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.permit-card .pc-job { font-family: var(--font-heading); font-size: 0.95rem; text-transform: uppercase; }
+.permit-card .pc-badge {
+  padding: 3px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+}
+.badge-submitted { background: var(--info-bg); color: var(--info); }
+.badge-scheduled { background: var(--warning-bg); color: var(--warning); }
+.badge-assigned { background: var(--red-subtle); color: var(--red); }
+.badge-passed { background: var(--success-bg); color: var(--success); }
+.badge-failed { background: var(--error-bg); color: var(--error); }
+.permit-card .pc-address { font-size: 0.8rem; color: var(--white-70); margin-bottom: 4px; }
+.permit-card .pc-type { font-size: 0.7rem; color: var(--white-50); }
+.permit-card .pc-date { font-size: 0.65rem; color: var(--white-30); margin-top: 8px; }
+
+/* ═══════════════════════════════════════════
+   TIMELINE LOG
+   ═══════════════════════════════════════════ */
+.timeline { padding: 8px 0; }
+.timeline-item {
+  display: flex; gap: 12px; padding: 10px 0; position: relative;
+}
+.timeline-item::before {
+  content: ''; position: absolute; left: 15px; top: 36px; bottom: -10px;
+  width: 2px; background: var(--dark-border);
+}
+.timeline-item:last-child::before { display: none; }
+.timeline-dot {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+  background: var(--dark-elevated); border: 2px solid var(--dark-border);
+}
+.timeline-dot.tl-submit { background: var(--info-bg); border-color: var(--info); }
+.timeline-dot.tl-schedule { background: var(--warning-bg); border-color: var(--warning); }
+.timeline-dot.tl-assign { background: var(--red-subtle); border-color: var(--red); }
+.timeline-dot.tl-pass { background: var(--success-bg); border-color: var(--success); }
+.timeline-dot.tl-fail { background: var(--error-bg); border-color: var(--error); }
+.timeline-dot.tl-note { background: var(--white-10); border-color: var(--white-30); }
+.timeline-body { flex: 1; }
+.timeline-body .tl-action { font-size: 0.85rem; font-weight: 500; }
+.timeline-body .tl-time { font-size: 0.7rem; color: var(--white-50); margin-top: 2px; }
+.timeline-body .tl-note-text { font-size: 0.8rem; color: var(--white-70); margin-top: 4px; font-style: italic; }
+
+/* ═══════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 48px 24px; max-width: 400px; margin: 0 auto;
+}
+.empty-icon {
+  width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px;
+  background: var(--red-subtle); display: flex; align-items: center; justify-content: center;
+  font-size: 32px; border: 2px solid var(--red); box-shadow: 0 0 24px var(--red-glow);
+}
+.empty-title { font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 12px; text-transform: uppercase; }
+.empty-desc { font-size: 0.85rem; color: var(--white-70); line-height: 1.5; margin-bottom: 24px; }
+.empty-actions { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+
+/* ═══════════════════════════════════════════
+   DEMO BANNER
+   ═══════════════════════════════════════════ */
+.demo-banner {
+  background: linear-gradient(135deg, var(--warning-bg) 0%, rgba(245,158,11,0.05) 100%);
+  border: 1px solid rgba(245,158,11,0.3); border-radius: var(--radius-sm);
+  padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center;
+  gap: 10px; font-size: 0.8rem; color: var(--warning); cursor: pointer;
+  transition: var(--transition);
+}
+.demo-banner:hover { background: rgba(245,158,11,0.15); }
+.demo-banner .demo-x { margin-left: auto; font-size: 18px; opacity: 0.7; }
+
+/* ═══════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════ */
+.toast-container {
+  position: fixed; bottom: calc(var(--tab-height) + 16px); left: 16px; right: 16px;
+  z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+  align-items: center;
+}
+@media (min-width: 1024px) { .toast-container { bottom: 32px; left: auto; right: 32px; max-width: 400px; } }
+.toast {
+  pointer-events: all; background: var(--dark-elevated); border: 1px solid var(--dark-border);
+  border-radius: var(--radius-sm); padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow); font-size: 0.85rem; animation: slideUp 0.3s ease;
+  width: 100%; max-width: 400px;
+}
+.toast-success { border-color: var(--success); }
+.toast-error { border-color: var(--error); }
+.toast-undo { border-color: var(--warning); }
+.toast .toast-icon { font-size: 18px; flex-shrink: 0; }
+.toast .toast-msg { flex: 1; }
+.toast .toast-action {
+  font-family: var(--font-heading); font-size: 0.75rem; text-transform: uppercase;
+  color: var(--warning); cursor: pointer; font-weight: 600; letter-spacing: 0.04em;
+  padding: 4px 8px; border-radius: 4px; transition: var(--transition);
+}
+.toast .toast-action:hover { background: var(--warning-bg); }
+
+/* ═══════════════════════════════════════════
+   MODAL / SLIDE PANEL
+   ═══════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,0.7);
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: flex; }
+.modal-panel {
+  background: var(--dark-card); border-radius: var(--radius) var(--radius) 0 0;
+  width: 100%; max-width: 600px; max-height: 90dvh; overflow-y: auto;
+  animation: slideUp 0.3s ease; padding: 0;
+}
+@media (min-width: 1024px) {
+  .modal-overlay { align-items: center; }
+  .modal-panel { border-radius: var(--radius); max-height: 80vh; }
+}
+.modal-handle { width: 40px; height: 4px; background: var(--white-30); border-radius: 2px; margin: 12px auto; }
+.modal-header {
+  padding: 0 20px 16px; border-bottom: 1px solid var(--dark-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-header h2 { font-size: 1.1rem; }
+.modal-close {
+  width: 36px; height: 36px; border-radius: 50%; background: var(--dark-elevated);
+  border: 1px solid var(--dark-border); color: var(--white-70); cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+  transition: var(--transition);
+}
+.modal-close:hover { color: var(--white); border-color: var(--red); }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid var(--dark-border); }
+
+/* ═══════════════════════════════════════════
+   DETAIL VIEW
+   ═══════════════════════════════════════════ */
+.detail-back {
+  display: inline-flex; align-items: center; gap: 6px; color: var(--white-70);
+  font-size: 0.8rem; cursor: pointer; margin-bottom: 16px; padding: 4px 0;
+  transition: var(--transition); background: none; border: none; font-family: var(--font-body);
+}
+.detail-back:hover { color: var(--white); }
+.detail-section { margin-bottom: 20px; }
+.detail-section-title {
+  font-family: var(--font-heading); font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--red); margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--dark-border);
+}
+.detail-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.85rem; }
+.detail-row .dr-label { color: var(--white-50); }
+.detail-row .dr-value { color: var(--white); font-weight: 500; text-align: right; }
+
+/* ═══════════════════════════════════════════
+   PROOF RECEIPT
+   ═══════════════════════════════════════════ */
+.receipt-card {
+  background: var(--white); color: #111; border-radius: var(--radius); padding: 24px;
+  margin: 16px 0; position: relative;
+}
+.receipt-card .rc-header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 16px; margin-bottom: 16px; }
+.receipt-card .rc-header h3 { font-family: var(--font-heading); color: var(--red); font-size: 1rem; }
+.receipt-card .rc-header .rc-subtitle { font-size: 0.7rem; color: #666; margin-top: 4px; }
+.receipt-card .rc-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.8rem; }
+.receipt-card .rc-row .rc-label { color: #666; }
+.receipt-card .rc-row .rc-val { font-weight: 600; }
+.receipt-card .rc-stamp {
+  text-align: center; margin-top: 16px; padding-top: 16px; border-top: 2px dashed #ccc;
+  font-size: 0.65rem; color: #999;
+}
+.receipt-card .rc-stamp .stamp-hash { font-family: monospace; font-size: 0.6rem; word-break: break-all; }
+
+/* ═══════════════════════════════════════════
+   FILTERS & SEARCH
+   ═══════════════════════════════════════════ */
+.filter-bar {
+  display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.filter-bar::-webkit-scrollbar { display: none; }
+.filter-chip {
+  padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.03em; cursor: pointer;
+  white-space: nowrap; transition: var(--transition); border: 1px solid var(--dark-border);
+  background: var(--dark-elevated); color: var(--white-70);
+  font-family: var(--font-body);
+}
+.filter-chip:hover { border-color: var(--white-50); color: var(--white); }
+.filter-chip.active { background: var(--red); border-color: var(--red); color: var(--white); }
+.search-bar {
+  position: relative; margin-bottom: 12px;
+}
+.search-bar input {
+  width: 100%; padding: 10px 14px 10px 38px; background: var(--dark-card);
+  border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  color: var(--white); font-size: 14px; outline: none; font-family: var(--font-body);
+  transition: var(--transition);
+}
+.search-bar input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+.search-bar .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--white-50); font-size: 14px; pointer-events: none; }
+
+/* ═══════════════════════════════════════════
+   SETTINGS / DATA VIEW
+   ═══════════════════════════════════════════ */
+.settings-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0; border-bottom: 1px solid var(--dark-border);
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-item .si-left { display: flex; align-items: center; gap: 12px; }
+.settings-item .si-icon { font-size: 20px; width: 36px; text-align: center; }
+.settings-item .si-label { font-size: 0.85rem; }
+.settings-item .si-desc { font-size: 0.7rem; color: var(--white-50); }
+.settings-item .si-action { color: var(--red); font-size: 0.8rem; font-weight: 500; cursor: pointer; }
+
+/* ═══════════════════════════════════════════
+   PHOTO UPLOAD
+   ═══════════════════════════════════════════ */
+.photo-drop {
+  border: 2px dashed var(--dark-border); border-radius: var(--radius); padding: 24px;
+  text-align: center; cursor: pointer; transition: var(--transition); position: relative;
+  overflow: hidden;
+}
+.photo-drop:hover { border-color: var(--red); background: var(--red-subtle); }
+.photo-drop input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.photo-drop .pd-icon { font-size: 28px; margin-bottom: 8px; }
+.photo-drop .pd-text { font-size: 0.8rem; color: var(--white-70); }
+.photo-thumb {
+  width: 60px; height: 60px; border-radius: var(--radius-xs); object-fit: cover;
+  border: 1px solid var(--dark-border); cursor: pointer;
+}
+.photo-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ═══════════════════════════════════════════
+   STAT COUNTER (Dashboard)
+   ═══════════════════════════════════════════ */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: var(--dark-card); border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  padding: 14px; text-align: center;
+}
+.stat-num { font-family: var(--font-heading); font-size: 1.8rem; font-weight: 700; }
+.stat-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--white-50); margin-top: 2px; }
+.stat-card.stat-active .stat-num { color: var(--warning); }
+.stat-card.stat-passed .stat-num { color: var(--success); }
+.stat-card.stat-pending .stat-num { color: var(--info); }
+.stat-card.stat-failed .stat-num { color: var(--error); }
+
+/* ═══════════════════════════════════════════
+   STATUS LINK PAGE
+   ═══════════════════════════════════════════ */
+.share-link-box {
+  background: var(--dark-elevated); border: 1px solid var(--dark-border); border-radius: var(--radius-sm);
+  padding: 10px 14px; display: flex; align-items: center; gap: 8px; margin-top: 10px;
+}
+.share-link-box .sl-url {
+  flex: 1; font-size: 0.75rem; color: var(--white-70); word-break: break-all;
+  font-family: monospace;
+}
+.share-link-box .sl-copy {
+  padding: 6px 12px; background: var(--red); border: none; border-radius: var(--radius-xs);
+  color: var(--white); font-size: 0.7rem; font-weight: 600; cursor: pointer;
+  font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em;
+  transition: var(--transition); white-space: nowrap;
+}
+.share-link-box .sl-copy:hover { background: var(--red-hover); }
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════ */
+@media print {
+  * { color: #000 !important; background: #fff !important; box-shadow: none !important; border-color: #ccc !important; }
+  .app-header, .tab-bar, .desktop-nav, .toast-container, .demo-banner, .modal-overlay,
+  .btn, .filter-bar, .search-bar, .photo-drop, .header-actions, .detail-back { display: none !important; }
+  .main-content { padding: 0 !important; max-width: 100% !important; }
+  .view { display: block !important; }
+  .receipt-card { border: 2px solid #000; page-break-inside: avoid; }
+  .permit-card { border: 1px solid #ccc; page-break-inside: avoid; }
+  .status-pipeline { margin: 24px 0; }
+  body { font-size: 12pt; }
+}
+
+/* === DEMO DISCLAIMER === */
+#bct-demo-disclaimer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f8f8f8;
+  border-top: 1px solid #ddd;
+  padding: 10px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #666;
+  z-index: 99999;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 16px;
+  text-align: center;
+}
+#bct-demo-disclaimer p {
+  margin: 0;
+  max-width: 700px;
+}
+#bct-demo-disclaimer strong {
+  color: #333;
+  font-weight: 600;
+}
+#bct-demo-disclaimer a.bct-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dc3545;
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+#bct-demo-disclaimer a.bct-delete-btn:hover {
+  background: #b02a37;
+}
+@media (max-width: 600px) {
+  #bct-demo-disclaimer {
+    flex-direction: column;
+    padding: 8px 12px 12px;
+    font-size: 11px;
+  }
+}
+/* Add bottom padding to body so disclaimer doesn't cover content */
+body { padding-bottom: 60px !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     HEADER
+     ═══════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="logo">
+    <div class="logo-icon">🏛️</div>
+    <div class="logo-text">
+      Permit Patrol
+      <span>Tim Ferguson Plumbing</span>
+    </div>
+  </div>
+  <nav class="desktop-nav">
+    <button class="desktop-nav-item active" data-view="tracker" onclick="switchView('tracker')">+ New Permit</button>
+    <button class="desktop-nav-item" data-view="permits" onclick="switchView('permits')">All Permits</button>
+    <button class="desktop-nav-item" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</button>
+    <button class="desktop-nav-item" data-view="data" onclick="switchView('data')">Data</button>
+  </nav>
+  <div class="header-actions">
+    <button class="header-btn" onclick="openImportModal()" title="Import Data">📥</button>
+    <button class="header-btn" onclick="window.print()" title="Print">🖨️</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════
+     MAIN CONTENT
+     ═══════════════════════════════════════════ -->
+<main class="main-content">
+
+  <!-- ── DEMO BANNER ── -->
+  <div class="demo-banner" id="demoBanner" style="display:none" onclick="clearDemoData()">
+    <span>⚠️</span>
+    <span>Showing sample data for Tim Ferguson Plumbing. Tap to clear and start fresh.</span>
+    <span class="demo-x">✕</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 1: NEW PERMIT (Primary Workflow)
+       ═══════════════════════════════════════ -->
+  <div class="view active" id="view-tracker">
+    <h1 style="margin-bottom:4px;">🏛️ New Permit Entry</h1>
+    <p style="color:var(--white-50); font-size:0.8rem; margin-bottom:20px;">Track a permit from application to inspection pass.</p>
+
+    <form id="permitForm" onsubmit="return savePermit(event)">
+      <div class="card">
+        <h3 style="margin-bottom:16px; color:var(--red);">Job Details</h3>
+        <div class="form-group">
+          <label class="form-label" for="jobName">Job / Customer Name *</label>
+          <input type="text" class="form-input" id="jobName" placeholder="e.g., Smith Water Heater Replace" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="jobAddress">Job Address *</label>
+          <input type="text" class="form-input" id="jobAddress" placeholder="e.g., 142 Campbell St, Jackson, TN" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="permitType">Permit Type *</label>
+            <select class="form-select" id="permitType" required>
+              <option value="">Select type...</option>
+              <option value="gas-line">Gas Line</option>
+              <option value="water-heater">Water Heater</option>
+              <option value="electrical-panel">Electrical Panel</option>
+              <option value="sewer-line">Sewer Line</option>
+              <option value="hvac-install">HVAC Install</option>
+              <option value="water-line">Water Line</option>
+              <option value="drain-repair">Drain Repair</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="filingEntity">Filing Entity</label>
+            <select class="form-select" id="filingEntity">
+              <option value="city-codes">City Building Codes Dept</option>
+              <option value="jea">Jackson Energy Authority</option>
+              <option value="county">Madison County</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="techName">Assigned Tech</label>
+          <input type="text" class="form-input" id="techName" placeholder="e.g., Stephen Eaton">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="jobNotes">Notes</label>
+          <textarea class="form-textarea" id="jobNotes" placeholder="Special instructions, customer contact info, etc."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:16px; color:var(--red);">📎 Submission Proof</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Upload a photo of the permit application or submission receipt. This becomes your timestamped proof.</p>
+        <div class="photo-drop" id="photoDrop">
+          <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)">
+          <div class="pd-icon">📷</div>
+          <div class="pd-text">Tap to take photo or upload</div>
+        </div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" style="margin-bottom:16px;">
+        🚀 Submit & Track Permit
+      </button>
+    </form>
+
+    <!-- EMPTY STATE (shown when no permits exist) -->
+    <div class="empty-state" id="trackerEmpty" style="display:none;">
+      <div class="empty-icon">🏛️</div>
+      <h2 class="empty-title">Permit Patrol</h2>
+      <p class="empty-desc">
+        Track every permit from application to inspection pass. Upload submission receipts, 
+        generate shareable status links, and never get caught in "we didn't get it" limbo again.
+        Built for Tim Ferguson Plumbing, Air & Electric — Jackson, TN.
+      </p>
+      <div class="empty-actions">
+        <button class="btn btn-primary" onclick="document.getElementById('jobName').focus()">+ Track New Permit</button>
+        <button class="btn btn-outline btn-sm" onclick="loadDemoData()">Load Demo Data</button>
+        <button class="btn btn-secondary btn-sm" onclick="openImportModal()">📥 Import Existing Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 2: ALL PERMITS LIST
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-permits">
+    <h1 style="margin-bottom:16px;">📋 All Permits</h1>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search jobs, addresses..." id="searchInput" oninput="renderPermitsList()">
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">All</button>
+      <button class="filter-chip" data-filter="submitted" onclick="setFilter('submitted')">Submitted</button>
+      <button class="filter-chip" data-filter="scheduled" onclick="setFilter('scheduled')">Scheduled</button>
+      <button class="filter-chip" data-filter="assigned" onclick="setFilter('assigned')">Assigned</button>
+      <button class="filter-chip" data-filter="passed" onclick="setFilter('passed')">Passed</button>
+      <button class="filter-chip" data-filter="failed" onclick="setFilter('failed')">Failed</button>
+    </div>
+    <div id="permitsList"></div>
+    <div class="empty-state" id="permitsEmpty" style="display:none;">
+      <div class="empty-icon">📋</div>
+      <h2 class="empty-title">No Permits Yet</h2>
+      <p class="empty-desc">Create your first permit entry to start tracking.</p>
+      <button class="btn btn-primary" onclick="switchView('tracker')">+ New Permit</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 3: PERMIT DETAIL
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-detail">
+    <button class="detail-back" onclick="switchView('permits')">← Back to All Permits</button>
+    <div id="detailContent"></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 4: DASHBOARD
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-dashboard">
+    <h1 style="margin-bottom:16px;">📊 Dashboard</h1>
+    <div class="stat-grid" id="statsGrid"></div>
+    <div class="card">
+      <h3 style="margin-bottom:12px; color:var(--red);">Recent Activity</h3>
+      <div id="recentActivity"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════
+       VIEW 5: DATA MANAGEMENT
+       ═══════════════════════════════════════ -->
+  <div class="view" id="view-data">
+    <h1 style="margin-bottom:16px;">⚙️ Data & Settings</h1>
+    <div class="card">
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">📤</span>
+          <div>
+            <div class="si-label">Export CSV</div>
+            <div class="si-desc">Download permits as spreadsheet</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="exportCSV()">Export</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">💾</span>
+          <div>
+            <div class="si-label">Full Backup (JSON)</div>
+            <div class="si-desc">All data including photos & logs</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="exportJSON()">Backup</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">📥</span>
+          <div>
+            <div class="si-label">Import / Restore</div>
+            <div class="si-desc">CSV upload, paste, or JSON restore</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="openImportModal()">Import</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">🎲</span>
+          <div>
+            <div class="si-label">Load Demo Data</div>
+            <div class="si-desc">Sample permits from Jackson, TN</div>
+          </div>
+        </div>
+        <span class="si-action" onclick="loadDemoData()">Load</span>
+      </div>
+      <div class="settings-item">
+        <div class="si-left">
+          <span class="si-icon">🗑️</span>
+          <div>
+            <div class="si-label">Clear All Data</div>
+            <div class="si-desc">Remove all permits permanently</div>
+          </div>
+        </div>
+        <span class="si-action" style="color:var(--error);" onclick="confirmClearAll()">Clear</span>
+      </div>
+    </div>
+    <p style="text-align:center; font-size:0.7rem; color:var(--white-30); margin-top:24px;">
+      The Jackson Permit Patrol v1.0<br>
+      Built for Tim Ferguson Plumbing, Air & Electric — Jackson, TN<br>
+      All data stored locally on this device.
+    </p>
+  </div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════
+     BOTTOM TAB BAR
+     ═══════════════════════════════════════════ -->
+<nav class="tab-bar">
+  <button class="tab-item active" data-view="tracker" onclick="switchView('tracker')">
+    <span class="tab-icon">➕</span>
+    <span class="tab-label">New</span>
+  </button>
+  <button class="tab-item" data-view="permits" onclick="switchView('permits')">
+    <span class="tab-icon">📋</span>
+    <span class="tab-label">Permits</span>
+  </button>
+  <button class="tab-item" data-view="dashboard" onclick="switchView('dashboard')">
+    <span class="tab-icon">📊</span>
+    <span class="tab-label">Stats</span>
+  </button>
+  <button class="tab-item" data-view="data" onclick="switchView('data')">
+    <span class="tab-icon">⚙️</span>
+    <span class="tab-label">Data</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════
+     IMPORT MODAL
+     ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal-panel">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>📥 Import Data</h2>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">CSV File Upload</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Upload a .csv file with columns: jobName, address, permitType, status, techName</p>
+        <input type="file" accept=".csv" id="csvFileInput" onchange="importCSVFile(event)" style="display:none;">
+        <button class="btn btn-secondary btn-block" onclick="document.getElementById('csvFileInput').click()">Choose CSV File</button>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">Paste Data</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Paste tab-delimited data (e.g., from a spreadsheet)</p>
+        <textarea class="form-textarea" id="pasteArea" placeholder="jobName&#9;address&#9;permitType&#9;status&#9;techName&#10;Smith Water Heater&#9;142 Campbell St&#9;water-heater&#9;submitted&#9;Stephen Eaton" style="min-height:120px; font-size:13px;"></textarea>
+        <button class="btn btn-primary btn-block" style="margin-top:10px;" onclick="importPastedData()">Import Pasted Data</button>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:10px;">Restore JSON Backup</h3>
+        <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:12px;">Restore a full backup created by this tool.</p>
+        <input type="file" accept=".json" id="jsonFileInput" onchange="importJSONFile(event)" style="display:none;">
+        <button class="btn btn-secondary btn-block" onclick="document.getElementById('jsonFileInput').click()">Choose JSON Backup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     UPDATE STATUS MODAL
+     ═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="statusModal">
+  <div class="modal-panel">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>🔄 Update Status</h2>
+      <button class="modal-close" onclick="closeStatusModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="statusPermitId">
+      <div class="form-group">
+        <label class="form-label">New Status</label>
+        <select class="form-select" id="newStatus">
+          <option value="submitted">Application Submitted</option>
+          <option value="scheduled">City Scheduled</option>
+          <option value="assigned">Inspector Assigned</option>
+          <option value="passed">✅ Passed</option>
+          <option value="failed">❌ Failed</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optional)</label>
+        <textarea class="form-textarea" id="statusNote" placeholder="e.g., Inspector John scheduled for Tuesday 2pm"></textarea>
+      </div>
+      <div class="card" style="background: var(--dark-elevated);">
+        <h3 style="margin-bottom:10px; font-size:0.8rem;">📎 Add Photo Proof</h3>
+        <div class="photo-drop" id="statusPhotoDrop" style="padding:16px;">
+          <input type="file" accept="image/*" capture="environment" id="statusPhotoInput" onchange="handleStatusPhoto(event)">
+          <div class="pd-icon" style="font-size:20px;">📷</div>
+          <div class="pd-text" style="font-size:0.75rem;">Snap receipt or document</div>
+        </div>
+        <div class="photo-grid" id="statusPhotoGrid" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-block" onclick="submitStatusUpdate()">Update Status</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT ENGINE
+     ═══════════════════════════════════════════ -->
+<script>
+// ═══════════════════════════════════════════
+// SECURITY LAYER - Access Key Gate
+// ═══════════════════════════════════════════
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=181969462;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+  throw new Error('Invalid key');
+}
+
+// Disable right-click
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// Block dev tools shortcuts
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C')){e.preventDefault();}
+  if((e.ctrlKey||e.metaKey)&&e.key==='U'){e.preventDefault();}
+  if(e.key==='F12'){e.preventDefault();}
+});
+
+// ═══════════════════════════════════════════
+// DATABASE LAYER (IndexedDB + localStorage fallback)
+// ═══════════════════════════════════════════
+const DB_NAME = 'PermitPatrolDB';
+const DB_VERSION = 1;
+const STORE_NAME = 'permits';
+let db = null;
+let useLocalStorage = false;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { useLocalStorage = true; resolve(null); return; }
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE_NAME)) {
+        const store = d.createObjectStore(STORE_NAME, { keyPath: 'id' });
+        store.createIndex('status', 'status');
+        store.createIndex('createdAt', 'createdAt');
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = () => { useLocalStorage = true; resolve(null); };
+  });
+}
+
+function getAllPermits() {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      resolve(JSON.parse(localStorage.getItem('permits') || '[]'));
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => resolve([]);
+  });
+}
+
+function putPermit(permit) {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      getAllPermits().then(all => {
+        const idx = all.findIndex(p => p.id === permit.id);
+        if (idx >= 0) all[idx] = permit; else all.push(permit);
+        localStorage.setItem('permits', JSON.stringify(all));
+        resolve();
+      });
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(permit);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  });
+}
+
+function deletePermit(id) {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      getAllPermits().then(all => {
+        localStorage.setItem('permits', JSON.stringify(all.filter(p => p.id !== id)));
+        resolve();
+      });
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(id);
+    tx.oncomplete = () => resolve();
+  });
+}
+
+function clearAllPermits() {
+  return new Promise((resolve) => {
+    if (useLocalStorage) {
+      localStorage.removeItem('permits');
+      resolve();
+      return;
+    }
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).clear();
+    tx.oncomplete = () => resolve();
+  });
+}
+
+// ═══════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function formatDate(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function formatDateTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' at ' +
+         d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function generateHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+}
+
+const STATUS_ORDER = ['submitted', 'scheduled', 'assigned', 'passed', 'failed'];
+const STATUS_LABELS = {
+  submitted: 'Application Submitted',
+  scheduled: 'City Scheduled',
+  assigned: 'Inspector Assigned',
+  passed: 'Passed',
+  failed: 'Failed'
+};
+const STATUS_ICONS = { submitted: '📄', scheduled: '📅', assigned: '👷', passed: '✅', failed: '❌' };
+const TYPE_LABELS = {
+  'gas-line': 'Gas Line', 'water-heater': 'Water Heater', 'electrical-panel': 'Electrical Panel',
+  'sewer-line': 'Sewer Line', 'hvac-install': 'HVAC Install', 'water-line': 'Water Line',
+  'drain-repair': 'Drain Repair', 'other': 'Other'
+};
+const ENTITY_LABELS = {
+  'city-codes': 'City Building Codes Dept', 'jea': 'Jackson Energy Authority',
+  'county': 'Madison County', 'other': 'Other'
+};
+
+// ═══════════════════════════════════════════
+// VIEW SWITCHING
+// ═══════════════════════════════════════════
+let currentView = 'tracker';
+let currentFilter = 'all';
+let pendingPhotos = [];
+let statusPhotos = [];
+let undoTimeout = null;
+let undoPermit = null;
+
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const el = document.getElementById('view-' + view);
+  if (el) el.classList.add('active');
+
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+  document.querySelectorAll('.desktop-nav-item').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === view);
+  });
+
+  if (view === 'permits') renderPermitsList();
+  if (view === 'dashboard') renderDashboard();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════════════════
+// PHOTO HANDLING
+// ═══════════════════════════════════════════
+function handlePhoto(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      pendingPhotos.push({ name: file.name, data: ev.target.result, ts: Date.now() });
+      renderPhotoGrid('photoGrid', pendingPhotos);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function handleStatusPhoto(e) {
+  const files = e.target.files;
+  if (!files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      statusPhotos.push({ name: file.name, data: ev.target.result, ts: Date.now() });
+      renderPhotoGrid('statusPhotoGrid', statusPhotos);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+
+function renderPhotoGrid(containerId, photos) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = photos.map((p, i) =>
+    `<img src="${p.data}" class="photo-thumb" alt="${p.name}" onclick="previewPhoto('${containerId}', ${i})">`
+  ).join('');
+}
+
+function previewPhoto(containerId, idx) {
+  const photos = containerId === 'photoGrid' ? pendingPhotos : statusPhotos;
+  const w = window.open('', '_blank');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${photos[idx].data}" style="max-width:100%;max-height:100vh;">
+<!-- DEMO DISCLAIMER - Legal Notice -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+  <p><strong>DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only.
+  It is not affiliated with, endorsed by, or authorized by Tim Ferguson Plumbing.
+  All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Tim%20Ferguson%20Plumbing&body=I%20am%20the%20owner%20of%20Tim%20Ferguson%20Plumbing%20and%20I%20request%20permanent%20deletion%20of%20the%20demo%20tool%20on%20bennycutools.com." class="bct-delete-btn" aria-label="Request permanent deletion of this demo">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Permanent Deletion
+  </a>
+</div>
+
+</body></html>`);
+}
+
+// ═══════════════════════════════════════════
+// SAVE PERMIT
+// ═══════════════════════════════════════════
+async function savePermit(e) {
+  e.preventDefault();
+  const jobName = document.getElementById('jobName').value.trim();
+  const jobAddress = document.getElementById('jobAddress').value.trim();
+  const permitType = document.getElementById('permitType').value;
+
+  // Validate
+  let valid = true;
+  if (!jobName) { document.getElementById('jobName').classList.add('invalid', 'shake'); valid = false; }
+  if (!jobAddress) { document.getElementById('jobAddress').classList.add('invalid', 'shake'); valid = false; }
+  if (!permitType) { document.getElementById('permitType').classList.add('invalid', 'shake'); valid = false; }
+
+  if (!valid) {
+    setTimeout(() => document.querySelectorAll('.shake').forEach(el => el.classList.remove('shake')), 500);
+    showToast('Please fill in all required fields', 'error');
+    return false;
+  }
+
+  const now = Date.now();
+  const permit = {
+    id: genId(),
+    jobName,
+    address: jobAddress,
+    permitType,
+    filingEntity: document.getElementById('filingEntity').value,
+    techName: document.getElementById('techName').value.trim(),
+    notes: document.getElementById('jobNotes').value.trim(),
+    status: 'submitted',
+    photos: [...pendingPhotos],
+    timeline: [{
+      action: 'Application Submitted',
+      status: 'submitted',
+      timestamp: now,
+      note: 'Permit application filed with ' + ENTITY_LABELS[document.getElementById('filingEntity').value],
+      photos: pendingPhotos.length > 0 ? [...pendingPhotos] : []
+    }],
+    createdAt: now,
+    updatedAt: now,
+    isDemo: false
+  };
+
+  await putPermit(permit);
+
+  // Reset form
+  document.getElementById('permitForm').reset();
+  pendingPhotos = [];
+  document.getElementById('photoGrid').innerHTML = '';
+  document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+
+  showToast(`Permit tracked: ${jobName}`, 'success');
+  checkDemoBanner();
+  return false;
+}
+
+// Clear invalid on input
+document.querySelectorAll('.form-input, .form-select').forEach(el => {
+  el.addEventListener('input', () => el.classList.remove('invalid'));
+});
+
+// ═══════════════════════════════════════════
+// PERMITS LIST
+// ═══════════════════════════════════════════
+async function renderPermitsList() {
+  const permits = await getAllPermits();
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let filtered = permits.filter(p => {
+    if (currentFilter !== 'all' && p.status !== currentFilter) return false;
+    if (search && !p.jobName.toLowerCase().includes(search) && !p.address.toLowerCase().includes(search) && !(p.techName || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  filtered.sort((a, b) => b.updatedAt - a.updatedAt);
+
+  const container = document.getElementById('permitsList');
+  const emptyEl = document.getElementById('permitsEmpty');
+
+  if (filtered.length === 0) {
+    container.innerHTML = '';
+    emptyEl.style.display = 'block';
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  container.innerHTML = filtered.map((p, i) => `
+    <div class="permit-card" data-status="${p.status}" onclick="showDetail('${p.id}')" style="animation-delay:${i * 0.05}s">
+      <div class="pc-top">
+        <div class="pc-job">${escHtml(p.jobName)}</div>
+        <span class="pc-badge badge-${p.status}">${STATUS_LABELS[p.status] || p.status}</span>
+      </div>
+      <div class="pc-address">📍 ${escHtml(p.address)}</div>
+      <div class="pc-type">${STATUS_ICONS[p.status] || '📄'} ${TYPE_LABELS[p.permitType] || p.permitType} · ${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</div>
+      <div class="pc-date">Updated ${formatDateTime(p.updatedAt)}</div>
+    </div>
+  `).join('');
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderPermitsList();
+}
+
+function escHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+// ═══════════════════════════════════════════
+// PERMIT DETAIL
+// ═══════════════════════════════════════════
+async function showDetail(id) {
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  const statusIdx = STATUS_ORDER.indexOf(p.status);
+  const isFinal = p.status === 'passed' || p.status === 'failed';
+  const connectorPct = p.status === 'failed' ? ((Math.min(statusIdx, 3)) / 4 * 100) :
+                       isFinal ? 100 : (statusIdx / 4 * 100);
+
+  // Build pipeline stages
+  const stages = ['submitted', 'scheduled', 'assigned', 'passed'];
+  const pipelineHtml = stages.map((s, i) => {
+    let cls = '';
+    if (p.status === 'failed' && i === statusIdx) cls = 'failed';
+    else if (i < statusIdx || (isFinal && i <= 3 && p.status === 'passed')) cls = 'completed';
+    else if (i === statusIdx) cls = 'active';
+    const icon = cls === 'completed' ? '✓' : cls === 'failed' ? '✕' : cls === 'active' ? '●' : '';
+    return `<div class="status-stage ${cls}"><div class="status-dot">${icon}</div><div class="status-label">${STATUS_LABELS[s]}</div></div>`;
+  }).join('');
+
+  // Share link (self-referencing hash)
+  const shareHash = generateHash(p.id + p.createdAt);
+  const shareUrl = `${window.location.origin}${window.location.pathname}#permit-${shareHash}`;
+
+  // Receipt
+  const submissionEvent = p.timeline.find(t => t.status === 'submitted');
+
+  const html = `
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div>
+        <h1 style="font-size:1.3rem; margin-bottom:2px;">${escHtml(p.jobName)}</h1>
+        <span class="pc-badge badge-${p.status}" style="font-size:0.7rem;">${STATUS_LABELS[p.status]}</span>
+      </div>
+      <div class="btn-group">
+        ${!isFinal ? `<button class="btn btn-primary btn-sm" onclick="openStatusModal('${p.id}')">🔄 Update</button>` : ''}
+        <button class="btn btn-secondary btn-sm" onclick="deletePermitConfirm('${p.id}')">🗑️</button>
+      </div>
+    </div>
+
+    <!-- STATUS PIPELINE -->
+    <div class="card" style="padding:20px 12px;">
+      <div class="status-pipeline">
+        <div class="status-connector"><div class="status-connector-fill" style="width:${connectorPct}%"></div></div>
+        ${pipelineHtml}
+      </div>
+    </div>
+
+    <!-- JOB INFO -->
+    <div class="detail-section">
+      <div class="detail-section-title">Job Information</div>
+      <div class="detail-row"><span class="dr-label">Address</span><span class="dr-value">${escHtml(p.address)}</span></div>
+      <div class="detail-row"><span class="dr-label">Permit Type</span><span class="dr-value">${TYPE_LABELS[p.permitType] || p.permitType}</span></div>
+      <div class="detail-row"><span class="dr-label">Filing Entity</span><span class="dr-value">${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</span></div>
+      <div class="detail-row"><span class="dr-label">Assigned Tech</span><span class="dr-value">${escHtml(p.techName || '—')}</span></div>
+      <div class="detail-row"><span class="dr-label">Created</span><span class="dr-value">${formatDateTime(p.createdAt)}</span></div>
+      ${p.notes ? `<div style="margin-top:8px; font-size:0.85rem; color:var(--white-70); font-style:italic;">"${escHtml(p.notes)}"</div>` : ''}
+    </div>
+
+    <!-- SHARE LINK -->
+    <div class="detail-section">
+      <div class="detail-section-title">📎 Customer Status Link</div>
+      <p style="font-size:0.8rem; color:var(--white-50); margin-bottom:8px;">Share this link with the customer so they can track permit status.</p>
+      <div class="share-link-box">
+        <span class="sl-url" id="shareUrl">${shareUrl}</span>
+        <button class="sl-copy" onclick="copyShareLink()">Copy</button>
+      </div>
+    </div>
+
+    <!-- SUBMISSION RECEIPT -->
+    <div class="detail-section">
+      <div class="detail-section-title">🧾 Submission Receipt</div>
+      <div class="receipt-card" id="receiptCard">
+        <div class="rc-header">
+          <h3>TIM FERGUSON PLUMBING</h3>
+          <div>Air & Electric — Jackson, TN</div>
+          <div class="rc-subtitle">PERMIT SUBMISSION RECEIPT</div>
+        </div>
+        <div class="rc-row"><span class="rc-label">Job:</span><span class="rc-val">${escHtml(p.jobName)}</span></div>
+        <div class="rc-row"><span class="rc-label">Address:</span><span class="rc-val">${escHtml(p.address)}</span></div>
+        <div class="rc-row"><span class="rc-label">Permit Type:</span><span class="rc-val">${TYPE_LABELS[p.permitType] || p.permitType}</span></div>
+        <div class="rc-row"><span class="rc-label">Filed With:</span><span class="rc-val">${ENTITY_LABELS[p.filingEntity] || p.filingEntity}</span></div>
+        <div class="rc-row"><span class="rc-label">Filed By:</span><span class="rc-val">${escHtml(p.techName || 'Tim Ferguson Plumbing')}</span></div>
+        <div class="rc-row"><span class="rc-label">Submitted:</span><span class="rc-val">${submissionEvent ? formatDateTime(submissionEvent.timestamp) : formatDateTime(p.createdAt)}</span></div>
+        <div class="rc-row"><span class="rc-label">Current Status:</span><span class="rc-val" style="color:${p.status === 'passed' ? '#22c55e' : p.status === 'failed' ? '#ef4444' : '#d1242b'};">${STATUS_LABELS[p.status]}</span></div>
+        <div class="rc-stamp">
+          TIMESTAMPED PROOF OF FILING<br>
+          <span class="stamp-hash">REF: TFP-${shareHash}-${new Date(p.createdAt).getFullYear()}</span>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm btn-block" onclick="printReceipt('${p.id}')">🖨️ Print Receipt</button>
+    </div>
+
+    <!-- PHOTOS -->
+    ${(p.photos && p.photos.length > 0) ? `
+    <div class="detail-section">
+      <div class="detail-section-title">📷 Photos & Documents</div>
+      <div class="photo-grid">${p.photos.map((ph, i) =>
+        `<img src="${ph.data}" class="photo-thumb" style="width:80px;height:80px;" onclick="window.open('').document.write('<img src=\\'${ph.data}\\' style=\\'max-width:100%;max-height:100vh;\\'>')">`
+      ).join('')}</div>
+    </div>` : ''}
+
+    <!-- TIMELINE -->
+    <div class="detail-section">
+      <div class="detail-section-title">📜 Activity Log</div>
+      <div class="timeline">
+        ${(p.timeline || []).slice().reverse().map(t => {
+          const dotCls = t.status === 'submitted' ? 'tl-submit' : t.status === 'scheduled' ? 'tl-schedule' :
+                         t.status === 'assigned' ? 'tl-assign' : t.status === 'passed' ? 'tl-pass' :
+                         t.status === 'failed' ? 'tl-fail' : 'tl-note';
+          return `
+          <div class="timeline-item">
+            <div class="timeline-dot ${dotCls}">${STATUS_ICONS[t.status] || '📝'}</div>
+            <div class="timeline-body">
+              <div class="tl-action">${escHtml(t.action)}</div>
+              <div class="tl-time">${formatDateTime(t.timestamp)}</div>
+              ${t.note ? `<div class="tl-note-text">${escHtml(t.note)}</div>` : ''}
+              ${(t.photos && t.photos.length) ? `<div class="photo-grid" style="margin-top:6px;">${t.photos.map(ph =>
+                `<img src="${ph.data}" class="photo-thumb" style="width:48px;height:48px;" onclick="window.open('').document.write('<img src=\\'${ph.data}\\' style=\\'max-width:100%;max-height:100vh;\\'>')">`
+              ).join('')}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('detailContent').innerHTML = html;
+  switchView('detail');
+}
+
+function copyShareLink() {
+  const url = document.getElementById('shareUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied to clipboard', 'success'))
+    .catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('Link copied to clipboard', 'success');
+    });
+}
+
+function printReceipt(id) {
+  window.print();
+}
+
+// ═══════════════════════════════════════════
+// STATUS UPDATE
+// ═══════════════════════════════════════════
+function openStatusModal(id) {
+  document.getElementById('statusPermitId').value = id;
+  statusPhotos = [];
+  document.getElementById('statusPhotoGrid').innerHTML = '';
+  document.getElementById('statusNote').value = '';
+  document.getElementById('statusModal').classList.add('active');
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.remove('active');
+}
+
+async function submitStatusUpdate() {
+  const id = document.getElementById('statusPermitId').value;
+  const newStatus = document.getElementById('newStatus').value;
+  const note = document.getElementById('statusNote').value.trim();
+
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  p.status = newStatus;
+  p.updatedAt = Date.now();
+  p.timeline.push({
+    action: `Status updated to ${STATUS_LABELS[newStatus]}`,
+    status: newStatus,
+    timestamp: Date.now(),
+    note: note,
+    photos: statusPhotos.length > 0 ? [...statusPhotos] : []
+  });
+
+  // Merge photos
+  if (statusPhotos.length > 0) {
+    p.photos = (p.photos || []).concat(statusPhotos);
+  }
+
+  await putPermit(p);
+  closeStatusModal();
+  showToast(`Status: ${STATUS_LABELS[newStatus]}`, 'success');
+  showDetail(id);
+}
+
+// ═══════════════════════════════════════════
+// DELETE WITH UNDO
+// ═══════════════════════════════════════════
+async function deletePermitConfirm(id) {
+  const permits = await getAllPermits();
+  const p = permits.find(x => x.id === id);
+  if (!p) return;
+
+  undoPermit = { ...p };
+  await deletePermit(id);
+
+  showToast(`"${p.jobName}" deleted`, 'undo', () => {
+    // Undo action
+    putPermit(undoPermit).then(() => {
+      undoPermit = null;
+      showDetail(id);
+      showToast('Restored!', 'success');
+    });
+  });
+
+  switchView('permits');
+  renderPermitsList();
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+async function renderDashboard() {
+  const permits = await getAllPermits();
+  const counts = { submitted: 0, scheduled: 0, assigned: 0, passed: 0, failed: 0 };
+  permits.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
+
+  const active = counts.submitted + counts.scheduled + counts.assigned;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card stat-active"><div class="stat-num">${active}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card stat-passed"><div class="stat-num">${counts.passed}</div><div class="stat-label">Passed</div></div>
+    <div class="stat-card stat-pending"><div class="stat-num">${counts.submitted}</div><div class="stat-label">Submitted</div></div>
+    <div class="stat-card stat-failed"><div class="stat-num">${counts.failed}</div><div class="stat-label">Failed</div></div>
+  `;
+
+  // Recent activity
+  const allEvents = [];
+  permits.forEach(p => {
+    (p.timeline || []).forEach(t => {
+      allEvents.push({ ...t, jobName: p.jobName, permitId: p.id });
+    });
+  });
+  allEvents.sort((a, b) => b.timestamp - a.timestamp);
+  const recent = allEvents.slice(0, 10);
+
+  document.getElementById('recentActivity').innerHTML = recent.length === 0
+    ? '<p style="color:var(--white-50); font-size:0.85rem; text-align:center; padding:20px;">No activity yet.</p>'
+    : recent.map(t => `
+      <div style="display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid var(--dark-border); cursor:pointer;" onclick="showDetail('${t.permitId}')">
+        <span style="font-size:16px;">${STATUS_ICONS[t.status] || '📝'}</span>
+        <div style="flex:1;">
+          <div style="font-size:0.85rem; font-weight:500;">${escHtml(t.jobName)}</div>
+          <div style="font-size:0.75rem; color:var(--white-50);">${escHtml(t.action)}</div>
+          <div style="font-size:0.65rem; color:var(--white-30);">${formatDateTime(t.timestamp)}</div>
+        </div>
+      </div>
+    `).join('');
+}
+
+// ═══════════════════════════════════════════
+// TOAST SYSTEM
+// ═══════════════════════════════════════════
+function showToast(msg, type = 'success', undoFn = null) {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type === 'undo' ? 'undo' : type}`;
+
+  const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'undo' ? '↩️' : 'ℹ️';
+
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <span class="toast-msg">${escHtml(msg)}</span>
+    ${undoFn ? '<span class="toast-action" onclick="this.parentElement._undoFn()">UNDO</span>' : ''}
+  `;
+
+  if (undoFn) {
+    toast._undoFn = () => {
+      undoFn();
+      toast.remove();
+    };
+  }
+
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; toast.style.transition = '0.3s'; setTimeout(() => toast.remove(), 300); }, undoFn ? 5000 : 3000);
+}
+
+// ═══════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════
+function openImportModal() { document.getElementById('importModal').classList.add('active'); }
+function closeImportModal() { document.getElementById('importModal').classList.remove('active'); }
+
+async function exportCSV() {
+  const permits = await getAllPermits();
+  if (!permits.length) { showToast('No data to export', 'error'); return; }
+  const headers = ['jobName', 'address', 'permitType', 'filingEntity', 'techName', 'status', 'createdAt', 'updatedAt', 'notes'];
+  const rows = permits.map(p => headers.map(h => {
+    let v = p[h] || '';
+    if (h === 'createdAt' || h === 'updatedAt') v = new Date(v).toISOString();
+    return `"${String(v).replace(/"/g, '""')}"`;
+  }).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  downloadFile(csv, 'permit-patrol-export.csv', 'text/csv');
+  showToast('CSV exported', 'success');
+}
+
+async function exportJSON() {
+  const permits = await getAllPermits();
+  const data = { version: '1.0', app: 'Jackson Permit Patrol', exportedAt: new Date().toISOString(), permits };
+  downloadFile(JSON.stringify(data, null, 2), 'permit-patrol-backup.json', 'application/json');
+  showToast('Backup saved', 'success');
+}
+
+function downloadFile(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function importCSVFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  await parseAndImportCSV(text);
+  e.target.value = '';
+}
+
+async function importPastedData() {
+  const text = document.getElementById('pasteArea').value.trim();
+  if (!text) { showToast('Nothing to import', 'error'); return; }
+  await parseAndImportCSV(text, '\t');
+  document.getElementById('pasteArea').value = '';
+}
+
+async function parseAndImportCSV(text, sep = null) {
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { showToast('Need header + at least 1 row', 'error'); return; }
+
+  // Auto-detect separator
+  if (!sep) sep = lines[0].includes('\t') ? '\t' : ',';
+
+  const headers = lines[0].split(sep).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
+  const nameIdx = headers.findIndex(h => h.includes('job') || h.includes('name') || h.includes('customer'));
+  const addrIdx = headers.findIndex(h => h.includes('addr'));
+  const typeIdx = headers.findIndex(h => h.includes('type'));
+  const statusIdx = headers.findIndex(h => h.includes('status'));
+  const techIdx = headers.findIndex(h => h.includes('tech'));
+
+  if (nameIdx < 0) { showToast('Could not find job/customer name column', 'error'); return; }
+
+  let count = 0;
+  const now = Date.now();
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(sep).map(c => c.replace(/^"|"$/g, '').trim());
+    const jobName = cols[nameIdx];
+    if (!jobName) continue;
+
+    const status = statusIdx >= 0 ? (cols[statusIdx] || 'submitted').toLowerCase() : 'submitted';
+    const permit = {
+      id: genId(),
+      jobName,
+      address: addrIdx >= 0 ? cols[addrIdx] || '' : '',
+      permitType: typeIdx >= 0 ? cols[typeIdx] || 'other' : 'other',
+      filingEntity: 'city-codes',
+      techName: techIdx >= 0 ? cols[techIdx] || '' : '',
+      notes: '',
+      status: STATUS_ORDER.includes(status) ? status : 'submitted',
+      photos: [],
+      timeline: [{ action: 'Imported', status: 'submitted', timestamp: now, note: 'Imported from CSV', photos: [] }],
+      createdAt: now - (lines.length - i) * 86400000,
+      updatedAt: now,
+      isDemo: false
+    };
+    await putPermit(permit);
+    count++;
+  }
+
+  closeImportModal();
+  showToast(`Imported ${count} permits`, 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+async function importJSONFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    if (!data.permits || !Array.isArray(data.permits)) throw new Error('Invalid format');
+    for (const p of data.permits) await putPermit(p);
+    closeImportModal();
+    showToast(`Restored ${data.permits.length} permits`, 'success');
+    checkDemoBanner();
+    renderPermitsList();
+  } catch (err) {
+    showToast('Invalid backup file', 'error');
+  }
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════
+// DEMO DATA
+// ═══════════════════════════════════════════
+async function loadDemoData() {
+  const now = Date.now();
+  const demos = [
+    {
+      id: genId(), jobName: 'Henderson Gas Line Repair', address: '312 Campbell St, Jackson, TN 38301',
+      permitType: 'gas-line', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: 'Gas leak detected at meter. JEA shutoff performed. Needs city inspection before re-connect.',
+      status: 'scheduled', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 172800000, note: 'Filed with City Building Codes Dept. Receipt #4821.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 86400000, note: 'Inspector tentatively scheduled for Thursday AM.', photos: [] }
+      ],
+      createdAt: now - 172800000, updatedAt: now - 86400000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Martinez Water Heater Replace', address: '1547 Hollywood Dr, Jackson, TN 38301',
+      permitType: 'water-heater', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: '50-gal gas water heater replacement. Customer has been without hot water since Monday.',
+      status: 'assigned', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 259200000, note: 'Filed with City Building Codes Dept.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 172800000, note: 'Scheduled for inspection window.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 43200000, note: 'Inspector John Davis assigned, ETA Friday 10am-12pm.', photos: [] }
+      ],
+      createdAt: now - 259200000, updatedAt: now - 43200000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Whitfield Electrical Panel Upgrade', address: '88 Lexington Ave, Jackson, TN 38301',
+      permitType: 'electrical-panel', filingEntity: 'jea', techName: 'Brian Ferguson',
+      notes: '100A to 200A panel upgrade. JEA coordination required for meter pull/reset.',
+      status: 'submitted', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 36000000, note: 'Filed with Jackson Energy Authority. Awaiting confirmation.', photos: [] }
+      ],
+      createdAt: now - 36000000, updatedAt: now - 36000000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Cooper Sewer Line Replacement', address: '2201 N Highland Ave, Jackson, TN 38305',
+      permitType: 'sewer-line', filingEntity: 'city-codes', techName: 'Stephen Eaton',
+      notes: 'Full sewer lateral replacement. City sidewalk cut required — need ROW permit also.',
+      status: 'passed', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 604800000, note: 'Filed with City Building Codes Dept and ROW permit with Public Works.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 518400000, note: 'Inspection scheduled.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 432000000, note: 'Inspector verified trench depth and grade.', photos: [] },
+        { action: 'Status updated to Passed', status: 'passed', timestamp: now - 345600000, note: '✅ Inspection passed. Backfill authorized. ROW restoration within 5 days.', photos: [] }
+      ],
+      createdAt: now - 604800000, updatedAt: now - 345600000, isDemo: true
+    },
+    {
+      id: genId(), jobName: 'Baker HVAC Install', address: '455 Old Hickory Blvd, Jackson, TN 38305',
+      permitType: 'hvac-install', filingEntity: 'city-codes', techName: 'Brian Ferguson',
+      notes: 'New 3-ton heat pump system. Ductwork modification included.',
+      status: 'failed', photos: [],
+      timeline: [
+        { action: 'Application Submitted', status: 'submitted', timestamp: now - 432000000, note: 'Filed with City Building Codes Dept.', photos: [] },
+        { action: 'Status updated to City Scheduled', status: 'scheduled', timestamp: now - 345600000, note: 'Scheduled for routine HVAC inspection.', photos: [] },
+        { action: 'Status updated to Inspector Assigned', status: 'assigned', timestamp: now - 259200000, note: 'Inspector assigned.', photos: [] },
+        { action: 'Status updated to Failed', status: 'failed', timestamp: now - 172800000, note: '❌ Failed — condensate drain not properly routed per code. Re-inspection needed after fix.', photos: [] }
+      ],
+      createdAt: now - 432000000, updatedAt: now - 172800000, isDemo: true
+    }
+  ];
+
+  for (const d of demos) await putPermit(d);
+  showToast('Demo data loaded — 5 sample permits', 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+async function clearDemoData() {
+  const permits = await getAllPermits();
+  const demos = permits.filter(p => p.isDemo);
+  for (const d of demos) await deletePermit(d.id);
+  document.getElementById('demoBanner').style.display = 'none';
+  showToast('Demo data cleared', 'success');
+  renderPermitsList();
+}
+
+async function checkDemoBanner() {
+  const permits = await getAllPermits();
+  const hasDemo = permits.some(p => p.isDemo);
+  document.getElementById('demoBanner').style.display = hasDemo ? 'flex' : 'none';
+  // Show/hide empty state
+  const hasAny = permits.length > 0;
+  document.getElementById('trackerEmpty').style.display = hasAny ? 'none' : 'block';
+}
+
+async function confirmClearAll() {
+  if (!confirm('⚠️ This will permanently delete ALL permits. Are you sure?')) return;
+  await clearAllPermits();
+  showToast('All data cleared', 'success');
+  checkDemoBanner();
+  renderPermitsList();
+}
+
+// ═══════════════════════════════════════════
+// HASH ROUTING (for shared links)
+// ═══════════════════════════════════════════
+async function checkHashRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#permit-')) {
+    const targetHash = hash.replace('#permit-', '');
+    const permits = await getAllPermits();
+    const match = permits.find(p => generateHash(p.id + p.createdAt) === targetHash);
+    if (match) showDetail(match.id);
+  }
+}
+
+// ═══════════════════════════════════════════
+// CLOSE MODALS ON OVERLAY CLICK
+// ═══════════════════════════════════════════
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('active');
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+async function init() {
+  await openDB();
+  await checkDemoBanner();
+  await checkHashRoute();
+}
+
+init();
+</script>
+
+<!-- DEMO DISCLAIMER - Legal Notice -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
+  <p><strong>DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only.
+  It is not affiliated with, endorsed by, or authorized by Tim Ferguson Plumbing.
+  All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Tim%20Ferguson%20Plumbing&body=I%20am%20the%20owner%20of%20Tim%20Ferguson%20Plumbing%20and%20I%20request%20permanent%20deletion%20of%20the%20demo%20tool%20on%20bennycutools.com." class="bct-delete-btn" aria-label="Request permanent deletion of this demo">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Permanent Deletion
+  </a>
+</div>
+
+</body>
+</html>
