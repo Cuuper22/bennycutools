@@ -20,24 +20,26 @@
     window.BCU.animateSplitText(heroH1);
   }
 
-  // Hero subheadline and CTAs
-  gsap.from('.hero-content p', { y: 30, opacity: 0, duration: 0.7, delay: 0.4 });
-  gsap.from('.hero-ctas', { y: 30, opacity: 0, duration: 0.7, delay: 0.5 });
+  // Hero subheadline and CTAs — subtle entrance, not from invisible
+  gsap.from('.hero-content p', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.3 });
+  gsap.from('.hero-ctas', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.4 });
 
   // ---- Dashboard Mockup Animation ----
+  // Dashboard starts VISIBLE — only animate position/scale, not opacity.
+  // Internal content animates in quickly so the dashboard feels alive, not empty.
   var dashboard = document.querySelector('.dashboard-mockup');
   if (dashboard) {
-    gsap.from(dashboard, { y: 40, opacity: 0, scale: 0.96, duration: 1, delay: 0.5, ease: 'power3.out' });
+    gsap.from(dashboard, { y: 24, scale: 0.98, duration: 0.8, delay: 0.3, ease: 'power3.out' });
 
-    // Sidebar items
+    // Sidebar items — fast stagger, slight opacity
     var sidebarItems = dashboard.querySelectorAll('.sidebar-item');
-    gsap.from(sidebarItems, { x: -20, opacity: 0, duration: 0.4, stagger: 0.08, delay: 0.8 });
+    gsap.from(sidebarItems, { x: -10, opacity: 0.4, duration: 0.3, stagger: 0.05, delay: 0.4 });
 
-    // Metric cards
+    // Metric cards — visible immediately, slight scale pop
     var metricCards = dashboard.querySelectorAll('.metric-card');
-    gsap.from(metricCards, { y: 20, opacity: 0, scale: 0.95, duration: 0.5, stagger: 0.1, delay: 1.0 });
+    gsap.from(metricCards, { scale: 0.95, duration: 0.4, stagger: 0.08, delay: 0.5 });
 
-    // Metric values counter
+    // Metric values counter — start counting immediately
     dashboard.querySelectorAll('.metric-value[data-target]').forEach(function(el) {
       var target = parseFloat(el.getAttribute('data-target'));
       var prefix = el.getAttribute('data-prefix') || '';
@@ -45,8 +47,8 @@
       var proxy = { value: 0 };
       gsap.to(proxy, {
         value: target,
-        duration: 1.2,
-        delay: 1.3,
+        duration: 1,
+        delay: 0.5,
         ease: 'power2.out',
         onUpdate: function() {
           el.textContent = prefix + Math.round(proxy.value).toLocaleString() + suffix;
@@ -54,17 +56,17 @@
       });
     });
 
-    // Chart bars grow
+    // Chart bars grow — faster
     var bars = dashboard.querySelectorAll('.metric-bar-segment');
     bars.forEach(function(bar) {
       var h = bar.style.height || bar.getAttribute('data-height') || '60%';
       bar.style.height = '0';
-      gsap.to(bar, { height: h, duration: 0.6, delay: 1.5 + Math.random() * 0.3, ease: 'power2.out' });
+      gsap.to(bar, { height: h, duration: 0.5, delay: 0.6 + Math.random() * 0.2, ease: 'power2.out' });
     });
 
-    // Table rows
+    // Table rows — faster, less delay
     var tableRows = dashboard.querySelectorAll('.dashboard-table tbody tr');
-    gsap.from(tableRows, { opacity: 0, x: -10, duration: 0.4, stagger: 0.06, delay: 1.8 });
+    gsap.from(tableRows, { opacity: 0.3, x: -6, duration: 0.3, stagger: 0.04, delay: 0.7 });
   }
 
   // ---- Parallax Orbs ----

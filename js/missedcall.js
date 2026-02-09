@@ -14,22 +14,22 @@
     if (reduced) {
       phoneBubbles.forEach(function(b) { b.style.opacity = '1'; b.style.transform = 'none'; });
     } else if (typeof gsap !== 'undefined') {
-      // Hide bubbles initially
-      gsap.set(phoneBubbles, { opacity: 0, y: 20 });
+      // Phone frame starts VISIBLE — only animate scale/position, not opacity.
+      // SMS bubbles animate in sequence for engagement.
+      gsap.set(phoneBubbles, { opacity: 0, y: 12 });
 
-      // Phone entrance
       var phoneFrame = document.querySelector('.phone-frame');
       if (phoneFrame) {
         gsap.from(phoneFrame, {
-          scale: 0.9, opacity: 0, duration: 0.8, delay: 0.5, ease: 'power3.out'
+          y: 16, scale: 0.97, duration: 0.6, delay: 0.3, ease: 'power3.out'
         });
       }
 
-      // Sequence messages
-      var delays = [1.0, 1.8, 3.0];
+      // Sequence messages — faster, first bubble shows quickly
+      var delays = [0.6, 1.2, 2.0];
       phoneBubbles.forEach(function(bubble, i) {
         gsap.to(bubble, {
-          opacity: 1, y: 0, duration: 0.5, delay: delays[i] || (1 + i * 0.8),
+          opacity: 1, y: 0, duration: 0.4, delay: delays[i] || (0.6 + i * 0.6),
           ease: 'power2.out'
         });
       });
@@ -49,8 +49,8 @@
     if (heroH1) {
       window.BCU.animateSplitText(heroH1);
     }
-    gsap.from('.mc-hero-content p', { y: 30, opacity: 0, duration: 0.7, delay: 0.4 });
-    gsap.from('.mc-hero-ctas', { y: 30, opacity: 0, duration: 0.7, delay: 0.5 });
+    gsap.from('.mc-hero-content p', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.3 });
+    gsap.from('.mc-hero-ctas', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.4 });
   }
 
   // ---- Stats Counter Animations ----

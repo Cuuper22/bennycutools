@@ -41,13 +41,13 @@
     if (heroH1) {
       window.BCU.animateSplitText(heroH1);
     }
-    gsap.from('.rv-hero-content p', { y: 30, opacity: 0, duration: 0.7, delay: 0.4 });
-    gsap.from('.rv-hero-ctas', { y: 30, opacity: 0, duration: 0.7, delay: 0.5 });
+    gsap.from('.rv-hero-content p', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.3 });
+    gsap.from('.rv-hero-ctas', { y: 16, opacity: 0.3, duration: 0.5, delay: 0.4 });
 
-    // Review mockup
+    // Review mockup — starts VISIBLE, subtle entrance
     var mockup = document.querySelector('.review-mockup');
     if (mockup) {
-      gsap.from(mockup, { y: 40, opacity: 0, scale: 0.95, duration: 1, delay: 0.5, ease: 'power3.out' });
+      gsap.from(mockup, { y: 16, scale: 0.98, duration: 0.6, delay: 0.3, ease: 'power3.out' });
     }
   }
 
