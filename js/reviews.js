@@ -135,9 +135,9 @@
   // ---- Stats Counter Animations ----
   if (!reduced && typeof gsap !== 'undefined') {
     var statCards = document.querySelectorAll('.rv-stats-grid .stat-card');
-    gsap.from(statCards, {
-      scale: 0.95, opacity: 0, duration: 0.8, stagger: 0.12,
-      scrollTrigger: { trigger: '.rv-stats-grid', start: 'top 80%', once: true }
+    gsap.to(statCards, {
+      scale: 1, opacity: 1, duration: 0.8, stagger: 0.12,
+      scrollTrigger: { trigger: '.rv-stats-grid', start: 'top 90%', once: true }
     });
 
     // Counter: 76%
@@ -164,7 +164,7 @@
       var proxy = { low: 0, high: 0 };
       gsap.to(proxy, {
         low: 5, high: 9, duration: 1.5, ease: 'power2.out',
-        scrollTrigger: { trigger: statRevenue, start: 'top 80%', once: true },
+        scrollTrigger: { trigger: statRevenue, start: 'top 90%', once: true },
         onUpdate: function() {
           statRevenue.textContent = Math.round(proxy.low) + '-' + Math.round(proxy.high) + '%';
         }
@@ -174,9 +174,9 @@
 
   // ---- How It Works ----
   if (!reduced && typeof gsap !== 'undefined') {
-    gsap.from('.rv-step', {
-      y: 40, opacity: 0, scale: 0.95, duration: 0.8, stagger: 0.15,
-      scrollTrigger: { trigger: '.rv-steps-grid', start: 'top 80%', once: true }
+    gsap.to('.rv-step', {
+      y: 0, opacity: 1, duration: 0.8, stagger: 0.15,
+      scrollTrigger: { trigger: '.rv-steps-grid', start: 'top 90%', once: true }
     });
 
     var stepsLine = document.querySelector('.rv-steps-connector .draw-line');
@@ -187,14 +187,14 @@
 
   // ---- Features ----
   if (!reduced && typeof gsap !== 'undefined') {
-    gsap.from('.rv-hero-feature', {
-      y: 40, opacity: 0, duration: 0.8,
-      scrollTrigger: { trigger: '.rv-hero-feature', start: 'top 80%', once: true }
+    gsap.to('.rv-hero-feature', {
+      y: 0, opacity: 1, duration: 0.8,
+      scrollTrigger: { trigger: '.rv-hero-feature', start: 'top 90%', once: true }
     });
 
-    gsap.from('.rv-features-grid .feature-card', {
-      y: 40, opacity: 0, duration: 0.8, stagger: 0.1,
-      scrollTrigger: { trigger: '.rv-features-grid', start: 'top 80%', once: true }
+    gsap.to('.rv-features-grid .feature-card', {
+      y: 0, opacity: 1, duration: 0.8, stagger: 0.08,
+      scrollTrigger: { trigger: '.rv-features-grid', start: 'top 90%', once: true }
     });
   }
 
@@ -202,23 +202,24 @@
   if (!reduced && typeof gsap !== 'undefined') {
     var pricingCards = document.querySelectorAll('.rv-pricing-grid .pricing-card');
     if (pricingCards.length === 3) {
-      gsap.from(pricingCards[1], {
-        y: 40, opacity: 0, scale: 0.95, duration: 0.8,
-        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 80%', once: true }
+      // Center card first, then sides
+      gsap.to(pricingCards[1], {
+        y: 0, opacity: 1, duration: 0.8,
+        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 90%', once: true }
       });
-      gsap.from(pricingCards[0], {
-        x: -40, opacity: 0, duration: 0.8, delay: 0.2,
-        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 80%', once: true }
+      gsap.to(pricingCards[0], {
+        x: 0, opacity: 1, duration: 0.8, delay: 0.2,
+        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 90%', once: true }
       });
-      gsap.from(pricingCards[2], {
-        x: 40, opacity: 0, duration: 0.8, delay: 0.2,
-        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 80%', once: true }
+      gsap.to(pricingCards[2], {
+        x: 0, opacity: 1, duration: 0.8, delay: 0.2,
+        scrollTrigger: { trigger: '.rv-pricing-grid', start: 'top 90%', once: true }
       });
     }
 
     gsap.from('.sprint-offer', {
       y: 30, opacity: 0, duration: 0.8,
-      scrollTrigger: { trigger: '.sprint-offer', start: 'top 85%', once: true }
+      scrollTrigger: { trigger: '.sprint-offer', start: 'top 90%', once: true }
     });
   }
 
@@ -227,7 +228,7 @@
     var checkItems = document.querySelectorAll('.audit-checklist-item');
     gsap.from(checkItems, {
       x: -20, opacity: 0, duration: 0.5, stagger: 0.12,
-      scrollTrigger: { trigger: '.audit-cta', start: 'top 80%', once: true }
+      scrollTrigger: { trigger: '.audit-cta', start: 'top 90%', once: true }
     });
 
     // Check marks draw in
@@ -236,7 +237,7 @@
       if (check) {
         gsap.from(check, {
           scale: 0, rotation: -90, duration: 0.4, delay: 0.1 + i * 0.12,
-          scrollTrigger: { trigger: '.audit-cta', start: 'top 80%', once: true }
+          scrollTrigger: { trigger: '.audit-cta', start: 'top 90%', once: true }
         });
       }
     });
@@ -246,7 +247,7 @@
   if (!reduced && typeof gsap !== 'undefined') {
     gsap.from('.faq-item', {
       x: -30, opacity: 0, rotation: -1, duration: 0.6, stagger: 0.08,
-      scrollTrigger: { trigger: '.faq-list', start: 'top 80%', once: true }
+      scrollTrigger: { trigger: '.faq-list', start: 'top 90%', once: true }
     });
   }
 
@@ -255,7 +256,7 @@
     document.querySelectorAll('.section h2[data-split]').forEach(function(h2) {
       ScrollTrigger.create({
         trigger: h2,
-        start: 'top 80%',
+        start: 'top 90%',
         once: true,
         onEnter: function() {
           window.BCU.animateSplitText(h2);

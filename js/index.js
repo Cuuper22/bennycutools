@@ -7,11 +7,7 @@
   'use strict';
 
   if (window.BCU.prefersReduced) {
-    // Show everything immediately
-    document.querySelectorAll('[data-animate]').forEach(function(el) {
-      el.style.opacity = '1';
-      el.style.transform = 'none';
-    });
+    // Content stays visible via CSS defaults — nothing to do
     return;
   }
 
@@ -31,7 +27,7 @@
   // ---- Dashboard Mockup Animation ----
   var dashboard = document.querySelector('.dashboard-mockup');
   if (dashboard) {
-    gsap.from(dashboard, { y: 40, opacity: 0, scale: 0.96, duration: 1, delay: 0.3, ease: 'power3.out' });
+    gsap.from(dashboard, { y: 40, opacity: 0, scale: 0.96, duration: 1, delay: 0.5, ease: 'power3.out' });
 
     // Sidebar items
     var sidebarItems = dashboard.querySelectorAll('.sidebar-item');
@@ -79,19 +75,19 @@
   // ---- Social Proof ----
   gsap.from('.proof-item', {
     y: 20, opacity: 0, duration: 0.6, stagger: 0.1,
-    scrollTrigger: { trigger: '.social-proof', start: 'top 85%', once: true }
+    scrollTrigger: { trigger: '.social-proof', start: 'top 90%', once: true }
   });
 
   // ---- Services Cards ----
-  gsap.from('.service-card', {
-    y: 40, opacity: 0, duration: 0.8, stagger: 0.12,
-    scrollTrigger: { trigger: '.services-grid', start: 'top 80%', once: true }
+  gsap.to('.service-card', {
+    y: 0, opacity: 1, duration: 0.8, stagger: 0.08,
+    scrollTrigger: { trigger: '.services-grid', start: 'top 90%', once: true }
   });
 
   // ---- How It Works ----
-  gsap.from('.step', {
-    y: 40, opacity: 0, scale: 0.95, duration: 0.8, stagger: 0.15,
-    scrollTrigger: { trigger: '.steps-grid', start: 'top 80%', once: true }
+  gsap.to('.step', {
+    y: 0, opacity: 1, duration: 0.8, stagger: 0.15,
+    scrollTrigger: { trigger: '.steps-grid', start: 'top 90%', once: true }
   });
 
   // Line draw
@@ -104,7 +100,7 @@
   document.querySelectorAll('.step-number').forEach(function(num, i) {
     ScrollTrigger.create({
       trigger: num,
-      start: 'top 70%',
+      start: 'top 90%',
       once: true,
       onEnter: function() {
         gsap.to(num, {
@@ -118,9 +114,9 @@
 
   // ---- Features Grid ----
   var featureCards = document.querySelectorAll('.features-grid .feature-card');
-  gsap.from(featureCards, {
-    y: 40, opacity: 0, duration: 0.8, stagger: 0.1,
-    scrollTrigger: { trigger: '.features-grid', start: 'top 80%', once: true }
+  gsap.to(featureCards, {
+    y: 0, opacity: 1, duration: 0.8, stagger: 0.08,
+    scrollTrigger: { trigger: '.features-grid', start: 'top 90%', once: true }
   });
 
   // Feature icons
@@ -129,7 +125,7 @@
     if (icon) {
       gsap.from(icon, {
         scale: 0, rotation: -15, duration: 0.5,
-        scrollTrigger: { trigger: card, start: 'top 80%', once: true }
+        scrollTrigger: { trigger: card, start: 'top 90%', once: true }
       });
     }
   });
@@ -181,9 +177,9 @@
   });
 
   // ---- Portfolio Cards ----
-  gsap.from('.portfolio-card', {
-    y: 50, opacity: 0, rotationY: -3, duration: 0.9, stagger: 0.12,
-    scrollTrigger: { trigger: '.portfolio-grid', start: 'top 80%', once: true }
+  gsap.to('.portfolio-card', {
+    y: 0, opacity: 1, duration: 0.9, stagger: 0.12,
+    scrollTrigger: { trigger: '.portfolio-grid', start: 'top 90%', once: true }
   });
 
   // ---- Pricing ----
@@ -198,14 +194,14 @@
   // Competitor rows
   gsap.from('.competitor-table tbody tr', {
     x: -30, opacity: 0, duration: 0.6, stagger: 0.15,
-    scrollTrigger: { trigger: '.competitor-table', start: 'top 80%', once: true }
+    scrollTrigger: { trigger: '.competitor-table', start: 'top 90%', once: true }
   });
 
   // ---- Section titles ----
   document.querySelectorAll('.section h2[data-split]').forEach(function(h2) {
     ScrollTrigger.create({
       trigger: h2,
-      start: 'top 80%',
+      start: 'top 90%',
       once: true,
       onEnter: function() {
         window.BCU.animateSplitText(h2);
@@ -216,7 +212,7 @@
   // ---- Section labels ----
   gsap.from('.section-label', {
     y: 20, opacity: 0, duration: 0.5,
-    scrollTrigger: { trigger: '.section-label', start: 'top 85%', once: true }
+    scrollTrigger: { trigger: '.section-label', start: 'top 90%', once: true }
   });
 
 })();

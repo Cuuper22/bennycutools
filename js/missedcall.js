@@ -21,7 +21,7 @@
       var phoneFrame = document.querySelector('.phone-frame');
       if (phoneFrame) {
         gsap.from(phoneFrame, {
-          scale: 0.9, opacity: 0, duration: 0.8, delay: 0.3, ease: 'power3.out'
+          scale: 0.9, opacity: 0, duration: 0.8, delay: 0.5, ease: 'power3.out'
         });
       }
 
@@ -56,9 +56,9 @@
   // ---- Stats Counter Animations ----
   if (!reduced && typeof gsap !== 'undefined') {
     var statCards = document.querySelectorAll('.mc-stats-grid .stat-card');
-    gsap.from(statCards, {
-      scale: 0.95, opacity: 0, duration: 0.8, stagger: 0.12,
-      scrollTrigger: { trigger: '.mc-stats-grid', start: 'top 80%', once: true }
+    gsap.to(statCards, {
+      scale: 1, opacity: 1, duration: 0.8, stagger: 0.12,
+      scrollTrigger: { trigger: '.mc-stats-grid', start: 'top 90%', once: true }
     });
 
     // Counter: 80%
@@ -85,7 +85,7 @@
       var proxy = { low: 0, high: 0 };
       gsap.to(proxy, {
         low: 300, high: 1500, duration: 1.5, ease: 'power2.out',
-        scrollTrigger: { trigger: statRange, start: 'top 80%', once: true },
+        scrollTrigger: { trigger: statRange, start: 'top 90%', once: true },
         onUpdate: function() {
           statRange.textContent = '$' + Math.round(proxy.low).toLocaleString() + '-$' + Math.round(proxy.high).toLocaleString();
         }
@@ -95,9 +95,9 @@
 
   // ---- How It Works ----
   if (!reduced && typeof gsap !== 'undefined') {
-    gsap.from('.mc-step', {
-      y: 40, opacity: 0, scale: 0.95, duration: 0.8, stagger: 0.15,
-      scrollTrigger: { trigger: '.mc-steps-grid', start: 'top 80%', once: true }
+    gsap.to('.mc-step', {
+      y: 0, opacity: 1, duration: 0.8, stagger: 0.15,
+      scrollTrigger: { trigger: '.mc-steps-grid', start: 'top 90%', once: true }
     });
 
     // Vibration rings for step 1
@@ -110,7 +110,7 @@
         repeat: -1,
         delay: i * 0.3,
         ease: 'power2.out',
-        scrollTrigger: { trigger: ring.closest('.mc-step'), start: 'top 80%' }
+        scrollTrigger: { trigger: ring.closest('.mc-step'), start: 'top 90%' }
       });
     });
 
@@ -186,29 +186,37 @@
   // Initialize ROI
   calculateROI();
 
+  // ---- ROI Calculator ----
+  if (!reduced && typeof gsap !== 'undefined') {
+    gsap.to('.roi-calculator', {
+      y: 0, opacity: 1, duration: 0.8,
+      scrollTrigger: { trigger: '.roi-calculator', start: 'top 90%', once: true }
+    });
+  }
+
   // ---- Pricing ----
   if (!reduced && typeof gsap !== 'undefined') {
     var pricingCards = document.querySelectorAll('.mc-pricing-grid .pricing-card');
     if (pricingCards.length === 3) {
       // Featured first, then sides
-      gsap.from(pricingCards[1], {
-        y: 40, opacity: 0, scale: 0.95, duration: 0.8,
-        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 80%', once: true }
+      gsap.to(pricingCards[1], {
+        y: 0, opacity: 1, duration: 0.8,
+        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 90%', once: true }
       });
-      gsap.from(pricingCards[0], {
-        x: -40, opacity: 0, duration: 0.8, delay: 0.2,
-        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 80%', once: true }
+      gsap.to(pricingCards[0], {
+        x: 0, opacity: 1, duration: 0.8, delay: 0.2,
+        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 90%', once: true }
       });
-      gsap.from(pricingCards[2], {
-        x: 40, opacity: 0, duration: 0.8, delay: 0.2,
-        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 80%', once: true }
+      gsap.to(pricingCards[2], {
+        x: 0, opacity: 1, duration: 0.8, delay: 0.2,
+        scrollTrigger: { trigger: '.mc-pricing-grid', start: 'top 90%', once: true }
       });
     }
 
     // Founding banner
     gsap.from('.founding-banner', {
       y: 30, opacity: 0, duration: 0.8,
-      scrollTrigger: { trigger: '.founding-banner', start: 'top 85%', once: true }
+      scrollTrigger: { trigger: '.founding-banner', start: 'top 90%', once: true }
     });
   }
 
@@ -216,7 +224,7 @@
   if (!reduced && typeof gsap !== 'undefined') {
     gsap.from('.faq-item', {
       x: -30, opacity: 0, rotation: -1, duration: 0.6, stagger: 0.08,
-      scrollTrigger: { trigger: '.mc-faq', start: 'top 80%', once: true }
+      scrollTrigger: { trigger: '.mc-faq', start: 'top 90%', once: true }
     });
   }
 
@@ -224,7 +232,7 @@
   if (!reduced && typeof gsap !== 'undefined') {
     gsap.from('.final-cta', {
       y: 40, opacity: 0, duration: 0.8,
-      scrollTrigger: { trigger: '.final-cta', start: 'top 85%', once: true }
+      scrollTrigger: { trigger: '.final-cta', start: 'top 90%', once: true }
     });
   }
 
@@ -233,7 +241,7 @@
     document.querySelectorAll('.section h2[data-split]').forEach(function(h2) {
       ScrollTrigger.create({
         trigger: h2,
-        start: 'top 80%',
+        start: 'top 90%',
         once: true,
         onEnter: function() {
           window.BCU.animateSplitText(h2);

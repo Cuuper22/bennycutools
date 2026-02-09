@@ -8,8 +8,8 @@
 
   if (typeof gsap === 'undefined') return;
 
-  // Mark that GSAP is loaded — CSS will now hide animated elements
-  document.documentElement.classList.add('gsap-loaded');
+  // Progressive enhancement: do NOT add gsap-loaded class to hide content via CSS.
+  // Hidden states are set below via gsap.set() so content stays visible if JS fails.
 
   // Register plugins
   gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -28,10 +28,22 @@
   // ---- Shared Animation Registrations ----
 
   if (window.BCU.prefersReduced) {
-    // Remove gsap-loaded so CSS doesn't hide anything
-    document.documentElement.classList.remove('gsap-loaded');
+    // Skip all animations — content stays visible via CSS defaults
     return;
   }
+
+  // ---- Set initial hidden states via JS (progressive enhancement) ----
+  // If JS fails before this point, all content remains visible.
+  document.querySelectorAll('[data-animate]').forEach(function(el) {
+    var type = el.getAttribute('data-animate');
+    var props = { opacity: 0 };
+    if (type === 'fade-up') props.y = 40;
+    else if (type === 'fade-left') props.x = -40;
+    else if (type === 'fade-right') props.x = 40;
+    else if (type === 'scale-up') props.scale = 0.95;
+    else if (type === 'rotate-in') { props.rotation = -5; props.x = -20; }
+    gsap.set(el, props);
+  });
 
   // ---- Staggered Reveal for data-animate="fade-up" groups ----
   window.BCU.animateFadeUp = function(selector, options) {
@@ -76,13 +88,10 @@
   // ---- Text Split Animation ----
   window.BCU.animateSplitText = function(element) {
     var words = window.BCU.splitText(element);
-    gsap.from(words, {
-      y: '100%',
-      opacity: 0,
-      duration: 0.6,
-      stagger: 0.04,
-      ease: 'power4.out'
-    });
+    gsap.fromTo(words,
+      { y: 20, opacity: 0.2 },
+      { y: 0, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'power3.out' }
+    );
   };
 
   // ---- SVG Line Draw ----
