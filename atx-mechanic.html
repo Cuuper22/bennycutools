@@ -2109,6 +2109,54 @@
 </div>
 <script>
 // Auto-fill the buy link with the current tool's page name
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
 (function(){
   try {
     var pg = location.pathname.replace(/.*\//, '').replace('.html','');
@@ -2450,16 +2498,16 @@
             </svg>
             Describe the problem
           </div>
-          <textarea class="issue-textarea" placeholder="What's wrong? What needs repair?" data-id="${id}"></textarea>
+          <textarea class="issue-textarea" placeholder="What's wrong? What needs repair?" data-id="${escapeHTML(id)}"></textarea>
           <div class="issue-actions">
-            <button class="issue-btn issue-btn-photo" data-id="${id}" aria-label="Add photo of issue">
+            <button class="issue-btn issue-btn-photo" data-id="${escapeHTML(id)}" aria-label="Add photo of issue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
               Photo
             </button>
-            <button class="issue-btn issue-btn-voice" data-id="${id}" aria-label="Voice note for issue">
+            <button class="issue-btn issue-btn-voice" data-id="${escapeHTML(id)}" aria-label="Voice note for issue">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -2741,8 +2789,8 @@
             issuePanel.appendChild(preview);
           }
           preview.innerHTML = `
-            <img src="${finalImage}" alt="Issue photo">
-            <button class="photo-remove" data-id="${currentPhotoTarget}" aria-label="Remove photo">
+            <img src="${escapeHTML(finalImage)}" alt="Issue photo">
+            <button class="photo-remove" data-id="${escapeHTML(currentPhotoTarget)}" aria-label="Remove photo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18"/>
                 <line x1="6" y1="6" x2="18" y2="18"/>
@@ -3245,7 +3293,7 @@
         icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
       }
       
-      toast.innerHTML = `${icon}<span>${message}</span>`;
+      toast.innerHTML = `${icon}<span>${escapeHTML(message)}</span>`;
       container.appendChild(toast);
       
       setTimeout(() => {

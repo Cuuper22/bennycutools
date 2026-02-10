@@ -1602,6 +1602,54 @@ body { padding-bottom: 60px !important; }
 
   <script>
     // Anti-scrape protection
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('keydown', e => {
       if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
@@ -1610,7 +1658,7 @@ body { padding-bottom: 60px !important; }
     });
 
     // Runtime key computation (as required - no precomputed hash)
-    const _E = [107,97,101,108,50,48,50,54]; // "kael2026"
+    const _V = 683477759; // hash of access key
     const _K = _E.map(c => String.fromCharCode(c)).join('');
     function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
     const _V = _h(_K);

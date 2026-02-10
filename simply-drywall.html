@@ -1586,6 +1586,54 @@
 </div>
 <script>
 // Auto-fill the buy link with the current tool's page name
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
 (function(){
   try {
     var pg = location.pathname.replace(/.*\//, '').replace('.html','');
@@ -2004,7 +2052,7 @@
 
       jobDetailTab.innerHTML = `
         <div class="job-detail-header">
-          <img src="${job.photos[0] || ''}" alt="${job.title}" class="job-detail-hero">
+          <img src="${escapeHTML(job.photos[0] || '')}" alt="${escapeHTML(job.title)}" class="job-detail-hero">
           <button class="job-detail-back" id="backToList" aria-label="Back to list">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M19 12H5M12 19l-7-7 7-7"/>
@@ -2012,8 +2060,8 @@
           </button>
         </div>
         <div class="job-detail-info">
-          <span class="status-badge status-badge--${job.status}">${job.status === 'complete' ? 'Done' : job.status === 'progress' ? 'Working' : 'Not Started'}</span>
-          <h2 class="job-detail-title">${job.title}</h2>
+          <span class="status-badge status-badge--${escapeHTML(job.status)}">${escapeHTML(job.status === 'complete' ? 'Done' : job.status === 'progress' ? 'Working' : 'Not Started')}</span>
+          <h2 class="job-detail-title">${escapeHTML(job.title)}</h2>
           <div class="job-detail-meta">
             <span class="job-detail-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2021,14 +2069,14 @@
                 <circle cx="9" cy="9" r="2"/>
                 <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
               </svg>
-              ${TEXTURE_NAMES[job.texture]}
+              ${escapeHTML(TEXTURE_NAMES[job.texture])}
             </span>
             <span class="job-detail-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="10" r="3"/>
                 <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/>
               </svg>
-              ${job.location}
+              ${escapeHTML(job.location)}
             </span>
             <span class="job-detail-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

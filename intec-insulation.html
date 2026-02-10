@@ -1802,6 +1802,54 @@
 </div>
 <script>
 // Auto-fill the buy link with the current tool's page name
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
 (function(){
   try {
     var pg = location.pathname.replace(/.*\//, '').replace('.html','');
@@ -2092,11 +2140,11 @@
       
       card.innerHTML = `
         <div class="job-header">
-          <div class="job-address">${job.address.split(',')[0]}</div>
-          <span class="job-status ${status}">${statusLabel}</span>
+          <div class="job-address">${escapeHTML(job.address.split(',')[0])}</div>
+          <span class="job-status ${escapeHTML(status)}">${escapeHTML(statusLabel)}</span>
         </div>
-        <div class="job-customer">${job.customer}</div>
-        <div class="job-type">${job.type}</div>
+        <div class="job-customer">${escapeHTML(job.customer)}</div>
+        <div class="job-type">${escapeHTML(job.type)}</div>
         <div class="job-meta">
           <span class="job-meta-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -2104,7 +2152,7 @@
           </span>
           <span class="job-meta-item">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            ${job.address.split(',').slice(-1)[0].trim()}
+            ${escapeHTML(job.address.split(',').slice(-1)[0].trim())}
           </span>
         </div>
       `;
@@ -2122,8 +2170,8 @@
       card.innerHTML = `
         <div class="completed-header">
           <div>
-            <div class="job-address">${job.address.split(',')[0]}</div>
-            <div class="job-customer">${job.customer}</div>
+            <div class="job-address">${escapeHTML(job.address.split(',')[0])}</div>
+            <div class="job-customer">${escapeHTML(job.customer)}</div>
           </div>
           <span class="completed-date">${job.completedDate}</span>
         </div>
@@ -2301,7 +2349,7 @@
           <div class="checklist-checkbox">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
           </div>
-          <span class="checklist-label">${item.label}</span>
+          <span class="checklist-label">${escapeHTML(item.label)}</span>
         `;
         li.addEventListener('click', () => toggleChecklistItem(i));
         li.addEventListener('keypress', e => { if (e.key === 'Enter' || e.key === ' ') toggleChecklistItem(i); });

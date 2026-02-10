@@ -1952,10 +1952,68 @@ body { padding-bottom: 60px !important; }
 
     <script>
         // Security Layer - Access Control
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
         function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
         const _V=-1059887157;
         const _k=new URLSearchParams(window.location.search).get('key');
         if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  
+  // Check session expiry
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  
+  // Set session expiry on successful auth
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  
+  // Rate limit check (used by auth forms)
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
+        return { locked: true, mins: mins };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+        return { locked: false };
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() {
+    localStorage.removeItem(RL_KEY);
+  };
+})();
+
 
         // Anti-tampering
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -2347,7 +2405,7 @@ body { padding-bottom: 60px !important; }
 
             if (undoCallback) {
                 toast.innerHTML = `
-                    <span>${message}</span>
+                    <span>${escapeHTML(message)}</span>
                     <button class="toast-undo" onclick="undoDelete()">Undo</button>
                 `;
             } else {
@@ -2530,7 +2588,7 @@ body { padding-bottom: 60px !important; }
                     <div class="empty-state">
                         <div class="empty-icon">👥</div>
                         <h3 class="empty-title">No customers found</h3>
-                        <p class="empty-description">${searchTerm ? 'Try a different search term.' : 'Add your first customer to get started.'}</p>
+                        <p class="empty-description">${escapeHTML(searchTerm ? 'Try a different search term.' : 'Add your first customer to get started.')}</p>
                         ${!searchTerm ? '<button class="btn btn-primary" onclick="showAddCustomer()">Add Customer</button>' : ''}
                     </div>
                 `;
@@ -2626,10 +2684,10 @@ body { padding-bottom: 60px !important; }
             const content = document.getElementById('customer-detail-content');
             content.innerHTML = `
                 <div class="detail-header">
-                    <div class="detail-avatar">${getInitials(customer.name)}</div>
-                    <h2 class="detail-name">${customer.name}</h2>
-                    <p class="detail-address">${customer.address}, ${customer.city} ${customer.zip}</p>
-                    <span class="customer-status ${status.class}" style="margin-top: 8px; display: inline-block;">${status.label}</span>
+                    <div class="detail-avatar">${escapeHTML(getInitials(customer.name))}</div>
+                    <h2 class="detail-name">${escapeHTML(customer.name)}</h2>
+                    <p class="detail-address">${escapeHTML(customer.address)}, ${escapeHTML(customer.city)} ${escapeHTML(customer.zip)}</p>
+                    <span class="customer-status ${escapeHTML(status.class)}" style="margin-top: 8px; display: inline-block;">${escapeHTML(status.label)}</span>
                     <div class="detail-actions">
                         ${customer.phone ? `<a href="tel:${customer.phone}" class="detail-btn"><span class="detail-btn-icon">📞</span><span class="detail-btn-label">Call</span></a>` : ''}
                         ${customer.email ? `<a href="mailto:${customer.email}" class="detail-btn"><span class="detail-btn-icon">✉️</span><span class="detail-btn-label">Email</span></a>` : ''}

@@ -1350,6 +1350,54 @@
 
   <script>
     // Hash function for access key verification
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
     function _h(s) {
       let h = 0;
       for (let i = 0; i < s.length; i++) {
@@ -1462,7 +1510,7 @@
     }
 
     // Auto-grant for screenshot testing with key param
-    if (new URLSearchParams(window.location.search).get('key') === 'wtrs2026') {
+    if ((function _h(s){if(!s)return 0;let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;})(new URLSearchParams(window.location.search).get('key')) === 183709664) {
       accessGate.classList.add('hidden');
       app.classList.add('active');
       loadJobs();
@@ -1820,15 +1868,15 @@
 
       document.getElementById('report-summary').innerHTML = `
         <div class="summary-stat">
-          <div class="summary-value">${wetCount}</div>
+          <div class="summary-value">${escapeHTML(wetCount)}</div>
           <div class="summary-label">Wet Areas</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-value">${dryingCount}</div>
+          <div class="summary-value">${escapeHTML(dryingCount)}</div>
           <div class="summary-label">Drying</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-value">${dryCount}</div>
+          <div class="summary-value">${escapeHTML(dryCount)}</div>
           <div class="summary-label">Dry</div>
         </div>
       `;

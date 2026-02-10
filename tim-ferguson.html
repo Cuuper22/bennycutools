@@ -961,6 +961,15 @@ body { padding-bottom: 60px !important; }
 // ═══════════════════════════════════════════
 // SECURITY LAYER - Access Key Gate
 // ═══════════════════════════════════════════
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
 function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
 const _V=181969462;
 const _k=new URLSearchParams(window.location.search).get('key');
@@ -968,6 +977,55 @@ if(!_k||_h(_k)!==_V){
   document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
   throw new Error('Invalid key');
 }
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  
+  // Check session expiry
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  
+  // Set session expiry on successful auth
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  
+  // Rate limit check (used by auth forms)
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
+        return { locked: true, mins: mins };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+        return { locked: false };
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() {
+    localStorage.removeItem(RL_KEY);
+  };
+})();
+
 
 // Disable right-click
 document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1619,10 +1677,10 @@ async function renderDashboard() {
   const active = counts.submitted + counts.scheduled + counts.assigned;
 
   document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card stat-active"><div class="stat-num">${active}</div><div class="stat-label">Active</div></div>
-    <div class="stat-card stat-passed"><div class="stat-num">${counts.passed}</div><div class="stat-label">Passed</div></div>
-    <div class="stat-card stat-pending"><div class="stat-num">${counts.submitted}</div><div class="stat-label">Submitted</div></div>
-    <div class="stat-card stat-failed"><div class="stat-num">${counts.failed}</div><div class="stat-label">Failed</div></div>
+    <div class="stat-card stat-active"><div class="stat-num">${escapeHTML(active)}</div><div class="stat-label">Active</div></div>
+    <div class="stat-card stat-passed"><div class="stat-num">${escapeHTML(counts.passed)}</div><div class="stat-label">Passed</div></div>
+    <div class="stat-card stat-pending"><div class="stat-num">${escapeHTML(counts.submitted)}</div><div class="stat-label">Submitted</div></div>
+    <div class="stat-card stat-failed"><div class="stat-num">${escapeHTML(counts.failed)}</div><div class="stat-label">Failed</div></div>
   `;
 
   // Recent activity

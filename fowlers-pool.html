@@ -1092,6 +1092,15 @@ body { padding-bottom: 60px !important; }
 </div>
 
 <script>
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
 /* ==========================================================================
    SECURITY LAYER — Access Control
    ========================================================================== */
@@ -1102,6 +1111,55 @@ if(!_k||_h(_k)!==_V){
   document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
   throw new Error('Invalid key');
 }
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  
+  // Check session expiry
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  
+  // Set session expiry on successful auth
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  
+  // Rate limit check (used by auth forms)
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
+        return { locked: true, mins: mins };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+        return { locked: false };
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() {
+    localStorage.removeItem(RL_KEY);
+  };
+})();
+
 
 /* ==========================================================================
    POOLVAULT — Equipment & Warranty Tracker
@@ -1259,7 +1317,7 @@ function showToast(msg, icon = '✅', action = null, actionLabel = 'Undo', durat
   toast.className = 'toast';
   toast.innerHTML = `
     <span class="toast-icon">${icon}</span>
-    <span class="toast-msg">${msg}</span>
+    <span class="toast-msg">${escapeHTML(msg)}</span>
     ${action ? `<button class="toast-action" onclick="(${action.toString()})();this.closest('.toast').remove()">${actionLabel}</button>` : ''}
   `;
   container.appendChild(toast);
@@ -1830,7 +1888,7 @@ async function populateWaterSelect() {
   const currentVal = sel.value;
   sel.innerHTML = '<option value="">— Choose Property —</option>';
   props.forEach(p => {
-    sel.innerHTML += `<option value="${p.id}">${esc(p.customer)} — ${esc(p.address)}</option>`;
+    sel.innerHTML += `<option value="${escapeHTML(p.id)}">${escapeHTML(esc(p.customer))} — ${escapeHTML(esc(p.address))}</option>`;
   });
   if (currentVal) sel.value = currentVal;
 }

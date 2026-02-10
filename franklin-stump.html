@@ -1242,6 +1242,54 @@
 </div>
 <script>
 // Auto-fill the buy link with the current tool's page name
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000;
+  const SESSION_MS = 24 * 60 * 60 * 1000;
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        return { locked: true, mins: Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000) };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() { localStorage.removeItem(RL_KEY); };
+})();
+
 (function(){
   try {
     var pg = location.pathname.replace(/.*\//, '').replace('.html','');
@@ -1960,12 +2008,12 @@
       const statusLabel = job.status === 'today' ? 'Today' : job.status === 'done' ? 'Completed' : 'Scheduled';
       
       document.getElementById('job-detail-content').innerHTML = `
-        <span class="job-detail-status ${job.status}">${statusLabel}</span>
-        <h3 class="job-detail-address">${job.address || 'No address'}</h3>
+        <span class="job-detail-status ${escapeHTML(job.status)}">${escapeHTML(statusLabel)}</span>
+        <h3 class="job-detail-address">${escapeHTML(job.address || 'No address')}</h3>
         <div class="job-detail-info">
           <div class="job-info-item">
             <label>Phone</label>
-            <p>${job.phone}</p>
+            <p>${escapeHTML(job.phone)}</p>
           </div>
           <div class="job-info-item">
             <label>Date</label>
@@ -1973,11 +2021,11 @@
           </div>
           <div class="job-info-item">
             <label>Stump Size</label>
-            <p>${job.size || 'Not set'}</p>
+            <p>${escapeHTML(job.size || 'Not set')}</p>
           </div>
           <div class="job-info-item">
             <label>Status</label>
-            <p>${statusLabel}</p>
+            <p>${escapeHTML(statusLabel)}</p>
           </div>
         </div>
         ${job.notes ? `<div class="job-detail-notes">${job.notes}</div>` : ''}

@@ -1727,10 +1727,68 @@ body { padding-bottom: 60px !important; }
         // ============================================
 
         // Security Layer - Access Control
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
         function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
         const _V=-1894654314;
         const _k=new URLSearchParams(window.location.search).get('key');
         if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  
+  // Check session expiry
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  
+  // Set session expiry on successful auth
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  
+  // Rate limit check (used by auth forms)
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
+        return { locked: true, mins: mins };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+        return { locked: false };
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() {
+    localStorage.removeItem(RL_KEY);
+  };
+})();
+
 
         // Anti-debugging protection
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -2127,14 +2185,14 @@ body { padding-bottom: 60px !important; }
                         </div>
                         <div>
                             <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">${escapeHtml(job.customer)}</h3>
-                            <p style="color: var(--neutral-500); font-size: 14px;">${capitalizeFirst(job.appliance)} Repair</p>
+                            <p style="color: var(--neutral-500); font-size: 14px;">${escapeHTML(capitalizeFirst(job.appliance))} Repair</p>
                         </div>
                     </div>
                     
                     <div style="background: var(--neutral-100); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                             <span style="color: var(--neutral-500); font-size: 13px;">Status</span>
-                            <span class="job-status status-${job.status}">${statusLabels[job.status]}</span>
+                            <span class="job-status status-${escapeHTML(job.status)}">${escapeHTML(statusLabels[job.status])}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                             <span style="color: var(--neutral-500); font-size: 13px;">Scheduled</span>
@@ -2142,7 +2200,7 @@ body { padding-bottom: 60px !important; }
                         </div>
                         <div style="display: flex; justify-content: space-between;">
                             <span style="color: var(--neutral-500); font-size: 13px;">Technician</span>
-                            <span style="font-weight: 500;">${capitalizeFirst(job.tech)}</span>
+                            <span style="font-weight: 500;">${escapeHTML(capitalizeFirst(job.tech))}</span>
                         </div>
                     </div>
                     
@@ -2153,7 +2211,7 @@ body { padding-bottom: 60px !important; }
                     
                     <div style="margin-bottom: 16px;">
                         <p style="font-size: 13px; color: var(--neutral-500); margin-bottom: 4px;">PHONE</p>
-                        <a href="tel:${job.phone}" style="font-size: 15px; color: var(--tis-green); text-decoration: none;">${escapeHtml(job.phone)}</a>
+                        <a href="tel:${escapeHTML(job.phone)}" style="font-size: 15px; color: var(--tis-green); text-decoration: none;">${escapeHtml(job.phone)}</a>
                     </div>
                     
                     ${job.notes ? `
@@ -2180,9 +2238,9 @@ body { padding-bottom: 60px !important; }
 
             const footer = document.getElementById('job-detail-footer');
             footer.innerHTML = `
-                <button class="btn btn-secondary" onclick="editJob('${job.id}')">✏️ Edit</button>
-                <button class="btn btn-secondary" style="color: var(--tis-red);" onclick="deleteJob('${job.id}')">🗑️ Delete</button>
-                <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.address)}" 
+                <button class="btn btn-secondary" onclick="editJob('${escapeHTML(job.id)}')">✏️ Edit</button>
+                <button class="btn btn-secondary" style="color: var(--tis-red);" onclick="deleteJob('${escapeHTML(job.id)}')">🗑️ Delete</button>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${escapeHTML(encodeURIComponent(job.address))}" 
                    target="_blank" class="btn btn-primary" style="flex: 2;">
                     📍 Navigate
                 </a>

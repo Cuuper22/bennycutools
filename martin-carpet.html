@@ -1918,6 +1918,15 @@ body { padding-bottom: 60px !important; }
         // =============================================
         // SECURITY LAYER - Access Key Gate
         // =============================================
+
+// Security: HTML entity escaping to prevent XSS
+function escapeHTML(str) {
+  if (str === null || str === undefined) return '';
+  const s = String(str);
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(s));
+  return div.innerHTML;
+}
         function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
         const _V=253698264;
         const _k=new URLSearchParams(window.location.search).get('key');
@@ -1925,6 +1934,55 @@ body { padding-bottom: 60px !important; }
             document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
             throw new Error('Invalid key');
         }
+
+// Security: Rate limiting + session expiry
+(function(){
+  const RL_KEY = 'bct_rl';
+  const SE_KEY = 'bct_se';
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
+  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
+  
+  // Check session expiry
+  const sessionExp = localStorage.getItem(SE_KEY);
+  if (sessionExp && Date.now() > parseInt(sessionExp)) {
+    localStorage.removeItem('bct_auth');
+    localStorage.removeItem(SE_KEY);
+  }
+  
+  // Set session expiry on successful auth
+  if (!localStorage.getItem(SE_KEY)) {
+    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
+  }
+  
+  // Rate limit check (used by auth forms)
+  window._bctCheckRL = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
+        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
+        return { locked: true, mins: mins };
+      }
+      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
+        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
+        return { locked: false };
+      }
+      return { locked: false };
+    } catch(e) { return { locked: false }; }
+  };
+  window._bctRecordFail = function() {
+    try {
+      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
+      rl.c++;
+      rl.t = Date.now();
+      localStorage.setItem(RL_KEY, JSON.stringify(rl));
+    } catch(e) {}
+  };
+  window._bctResetRL = function() {
+    localStorage.removeItem(RL_KEY);
+  };
+})();
+
 
         // Disable right-click
         document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -2721,15 +2779,15 @@ body { padding-bottom: 60px !important; }
             document.getElementById('rugDetailContent').innerHTML = `
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Customer</span>
-                    <span class="rug-detail-value">${rug.customerName}</span>
+                    <span class="rug-detail-value">${escapeHTML(rug.customerName)}</span>
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Type</span>
-                    <span class="rug-detail-value">${rug.type}</span>
+                    <span class="rug-detail-value">${escapeHTML(rug.type)}</span>
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Dimensions</span>
-                    <span class="rug-detail-value">${rug.dimensions}</span>
+                    <span class="rug-detail-value">${escapeHTML(rug.dimensions)}</span>
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Estimated Value</span>
@@ -2737,7 +2795,7 @@ body { padding-bottom: 60px !important; }
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Services</span>
-                    <span class="rug-detail-value">${rug.services.join(', ') || 'None'}</span>
+                    <span class="rug-detail-value">${escapeHTML(rug.services.join(', ') || 'None')}</span>
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Intake Date</span>
@@ -2745,7 +2803,7 @@ body { padding-bottom: 60px !important; }
                 </div>
                 <div class="rug-detail" style="padding: 12px 0; border-bottom: 1px solid var(--bg-light);">
                     <span class="rug-detail-label">Days Stored</span>
-                    <span class="rug-detail-value" style="${rug.daysStored > 90 ? 'color: var(--danger);' : ''}">${rug.daysStored} days</span>
+                    <span class="rug-detail-value" style="${rug.daysStored > 90 ? 'color: var(--danger);' : ''}">${escapeHTML(rug.daysStored)} days</span>
                 </div>
                 ${rug.notes ? `
                 <div style="margin-top: 16px;">
@@ -2919,7 +2977,7 @@ body { padding-bottom: 60px !important; }
                       type === 'warning' ? '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>' :
                       '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'}
                 </svg>
-                <span>${message}</span>
+                <span>${escapeHTML(message)}</span>
             `;
             container.appendChild(toast);
             
