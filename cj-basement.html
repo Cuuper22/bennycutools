@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Basement Pro Dispatch - C&J Basement Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #2A2772;
+      --primary-light: #3d3990;
+      --accent: #39A3D1;
+      --navy: #0C1115;
+      --gray-600: #6A6B6C;
+      --gray-400: #9CA3AF;
+      --gray-200: #E5E7EB;
+      --gray-100: #F5F5F5;
+      --white: #FFFFFF;
+      --success: #22C55E;
+      --warning: #F59E0B;
+      --error: #EF4444;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(12,17,21,0.06);
+      --shadow-md: 0 4px 12px rgba(12,17,21,0.1);
+      --shadow-lg: 0 8px 24px rgba(12,17,21,0.12);
+    }
+    
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--gray-100);
+      color: var(--navy);
+      min-height: 100vh;
+      padding-bottom: 140px;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    h1, h2, h3, h4 {
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    /* Auth Gate */
+    #auth-gate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--navy) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    
+    .auth-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      max-width: 380px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .auth-logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      background: var(--primary);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .auth-card h1 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+    
+    .auth-card p {
+      color: var(--gray-600);
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 16px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(57,163,209,0.15);
+    }
+    
+    .auth-input:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    
+    .auth-error {
+      color: var(--error);
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    
+    .auth-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .auth-btn:hover {
+      background: var(--primary-light);
+    }
+    
+    .auth-btn:active {
+      transform: scale(0.98);
+    }
+    
+    /* Main App */
+    #app {
+      display: none;
+    }
+    
+    /* Header */
+    .header {
+      background: var(--white);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .header-weather {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--gray-100);
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    .weather-alert {
+      background: rgba(245,158,11,0.15);
+      color: var(--warning);
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+      display: flex;
+      background: var(--white);
+      padding: 8px 12px;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      color: var(--gray-600);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: background 0.15s ease, color 0.15s ease;
+      white-space: nowrap;
+    }
+    
+    .tab-btn:hover {
+      background: var(--gray-100);
+    }
+    
+    .tab-btn.active {
+      background: var(--primary);
+      color: var(--white);
+    }
+    
+    .tab-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Content */
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .tab-content.active,
+      .job-card,
+      .btn,
+      .auth-btn,
+      .tab-btn {
+        animation: none;
+        transition: none;
+      }
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .card-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .card-body {
+      padding: 16px 20px;
+    }
+    
+    /* Jobs */
+    .job-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      border-left: 4px solid var(--gray-200);
+      transition: box-shadow 0.15s ease, transform 0.1s ease;
+    }
+    
+    .job-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .job-card:active {
+      transform: scale(0.99);
+    }
+    
+    .job-card.estimate {
+      border-left-color: var(--accent);
+    }
+    
+    .job-card.in-progress {
+      border-left-color: var(--warning);
+    }
+    
+    .job-card.completed {
+      border-left-color: var(--success);
+    }
+    
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    
+    .job-customer {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .job-address {
+      color: var(--gray-600);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .job-time {
+      text-align: right;
+    }
+    
+    .job-time-value {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--primary);
+    }
+    
+    .job-time-label {
+      font-size: 12px;
+      color: var(--gray-600);
+    }
+    
+    .job-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--gray-100);
+      border-radius: 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-600);
+    }
+    
+    .job-type.waterproofing {
+      background: rgba(57,163,209,0.12);
+      color: var(--accent);
+    }
+    
+    .job-type.sump-pump {
+      background: rgba(34,197,94,0.12);
+      color: var(--success);
+    }
+    
+    .job-type.foundation {
+      background: rgba(245,158,11,0.12);
+      color: var(--warning);
+    }
+    
+    /* Route Optimization Banner */
+    .route-banner {
+      background: linear-gradient(135deg, var(--primary) 0%, #3d4a8a 100%);
+      border-radius: var(--radius);
+      padding: 20px;
+      color: var(--white);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    
+    .route-info h3 {
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .route-info p {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .route-info span {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+    
+    .route-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s ease;
+      white-space: nowrap;
+    }
+    
+    .route-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .btn:active {
+      transform: scale(0.98);
+    }
+    
+    .btn:focus-visible,
+    .tab-btn:focus-visible,
+    .auth-btn:focus-visible,
+    .route-btn:focus-visible,
+    .modal-close:focus-visible,
+    .template-item:focus-visible,
+    .job-card:focus-visible,
+    .photo-add:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-light);
+    }
+    
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--navy);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: var(--white);
+    }
+    
+    .btn-disabled {
+      background: var(--gray-200);
+      color: var(--gray-400);
+      cursor: not-allowed;
+      position: relative;
+    }
+    
+    .btn-disabled::after {
+      content: 'Full version';
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: var(--warning);
+      color: var(--white);
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+    }
+    
+    .btn-block {
+      width: 100%;
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .btn-group .btn {
+      flex: 1;
+    }
+    
+    /* Crew Cards */
+    .crew-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .crew-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--gray-600);
+      font-size: 18px;
+    }
+    
+    .crew-info {
+      flex: 1;
+    }
+    
+    .crew-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    
+    .crew-status {
+      font-size: 13px;
+      color: var(--gray-600);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gray-400);
+    }
+    
+    .status-dot.active {
+      background: var(--success);
+    }
+    
+    .status-dot.traveling {
+      background: var(--warning);
+    }
+    
+    /* Photo Capture */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 16px 0;
+    }
+    
+    .photo-item {
+      aspect-ratio: 1;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .photo-add {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--gray-400);
+      cursor: pointer;
+      border: 2px dashed var(--gray-300);
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    
+    .photo-add:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    
+    .photo-add svg {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .photo-add span {
+      font-size: 11px;
+      font-weight: 500;
+    }
+    
+    .photo-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: rgba(0,0,0,0.6);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Signature Pad */
+    .signature-section {
+      margin: 24px 0;
+    }
+    
+    .signature-pad {
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      position: relative;
+      touch-action: none;
+    }
+    
+    .signature-canvas {
+      width: 100%;
+      height: 200px;
+      display: block;
+    }
+    
+    .signature-label {
+      position: absolute;
+      bottom: 40px;
+      left: 20px;
+      right: 20px;
+      border-top: 1px solid var(--gray-300);
+      padding-top: 8px;
+      font-size: 12px;
+      color: var(--gray-400);
+      pointer-events: none;
+    }
+    
+    .signature-actions {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--gray-200);
+    }
+    
+    /* Templates */
+    .template-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .template-item {
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    
+    .template-item:hover {
+      background: var(--gray-200);
+    }
+    
+    .template-item.selected {
+      border-color: var(--accent);
+      background: rgba(57,163,209,0.08);
+    }
+    
+    .template-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .template-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+    
+    .template-price {
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .template-desc {
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--navy);
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(57,163,209,0.15);
+    }
+    
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(12,17,21,0.5);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius) var(--radius) 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--white);
+    }
+    
+    .modal-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--gray-100);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-600);
+    }
+    
+    .modal-body {
+      padding: 24px;
+    }
+    
+    /* Proposal Preview */
+    .proposal-preview {
+      background: var(--gray-100);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 16px 0;
+    }
+    
+    .proposal-header {
+      text-align: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--primary);
+    }
+    
+    .proposal-company {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    
+    .proposal-tagline {
+      font-size: 13px;
+      color: var(--gray-600);
+    }
+    
+    .proposal-section {
+      margin-bottom: 20px;
+    }
+    
+    .proposal-section h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--primary);
+    }
+    
+    .proposal-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .proposal-total {
+      font-size: 20px;
+      font-weight: 700;
+      text-align: right;
+      color: var(--primary);
+      margin-top: 16px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy);
+      color: var(--white);
+      padding: 14px 24px;
+      border-radius: var(--radius);
+      font-weight: 500;
+      z-index: 600;
+      box-shadow: var(--shadow-lg);
+      display: none;
+    }
+    
+    .toast.show {
+      display: block;
+      animation: toastIn 0.3s ease;
+    }
+    
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-600);
+    }
+    
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+      color: var(--navy);
+    }
+    
+    /* Hidden */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Camera Modal Specific */
+    #camera-view {
+      width: 100%;
+      height: 300px;
+      background: #000;
+      border-radius: var(--radius);
+      object-fit: cover;
+    }
+    
+    .camera-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .camera-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 4px solid var(--white);
+      background: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* Section headers */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .section-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    
+    .badge {
+      background: var(--primary);
+      color: var(--white);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    /* Staggered animations */
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+    .stagger-5 { animation-delay: 0.25s; }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .stagger-1, .stagger-2, .stagger-3, .stagger-4, .stagger-5 {
+        animation-delay: 0s;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Auth Gate -->
+  <div id="auth-gate">
+    <div class="auth-card">
+      <div class="auth-logo" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <h1>Basement Pro Dispatch</h1>
+      <p>Enter your access key to continue</p>
+      <div class="auth-error" id="auth-error">Invalid access key. Please try again.</div>
+      <input type="text" class="auth-input" id="access-key-input" placeholder="Access key" autocomplete="off">
+      <button class="auth-btn" id="auth-submit">Open Tool</button>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-brand">
+          <div class="header-logo" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+          </div>
+          <h1>C&J Dispatch</h1>
+        </div>
+        <div class="header-weather weather-alert" id="weather-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 16.2A4.5 4.5 0 0 0 17.5 8h-1.8A7 7 0 1 0 4 14.9"/>
+            <path d="M16 14v6"/>
+            <path d="M8 14v6"/>
+            <path d="M12 12v6"/>
+          </svg>
+          <span>Rain 2pm</span>
+        </div>
+      </div>
+    </header>
+    
+    <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+      <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="tab-schedule" data-tab="schedule">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Today
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-estimate" data-tab="estimate">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
+        Estimate
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-crew" data-tab="crew">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Crew
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-proposals" data-tab="proposals">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Proposals
+      </button>
+    </nav>
+    
+    <main class="content">
+      <!-- Schedule Tab -->
+      <section id="tab-schedule" class="tab-content active" role="tabpanel" aria-labelledby="tab-schedule">
+        <div class="route-banner">
+          <div class="route-info">
+            <h3>Today's Route</h3>
+            <p>4 stops <span>- 47 mi total</span></p>
+          </div>
+          <button class="route-btn" id="start-route-btn" aria-label="Start route in maps app">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Start
+          </button>
+        </div>
+        
+        <div class="section-header">
+          <h2>Jobs</h2>
+          <span class="badge" id="job-count">4</span>
+        </div>
+        
+        <div id="jobs-list">
+          <!-- Jobs inserted by JS -->
+        </div>
+      </section>
+      
+      <!-- Estimate Tab -->
+      <section id="tab-estimate" class="tab-content" role="tabpanel" aria-labelledby="tab-estimate">
+        <div class="card">
+          <div class="card-header">
+            <h2>New Estimate</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label" for="estimate-customer">Customer Name <span aria-label="required">*</span></label>
+              <input type="text" class="form-input" id="estimate-customer" placeholder="John Smith" required aria-required="true">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="estimate-address">Property Address <span aria-label="required">*</span></label>
+              <input type="text" class="form-input" id="estimate-address" placeholder="123 Main St, Columbus, OH" required aria-required="true">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="estimate-phone">Phone Number</label>
+              <input type="tel" class="form-input" id="estimate-phone" placeholder="(614) 555-1234">
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h2>Photos</h2>
+          </div>
+          <div class="card-body">
+            <p style="font-size: 14px; color: var(--gray-600); margin-bottom: 12px;">Document the basement issues - cracks, water damage, mold</p>
+            <div class="photo-grid" id="photo-grid">
+              <div class="photo-item photo-add" id="add-photo-btn" role="button" tabindex="0" aria-label="Add photo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Add Photo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h2>Solution Templates</h2>
+          </div>
+          <div class="card-body">
+            <div class="template-list" id="template-list">
+              <div class="template-item" data-template="interior-drain" tabindex="0" role="button">
+                <div class="template-header">
+                  <span class="template-name">Interior Drain System</span>
+                  <span class="template-price">$4,500 - $8,000</span>
+                </div>
+                <p class="template-desc">French drain around perimeter, sump basin, discharge line</p>
+              </div>
+              <div class="template-item" data-template="sump-pump" tabindex="0" role="button">
+                <div class="template-header">
+                  <span class="template-name">Sump Pump Install</span>
+                  <span class="template-price">$1,200 - $2,500</span>
+                </div>
+                <p class="template-desc">Battery backup pump, basin, check valve, discharge</p>
+              </div>
+              <div class="template-item" data-template="wall-repair" tabindex="0" role="button">
+                <div class="template-header">
+                  <span class="template-name">Foundation Wall Repair</span>
+                  <span class="template-price">$3,500 - $7,000</span>
+                </div>
+                <p class="template-desc">Carbon fiber reinforcement, crack injection, waterproof coating</p>
+              </div>
+              <div class="template-item" data-template="crawl-encap" tabindex="0" role="button">
+                <div class="template-header">
+                  <span class="template-name">Crawl Space Encapsulation</span>
+                  <span class="template-price">$5,000 - $12,000</span>
+                </div>
+                <p class="template-desc">Vapor barrier, dehumidifier, sealed vents, drainage</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <h2>Custom Quote</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label class="form-label" for="quote-amount">Total Amount</label>
+              <input type="text" class="form-input" id="quote-amount" placeholder="$5,500">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="quote-notes">Notes / Scope of Work</label>
+              <textarea class="form-textarea" id="quote-notes" placeholder="Describe the work to be performed..."></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="preview-proposal-btn">Preview</button>
+          <button class="btn btn-primary" id="generate-proposal-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            Create Proposal
+          </button>
+        </div>
+      </section>
+      
+      <!-- Crew Tab -->
+      <section id="tab-crew" class="tab-content" role="tabpanel" aria-labelledby="tab-crew">
+        <div class="section-header">
+          <h2>Crew Status</h2>
+        </div>
+        
+        <div id="crew-list">
+          <div class="crew-card">
+            <div class="crew-avatar">BG</div>
+            <div class="crew-info">
+              <div class="crew-name">Brian G.</div>
+              <div class="crew-status">
+                <span class="status-dot active"></span>
+                On site - Westerville
+              </div>
+            </div>
+          </div>
+          <div class="crew-card">
+            <div class="crew-avatar">CM</div>
+            <div class="crew-info">
+              <div class="crew-name">Carl M.</div>
+              <div class="crew-status">
+                <span class="status-dot traveling"></span>
+                Traveling to Dublin
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 24px;">
+          <div class="card-header">
+            <h2>Today's Assignments</h2>
+          </div>
+          <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-200);">
+                <span style="font-weight: 500;">Brian G.</span>
+                <span style="color: var(--gray-600);">2847 Millbrook Dr - Sump Pump</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray-200);">
+                <span style="font-weight: 500;">Carl M.</span>
+                <span style="color: var(--gray-600);">6521 Avery Rd - Drain Install</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Proposals Tab -->
+      <section id="tab-proposals" class="tab-content" role="tabpanel" aria-labelledby="tab-proposals">
+        <div class="section-header">
+          <h2>Recent Proposals</h2>
+        </div>
+        
+        <div id="proposals-list">
+          <!-- Filled by JS -->
+        </div>
+        
+        <div class="empty-state hidden" id="proposals-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <h3>No proposals yet</h3>
+          <p>Create your first proposal in the Estimate tab</p>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    
+    <!-- Camera Modal -->
+    <div class="modal-overlay" id="camera-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Take Photo</h2>
+          <button class="modal-close" id="close-camera" aria-label="Close camera">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <video id="camera-view" autoplay playsinline></video>
+          <div class="camera-actions">
+            <button class="camera-btn" id="capture-btn" aria-label="Capture photo">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Signature Modal -->
+    <div class="modal-overlay" id="signature-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Customer Signature</h2>
+          <button class="modal-close" id="close-signature" aria-label="Close signature">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="signature-pad">
+            <canvas id="signature-canvas" class="signature-canvas"></canvas>
+            <div class="signature-label">Sign here</div>
+          </div>
+          <div class="signature-actions">
+            <button class="btn btn-secondary" id="clear-signature">Clear</button>
+            <button class="btn btn-primary" id="save-signature" style="flex: 2;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Accept Signature
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Proposal Preview Modal -->
+    <div class="modal-overlay" id="proposal-modal">
+      <div class="modal" style="max-height: 95vh;">
+        <div class="modal-header">
+          <h2>Proposal Preview</h2>
+          <button class="modal-close" id="close-proposal" aria-label="Close proposal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="proposal-content">
+          <!-- Filled by JS -->
+        </div>
+        <div style="padding: 16px 24px; border-top: 1px solid var(--gray-200); display: flex; gap: 12px;">
+          <button class="btn btn-secondary" id="get-signature-btn" style="flex: 1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+            </svg>
+            Get Signature
+          </button>
+          <button class="btn btn-primary" id="download-pdf-btn" style="flex: 1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Save PDF
+          </button>
+        </div>
+        <div style="padding: 0 24px 16px;">
+          <button class="btn btn-disabled btn-block" aria-disabled="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            Send to Customer
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay" id="job-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="job-modal-title">Job Details</h2>
+          <button class="modal-close" id="close-job" aria-label="Close job details">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body" id="job-modal-content">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Database
+    const DB_NAME = 'cj_basement_dispatch';
+    const DB_VERSION = 1;
+    let db;
+    
+    // State
+    let currentProposal = null;
+    let capturedPhotos = [];
+    let selectedTemplates = [];
+    let signatureData = null;
+    let cameraStream = null;
+    
+    // Demo Data
+    const demoJobs = [
+      {
+        id: 1,
+        customer: 'Robert & Lisa Martinez',
+        address: '4521 Westbrook Dr, Dublin, OH 43017',
+        phone: '(614) 555-2847',
+        time: '9:00 AM',
+        type: 'estimate',
+        category: 'waterproofing',
+        notes: 'Water seepage in northwest corner. Finished basement - carpet damaged. Need full assessment.'
+      },
+      {
+        id: 2,
+        customer: 'Thompson Family',
+        address: '2847 Millbrook Dr, Westerville, OH 43081',
+        phone: '(614) 555-9182',
+        time: '11:30 AM',
+        type: 'in-progress',
+        category: 'sump-pump',
+        notes: 'Sump pump replacement - battery backup install. Brian on site.'
+      },
+      {
+        id: 3,
+        customer: 'David Chen',
+        address: '6521 Avery Rd, Dublin, OH 43016',
+        phone: '(614) 555-3847',
+        time: '2:00 PM',
+        type: 'in-progress',
+        category: 'waterproofing',
+        notes: 'Interior drain system install - Day 2 of 3. Carl assigned.'
+      },
+      {
+        id: 4,
+        customer: 'Patricia Williams',
+        address: '892 Summit View Blvd, Reynoldsburg, OH 43068',
+        phone: '(614) 555-7291',
+        time: '4:30 PM',
+        type: 'estimate',
+        category: 'foundation',
+        notes: 'Bowed wall in basement. Homeowner noticed gap widening. Urgent assessment needed.'
+      }
+    ];
+    
+    const demoProposals = [
+      {
+        id: 1,
+        customer: 'Johnson Residence',
+        address: '1847 Oak Creek Ln, Pataskala, OH 43062',
+        amount: '$6,800',
+        date: '2026-02-10',
+        status: 'pending',
+        signed: false
+      },
+      {
+        id: 2,
+        customer: 'Michael & Sarah Davis',
+        address: '3291 Heritage Way, Westerville, OH 43081',
+        amount: '$4,200',
+        date: '2026-02-08',
+        status: 'signed',
+        signed: true
+      }
+    ];
+    
+    // Auth
+    function hashCode(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const urlKey = params.get('key');
+      if (urlKey && hashCode(urlKey) === -1055927302) {
+        showApp();
+        return;
+      }
+      
+      const storedAuth = localStorage.getItem('cj_auth');
+      if (storedAuth === 'true') {
+        showApp();
+      }
+    }
+    
+    function showApp() {
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      initApp();
+    }
+    
+    document.getElementById('auth-submit').addEventListener('click', function() {
+      const key = document.getElementById('access-key-input').value.trim();
+      if (hashCode(key) === -1055927302) {
+        localStorage.setItem('cj_auth', 'true');
+        showApp();
+      } else {
+        document.getElementById('auth-error').style.display = 'block';
+        document.getElementById('access-key-input').focus();
+      }
+    });
+    
+    document.getElementById('access-key-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        document.getElementById('auth-submit').click();
+      }
+    });
+    
+    // IndexedDB
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          
+          if (!database.objectStoreNames.contains('jobs')) {
+            database.createObjectStore('jobs', { keyPath: 'id', autoIncrement: true });
+          }
+          if (!database.objectStoreNames.contains('proposals')) {
+            database.createObjectStore('proposals', { keyPath: 'id', autoIncrement: true });
+          }
+          if (!database.objectStoreNames.contains('photos')) {
+            database.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+      });
+    }
+    
+    function getAll(store) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const s = tx.objectStore(store);
+        const req = s.getAll();
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    
+    function add(store, data) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const s = tx.objectStore(store);
+        const req = s.add(data);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    
+    function put(store, data) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        const s = tx.objectStore(store);
+        const req = s.put(data);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    
+    async function loadDemoData() {
+      const jobs = await getAll('jobs');
+      const proposals = await getAll('proposals');
+      
+      if (jobs.length === 0) {
+        for (const job of demoJobs) {
+          await add('jobs', job);
+        }
+      }
+      
+      if (proposals.length === 0) {
+        for (const p of demoProposals) {
+          await add('proposals', p);
+        }
+      }
+    }
+    
+    // Tab Navigation
+    function setupTabs() {
+      const btns = document.querySelectorAll('.tab-btn');
+      const contents = document.querySelectorAll('.tab-content');
+      
+      btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          btns.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          contents.forEach(c => c.classList.remove('active'));
+          
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          const tab = btn.dataset.tab;
+          document.getElementById('tab-' + tab).classList.add('active');
+        });
+      });
+    }
+    
+    // Render Jobs
+    async function renderJobs() {
+      const jobs = await getAll('jobs');
+      const container = document.getElementById('jobs-list');
+      document.getElementById('job-count').textContent = jobs.length;
+      
+      container.innerHTML = jobs.map((job, i) => `
+        <div class="job-card ${job.type} stagger-${(i % 5) + 1}" data-job-id="${job.id}" tabindex="0" role="button" aria-label="View job for ${job.customer}">
+          <div class="job-header">
+            <div>
+              <div class="job-customer">${job.customer}</div>
+              <div class="job-address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                ${job.address}
+              </div>
+            </div>
+            <div class="job-time">
+              <div class="job-time-value">${job.time}</div>
+              <div class="job-time-label">${job.type === 'estimate' ? 'Estimate' : 'In Progress'}</div>
+            </div>
+          </div>
+          <div class="job-type ${job.category}">${getCategoryLabel(job.category)}</div>
+        </div>
+      `).join('');
+      
+      container.querySelectorAll('.job-card').forEach(card => {
+        card.addEventListener('click', () => openJobModal(parseInt(card.dataset.jobId)));
+        card.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openJobModal(parseInt(card.dataset.jobId));
+          }
+        });
+      });
+    }
+    
+    function getCategoryLabel(cat) {
+      const labels = {
+        'waterproofing': 'Waterproofing',
+        'sump-pump': 'Sump Pump',
+        'foundation': 'Foundation Repair'
+      };
+      return labels[cat] || cat;
+    }
+    
+    async function openJobModal(id) {
+      const jobs = await getAll('jobs');
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+      
+      document.getElementById('job-modal-title').textContent = job.customer;
+      document.getElementById('job-modal-content').innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span style="color: var(--gray-600); font-size: 15px;">${job.address}</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <a href="tel:${job.phone}" style="color: var(--primary); font-size: 15px; text-decoration: none;">${job.phone}</a>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span style="font-weight: 600; font-size: 15px;">${job.time}</span>
+            <span class="job-type ${job.category}" style="margin-left: 8px;">${getCategoryLabel(job.category)}</span>
+          </div>
+        </div>
+        <div style="background: var(--gray-100); padding: 16px; border-radius: var(--radius-sm);">
+          <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--gray-600);">Notes</h4>
+          <p style="font-size: 14px; line-height: 1.5;">${job.notes}</p>
+        </div>
+        <div class="btn-group" style="margin-top: 20px;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.address)}" target="_blank" class="btn btn-secondary" style="text-decoration: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Directions
+          </a>
+          <a href="tel:${job.phone}" class="btn btn-primary" style="text-decoration: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            Call
+          </a>
+        </div>
+      `;
+      
+      document.getElementById('job-modal').classList.add('active');
+    }
+    
+    // Render Proposals
+    async function renderProposals() {
+      const proposals = await getAll('proposals');
+      const container = document.getElementById('proposals-list');
+      const empty = document.getElementById('proposals-empty');
+      
+      if (proposals.length === 0) {
+        container.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      
+      empty.classList.add('hidden');
+      container.innerHTML = proposals.map((p, i) => `
+        <div class="job-card ${p.signed ? 'completed' : 'estimate'} stagger-${(i % 5) + 1}">
+          <div class="job-header">
+            <div>
+              <div class="job-customer">${p.customer}</div>
+              <div class="job-address">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                ${p.address}
+              </div>
+            </div>
+            <div class="job-time">
+              <div class="job-time-value">${p.amount}</div>
+              <div class="job-time-label">${p.signed ? 'Signed' : 'Pending'}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+            <span style="font-size: 13px; color: var(--gray-600);">${formatDate(p.date)}</span>
+            ${p.signed ? '<span style="display: inline-flex; align-items: center; gap: 4px; color: var(--success); font-size: 13px; font-weight: 500;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Customer Signed</span>' : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function formatDate(str) {
+      const d = new Date(str);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
+    // Templates
+    function setupTemplates() {
+      document.querySelectorAll('.template-item').forEach(item => {
+        item.addEventListener('click', () => {
+          item.classList.toggle('selected');
+          const template = item.dataset.template;
+          if (item.classList.contains('selected')) {
+            selectedTemplates.push(template);
+          } else {
+            selectedTemplates = selectedTemplates.filter(t => t !== template);
+          }
+        });
+        
+        item.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            item.click();
+          }
+        });
+      });
+    }
+    
+    // Camera
+    function setupCamera() {
+      const addBtn = document.getElementById('add-photo-btn');
+      const modal = document.getElementById('camera-modal');
+      const closeBtn = document.getElementById('close-camera');
+      const video = document.getElementById('camera-view');
+      const captureBtn = document.getElementById('capture-btn');
+      
+      addBtn.addEventListener('click', async () => {
+        try {
+          cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' },
+            audio: false
+          });
+          video.srcObject = cameraStream;
+          modal.classList.add('active');
+        } catch (err) {
+          showToast('Camera access needed for photos');
+        }
+      });
+      
+      addBtn.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          addBtn.click();
+        }
+      });
+      
+      closeBtn.addEventListener('click', () => {
+        stopCamera();
+        modal.classList.remove('active');
+      });
+      
+      captureBtn.addEventListener('click', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        capturedPhotos.push(dataUrl);
+        renderPhotos();
+        stopCamera();
+        modal.classList.remove('active');
+        showToast('Photo captured');
+      });
+    }
+    
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+    }
+    
+    function renderPhotos() {
+      const grid = document.getElementById('photo-grid');
+      const photosHtml = capturedPhotos.map((photo, i) => `
+        <div class="photo-item">
+          <img src="${photo}" alt="Basement photo ${i + 1}">
+          <button class="photo-delete" data-index="${i}" aria-label="Delete photo ${i + 1}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+      
+      grid.innerHTML = photosHtml + `
+        <div class="photo-item photo-add" id="add-photo-btn" role="button" tabindex="0" aria-label="Add photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span>Add Photo</span>
+        </div>
+      `;
+      
+      grid.querySelectorAll('.photo-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          capturedPhotos.splice(parseInt(btn.dataset.index), 1);
+          renderPhotos();
+        });
+      });
+      
+      setupCamera();
+    }
+    
+    // Signature
+    function setupSignature() {
+      const canvas = document.getElementById('signature-canvas');
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      
+      function resizeCanvas() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = 200;
+        ctx.strokeStyle = '#0C1115';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+      }
+      
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = e.touches ? e.touches[0] : e;
+        return {
+          x: touch.clientX - rect.left,
+          y: touch.clientY - rect.top
+        };
+      }
+      
+      function start(e) {
+        isDrawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      function end() {
+        isDrawing = false;
+      }
+      
+      canvas.addEventListener('mousedown', start);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', end);
+      canvas.addEventListener('mouseleave', end);
+      
+      canvas.addEventListener('touchstart', start, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', end);
+      
+      document.getElementById('clear-signature').addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        signatureData = null;
+      });
+      
+      document.getElementById('save-signature').addEventListener('click', () => {
+        signatureData = canvas.toDataURL('image/png');
+        document.getElementById('signature-modal').classList.remove('active');
+        showToast('Signature saved');
+      });
+      
+      document.getElementById('close-signature').addEventListener('click', () => {
+        document.getElementById('signature-modal').classList.remove('active');
+      });
+      
+      window.addEventListener('resize', resizeCanvas);
+      setTimeout(resizeCanvas, 100);
+    }
+    
+    // Proposal
+    function setupProposal() {
+      document.getElementById('preview-proposal-btn').addEventListener('click', showProposalPreview);
+      document.getElementById('generate-proposal-btn').addEventListener('click', showProposalPreview);
+      
+      document.getElementById('close-proposal').addEventListener('click', () => {
+        document.getElementById('proposal-modal').classList.remove('active');
+      });
+      
+      document.getElementById('get-signature-btn').addEventListener('click', () => {
+        document.getElementById('proposal-modal').classList.remove('active');
+        document.getElementById('signature-modal').classList.add('active');
+        
+        setTimeout(() => {
+          const canvas = document.getElementById('signature-canvas');
+          const rect = canvas.parentElement.getBoundingClientRect();
+          canvas.width = rect.width;
+          canvas.height = 200;
+          const ctx = canvas.getContext('2d');
+          ctx.strokeStyle = '#0C1115';
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+        }, 100);
+      });
+      
+      document.getElementById('download-pdf-btn').addEventListener('click', generatePDF);
+    }
+    
+    function showProposalPreview() {
+      const customer = document.getElementById('estimate-customer').value || 'Customer Name';
+      const address = document.getElementById('estimate-address').value || 'Property Address';
+      const amount = document.getElementById('quote-amount').value || '$0';
+      const notes = document.getElementById('quote-notes').value || 'Scope of work to be determined.';
+      
+      currentProposal = { customer, address, amount, notes };
+      
+      const templates = selectedTemplates.map(t => {
+        const labels = {
+          'interior-drain': 'Interior Drain System',
+          'sump-pump': 'Sump Pump Installation',
+          'wall-repair': 'Foundation Wall Repair',
+          'crawl-encap': 'Crawl Space Encapsulation'
+        };
+        return labels[t] || t;
+      });
+      
+      document.getElementById('proposal-content').innerHTML = `
+        <div class="proposal-preview">
+          <div class="proposal-header">
+            <div class="proposal-company">C&J Basement Solutions, LLC</div>
+            <div class="proposal-tagline">Columbus Ohio Waterproofing Experts</div>
+          </div>
+          
+          <div class="proposal-section">
+            <h4>Customer Information</h4>
+            <div class="proposal-row">
+              <span>Name</span>
+              <span>${customer}</span>
+            </div>
+            <div class="proposal-row">
+              <span>Property</span>
+              <span>${address}</span>
+            </div>
+            <div class="proposal-row">
+              <span>Date</span>
+              <span>${new Date().toLocaleDateString()}</span>
+            </div>
+          </div>
+          
+          ${templates.length > 0 ? `
+          <div class="proposal-section">
+            <h4>Work to be Performed</h4>
+            ${templates.map(t => `<div class="proposal-row"><span>${t}</span></div>`).join('')}
+          </div>
+          ` : ''}
+          
+          <div class="proposal-section">
+            <h4>Scope of Work</h4>
+            <p style="font-size: 14px; line-height: 1.6; color: var(--gray-600);">${notes}</p>
+          </div>
+          
+          <div class="proposal-total">Total: ${amount}</div>
+          
+          ${signatureData ? `
+          <div class="proposal-section" style="margin-top: 24px;">
+            <h4>Customer Signature</h4>
+            <img src="${signatureData}" style="max-width: 200px; border-bottom: 1px solid var(--gray-300);" alt="Customer signature">
+          </div>
+          ` : ''}
+        </div>
+      `;
+      
+      document.getElementById('proposal-modal').classList.add('active');
+    }
+    
+    function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFillColor(42, 39, 114);
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(24);
+      doc.setFont('helvetica', 'bold');
+      doc.text('C&J Basement Solutions, LLC', 105, 20, { align: 'center' });
+      
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Columbus Ohio Waterproofing Experts', 105, 30, { align: 'center' });
+      
+      // Info
+      doc.setTextColor(12, 17, 21);
+      doc.setFontSize(11);
+      
+      let y = 55;
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text('Proposal Date:', 20, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date().toLocaleDateString(), 60, y);
+      
+      y += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Customer:', 20, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(currentProposal.customer, 60, y);
+      
+      y += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Property:', 20, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(currentProposal.address, 60, y);
+      
+      // Line
+      y += 15;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, y, 190, y);
+      
+      // Scope
+      y += 15;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('Scope of Work', 20, y);
+      
+      y += 10;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      const lines = doc.splitTextToSize(currentProposal.notes, 170);
+      doc.text(lines, 20, y);
+      
+      y += lines.length * 6 + 15;
+      
+      // Total
+      doc.setFillColor(245, 245, 245);
+      doc.rect(20, y, 170, 25, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(42, 39, 114);
+      doc.text('Total: ' + currentProposal.amount, 105, y + 16, { align: 'center' });
+      
+      // Signature
+      if (signatureData) {
+        y += 40;
+        doc.setTextColor(12, 17, 21);
+        doc.setFontSize(11);
+        doc.text('Customer Signature:', 20, y);
+        doc.addImage(signatureData, 'PNG', 20, y + 5, 60, 25);
+      }
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(106, 107, 108);
+      doc.text('C&J Basement Solutions, LLC | (614) 756-2961 | jeff@candjbasementsolutions.com', 105, 280, { align: 'center' });
+      doc.text('572 E Broad Street, #123, Pataskala, OH 43062', 105, 286, { align: 'center' });
+      
+      // Save
+      doc.save('CJ-Proposal-' + currentProposal.customer.replace(/\s+/g, '-') + '.pdf');
+      showToast('PDF saved');
+      
+      // Save proposal to DB
+      saveProposal();
+    }
+    
+    async function saveProposal() {
+      await add('proposals', {
+        customer: currentProposal.customer,
+        address: currentProposal.address,
+        amount: currentProposal.amount,
+        date: new Date().toISOString().split('T')[0],
+        status: signatureData ? 'signed' : 'pending',
+        signed: !!signatureData
+      });
+      renderProposals();
+    }
+    
+    // Route
+    function setupRoute() {
+      document.getElementById('start-route-btn').addEventListener('click', async () => {
+        const jobs = await getAll('jobs');
+        if (jobs.length === 0) return;
+        
+        const addresses = jobs.map(j => j.address).join('/');
+        const url = `https://www.google.com/maps/dir/${encodeURIComponent(addresses)}`;
+        
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Today\'s Route',
+              text: 'C&J Dispatch Route',
+              url: url
+            });
+          } catch (e) {
+            window.open(url, '_blank');
+          }
+        } else {
+          window.open(url, '_blank');
+        }
+      });
+    }
+    
+    // Modals
+    function setupModals() {
+      document.getElementById('close-job').addEventListener('click', () => {
+        document.getElementById('job-modal').classList.remove('active');
+      });
+      
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove('active');
+            stopCamera();
+          }
+        });
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-overlay.active').forEach(m => {
+            m.classList.remove('active');
+          });
+          stopCamera();
+        }
+      });
+    }
+    
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    
+    // Init
+    async function initApp() {
+      await initDB();
+      await loadDemoData();
+      
+      setupTabs();
+      setupTemplates();
+      setupCamera();
+      setupSignature();
+      setupProposal();
+      setupRoute();
+      setupModals();
+      
+      await renderJobs();
+      await renderProposals();
+    }
+    
+    // Start
+    checkAuth();
+  </script>
+
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by C&amp;J Basement Solutions. All brand references are used solely for demonstration purposes.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20CJ%20Basement%20Solutions&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">Request Permanent Deletion</a>
+  </div>
+</body>
+</html>
