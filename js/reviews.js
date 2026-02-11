@@ -133,7 +133,10 @@
   }
 
   // ---- Stats Counter Animations ----
-  if (!reduced && typeof gsap !== 'undefined') {
+  // DISABLED: Counter animations cause content to show 0 if animation doesn't complete
+  // Static values are now in HTML for reliable rendering
+  
+  if (!reduced && typeof gsap !== 'undefined' && window.BCU.enableCounterAnimations) {
     var statCards = document.querySelectorAll('.rv-stats-grid .stat-card');
     gsap.to(statCards, {
       scale: 1, opacity: 1, duration: 0.8, stagger: 0.12,

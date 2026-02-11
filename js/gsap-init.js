@@ -6,10 +6,15 @@
 (function() {
   'use strict';
 
-  if (typeof gsap === 'undefined') return;
+  // Mark GSAP as loaded so we know animations should work
+  window.BCU = window.BCU || {};
+  window.BCU.gsapLoaded = typeof gsap !== 'undefined';
 
-  // Progressive enhancement: do NOT add gsap-loaded class to hide content via CSS.
-  // Hidden states are set below via gsap.set() so content stays visible if JS fails.
+  if (typeof gsap === 'undefined') {
+    // GSAP failed to load - add fallback class immediately
+    document.documentElement.classList.add('gsap-fallback');
+    return;
+  }
 
   // Register plugins
   gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -29,21 +34,16 @@
 
   if (window.BCU.prefersReduced) {
     // Skip all animations — content stays visible via CSS defaults
+    document.documentElement.classList.add('gsap-fallback');
     return;
   }
 
-  // ---- Set initial hidden states via JS (progressive enhancement) ----
-  // If JS fails before this point, all content remains visible.
-  document.querySelectorAll('[data-animate]').forEach(function(el) {
-    var type = el.getAttribute('data-animate');
-    var props = { opacity: 0 };
-    if (type === 'fade-up') props.y = 40;
-    else if (type === 'fade-left') props.x = -40;
-    else if (type === 'fade-right') props.x = 40;
-    else if (type === 'scale-up') props.scale = 0.95;
-    else if (type === 'rotate-in') { props.rotation = -5; props.x = -20; }
-    gsap.set(el, props);
-  });
+  // IMPORTANT: We no longer hide elements via gsap.set() opacity:0
+  // Instead, we use gsap.from() which animates FROM a state TO current state
+  // This means if ScrollTrigger doesn't fire, elements stay visible
+
+  // Mark animations as ready
+  window.BCU.animationsReady = true;
 
   // ---- Staggered Reveal for data-animate="fade-up" groups ----
   window.BCU.animateFadeUp = function(selector, options) {
@@ -66,31 +66,20 @@
   };
 
   // ---- Counter Animation ----
+  // DISABLED - counter animations cause values to show 0 if not triggered
+  // Static values in HTML are more reliable
   window.BCU.animateCounter = function(element, target, options) {
-    options = options || {};
-    var proxy = { value: options.from || 0 };
-    gsap.to(proxy, {
-      value: target,
-      duration: options.duration || 1.5,
-      ease: options.ease || 'power2.out',
-      onUpdate: function() {
-        var formatted = options.format ? options.format(proxy.value) : Math.round(proxy.value);
-        element.textContent = formatted;
-      },
-      scrollTrigger: options.trigger ? {
-        trigger: options.trigger,
-        start: options.start || 'top 80%',
-        once: true
-      } : undefined
-    });
+    // Do nothing - let HTML static values display
+    return;
   };
 
   // ---- Text Split Animation ----
   window.BCU.animateSplitText = function(element) {
     var words = window.BCU.splitText(element);
+    // Only animate position, not opacity - to avoid invisible text
     gsap.fromTo(words,
-      { y: 20, opacity: 0.2 },
-      { y: 0, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'power3.out' }
+      { y: 12 },
+      { y: 0, duration: 0.4, stagger: 0.06, ease: 'power3.out' }
     );
   };
 

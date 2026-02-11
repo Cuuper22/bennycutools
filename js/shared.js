@@ -172,4 +172,28 @@
   // ---- Reduced motion check ----
   window.BCU.prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // ---- Safety Net: Force all content visible after 1.5 seconds ----
+  // If GSAP animations haven't completed, ensure everything is readable
+  setTimeout(function() {
+    if (!window.BCU.animationsReady || !window.BCU.gsapLoaded) {
+      document.documentElement.classList.add('gsap-fallback');
+    }
+    // Force-show any elements that might still be hidden by GSAP
+    var selectors = [
+      '.pricing-card', '.feature-card', '.stat-card', '.step', '.mc-step',
+      '.rv-step', '.portfolio-card', '.faq-item', '.service-card',
+      '.sms-bubble', '.roi-calculator', '.final-cta', '.audit-cta',
+      '.rv-hero-feature', '.founding-banner', '.sprint-offer',
+      '.section-label', '.proof-item', '.demo-card', '.demo-panel',
+      '.site-footer', '[data-animate]'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(function(el) {
+      el.style.opacity = '1';
+      el.style.visibility = 'visible';
+      if (el.style.transform && el.style.transform !== 'none') {
+        el.style.transform = 'none';
+      }
+    });
+  }, 1500);
+
 })();

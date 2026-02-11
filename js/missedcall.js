@@ -14,10 +14,7 @@
     if (reduced) {
       phoneBubbles.forEach(function(b) { b.style.opacity = '1'; b.style.transform = 'none'; });
     } else if (typeof gsap !== 'undefined') {
-      // Phone frame starts VISIBLE — only animate scale/position, not opacity.
-      // SMS bubbles animate in sequence for engagement.
-      gsap.set(phoneBubbles, { opacity: 0, y: 12 });
-
+      // Phone frame starts VISIBLE — animate from offset, not from invisible
       var phoneFrame = document.querySelector('.phone-frame');
       if (phoneFrame) {
         gsap.from(phoneFrame, {
@@ -25,11 +22,11 @@
         });
       }
 
-      // Sequence messages — faster, first bubble shows quickly
-      var delays = [0.6, 1.2, 2.0];
+      // Sequence messages — animate from slight offset, NOT from opacity 0
+      var delays = [0.4, 0.9, 1.5];
       phoneBubbles.forEach(function(bubble, i) {
-        gsap.to(bubble, {
-          opacity: 1, y: 0, duration: 0.4, delay: delays[i] || (0.6 + i * 0.6),
+        gsap.from(bubble, {
+          y: 12, opacity: 0.2, duration: 0.4, delay: delays[i] || (0.4 + i * 0.5),
           ease: 'power2.out'
         });
       });
@@ -54,7 +51,11 @@
   }
 
   // ---- Stats Counter Animations ----
-  if (!reduced && typeof gsap !== 'undefined') {
+  // DISABLED: Counter animations cause content to show 0 if animation doesn't complete
+  // Static values are now in HTML for reliable rendering
+  // The below is kept but wrapped in a flag check
+  
+  if (!reduced && typeof gsap !== 'undefined' && window.BCU.enableCounterAnimations) {
     var statCards = document.querySelectorAll('.mc-stats-grid .stat-card');
     gsap.to(statCards, {
       scale: 1, opacity: 1, duration: 0.8, stagger: 0.12,
@@ -153,19 +154,7 @@
 
     // Animate the numbers
     if (lossDisplay) {
-      if (typeof gsap !== 'undefined' && !reduced) {
-        gsap.to(lossDisplay, {
-          textContent: '$' + Math.round(monthlyLoss).toLocaleString(),
-          duration: 0.4,
-          snap: { textContent: 1 },
-          onUpdate: function() {
-            // Manual formatting since snap doesn't handle currency
-          }
-        });
-        lossDisplay.textContent = '$' + Math.round(monthlyLoss).toLocaleString();
-      } else {
-        lossDisplay.textContent = '$' + Math.round(monthlyLoss).toLocaleString();
-      }
+      lossDisplay.textContent = '$' + Math.round(monthlyLoss).toLocaleString();
     }
     if (gainDisplay) gainDisplay.textContent = '$' + Math.round(monthlyGain).toLocaleString();
     if (roiDisplay) roiDisplay.textContent = Math.round(multiplier * 10) / 10 + 'x';
@@ -183,8 +172,13 @@
     updateSliderFill(sliderValue);
   }
 
-  // Initialize ROI
+  // Initialize ROI immediately (no wait for scroll/animation)
   calculateROI();
+  
+  // Also run on DOMContentLoaded just to be safe
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', calculateROI);
+  }
 
   // ---- ROI Calculator ----
   if (!reduced && typeof gsap !== 'undefined') {
