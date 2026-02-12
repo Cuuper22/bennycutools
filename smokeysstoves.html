@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>StoveTracker - Smokey's Stoves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#C85A2B;--primary-light:#E07840;--primary-dark:#A04520;
+--secondary:#1F1F1F;--surface:#F8F4EF;--white:#FFFFFF;
+--success:#3D7A4A;--error:#B84444;--warning:#D49B2B;--info:#3B7DD8;
+--text:#1F1F1F;--text-muted:#78706A;--border:#E0D8D0;
+--shadow-1:0 1px 3px rgba(31,31,31,.08);
+--shadow-2:0 4px 12px rgba(31,31,31,.1),0 1px 3px rgba(31,31,31,.06);
+--shadow-3:0 8px 24px rgba(31,31,31,.12),0 2px 8px rgba(31,31,31,.08);
+--radius:12px;--radius-sm:8px;
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Source Sans 3',sans-serif;background:var(--surface);color:var(--text);min-height:100dvh;padding-bottom:120px !important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Playfair Display',serif;font-weight:600;line-height:1.25}
+button{font-family:'Source Sans 3',sans-serif;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:'Source Sans 3',sans-serif;font-size:16px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.skip-link{position:absolute;top:-100%;left:16px;background:var(--primary);color:#fff;padding:8px 16px;border-radius:var(--radius-sm);z-index:10000;font-size:14px}
+.skip-link:focus{top:8px}
+#app{display:none}
+#gate{display:flex;align-items:center;justify-content:center;height:100dvh;background:var(--secondary);color:#fff;text-align:center;padding:24px}
+#gate h1{font-size:1.75rem;margin-bottom:16px}
+#gate p{color:#999;margin-bottom:24px}
+.app-header{background:var(--secondary);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:1.1rem;font-weight:600}
+.app-header p{font-size:.75rem;color:rgba(255,255,255,.6);margin-top:2px}
+.demo-banner{background:var(--primary);color:#fff;padding:10px 16px;font-size:.8rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner button{background:rgba(255,255,255,.2);color:#fff;padding:4px 12px;border-radius:var(--radius-sm);font-size:.75rem;font-weight:500}
+.content{padding:16px;max-width:640px;margin:0 auto}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-2);padding:16px;margin-bottom:12px;animation:fadeUp .4s ease-out both;transition:transform .2s,box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+*:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.view{display:none}.view.active{display:block}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.8rem;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(200,90,43,.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:transform .15s,box-shadow .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow-2)}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:#fff}
+.btn-danger{background:var(--error);color:#fff}
+.btn-block{width:100%}
+.fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-3);z-index:90;transition:transform .15s}
+.fab:active{transform:scale(.93)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom,0)}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;font-size:.65rem;color:var(--text-muted);transition:color .15s}
+.bottom-nav button.active{color:var(--primary)}
+.bottom-nav button svg{width:22px;height:22px;margin-bottom:2px}
+/* Job cards */
+.job-card{cursor:pointer;border-left:4px solid var(--border)}
+.job-card.status-scheduled{border-left-color:var(--info)}
+.job-card.status-inprogress{border-left-color:var(--warning)}
+.job-card.status-awaitingparts{border-left-color:var(--error)}
+.job-card.status-complete{border-left-color:var(--success)}
+.job-card .job-time{font-size:.75rem;font-weight:600;color:var(--primary);text-transform:uppercase}
+.job-card h3{font-size:.95rem;margin:4px 0}
+.job-card .job-meta{font-size:.8rem;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap}
+.job-card .job-type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:600;background:var(--surface);color:var(--text-muted);margin-top:6px}
+/* Checklist */
+.checklist-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.checklist-item:last-child{border-bottom:none}
+.checklist-item input[type=checkbox]{width:22px;height:22px;accent-color:var(--primary);flex-shrink:0}
+.checklist-item label{font-size:.85rem;flex:1;cursor:pointer}
+.checklist-item.done label{text-decoration:line-through;color:var(--text-muted)}
+/* Photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.photo-grid .photo-cell{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;background:var(--surface)}
+.photo-grid .photo-cell img{width:100%;height:100%;object-fit:cover}
+.photo-grid .add-photo{display:flex;align-items:center;justify-content:center;border:2px dashed var(--border);cursor:pointer}
+/* Signature pad */
+.sig-pad{border:2px solid var(--border);border-radius:var(--radius-sm);background:#fff;touch-action:none;cursor:crosshair;width:100%;height:150px}
+/* Status badges */
+.status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.badge-scheduled{background:#DBEAFE;color:#1E40AF}
+.badge-inprogress{background:#FEF3C7;color:#92400E}
+.badge-awaitingparts{background:#FEE2E2;color:#991B1B}
+.badge-complete{background:#D1FAE5;color:#065F46}
+/* Upsell */
+.upsell-card{background:linear-gradient(135deg,var(--surface),#EDE5DB);border:1.5px dashed var(--border);opacity:.7;text-align:center;padding:24px}
+.upsell-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px}
+/* Back button */
+.back-btn{display:inline-flex;align-items:center;gap:4px;color:var(--text-muted);font-size:.85rem;margin-bottom:12px;cursor:pointer}
+/* Section headers */
+.section-header{font-size:.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;padding:16px 0 8px}
+/* Camera overlay */
+.camera-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:10001;display:none}
+.camera-overlay video{width:100%;height:100%;object-fit:cover}
+.camera-overlay .controls{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center}
+.camera-overlay .shutter{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.5)}
+.camera-overlay .close-cam{position:absolute;top:16px;right:16px;color:#fff;background:rgba(0,0,0,.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+/* Toast */
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10000}
+.toast{background:var(--secondary);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:.85rem;box-shadow:var(--shadow-3);animation:toastIn .3s ease-out;margin-bottom:8px}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none !important}body{background:#fff;padding:0}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="gate"><div><h1>StoveTracker</h1><p>This tool requires a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#C85A2B">ben@bennycutools.com</a></p></div></div>
+<div id="app">
+<header class="app-header"><h1>StoveTracker</h1><p>Smokey's Stoves -- Grants Pass</p></header>
+<div class="demo-banner" id="demoBanner" style="display:none" role="status"><span>Sample data for southern Oregon. Tap to clear and add your own.</span><button onclick="clearDemo()" aria-label="Clear demo data">Clear</button></div>
+<main id="main-content">
+<!-- Jobs Board -->
+<div class="view active" id="viewJobs">
+<div class="content">
+<div class="section-header">Today's Jobs</div>
+<div id="jobsList"></div>
+<div class="card upsell-card" style="--i:5">
+<h3 style="color:var(--text-muted)">Team View <span class="upsell-badge">Full Version</span></h3>
+<p style="font-size:.8rem;color:var(--text-muted);margin-top:8px">Multi-crew scheduling and dispatch across your Grants Pass and Medford locations.</p>
+</div>
+</div>
+</div>
+<!-- New/Edit Job -->
+<div class="view" id="viewEdit">
+<div class="content">
+<button class="back-btn" onclick="showView('viewJobs')" aria-label="Back to jobs board"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+<h2 id="editTitle" style="margin-bottom:16px">New Job</h2>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Customer</h3>
+<div class="form-group"><label for="jCustName">Customer Name</label><input type="text" id="jCustName" placeholder="Johnson family"></div>
+<div class="form-group"><label for="jCustPhone">Phone</label><input type="tel" id="jCustPhone" placeholder="(541) 555-0123"></div>
+<div class="form-group"><label for="jAddr">Address</label><input type="text" id="jAddr" placeholder="1842 Lakeshore Dr, Merlin OR"></div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Job Details</h3>
+<div class="form-group"><label for="jType">Job Type</label>
+<select id="jType" onchange="loadChecklist()">
+<option value="">Select...</option>
+<option value="pellet-install">Pellet Stove Install</option>
+<option value="wood-install">Wood Stove Install</option>
+<option value="gas-install">Gas Insert / Fireplace Install</option>
+<option value="chimney-sweep">Chimney Sweep</option>
+<option value="inspection">Inspection</option>
+<option value="service">Service / Repair</option>
+</select></div>
+<div class="form-group"><label for="jProduct">Product / Model</label><input type="text" id="jProduct" placeholder="Harman P43 pellet stove"></div>
+<div class="form-group"><label for="jDate">Scheduled Date</label><input type="date" id="jDate"></div>
+<div class="form-group"><label for="jTime">Time</label><input type="time" id="jTime"></div>
+<div class="form-group"><label for="jAssignee">Assigned To</label>
+<select id="jAssignee"><option value="Shaun">Shaun</option><option value="Gene">Gene</option><option value="Other">Other</option></select></div>
+<div class="form-group"><label for="jNotes">Notes</label><textarea id="jNotes" rows="3" placeholder="Special instructions, access codes, customer preferences..."></textarea></div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Install Checklist</h3>
+<div id="checklistEdit"></div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Photos</h3>
+<div class="photo-grid" id="jPhotoGrid">
+<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take a photo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+</div>
+</div>
+<button class="btn btn-primary btn-block" onclick="saveJob()" style="margin-top:16px">Save Job</button>
+</div>
+</div>
+<!-- Job Detail -->
+<div class="view" id="viewDetail">
+<div class="content" id="detailContent"></div>
+</div>
+<!-- Settings -->
+<div class="view" id="viewSettings">
+<div class="content">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:12px">Data</h3>
+<button class="btn btn-outline btn-block" onclick="exportData()" style="margin-bottom:8px">Export (JSON)</button>
+<button class="btn btn-outline btn-block" onclick="document.getElementById('importFile').click()">Import (JSON)</button>
+<input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+</div>
+<div class="card"><button class="btn btn-danger btn-block" onclick="if(confirm('Delete all data?'))clearAllData()">Delete All Data</button></div>
+</div>
+</div>
+</main>
+<button class="fab" onclick="newJob()" aria-label="Create new job" id="fabBtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewJobs')" class="active" id="navJobs" aria-label="Jobs board"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Jobs</button>
+<button onclick="showView('viewSettings')" id="navSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+</nav>
+<div class="camera-overlay" id="cameraOverlay"><video id="cameraVideo" autoplay playsinline></video><button class="close-cam" onclick="closeCamera()" aria-label="Close camera"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="controls"><button class="shutter" onclick="capturePhoto()" aria-label="Take photo"></button></div></div>
+<canvas id="cameraCanvas" style="display:none"></canvas>
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</div>
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Smokey's Stoves. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Smokeys%20Stoves&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=1345121857;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){initApp();}else{document.getElementById('gate').style.display='flex';document.getElementById('app').style.display='none';}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let db,currentJobId=null,currentChecklist=[],currentPhotos=[],cameraStream=null,signatureCanvas=null,signatureCtx=null,isDrawing=false;
+
+const CHECKLISTS={
+'pellet-install':['Confirm hearth pad in place','Position stove on hearth pad','Install vent pipe through wall/ceiling','Connect vent pipe to stove','Install wall thimble','Install termination cap','Seal all vent joints with RTV','Connect power cord','Load pellets and test ignition','Check draft with smoke pencil','Set thermostat controls','Clean work area','Walk customer through operation'],
+'wood-install':['Verify clearances to combustibles','Position stove on hearth pad','Install stovepipe to ceiling support box','Install Class A chimney sections','Install storm collar and cap','Seal all joints','Check draft','Test fire','Check for smoke leaks at joints','Install CO detector nearby','Clean work area','Review operation with customer'],
+'gas-install':['Check gas supply line','Position unit in fireplace opening','Connect gas line with flex connector','Install vent liner if needed','Connect venting','Test gas pressure','Light pilot and verify operation','Check for gas leaks (soap test)','Install remote control/wall switch','Set thermostat if applicable','Clean work area','Demo operation for customer'],
+'chimney-sweep':['Set up drop cloths','Inspect damper operation','Insert brush from top or bottom','Sweep all flue sections','Inspect for creosote buildup level','Check spark arrestor/cap','Inspect flashing','Clean firebox and ash dump','Vacuum all debris','Final inspection','Document condition'],
+'inspection':['External chimney inspection','Check cap and spark arrestor','Inspect flashing and crown','Check mortar joints','Internal flue inspection','Measure creosote depth','Check damper operation','Inspect firebox condition','Check clearances to combustibles','Test CO levels','Document findings','Provide written report'],
+'service':['Diagnose reported issue','Check electrical connections','Test ignition system','Inspect combustion chamber','Clean heat exchanger','Check blower/fan operation','Test safety switches','Replace worn parts','Verify proper operation','Document repair']
+};
+
+function initApp(){
+document.getElementById('gate').style.display='none';
+document.getElementById('app').style.display='block';
+openDB().then(()=>{checkFirstVisit();renderJobs();});
+}
+
+function openDB(){
+return new Promise((res,rej)=>{
+const r=indexedDB.open('StoveTrackerDB',1);
+r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('jobs'))d.createObjectStore('jobs',{keyPath:'id'});};
+r.onsuccess=e=>{db=e.target.result;res();};
+r.onerror=e=>rej(e);
+});
+}
+function dbPut(s,d){return new Promise((res,rej)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).put(d);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);})}
+function dbGetAll(s){return new Promise((res,rej)=>{const tx=db.transaction(s,'readonly');const r=tx.objectStore(s).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e);})}
+function dbGet(s,id){return new Promise((res,rej)=>{const tx=db.transaction(s,'readonly');const r=tx.objectStore(s).get(id);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e);})}
+function dbDelete(s,id){return new Promise((res,rej)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);})}
+
+function checkFirstVisit(){
+if(!localStorage.getItem('st_visited')){
+localStorage.setItem('st_visited','1');
+loadDemoData();
+}
+}
+
+function loadDemoData(){
+const today=new Date();const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const demos=[
+{id:'demo-1',isDemo:true,customer:{name:'Johnson Family',phone:'(541) 555-0234',address:'1842 Lakeshore Dr, Merlin OR'},job:{type:'pellet-install',product:'Harman P43 Pellet Stove',date:fmt(today),time:'08:30',assignee:'Shaun',notes:'Existing chimney, needs new liner. Customer wants programmable thermostat.'},checklist:CHECKLISTS['pellet-install'].map((t,i)=>({text:t,done:i<3})),photos:[],status:'inprogress',signature:null,created:Date.now()-86400000},
+{id:'demo-2',isDemo:true,customer:{name:'Garcia Residence',phone:'(541) 555-0567',address:'445 Rogue River Hwy, Gold Hill OR'},job:{type:'chimney-sweep',product:'Annual chimney cleaning',date:fmt(today),time:'13:00',assignee:'Shaun',notes:'Last cleaned 14 months ago. Customer mentioned some smoke smell.'},checklist:CHECKLISTS['chimney-sweep'].map(t=>({text:t,done:false})),photos:[],status:'scheduled',signature:null,created:Date.now()-172800000},
+{id:'demo-3',isDemo:true,customer:{name:'Williams Home',phone:'(541) 555-0891',address:'89 Table Rock Rd, Central Point OR'},job:{type:'gas-install',product:'Napoleon GDI-30 Direct Vent Insert',date:fmt(today),time:'15:30',assignee:'Gene',notes:'Waiting on flex gas connector (3/4"). Should arrive today.'},checklist:CHECKLISTS['gas-install'].map(t=>({text:t,done:false})),photos:[],status:'awaitingparts',signature:null,created:Date.now()-259200000},
+{id:'demo-4',isDemo:true,customer:{name:'Peterson Cabin',phone:'(541) 555-0345',address:'2201 Monument Dr, Cave Junction OR'},job:{type:'wood-install',product:'Jotul F 500 Oslo Wood Stove',date:fmt(new Date(today.getTime()-86400000)),time:'09:00',assignee:'Shaun',notes:'New install in vacation cabin. Full Class A chimney run. Excellent access from outside.'},checklist:CHECKLISTS['wood-install'].map(t=>({text:t,done:true})),photos:[],status:'complete',signature:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==',created:Date.now()-345600000}
+];
+demos.forEach(d=>dbPut('jobs',d));
+setTimeout(()=>{document.getElementById('demoBanner').style.display='flex';renderJobs();},300);
+}
+
+function clearDemo(){
+dbGetAll('jobs').then(jobs=>Promise.all(jobs.filter(j=>j.isDemo).map(j=>dbDelete('jobs',j.id)))).then(()=>{
+document.getElementById('demoBanner').style.display='none';renderJobs();toast('Demo data cleared');
+});
+}
+
+function renderJobs(){
+dbGetAll('jobs').then(jobs=>{
+jobs.sort((a,b)=>{
+const statusOrder={inprogress:0,scheduled:1,awaitingparts:2,complete:3};
+return(statusOrder[a.status]||3)-(statusOrder[b.status]||3);
+});
+const el=document.getElementById('jobsList');
+if(!jobs.length){
+el.innerHTML=`<div style="text-align:center;padding:48px 16px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><h2 style="margin-top:16px;font-size:1.2rem">No jobs yet</h2><p style="color:var(--text-muted);font-size:.85rem;margin-top:8px">Tap + to add your first job.</p></div>`;
+return;
+}
+el.innerHTML=jobs.map((j,i)=>{
+const typeLabels={'pellet-install':'Pellet Install','wood-install':'Wood Stove Install','gas-install':'Gas Install','chimney-sweep':'Chimney Sweep','inspection':'Inspection','service':'Service/Repair'};
+const statusLabels={scheduled:'Scheduled',inprogress:'In Progress',awaitingparts:'Awaiting Parts',complete:'Complete'};
+const badgeClass={scheduled:'badge-scheduled',inprogress:'badge-inprogress',awaitingparts:'badge-awaitingparts',complete:'badge-complete'};
+const doneCount=j.checklist?j.checklist.filter(c=>c.done).length:0;
+const totalCount=j.checklist?j.checklist.length:0;
+return`<div class="card job-card status-${j.status}" style="--i:${i}" onclick="viewJob('${j.id}')" tabindex="0" role="button" aria-label="View job for ${j.customer?.name}">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<span class="job-time">${j.job?.time||''} ${j.job?.date||''}</span>
+<span class="status-badge ${badgeClass[j.status]||''}">${statusLabels[j.status]||j.status}</span>
+</div>
+<h3>${j.customer?.name||'Unnamed'}</h3>
+<div class="job-meta"><span>${j.customer?.address?.split(',')[0]||''}</span><span>${j.job?.assignee||''}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+<span class="job-type-badge">${typeLabels[j.job?.type]||j.job?.type||''}</span>
+<span style="font-size:.75rem;color:var(--text-muted)">${doneCount}/${totalCount} steps</span>
+</div>
+</div>`;
+}).join('');
+document.getElementById('demoBanner').style.display=jobs.some(j=>j.isDemo)?'flex':'none';
+});
+}
+
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+if(id==='viewJobs')document.getElementById('navJobs').classList.add('active');
+if(id==='viewSettings')document.getElementById('navSettings').classList.add('active');
+document.getElementById('fabBtn').style.display=(id==='viewJobs')?'flex':'none';
+window.scrollTo(0,0);
+}
+
+function newJob(){
+currentJobId=null;currentChecklist=[];currentPhotos=[];
+document.getElementById('editTitle').textContent='New Job';
+['jCustName','jCustPhone','jAddr','jProduct','jNotes'].forEach(id=>document.getElementById(id).value='');
+document.getElementById('jType').value='';
+document.getElementById('jDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('jTime').value='08:00';
+document.getElementById('jAssignee').value='Shaun';
+document.getElementById('checklistEdit').innerHTML='<p style="font-size:.85rem;color:var(--text-muted)">Select a job type to load the checklist.</p>';
+renderJobPhotos();
+showView('viewEdit');
+}
+
+function loadChecklist(){
+const type=document.getElementById('jType').value;
+if(!type||!CHECKLISTS[type]){document.getElementById('checklistEdit').innerHTML='';return;}
+currentChecklist=CHECKLISTS[type].map(t=>({text:t,done:false}));
+renderChecklist('checklistEdit');
+}
+
+function renderChecklist(containerId){
+const el=document.getElementById(containerId);
+el.innerHTML=currentChecklist.map((c,i)=>`
+<div class="checklist-item ${c.done?'done':''}">
+<input type="checkbox" id="chk${i}" ${c.done?'checked':''} onchange="currentChecklist[${i}].done=this.checked;this.parentElement.classList.toggle('done')">
+<label for="chk${i}">${c.text}</label>
+</div>`).join('');
+}
+
+function openCamera(){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+cameraStream=stream;document.getElementById('cameraVideo').srcObject=stream;
+document.getElementById('cameraOverlay').style.display='block';
+}).catch(()=>{
+const input=document.createElement('input');input.type='file';input.accept='image/*';input.capture='environment';
+input.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{currentPhotos.push(ev.target.result);renderJobPhotos();};r.readAsDataURL(f);};
+input.click();
+});
+}
+function capturePhoto(){
+const v=document.getElementById('cameraVideo'),c=document.getElementById('cameraCanvas');
+c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+currentPhotos.push(c.toDataURL('image/jpeg',0.7));renderJobPhotos();closeCamera();toast('Photo captured');
+}
+function closeCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}document.getElementById('cameraOverlay').style.display='none';}
+
+function renderJobPhotos(){
+const g=document.getElementById('jPhotoGrid');
+g.innerHTML=currentPhotos.map((p,i)=>`<div class="photo-cell"><img src="${p}" alt="Photo ${i+1}"><button onclick="currentPhotos.splice(${i},1);renderJobPhotos()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center" aria-label="Remove photo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')+`<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take photo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>`;
+}
+
+function saveJob(){
+const name=document.getElementById('jCustName').value.trim();
+if(!name){toast('Enter customer name');return;}
+const job={
+id:currentJobId||'j-'+Date.now(),
+customer:{name,phone:document.getElementById('jCustPhone').value.trim(),address:document.getElementById('jAddr').value.trim()},
+job:{type:document.getElementById('jType').value,product:document.getElementById('jProduct').value.trim(),date:document.getElementById('jDate').value,time:document.getElementById('jTime').value,assignee:document.getElementById('jAssignee').value,notes:document.getElementById('jNotes').value.trim()},
+checklist:[...currentChecklist],photos:[...currentPhotos],status:currentJobId?undefined:'scheduled',signature:null,created:currentJobId?undefined:Date.now()
+};
+if(currentJobId){
+dbGet('jobs',currentJobId).then(ex=>{job.status=ex?.status||'scheduled';job.created=ex?.created||Date.now();job.signature=ex?.signature;return dbPut('jobs',job);}).then(()=>{toast('Job updated');renderJobs();showView('viewJobs');});
+}else{
+dbPut('jobs',job).then(()=>{toast('Job saved');renderJobs();showView('viewJobs');});
+}
+}
+
+function viewJob(id){
+dbGet('jobs',id).then(j=>{
+if(!j)return;
+const typeLabels={'pellet-install':'Pellet Stove Install','wood-install':'Wood Stove Install','gas-install':'Gas Insert/Fireplace Install','chimney-sweep':'Chimney Sweep','inspection':'Inspection','service':'Service/Repair'};
+const statusLabels={scheduled:'Scheduled',inprogress:'In Progress',awaitingparts:'Awaiting Parts',complete:'Complete'};
+const badgeClass={scheduled:'badge-scheduled',inprogress:'badge-inprogress',awaitingparts:'badge-awaitingparts',complete:'badge-complete'};
+const doneCount=j.checklist?j.checklist.filter(c=>c.done).length:0;
+const totalCount=j.checklist?j.checklist.length:0;
+const photosHtml=j.photos?.length?`<div class="photo-grid">${j.photos.map((p,i)=>`<div class="photo-cell"><img src="${p}" alt="Photo ${i+1}"></div>`).join('')}</div>`:'';
+document.getElementById('detailContent').innerHTML=`
+<button class="back-btn" onclick="showView('viewJobs')" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+<div class="card">
+<div style="display:flex;justify-content:space-between;align-items:center"><h2>${j.customer?.name}</h2><span class="status-badge ${badgeClass[j.status]||''}">${statusLabels[j.status]||j.status}</span></div>
+<p style="font-size:.85rem;color:var(--text-muted);margin-top:4px">${typeLabels[j.job?.type]||''} -- ${j.job?.product||''}</p>
+<p style="font-size:.85rem;color:var(--text-muted);margin-top:2px">${j.customer?.address||''}</p>
+<p style="font-size:.8rem;color:var(--text-muted);margin-top:2px">${j.job?.date||''} at ${j.job?.time||''} -- ${j.job?.assignee||''}</p>
+</div>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Status</h3>
+<div class="status-select" style="display:flex;gap:6px;flex-wrap:wrap">
+${['scheduled','inprogress','awaitingparts','complete'].map(s=>`<button style="padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;border:1.5px solid var(--border);${j.status===s?'background:var(--primary);color:#fff;border-color:var(--primary)':''}" onclick="updateJobStatus('${id}','${s}')">${statusLabels[s]}</button>`).join('')}
+</div></div>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Checklist (${doneCount}/${totalCount})</h3>
+<div id="detailChecklist">${j.checklist?j.checklist.map((c,i)=>`<div class="checklist-item ${c.done?'done':''}"><input type="checkbox" id="dc${i}" ${c.done?'checked':''} onchange="toggleCheckItem('${id}',${i},this.checked)"><label for="dc${i}">${c.text}</label></div>`).join(''):'<p style="color:var(--text-muted);font-size:.85rem">No checklist</p>'}</div>
+</div>
+${j.notes?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Notes</h3><p style="font-size:.85rem;color:var(--text-muted)">${j.notes}</p></div>`:''}
+${photosHtml?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Photos</h3>${photosHtml}</div>`:''}
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Customer Signature</h3>
+${j.signature?`<img src="${j.signature}" alt="Customer signature" style="width:100%;border:1px solid var(--border);border-radius:var(--radius-sm)">`:`<canvas class="sig-pad" id="sigCanvas" width="600" height="200"></canvas><div style="display:flex;gap:8px;margin-top:8px"><button class="btn btn-outline" onclick="clearSig()">Clear</button><button class="btn btn-primary" onclick="saveSig('${id}')">Save Signature</button></div>`}
+</div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn btn-primary" style="flex:1" onclick="editJob('${id}')">Edit Job</button>
+<button class="btn btn-outline" style="flex:1" onclick="shareJob('${id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+</div>
+<button class="btn btn-danger btn-block" style="margin-top:8px" onclick="deleteJob('${id}')">Delete Job</button>`;
+showView('viewDetail');
+// Init signature pad if present
+setTimeout(()=>{
+const c=document.getElementById('sigCanvas');
+if(c){initSigPad(c);}
+},100);
+});
+}
+
+function toggleCheckItem(id,idx,checked){
+dbGet('jobs',id).then(j=>{if(j&&j.checklist){j.checklist[idx].done=checked;return dbPut('jobs',j);}}).then(()=>renderJobs());
+}
+
+function updateJobStatus(id,status){
+dbGet('jobs',id).then(j=>{j.status=status;return dbPut('jobs',j);}).then(()=>{toast('Status updated');viewJob(id);renderJobs();});
+}
+
+function editJob(id){
+dbGet('jobs',id).then(j=>{
+if(!j)return;
+currentJobId=id;currentChecklist=[...(j.checklist||[])];currentPhotos=[...(j.photos||[])];
+document.getElementById('editTitle').textContent='Edit Job';
+document.getElementById('jCustName').value=j.customer?.name||'';
+document.getElementById('jCustPhone').value=j.customer?.phone||'';
+document.getElementById('jAddr').value=j.customer?.address||'';
+document.getElementById('jType').value=j.job?.type||'';
+document.getElementById('jProduct').value=j.job?.product||'';
+document.getElementById('jDate').value=j.job?.date||'';
+document.getElementById('jTime').value=j.job?.time||'';
+document.getElementById('jAssignee').value=j.job?.assignee||'Shaun';
+document.getElementById('jNotes').value=j.job?.notes||'';
+renderChecklist('checklistEdit');renderJobPhotos();showView('viewEdit');
+});
+}
+
+function deleteJob(id){if(!confirm('Delete this job?'))return;dbDelete('jobs',id).then(()=>{toast('Job deleted');renderJobs();showView('viewJobs');});}
+
+// Signature pad
+function initSigPad(canvas){
+signatureCanvas=canvas;signatureCtx=canvas.getContext('2d');
+const rect=canvas.getBoundingClientRect();
+canvas.width=rect.width*2;canvas.height=rect.height*2;
+signatureCtx.scale(2,2);signatureCtx.lineWidth=2;signatureCtx.lineCap='round';signatureCtx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--secondary');
+const getPos=e=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+canvas.addEventListener('pointerdown',e=>{isDrawing=true;const p=getPos(e);signatureCtx.beginPath();signatureCtx.moveTo(p.x,p.y);});
+canvas.addEventListener('pointermove',e=>{if(!isDrawing)return;const p=getPos(e);signatureCtx.lineTo(p.x,p.y);signatureCtx.stroke();});
+canvas.addEventListener('pointerup',()=>isDrawing=false);
+canvas.addEventListener('pointerleave',()=>isDrawing=false);
+}
+function clearSig(){if(signatureCanvas&&signatureCtx){signatureCtx.clearRect(0,0,signatureCanvas.width,signatureCanvas.height);}}
+function saveSig(id){
+if(!signatureCanvas)return;
+const data=signatureCanvas.toDataURL('image/png');
+dbGet('jobs',id).then(j=>{j.signature=data;return dbPut('jobs',j);}).then(()=>{toast('Signature saved');viewJob(id);});
+}
+
+function shareJob(id){
+dbGet('jobs',id).then(j=>{
+if(!j)return;
+const text=`Smokey's Stoves - Job Complete\n\nCustomer: ${j.customer?.name}\nAddress: ${j.customer?.address}\nService: ${j.job?.product||j.job?.type}\nDate: ${j.job?.date}\nCompleted by: ${j.job?.assignee}\n\nAll checklist items verified.\n\nQuestions? Call (541) 476-2174`;
+if(navigator.share){navigator.share({title:'Job Completion',text}).catch(()=>{});}
+else{navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard'));}
+});
+}
+
+function exportData(){dbGetAll('jobs').then(d=>{const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='stovetracker-backup.json';a.click();URL.revokeObjectURL(u);toast('Exported');});}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!Array.isArray(d)){toast('Invalid file');return;}Promise.all(d.map(x=>dbPut('jobs',x))).then(()=>{toast('Imported');renderJobs();});}catch{toast('Could not read file');}};r.readAsText(f);ev.target.value='';}
+function clearAllData(){const tx=db.transaction('jobs','readwrite');tx.objectStore('jobs').clear();tx.oncomplete=()=>{localStorage.removeItem('st_visited');toast('All data deleted');renderJobs();};}
+function toast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>el.remove(),3000);}
+</script>
+</body>
+</html>

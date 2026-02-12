@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HearthQuote - Etowah Fireplace & Patio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@400;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#D4872C;--primary-light:#E8A84E;--primary-dark:#B06B1A;
+--secondary:#2C2C2C;--surface:#F5F0EB;--white:#FFFFFF;
+--success:#4A7C59;--error:#C14B4B;--warning:#D4872C;
+--text:#2C2C2C;--text-muted:#7A7068;--border:#DDD5CC;
+--shadow-1:0 1px 3px rgba(44,44,44,.08);
+--shadow-2:0 4px 12px rgba(44,44,44,.1),0 1px 3px rgba(44,44,44,.06);
+--shadow-3:0 8px 24px rgba(44,44,44,.12),0 2px 8px rgba(44,44,44,.08),0 1px 2px rgba(44,44,44,.06);
+--radius:12px;--radius-sm:8px;--radius-lg:16px;
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Work Sans',sans-serif;background:var(--surface);color:var(--text);min-height:100dvh;padding-bottom:120px !important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Bitter',serif;font-weight:600;line-height:1.2}
+a{color:var(--primary);text-decoration:none}
+button{font-family:'Work Sans',sans-serif;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:'Work Sans',sans-serif;font-size:16px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+
+/* Skip link */
+.skip-link{position:absolute;top:-100%;left:16px;background:var(--primary);color:#fff;padding:8px 16px;border-radius:var(--radius-sm);z-index:10000;font-size:14px}
+.skip-link:focus{top:8px}
+
+/* App shell */
+#app{display:none;position:relative}
+#gate{display:flex;align-items:center;justify-content:center;height:100dvh;background:var(--secondary);color:#fff;text-align:center;padding:24px}
+#gate h1{font-size:1.75rem;margin-bottom:16px}
+#gate p{color:#999;margin-bottom:24px}
+
+/* Header */
+.app-header{background:var(--secondary);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:1.1rem;font-weight:600;letter-spacing:-.02em}
+.app-header p{font-size:.75rem;color:rgba(255,255,255,.6);margin-top:2px}
+
+/* Demo banner */
+.demo-banner{background:var(--primary);color:#fff;padding:10px 16px;font-size:.8rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner button{background:rgba(255,255,255,.2);color:#fff;padding:4px 12px;border-radius:var(--radius-sm);font-size:.75rem;font-weight:500}
+
+/* Content */
+.content{padding:16px;max-width:600px;margin:0 auto}
+
+/* Cards */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-2);padding:16px;margin-bottom:12px;animation:fadeUp .4s ease-out both;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.card:hover{box-shadow:var(--shadow-3)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Quote cards */
+.quote-card{cursor:pointer}
+.quote-card .status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.status-pending{background:#FEF3C7;color:#92400E}
+.status-sent{background:#DBEAFE;color:#1E40AF}
+.status-accepted{background:#D1FAE5;color:#065F46}
+.status-declined{background:#FEE2E2;color:#991B1B}
+.quote-card h3{font-size:1rem;margin:8px 0 4px}
+.quote-card .meta{font-size:.8rem;color:var(--text-muted);display:flex;gap:12px;flex-wrap:wrap}
+.quote-card .total{font-family:'Bitter',serif;font-size:1.25rem;font-weight:700;color:var(--primary);margin-top:8px}
+
+/* Floating action button */
+.fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-3);z-index:90;transition:transform .15s,box-shadow .15s}
+.fab:active{transform:scale(.93)}
+.fab svg{width:28px;height:28px}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom,0)}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;font-size:.65rem;color:var(--text-muted);transition:color .15s}
+.bottom-nav button.active{color:var(--primary)}
+.bottom-nav button svg{width:22px;height:22px;margin-bottom:2px}
+
+/* Views */
+.view{display:none}
+.view.active{display:block}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.8rem;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;font-size:1rem;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(212,135,44,.15)}
+*:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:transform .15s,box-shadow .15s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow-2)}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:#fff}
+.btn-danger{background:var(--error);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-block{width:100%}
+
+/* Line items */
+.line-item{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.line-item:last-child{border-bottom:none}
+.line-item .item-name{flex:1;font-size:.85rem}
+.line-item .item-price{font-weight:600;font-size:.9rem;min-width:70px;text-align:right}
+.line-item button{color:var(--error);padding:4px}
+
+/* Photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.photo-grid .photo-cell{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;background:var(--surface)}
+.photo-grid .photo-cell img{width:100%;height:100%;object-fit:cover}
+.photo-grid .add-photo{display:flex;align-items:center;justify-content:center;border:2px dashed var(--border);cursor:pointer;transition:border-color .2s}
+.photo-grid .add-photo:hover{border-color:var(--primary)}
+
+/* Quote totals */
+.quote-totals{background:var(--surface);border-radius:var(--radius-sm);padding:16px;margin-top:16px}
+.quote-totals .row{display:flex;justify-content:space-between;padding:4px 0;font-size:.9rem}
+.quote-totals .row.total{font-family:'Bitter',serif;font-size:1.2rem;font-weight:700;border-top:2px solid var(--border);padding-top:8px;margin-top:8px;color:var(--primary)}
+
+/* Toast */
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10000}
+.toast{background:var(--secondary);color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:.85rem;box-shadow:var(--shadow-3);animation:toastIn .3s ease-out;margin-bottom:8px}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Detail view */
+.detail-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.detail-header h2{font-size:1.1rem}
+.back-btn{display:inline-flex;align-items:center;gap:4px;color:var(--text-muted);font-size:.85rem;margin-bottom:12px;cursor:pointer}
+
+/* Status selector */
+.status-select{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.status-select button{padding:6px 14px;border-radius:20px;font-size:.75rem;font-weight:600;border:1.5px solid var(--border);transition:all .15s}
+.status-select button.active{border-color:var(--primary);background:var(--primary);color:#fff}
+
+/* Upsell */
+.upsell-card{background:linear-gradient(135deg,#F5F0EB,#EDE5DB);border:1.5px dashed var(--border);opacity:.7}
+.upsell-card h3{color:var(--text-muted)}
+.upsell-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px}
+
+/* Camera overlay */
+.camera-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:10001;display:none}
+.camera-overlay video{width:100%;height:100%;object-fit:cover}
+.camera-overlay .controls{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;gap:20px}
+.camera-overlay .shutter{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.5)}
+.camera-overlay .close-cam{position:absolute;top:16px;right:16px;color:#fff;background:rgba(0,0,0,.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+/* Animations */
+.card{animation-delay:calc(var(--i,0) * 80ms)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* Print */
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none !important}body{background:#fff;padding:0}.card{box-shadow:none;border:1px solid #ddd}}
+
+/* Desktop */
+@media(min-width:768px){.content{max-width:640px}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div id="gate">
+<div>
+<h1>HearthQuote</h1>
+<p>This tool requires a valid access key.</p>
+<p><a href="mailto:ben@bennycutools.com" style="color:#D4872C">ben@bennycutools.com</a></p>
+</div>
+</div>
+
+<div id="app">
+<header class="app-header">
+<h1>HearthQuote</h1>
+<p>Etowah Fireplace & Patio</p>
+</header>
+
+<div class="demo-banner" id="demoBanner" style="display:none" role="status">
+<span>Sample data for Etowah, NC. Tap to clear and add your own.</span>
+<button onclick="clearDemo()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<main id="main-content">
+<!-- Quotes List View -->
+<div class="view active" id="viewQuotes">
+<div class="content">
+<div id="quotesList"></div>
+<div class="card upsell-card" style="--i:5;text-align:center;padding:24px">
+<h3>Branded PDF Reports <span class="upsell-badge">Full Version</span></h3>
+<p style="font-size:.8rem;color:var(--text-muted);margin-top:8px">Generate multi-page proposals with your logo, before/after photos, product specs, and warranty details.</p>
+</div>
+</div>
+</div>
+
+<!-- New/Edit Quote View -->
+<div class="view" id="viewEdit">
+<div class="content">
+<button class="back-btn" onclick="showView('viewQuotes')" aria-label="Go back to quotes list">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+Back
+</button>
+<h2 id="editTitle" style="font-family:'Bitter',serif;font-size:1.25rem;margin-bottom:16px">New Quote</h2>
+
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Customer Info</h3>
+<div class="form-group">
+<label for="custName">Customer Name</label>
+<input type="text" id="custName" placeholder="John & Mary Smith">
+</div>
+<div class="form-group">
+<label for="custPhone">Phone</label>
+<input type="tel" id="custPhone" placeholder="(828) 555-0123">
+</div>
+<div class="form-group">
+<label for="custEmail">Email</label>
+<input type="email" id="custEmail" placeholder="customer@email.com">
+</div>
+<div class="form-group">
+<label for="custAddr">Job Site Address</label>
+<input type="text" id="custAddr" placeholder="123 Mountain View Dr, Hendersonville NC">
+<button onclick="autoFillLocation()" style="font-size:.75rem;color:var(--primary);margin-top:4px;padding:4px 0" aria-label="Use current GPS location">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+Use my location
+</button>
+</div>
+</div>
+
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Product</h3>
+<div class="form-group">
+<label for="prodType">Product Type</label>
+<select id="prodType">
+<option value="">Select type...</option>
+<option value="gas-insert">Gas Insert</option>
+<option value="wood-insert">Wood Insert</option>
+<option value="pellet-stove">Pellet Stove</option>
+<option value="gas-stove">Gas Stove (Freestanding)</option>
+<option value="wood-stove">Wood Stove</option>
+<option value="gas-fireplace">Gas Fireplace (New)</option>
+<option value="electric-fireplace">Electric Fireplace</option>
+<option value="outdoor-fireplace">Outdoor Fireplace</option>
+<option value="service-repair">Service / Repair</option>
+</select>
+</div>
+<div class="form-group">
+<label for="prodModel">Model / Notes</label>
+<input type="text" id="prodModel" placeholder="e.g., Napoleon GDI-30 Direct Vent Insert">
+</div>
+</div>
+
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Line Items</h3>
+<div id="lineItems"></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<input type="text" id="newItemName" placeholder="Item description" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+<input type="number" id="newItemPrice" placeholder="Price" style="width:90px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+<button class="btn btn-outline" onclick="addLineItem()" aria-label="Add line item">Add</button>
+</div>
+</div>
+
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Photos</h3>
+<p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Snap photos of the existing fireplace, chimney, and clearances.</p>
+<div class="photo-grid" id="photoGrid">
+<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take a photo">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Notes</h3>
+<div class="form-group" style="margin:0">
+<label for="quoteNotes" class="sr-only">Additional notes</label>
+<textarea id="quoteNotes" rows="3" placeholder="Chimney condition, venting requirements, special instructions..."></textarea>
+</div>
+</div>
+
+<div class="quote-totals" id="editTotals"></div>
+
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn btn-primary btn-block" onclick="saveQuote()" id="saveBtn">Save Quote</button>
+</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn btn-outline btn-block" onclick="shareQuote()" aria-label="Share quote with customer">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+Share with Customer
+</button>
+</div>
+</div>
+</div>
+
+<!-- Quote Detail View -->
+<div class="view" id="viewDetail">
+<div class="content" id="detailContent"></div>
+</div>
+
+<!-- Settings View -->
+<div class="view" id="viewSettings">
+<div class="content">
+<h2 style="font-family:'Bitter',serif;font-size:1.25rem;margin-bottom:16px">Settings</h2>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Your Business</h3>
+<div class="form-group">
+<label for="bizName">Business Name</label>
+<input type="text" id="bizName" value="Etowah Fireplace & Patio">
+</div>
+<div class="form-group">
+<label for="bizPhone">Phone</label>
+<input type="tel" id="bizPhone" value="(828) 891-5661">
+</div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Data</h3>
+<button class="btn btn-outline btn-block" onclick="exportData()" style="margin-bottom:8px">Export All Data (JSON)</button>
+<button class="btn btn-outline btn-block" onclick="document.getElementById('importFile').click()">Import Data (JSON)</button>
+<input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+</div>
+<div class="card">
+<button class="btn btn-danger btn-block" onclick="if(confirm('Delete all quotes? This cannot be undone.')){clearAllData()}">Delete All Data</button>
+</div>
+</div>
+</div>
+</main>
+
+<!-- FAB -->
+<button class="fab" onclick="newQuote()" aria-label="Create new quote" id="fabBtn">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewQuotes')" class="active" id="navQuotes" aria-label="Quotes list">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+Quotes
+</button>
+<button onclick="showView('viewSettings')" id="navSettings" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- Camera overlay -->
+<div class="camera-overlay" id="cameraOverlay">
+<video id="cameraVideo" autoplay playsinline></video>
+<button class="close-cam" onclick="closeCamera()" aria-label="Close camera">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+<div class="controls">
+<button class="shutter" onclick="capturePhoto()" aria-label="Take photo"></button>
+</div>
+</div>
+<canvas id="cameraCanvas" style="display:none"></canvas>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</div>
+
+<!-- DEMO DISCLAIMER - Legal Notice -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Etowah Fireplace & Patio, Inc. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Etowah%20Fireplace&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// Access key validation
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-427228278;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){initApp();}else{document.getElementById('gate').style.display='flex';document.getElementById('app').style.display='none';}
+
+// Anti-scrape
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// App state
+let db;
+let currentQuoteId=null;
+let currentLineItems=[];
+let currentPhotos=[];
+let cameraStream=null;
+
+function initApp(){
+document.getElementById('gate').style.display='none';
+document.getElementById('app').style.display='block';
+openDB().then(()=>{
+checkFirstVisit();
+renderQuotes();
+});
+}
+
+// IndexedDB
+function openDB(){
+return new Promise((resolve,reject)=>{
+const req=indexedDB.open('HearthQuoteDB',1);
+req.onupgradeneeded=e=>{
+const d=e.target.result;
+if(!d.objectStoreNames.contains('quotes')){
+d.createObjectStore('quotes',{keyPath:'id'});
+}
+};
+req.onsuccess=e=>{db=e.target.result;resolve();};
+req.onerror=e=>reject(e);
+});
+}
+
+function dbPut(store,data){
+return new Promise((resolve,reject)=>{
+const tx=db.transaction(store,'readwrite');
+tx.objectStore(store).put(data);
+tx.oncomplete=()=>resolve();
+tx.onerror=e=>reject(e);
+});
+}
+
+function dbGetAll(store){
+return new Promise((resolve,reject)=>{
+const tx=db.transaction(store,'readonly');
+const req=tx.objectStore(store).getAll();
+req.onsuccess=()=>resolve(req.result);
+req.onerror=e=>reject(e);
+});
+}
+
+function dbGet(store,id){
+return new Promise((resolve,reject)=>{
+const tx=db.transaction(store,'readonly');
+const req=tx.objectStore(store).get(id);
+req.onsuccess=()=>resolve(req.result);
+req.onerror=e=>reject(e);
+});
+}
+
+function dbDelete(store,id){
+return new Promise((resolve,reject)=>{
+const tx=db.transaction(store,'readwrite');
+tx.objectStore(store).delete(id);
+tx.oncomplete=()=>resolve();
+tx.onerror=e=>reject(e);
+});
+}
+
+// Demo data
+function checkFirstVisit(){
+if(!localStorage.getItem('hq_visited')){
+localStorage.setItem('hq_visited','1');
+loadDemoData();
+}
+}
+
+function loadDemoData(){
+const demos=[
+{id:'demo-1',isDemo:true,customer:{name:'Robert & Linda Chambers',phone:'(828) 555-0147',email:'rchambers@email.com',address:'42 Pisgah View Rd, Hendersonville NC'},product:{type:'gas-insert',model:'Napoleon GDI-30 Direct Vent Insert'},lineItems:[{name:'Napoleon GDI-30 Insert',price:3800},{name:'Chimney liner (25ft aluminum flex)',price:850},{name:'Installation labor',price:1600},{name:'Decorative surround kit',price:450},{name:'Gas line extension',price:350}],photos:[],notes:'Existing masonry fireplace, good condition. Chimney needs new liner. Customer wants remote control option.',status:'pending',total:7050,date:Date.now()-86400000*2},
+{id:'demo-2',isDemo:true,customer:{name:'Patricia Morrison',phone:'(828) 555-0298',email:'patmorrison@email.com',address:'118 Mountain Laurel Ln, Brevard NC'},product:{type:'wood-stove',model:'Jotul F 500 Oslo'},lineItems:[{name:'Jotul F 500 Oslo Wood Stove',price:3200},{name:'Class A chimney pipe (15ft)',price:1100},{name:'Hearth pad (natural stone)',price:480},{name:'Installation labor',price:1400},{name:'Fire extinguisher & CO detector',price:85}],photos:[],notes:'New install in renovated cottage. No existing chimney -- full Class A pipe run through roof. Customer chose soapstone finish.',status:'accepted',total:6265,date:Date.now()-86400000*5},
+{id:'demo-3',isDemo:true,customer:{name:'James & Deborah Whitaker',phone:'(828) 555-0412',email:'',address:'7 Kanuga Forest Dr, Flat Rock NC'},product:{type:'pellet-stove',model:'Harman Absolute 63'},lineItems:[{name:'Harman Absolute 63 Pellet Stove',price:4100},{name:'Pellet vent pipe kit',price:420},{name:'Wall thimble and termination cap',price:180},{name:'Installation labor',price:950}],photos:[],notes:'Replacing old wood stove in basement. Good access for vent pipe through foundation wall. Customers want programmable thermostat control.',status:'sent',total:5650,date:Date.now()-86400000*1},
+{id:'demo-4',isDemo:true,customer:{name:'Mark Spencer',phone:'(828) 555-0573',email:'mark.spencer@email.com',address:'225 Crab Creek Rd, Mills River NC'},product:{type:'service-repair',model:'Gas log set pilot ignition repair'},lineItems:[{name:'Diagnostic / service call',price:125},{name:'Thermocouple replacement',price:45},{name:'Pilot assembly cleaning',price:0}],photos:[],notes:'Pilot won\'t stay lit on existing vented gas log set. Likely thermocouple. Check millivolt output.',status:'accepted',total:170,date:Date.now()-86400000*8}
+];
+demos.forEach(d=>dbPut('quotes',d));
+setTimeout(()=>{
+document.getElementById('demoBanner').style.display='flex';
+renderQuotes();
+},300);
+}
+
+function clearDemo(){
+dbGetAll('quotes').then(quotes=>{
+const ops=quotes.filter(q=>q.isDemo).map(q=>dbDelete('quotes',q.id));
+return Promise.all(ops);
+}).then(()=>{
+document.getElementById('demoBanner').style.display='none';
+renderQuotes();
+toast('Demo data cleared');
+});
+}
+
+// Render quotes list
+function renderQuotes(){
+dbGetAll('quotes').then(quotes=>{
+quotes.sort((a,b)=>b.date-a.date);
+const container=document.getElementById('quotesList');
+if(quotes.length===0){
+container.innerHTML=`
+<div style="text-align:center;padding:48px 16px">
+<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+<h2 style="font-family:'Bitter',serif;font-size:1.2rem;margin-top:16px;color:var(--text)">No quotes yet</h2>
+<p style="color:var(--text-muted);font-size:.85rem;margin-top:8px">Tap the + button to create your first fireplace quote.</p>
+</div>`;
+return;
+}
+container.innerHTML=quotes.map((q,i)=>{
+const statusClass={'pending':'status-pending','sent':'status-sent','accepted':'status-accepted','declined':'status-declined'}[q.status]||'status-pending';
+const statusLabel={'pending':'Pending','sent':'Sent','accepted':'Accepted','declined':'Declined'}[q.status]||'Pending';
+const typeLabel={'gas-insert':'Gas Insert','wood-insert':'Wood Insert','pellet-stove':'Pellet Stove','gas-stove':'Gas Stove','wood-stove':'Wood Stove','gas-fireplace':'Gas Fireplace','electric-fireplace':'Electric','outdoor-fireplace':'Outdoor','service-repair':'Service/Repair'}[q.product?.type]||'Quote';
+const dateStr=new Date(q.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+return `<div class="card quote-card" style="--i:${i}" onclick="viewQuote('${q.id}')" tabindex="0" role="button" aria-label="View quote for ${q.customer?.name||'Unknown'}">
+<span class="status-badge ${statusClass}">${statusLabel}</span>
+<h3>${q.customer?.name||'Unnamed'}</h3>
+<div class="meta"><span>${typeLabel}</span><span>${q.customer?.address?.split(',')[0]||''}</span><span>${dateStr}</span></div>
+<div class="total">$${(q.total||0).toLocaleString()}</div>
+</div>`;
+}).join('');
+// Check for demo banner
+const hasDemo=quotes.some(q=>q.isDemo);
+document.getElementById('demoBanner').style.display=hasDemo?'flex':'none';
+});
+}
+
+// View navigation
+function showView(viewId){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(viewId).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+if(viewId==='viewQuotes')document.getElementById('navQuotes').classList.add('active');
+if(viewId==='viewSettings')document.getElementById('navSettings').classList.add('active');
+document.getElementById('fabBtn').style.display=(viewId==='viewQuotes')?'flex':'none';
+window.scrollTo(0,0);
+}
+
+// New quote
+function newQuote(){
+currentQuoteId=null;
+currentLineItems=[];
+currentPhotos=[];
+document.getElementById('editTitle').textContent='New Quote';
+document.getElementById('custName').value='';
+document.getElementById('custPhone').value='';
+document.getElementById('custEmail').value='';
+document.getElementById('custAddr').value='';
+document.getElementById('prodType').value='';
+document.getElementById('prodModel').value='';
+document.getElementById('quoteNotes').value='';
+renderLineItems();
+renderPhotos();
+updateTotals();
+showView('viewEdit');
+}
+
+// Line items
+function addLineItem(){
+const name=document.getElementById('newItemName').value.trim();
+const price=parseFloat(document.getElementById('newItemPrice').value)||0;
+if(!name){toast('Enter an item description');return;}
+currentLineItems.push({name,price});
+document.getElementById('newItemName').value='';
+document.getElementById('newItemPrice').value='';
+renderLineItems();
+updateTotals();
+}
+
+function removeLineItem(idx){
+currentLineItems.splice(idx,1);
+renderLineItems();
+updateTotals();
+}
+
+function renderLineItems(){
+const el=document.getElementById('lineItems');
+el.innerHTML=currentLineItems.map((item,i)=>`
+<div class="line-item">
+<span class="item-name">${item.name}</span>
+<span class="item-price">$${item.price.toLocaleString()}</span>
+<button onclick="removeLineItem(${i})" aria-label="Remove ${item.name}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+</div>
+`).join('');
+}
+
+function updateTotals(){
+const total=currentLineItems.reduce((s,i)=>s+i.price,0);
+document.getElementById('editTotals').innerHTML=`
+<div class="row"><span>Subtotal</span><span>$${total.toLocaleString()}</span></div>
+<div class="row total"><span>Total</span><span>$${total.toLocaleString()}</span></div>
+`;
+}
+
+// Camera
+function openCamera(){
+const overlay=document.getElementById('cameraOverlay');
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+cameraStream=stream;
+document.getElementById('cameraVideo').srcObject=stream;
+overlay.style.display='block';
+}).catch(()=>{
+toast('Camera not available -- use file upload instead');
+const input=document.createElement('input');
+input.type='file';input.accept='image/*';input.capture='environment';
+input.onchange=e=>{
+const file=e.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=ev=>{currentPhotos.push(ev.target.result);renderPhotos();};
+reader.readAsDataURL(file);
+};
+input.click();
+});
+}
+
+function capturePhoto(){
+const video=document.getElementById('cameraVideo');
+const canvas=document.getElementById('cameraCanvas');
+canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+canvas.getContext('2d').drawImage(video,0,0);
+currentPhotos.push(canvas.toDataURL('image/jpeg',0.7));
+renderPhotos();
+closeCamera();
+toast('Photo captured');
+}
+
+function closeCamera(){
+if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}
+document.getElementById('cameraOverlay').style.display='none';
+}
+
+function renderPhotos(){
+const grid=document.getElementById('photoGrid');
+grid.innerHTML=currentPhotos.map((p,i)=>`
+<div class="photo-cell">
+<img src="${p}" alt="Job site photo ${i+1}">
+<button onclick="currentPhotos.splice(${i},1);renderPhotos()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center" aria-label="Remove photo ${i+1}">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+</div>
+`).join('')+`
+<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take another photo">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+</div>`;
+}
+
+// Geolocation
+function autoFillLocation(){
+if(!navigator.geolocation){toast('Location not available');return;}
+navigator.geolocation.getCurrentPosition(pos=>{
+const{latitude:lat,longitude:lng}=pos.coords;
+document.getElementById('custAddr').value=`${lat.toFixed(5)}, ${lng.toFixed(5)} (GPS)`;
+toast('Location captured');
+},()=>toast('Could not get location'));
+}
+
+// Save quote
+function saveQuote(){
+const quote={
+id:currentQuoteId||'q-'+Date.now(),
+customer:{
+name:document.getElementById('custName').value.trim(),
+phone:document.getElementById('custPhone').value.trim(),
+email:document.getElementById('custEmail').value.trim(),
+address:document.getElementById('custAddr').value.trim()
+},
+product:{
+type:document.getElementById('prodType').value,
+model:document.getElementById('prodModel').value.trim()
+},
+lineItems:[...currentLineItems],
+photos:[...currentPhotos],
+notes:document.getElementById('quoteNotes').value.trim(),
+status:currentQuoteId?undefined:'pending',
+total:currentLineItems.reduce((s,i)=>s+i.price,0),
+date:currentQuoteId?undefined:Date.now()
+};
+if(!quote.customer.name){toast('Enter the customer name');return;}
+// If editing, preserve status and date
+if(currentQuoteId){
+dbGet('quotes',currentQuoteId).then(existing=>{
+quote.status=existing?.status||'pending';
+quote.date=existing?.date||Date.now();
+return dbPut('quotes',quote);
+}).then(()=>{
+toast('Quote updated');
+renderQuotes();
+showView('viewQuotes');
+});
+}else{
+dbPut('quotes',quote).then(()=>{
+toast('Quote saved');
+renderQuotes();
+showView('viewQuotes');
+});
+}
+}
+
+// View quote detail
+function viewQuote(id){
+dbGet('quotes',id).then(q=>{
+if(!q)return;
+const typeLabel={'gas-insert':'Gas Insert','wood-insert':'Wood Insert','pellet-stove':'Pellet Stove','gas-stove':'Gas Stove','wood-stove':'Wood Stove','gas-fireplace':'Gas Fireplace','electric-fireplace':'Electric','outdoor-fireplace':'Outdoor','service-repair':'Service/Repair'}[q.product?.type]||'Quote';
+const statusClass={'pending':'status-pending','sent':'status-sent','accepted':'status-accepted','declined':'status-declined'}[q.status]||'status-pending';
+const dateStr=new Date(q.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+const photosHtml=q.photos?.length?`<div class="photo-grid">${q.photos.map((p,i)=>`<div class="photo-cell"><img src="${p}" alt="Photo ${i+1}"></div>`).join('')}</div>`:'';
+document.getElementById('detailContent').innerHTML=`
+<button class="back-btn" onclick="showView('viewQuotes')" aria-label="Back to quotes list">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+Back
+</button>
+<div class="card">
+<div class="detail-header">
+<h2 style="font-family:'Bitter',serif">${q.customer?.name}</h2>
+<span class="status-badge ${statusClass}">${q.status}</span>
+</div>
+<p style="font-size:.85rem;color:var(--text-muted)">${typeLabel} -- ${q.product?.model||''}</p>
+<p style="font-size:.85rem;color:var(--text-muted);margin-top:4px">${q.customer?.address||''}</p>
+<p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">${dateStr}</p>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Status</h3>
+<div class="status-select">
+<button class="${q.status==='pending'?'active':''}" onclick="updateStatus('${id}','pending')">Pending</button>
+<button class="${q.status==='sent'?'active':''}" onclick="updateStatus('${id}','sent')">Sent</button>
+<button class="${q.status==='accepted'?'active':''}" onclick="updateStatus('${id}','accepted')">Accepted</button>
+<button class="${q.status==='declined'?'active':''}" onclick="updateStatus('${id}','declined')">Declined</button>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Line Items</h3>
+${q.lineItems?.map(i=>`<div class="line-item"><span class="item-name">${i.name}</span><span class="item-price">$${i.price.toLocaleString()}</span></div>`).join('')||'<p style="color:var(--text-muted);font-size:.85rem">No items</p>'}
+<div class="quote-totals" style="margin-top:12px">
+<div class="row total"><span>Total</span><span>$${(q.total||0).toLocaleString()}</span></div>
+</div>
+</div>
+${q.notes?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Notes</h3><p style="font-size:.85rem;color:var(--text-muted)">${q.notes}</p></div>`:''}
+${photosHtml?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Photos</h3>${photosHtml}</div>`:''}
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn btn-primary" style="flex:1" onclick="editQuote('${id}')">Edit</button>
+<button class="btn btn-outline" style="flex:1" onclick="shareQuoteById('${id}')">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+Share
+</button>
+</div>
+<button class="btn btn-danger btn-block" style="margin-top:8px" onclick="deleteQuote('${id}')">Delete Quote</button>
+`;
+showView('viewDetail');
+});
+}
+
+function updateStatus(id,status){
+dbGet('quotes',id).then(q=>{
+q.status=status;
+return dbPut('quotes',q);
+}).then(()=>{
+toast('Status updated');
+viewQuote(id);
+renderQuotes();
+});
+}
+
+function editQuote(id){
+dbGet('quotes',id).then(q=>{
+if(!q)return;
+currentQuoteId=id;
+currentLineItems=[...(q.lineItems||[])];
+currentPhotos=[...(q.photos||[])];
+document.getElementById('editTitle').textContent='Edit Quote';
+document.getElementById('custName').value=q.customer?.name||'';
+document.getElementById('custPhone').value=q.customer?.phone||'';
+document.getElementById('custEmail').value=q.customer?.email||'';
+document.getElementById('custAddr').value=q.customer?.address||'';
+document.getElementById('prodType').value=q.product?.type||'';
+document.getElementById('prodModel').value=q.product?.model||'';
+document.getElementById('quoteNotes').value=q.notes||'';
+renderLineItems();
+renderPhotos();
+updateTotals();
+showView('viewEdit');
+});
+}
+
+function deleteQuote(id){
+if(!confirm('Delete this quote?'))return;
+dbDelete('quotes',id).then(()=>{
+toast('Quote deleted');
+renderQuotes();
+showView('viewQuotes');
+});
+}
+
+// Share via Web Share API
+function shareQuote(){
+const name=document.getElementById('custName').value||'Customer';
+const total=currentLineItems.reduce((s,i)=>s+i.price,0);
+const type=document.getElementById('prodType').selectedOptions[0]?.text||'Quote';
+const items=currentLineItems.map(i=>`  ${i.name}: $${i.price.toLocaleString()}`).join('\n');
+const text=`Etowah Fireplace & Patio\nQuote for: ${name}\n\n${type}\n${items}\n\nTotal: $${total.toLocaleString()}\n\nQuestions? Call (828) 891-5661`;
+if(navigator.share){
+navigator.share({title:'Fireplace Quote',text}).catch(()=>{});
+}else{
+navigator.clipboard.writeText(text).then(()=>toast('Quote copied to clipboard'));
+}
+}
+
+function shareQuoteById(id){
+dbGet('quotes',id).then(q=>{
+if(!q)return;
+const typeLabel={'gas-insert':'Gas Insert','wood-insert':'Wood Insert','pellet-stove':'Pellet Stove','gas-stove':'Gas Stove','wood-stove':'Wood Stove','gas-fireplace':'Gas Fireplace','electric-fireplace':'Electric','outdoor-fireplace':'Outdoor','service-repair':'Service/Repair'}[q.product?.type]||'Quote';
+const items=(q.lineItems||[]).map(i=>`  ${i.name}: $${i.price.toLocaleString()}`).join('\n');
+const text=`Etowah Fireplace & Patio\nQuote for: ${q.customer?.name}\n\n${typeLabel}${q.product?.model?' - '+q.product.model:''}\n${items}\n\nTotal: $${(q.total||0).toLocaleString()}\n\nQuestions? Call (828) 891-5661`;
+if(navigator.share){
+navigator.share({title:'Fireplace Quote',text}).catch(()=>{});
+}else{
+navigator.clipboard.writeText(text).then(()=>toast('Quote copied to clipboard'));
+}
+});
+}
+
+// Data management
+function exportData(){
+dbGetAll('quotes').then(data=>{
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download='hearthquote-backup.json';a.click();
+URL.revokeObjectURL(url);
+toast('Data exported');
+});
+}
+
+function importData(event){
+const file=event.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=e=>{
+try{
+const data=JSON.parse(e.target.result);
+if(!Array.isArray(data)){toast('Invalid file format');return;}
+Promise.all(data.map(d=>dbPut('quotes',d))).then(()=>{
+toast('Data imported');
+renderQuotes();
+});
+}catch{toast('Could not read file');}
+};
+reader.readAsText(file);
+event.target.value='';
+}
+
+function clearAllData(){
+const tx=db.transaction('quotes','readwrite');
+tx.objectStore('quotes').clear();
+tx.oncomplete=()=>{
+localStorage.removeItem('hq_visited');
+toast('All data deleted');
+renderQuotes();
+};
+}
+
+// Toast
+function toast(msg){
+const el=document.createElement('div');
+el.className='toast';el.textContent=msg;
+document.getElementById('toastContainer').appendChild(el);
+setTimeout(()=>el.remove(),3000);
+}
+</script>
+</body>
+</html>

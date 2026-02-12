@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WellLog - Magill Drilling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#2B6CB0;--primary-light:#4299E1;--primary-dark:#1A4A7A;
+--secondary:#4A3728;--surface:#F5F1E8;--white:#FFFFFF;
+--success:#38A169;--error:#C53030;--warning:#D69E2E;
+--text:#2D2D2D;--text-muted:#7B7264;--border:#DDD6C8;
+--shadow-2:0 4px 12px rgba(42,55,40,.1),0 1px 3px rgba(42,55,40,.06);
+--shadow-3:0 8px 24px rgba(42,55,40,.12),0 2px 8px rgba(42,55,40,.08);
+--radius:12px;--radius-sm:8px;
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);min-height:100dvh;padding-bottom:120px !important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:'Archivo',sans-serif;font-weight:600;line-height:1.2}
+button{font-family:'Inter',sans-serif;cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:'Inter',sans-serif;font-size:16px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.skip-link{position:absolute;top:-100%;left:16px;background:var(--primary);color:#fff;padding:8px 16px;border-radius:var(--radius-sm);z-index:10000;font-size:14px}
+.skip-link:focus{top:8px}
+#app{display:none}#gate{display:flex;align-items:center;justify-content:center;height:100dvh;background:#1A2332;color:#fff;text-align:center;padding:24px}
+#gate h1{font-size:1.75rem;margin-bottom:16px}#gate p{color:#999;margin-bottom:24px}
+.app-header{background:linear-gradient(135deg,#1A2332,var(--primary-dark));color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:1.1rem}
+.app-header p{font-size:.75rem;color:rgba(255,255,255,.6);margin-top:2px}
+.demo-banner{background:var(--primary);color:#fff;padding:10px 16px;font-size:.8rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner button{background:rgba(255,255,255,.2);color:#fff;padding:4px 12px;border-radius:var(--radius-sm);font-size:.75rem;font-weight:500}
+.content{padding:16px;max-width:640px;margin:0 auto}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow-2);padding:16px;margin-bottom:12px;animation:fadeUp .4s ease-out both;transition:transform .2s,box-shadow .2s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+*:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.view{display:none}.view.active{display:block}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.8rem;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(43,108,176,.15)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:var(--radius-sm);font-size:.9rem;font-weight:600;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:var(--shadow-2)}
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:#fff}
+.btn-danger{background:var(--error);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-block{width:100%}
+.fab{position:fixed;bottom:80px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-3);z-index:90;transition:transform .15s}
+.fab:active{transform:scale(.93)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:99;padding-bottom:env(safe-area-inset-bottom,0)}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0 6px;font-size:.65rem;color:var(--text-muted);transition:color .15s}
+.bottom-nav button.active{color:var(--primary)}
+.bottom-nav button svg{width:22px;height:22px;margin-bottom:2px}
+/* Well cards */
+.well-card{cursor:pointer;border-left:4px solid var(--primary)}
+.well-card h3{font-size:.95rem;margin:4px 0}
+.well-card .well-stats{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+.well-card .stat{text-align:center}
+.well-card .stat-value{font-family:'Archivo',sans-serif;font-size:1.1rem;font-weight:700;color:var(--primary)}
+.well-card .stat-label{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+/* Geology column */
+.geo-column{margin:12px 0;border-left:3px solid var(--border);padding-left:12px}
+.geo-layer{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.85rem}
+.geo-layer:last-child{border-bottom:none}
+.geo-layer .depth{font-weight:600;min-width:70px;color:var(--primary)}
+.geo-layer .formation{flex:1}
+.geo-layer button{color:var(--error);padding:4px}
+/* Voice indicator */
+.voice-btn{width:100%;padding:16px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;font-size:1rem;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s}
+.voice-btn:active{transform:scale(.97)}
+.voice-btn.recording{animation:pulse 1.5s ease-in-out infinite;background:var(--error)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(197,48,48,.4)}50%{box-shadow:0 0 0 12px rgba(197,48,48,0)}}
+.voice-result{background:var(--surface);border-radius:var(--radius-sm);padding:12px;margin-top:8px;font-size:.85rem;color:var(--text-muted);min-height:40px}
+/* Photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.photo-grid .photo-cell{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;background:var(--surface)}
+.photo-grid .photo-cell img{width:100%;height:100%;object-fit:cover}
+.photo-grid .add-photo{display:flex;align-items:center;justify-content:center;border:2px dashed var(--border);cursor:pointer}
+/* Upsell */
+.upsell-card{background:linear-gradient(135deg,var(--surface),#E8E0D4);border:1.5px dashed var(--border);opacity:.7;text-align:center;padding:24px}
+.upsell-badge{display:inline-block;background:var(--primary);color:#fff;font-size:.6rem;padding:2px 8px;border-radius:10px;font-weight:600;margin-left:8px}
+.back-btn{display:inline-flex;align-items:center;gap:4px;color:var(--text-muted);font-size:.85rem;margin-bottom:12px;cursor:pointer}
+/* Camera */
+.camera-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:10001;display:none}
+.camera-overlay video{width:100%;height:100%;object-fit:cover}
+.camera-overlay .controls{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center}
+.camera-overlay .shutter{width:64px;height:64px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.5)}
+.camera-overlay .close-cam{position:absolute;top:16px;right:16px;color:#fff;background:rgba(0,0,0,.5);width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:10000}
+.toast{background:#1A2332;color:#fff;padding:10px 20px;border-radius:var(--radius);font-size:.85rem;box-shadow:var(--shadow-3);animation:toastIn .3s ease-out;margin-bottom:8px}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none !important}body{background:#fff;padding:0}.card{box-shadow:none;border:1px solid #ddd}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="gate"><div><h1>WellLog</h1><p>This tool requires a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#4299E1">ben@bennycutools.com</a></p></div></div>
+<div id="app">
+<header class="app-header"><h1>WellLog</h1><p>Magill Drilling & Water Well Service</p></header>
+<div class="demo-banner" id="demoBanner" style="display:none" role="status"><span>Sample data for Hill Country, TX. Tap to clear and add your own.</span><button onclick="clearDemo()" aria-label="Clear demo data">Clear</button></div>
+<main id="main-content">
+<!-- Wells List -->
+<div class="view active" id="viewWells">
+<div class="content"><div id="wellsList"></div>
+<div class="card upsell-card" style="--i:6">
+<h3 style="color:var(--text-muted)">TCEQ Reports <span class="upsell-badge">Full Version</span></h3>
+<p style="font-size:.8rem;color:var(--text-muted);margin-top:8px">Auto-format well data into state-compliant submission documents ready for TCEQ filing.</p>
+</div></div>
+</div>
+<!-- New/Edit Well -->
+<div class="view" id="viewEdit">
+<div class="content">
+<button class="back-btn" onclick="showView('viewWells')" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+<h2 id="editTitle" style="margin-bottom:16px">New Well</h2>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Voice Input</h3>
+<p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Tap and speak your well data. Works with muddy hands.</p>
+<button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" aria-label="Start voice input">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+Tap to Speak
+</button>
+<div class="voice-result" id="voiceResult"></div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Customer</h3>
+<div class="form-group"><label for="wCustName">Customer / Property</label><input type="text" id="wCustName" placeholder="Johnson Ranch"></div>
+<div class="form-group"><label for="wCustPhone">Phone</label><input type="tel" id="wCustPhone" placeholder="(325) 555-0123"></div>
+<div class="form-group"><label for="wAddr">Location</label><input type="text" id="wAddr" placeholder="CR 405, Mason TX">
+<button onclick="autoLoc()" style="font-size:.75rem;color:var(--primary);margin-top:4px;padding:4px 0" aria-label="Use GPS"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg> Use GPS</button>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Well Data</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="form-group"><label for="wDepth">Total Depth (ft)</label><input type="number" id="wDepth" placeholder="215"></div>
+<div class="form-group"><label for="wStaticLevel">Static Water Level (ft)</label><input type="number" id="wStaticLevel" placeholder="190"></div>
+<div class="form-group"><label for="wYield">Yield (GPM)</label><input type="number" id="wYield" placeholder="12"></div>
+<div class="form-group"><label for="wCasing">Casing Size (in)</label><input type="text" id="wCasing" placeholder='6" PVC'></div>
+</div>
+<div class="form-group"><label for="wPump">Pump Specs</label><input type="text" id="wPump" placeholder="3/4 HP submersible, set at 200ft"></div>
+<div class="form-group"><label for="wDate">Date Drilled</label><input type="date" id="wDate"></div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:12px">Geology Log</h3>
+<p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px">Tap formations as you drill through them.</p>
+<div id="geoLayers" class="geo-column"></div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<select id="newGeoType" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+<option value="">Formation type...</option>
+<option value="Topsoil">Topsoil</option>
+<option value="Clay">Clay</option>
+<option value="Sand">Sand</option>
+<option value="Gravel">Gravel</option>
+<option value="Sandstone">Sandstone</option>
+<option value="Limestone">Limestone</option>
+<option value="Granite">Granite</option>
+<option value="Shale">Shale</option>
+<option value="Caliche">Caliche</option>
+<option value="Fractured Rock">Fractured Rock</option>
+</select>
+<input type="number" id="newGeoFrom" placeholder="From" style="width:60px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+<input type="number" id="newGeoTo" placeholder="To" style="width:60px;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm)">
+<button class="btn btn-outline" onclick="addGeoLayer()" aria-label="Add layer">Add</button>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size:.9rem;margin-bottom:8px">Photos</h3>
+<div class="photo-grid" id="wPhotoGrid">
+<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take photo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+</div>
+</div>
+<div class="card">
+<div class="form-group" style="margin:0"><label for="wNotes">Notes</label><textarea id="wNotes" rows="3" placeholder="Water quality notes, access conditions, pump test details..."></textarea></div>
+</div>
+<button class="btn btn-primary btn-block" onclick="saveWell()" style="margin-top:16px">Save Well Log</button>
+</div>
+</div>
+<!-- Well Detail -->
+<div class="view" id="viewDetail"><div class="content" id="detailContent"></div></div>
+<!-- Settings -->
+<div class="view" id="viewSettings">
+<div class="content">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:12px">Data</h3>
+<button class="btn btn-outline btn-block" onclick="exportData()" style="margin-bottom:8px">Export (JSON)</button>
+<button class="btn btn-outline btn-block" onclick="document.getElementById('importFile').click()">Import (JSON)</button>
+<input type="file" id="importFile" accept=".json" onchange="importData(event)" style="display:none">
+</div>
+<div class="card"><button class="btn btn-danger btn-block" onclick="if(confirm('Delete all well data?'))clearAllData()">Delete All Data</button></div>
+</div>
+</div>
+</main>
+<button class="fab" onclick="newWell()" aria-label="Log new well" id="fabBtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewWells')" class="active" id="navWells" aria-label="Wells list"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12" y2="20" stroke-dasharray="2 2"/></svg>Wells</button>
+<button onclick="showView('viewSettings')" id="navSettings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+</nav>
+<div class="camera-overlay" id="cameraOverlay"><video id="cameraVideo" autoplay playsinline></video><button class="close-cam" onclick="closeCamera()" aria-label="Close camera"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div class="controls"><button class="shutter" onclick="capturePhoto()" aria-label="Take photo"></button></div></div>
+<canvas id="cameraCanvas" style="display:none"></canvas>
+<div class="toast-container" id="toastContainer" aria-live="polite"></div>
+</div>
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Magill Drilling & Water Well Service. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Magill%20Drilling&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=940291654;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){initApp();}else{document.getElementById('gate').style.display='flex';document.getElementById('app').style.display='none';}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let db,currentWellId=null,currentGeoLayers=[],currentPhotos=[],cameraStream=null,recognition=null,isRecording=false;
+
+function initApp(){
+document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';
+openDB().then(()=>{checkFirstVisit();renderWells();});
+}
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('WellLogDB',1);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('wells'))d.createObjectStore('wells',{keyPath:'id'});};r.onsuccess=e=>{db=e.target.result;res();};r.onerror=e=>rej(e);});}
+function dbPut(s,d){return new Promise((res,rej)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).put(d);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);})}
+function dbGetAll(s){return new Promise((res,rej)=>{const tx=db.transaction(s,'readonly');const r=tx.objectStore(s).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e);})}
+function dbGet(s,id){return new Promise((res,rej)=>{const tx=db.transaction(s,'readonly');const r=tx.objectStore(s).get(id);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e);})}
+function dbDelete(s,id){return new Promise((res,rej)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e);})}
+
+function checkFirstVisit(){if(!localStorage.getItem('wl_visited')){localStorage.setItem('wl_visited','1');loadDemoData();}}
+
+function loadDemoData(){
+const demos=[
+{id:'demo-1',isDemo:true,customer:{name:'Johnson Ranch',phone:'(325) 555-0147',address:'CR 405, Mason TX'},well:{depth:225,staticLevel:190,yield:15,casing:'6" PVC',pump:'1 HP submersible, set at 210ft',date:'2026-02-10'},geology:[{type:'Topsoil',from:0,to:12},{type:'Clay',from:12,to:45},{type:'Caliche',from:45,to:90},{type:'Limestone',from:90,to:180},{type:'Granite',from:180,to:225}],photos:[],notes:'Strong water strike at 195ft. Good production well for livestock and residential. Clear water, no sulfur smell.',created:Date.now()-172800000},
+{id:'demo-2',isDemo:true,customer:{name:'Miller Residence',phone:'(325) 555-0298',address:'FM 2768, Llano TX'},well:{depth:185,staticLevel:150,yield:8,casing:'5" PVC',pump:'3/4 HP submersible, set at 170ft',date:'2026-02-08'},geology:[{type:'Topsoil',from:0,to:8},{type:'Sand',from:8,to:35},{type:'Limestone',from:35,to:160},{type:'Fractured Rock',from:160,to:185}],photos:[],notes:'Residential well for new home build. Adequate flow for household use. Recommend pressure tank at 40/60 psi.',created:Date.now()-345600000},
+{id:'demo-3',isDemo:true,customer:{name:'Kingsland Subdivision Lot 3',phone:'(325) 555-0412',address:'Packsaddle Mountain Dr, Kingsland TX'},well:{depth:250,staticLevel:210,yield:20,casing:'6" PVC',pump:'1.5 HP submersible, set at 235ft',date:'2026-02-05'},geology:[{type:'Topsoil',from:0,to:10},{type:'Clay',from:10,to:55},{type:'Sandstone',from:55,to:120},{type:'Limestone',from:120,to:200},{type:'Granite',from:200,to:250}],photos:[],notes:'High-yield production well for subdivision. One of three wells planned. Builder pleased with GPM results.',created:Date.now()-604800000},
+{id:'demo-4',isDemo:true,customer:{name:'Davis Farm - Irrigation',phone:'(325) 555-0573',address:'Hwy 29, Castell TX'},well:{depth:180,staticLevel:120,yield:35,casing:'8" steel',pump:'2 HP submersible, set at 160ft',date:'2026-01-28'},geology:[{type:'Topsoil',from:0,to:15},{type:'Gravel',from:15,to:60},{type:'Sand',from:60,to:130},{type:'Limestone',from:130,to:180}],photos:[],notes:'Irrigation well for 40-acre hay operation. High yield from sand/gravel aquifer. Recommend monitoring water level during summer draw-down.',created:Date.now()-1209600000}
+];
+demos.forEach(d=>dbPut('wells',d));
+setTimeout(()=>{document.getElementById('demoBanner').style.display='flex';renderWells();},300);
+}
+
+function clearDemo(){dbGetAll('wells').then(w=>Promise.all(w.filter(x=>x.isDemo).map(x=>dbDelete('wells',x.id)))).then(()=>{document.getElementById('demoBanner').style.display='none';renderWells();toast('Demo data cleared');});}
+
+function renderWells(){
+dbGetAll('wells').then(wells=>{
+wells.sort((a,b)=>b.created-a.created);
+const el=document.getElementById('wellsList');
+if(!wells.length){
+el.innerHTML=`<div style="text-align:center;padding:48px 16px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="16" x2="12" y2="20" stroke-dasharray="2 2"/></svg><h2 style="margin-top:16px;font-size:1.2rem">No wells logged yet</h2><p style="color:var(--text-muted);font-size:.85rem;margin-top:8px">Tap + to log your first well.</p></div>`;return;
+}
+el.innerHTML=wells.map((w,i)=>{
+const dateStr=w.well?.date?new Date(w.well.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+return`<div class="card well-card" style="--i:${i}" onclick="viewWell('${w.id}')" tabindex="0" role="button" aria-label="View well for ${w.customer?.name}">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.75rem;color:var(--text-muted)">${dateStr}</span><span style="font-size:.7rem;color:var(--primary);font-weight:600">${w.geology?.length||0} layers</span></div>
+<h3>${w.customer?.name||'Unnamed'}</h3>
+<p style="font-size:.8rem;color:var(--text-muted)">${w.customer?.address||''}</p>
+<div class="well-stats">
+<div class="stat"><div class="stat-value">${w.well?.depth||'--'}</div><div class="stat-label">Depth (ft)</div></div>
+<div class="stat"><div class="stat-value">${w.well?.yield||'--'}</div><div class="stat-label">GPM</div></div>
+<div class="stat"><div class="stat-value">${w.well?.staticLevel||'--'}</div><div class="stat-label">Static (ft)</div></div>
+<div class="stat"><div class="stat-value">${w.well?.casing||'--'}</div><div class="stat-label">Casing</div></div>
+</div></div>`;
+}).join('');
+document.getElementById('demoBanner').style.display=wells.some(w=>w.isDemo)?'flex':'none';
+});
+}
+
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+if(id==='viewWells')document.getElementById('navWells').classList.add('active');
+if(id==='viewSettings')document.getElementById('navSettings').classList.add('active');
+document.getElementById('fabBtn').style.display=(id==='viewWells')?'flex':'none';
+window.scrollTo(0,0);
+}
+
+function newWell(){
+currentWellId=null;currentGeoLayers=[];currentPhotos=[];
+document.getElementById('editTitle').textContent='New Well';
+['wCustName','wCustPhone','wAddr','wDepth','wStaticLevel','wYield','wCasing','wPump','wNotes'].forEach(id=>document.getElementById(id).value='');
+document.getElementById('wDate').value=new Date().toISOString().split('T')[0];
+document.getElementById('voiceResult').textContent='';
+renderGeoLayers();renderWellPhotos();showView('viewEdit');
+}
+
+// Voice input
+function toggleVoice(){
+const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(!SpeechRecognition){toast('Voice input not available in this browser');return;}
+if(isRecording){recognition.stop();return;}
+recognition=new SpeechRecognition();recognition.continuous=false;recognition.interimResults=true;recognition.lang='en-US';
+const btn=document.getElementById('voiceBtn');const result=document.getElementById('voiceResult');
+recognition.onstart=()=>{isRecording=true;btn.classList.add('recording');btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12"/></svg> Listening...';};
+recognition.onresult=e=>{
+let transcript='';for(let i=e.resultIndex;i<e.results.length;i++){transcript+=e.results[i][0].transcript;}
+result.textContent=transcript;
+parseVoiceInput(transcript);
+};
+recognition.onend=()=>{isRecording=false;btn.classList.remove('recording');btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> Tap to Speak';};
+recognition.onerror=()=>{isRecording=false;btn.classList.remove('recording');toast('Could not hear you. Try again.');};
+recognition.start();
+}
+
+function parseVoiceInput(text){
+const lower=text.toLowerCase();
+// Try to parse depth
+const depthMatch=lower.match(/(?:total\s+)?depth\s+(\d+)\s*(?:feet|ft|foot)?/);
+if(depthMatch)document.getElementById('wDepth').value=depthMatch[1];
+// Static water level
+const staticMatch=lower.match(/(?:static\s+)?(?:water\s+)?level\s+(\d+)\s*(?:feet|ft)?/);
+if(staticMatch)document.getElementById('wStaticLevel').value=staticMatch[1];
+// Yield / GPM
+const yieldMatch=lower.match(/(?:yield\s+)?(\d+)\s*(?:gallons?\s+per\s+minute|gpm|gallon)/);
+if(yieldMatch)document.getElementById('wYield').value=yieldMatch[1];
+// Casing
+const casingMatch=lower.match(/(\d+)\s*(?:inch|")\s*(pvc|steel|iron)?/);
+if(casingMatch)document.getElementById('wCasing').value=casingMatch[1]+'"'+(casingMatch[2]?' '+casingMatch[2].toUpperCase():'');
+}
+
+// Geology layers
+function addGeoLayer(){
+const type=document.getElementById('newGeoType').value;
+const from=parseInt(document.getElementById('newGeoFrom').value);
+const to=parseInt(document.getElementById('newGeoTo').value);
+if(!type){toast('Select a formation type');return;}
+if(isNaN(from)||isNaN(to)){toast('Enter depth range');return;}
+currentGeoLayers.push({type,from,to});
+currentGeoLayers.sort((a,b)=>a.from-b.from);
+document.getElementById('newGeoType').value='';document.getElementById('newGeoFrom').value='';document.getElementById('newGeoTo').value='';
+renderGeoLayers();
+}
+function removeGeoLayer(idx){currentGeoLayers.splice(idx,1);renderGeoLayers();}
+function renderGeoLayers(){
+const el=document.getElementById('geoLayers');
+if(!currentGeoLayers.length){el.innerHTML='<p style="font-size:.85rem;color:var(--text-muted);padding:8px 0">No layers added. Select formation types as you drill.</p>';return;}
+el.innerHTML=currentGeoLayers.map((l,i)=>`<div class="geo-layer"><span class="depth">${l.from}-${l.to} ft</span><span class="formation">${l.type}</span><button onclick="removeGeoLayer(${i})" aria-label="Remove layer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('');
+}
+
+function autoLoc(){
+if(!navigator.geolocation){toast('GPS not available');return;}
+navigator.geolocation.getCurrentPosition(p=>{document.getElementById('wAddr').value=`${p.coords.latitude.toFixed(5)}, ${p.coords.longitude.toFixed(5)} (GPS)`;toast('Location captured');},()=>toast('Could not get location'));
+}
+
+function openCamera(){
+navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{cameraStream=stream;document.getElementById('cameraVideo').srcObject=stream;document.getElementById('cameraOverlay').style.display='block';}).catch(()=>{const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';inp.onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{currentPhotos.push(ev.target.result);renderWellPhotos();};r.readAsDataURL(f);};inp.click();});
+}
+function capturePhoto(){const v=document.getElementById('cameraVideo'),c=document.getElementById('cameraCanvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);currentPhotos.push(c.toDataURL('image/jpeg',0.7));renderWellPhotos();closeCamera();toast('Photo captured');}
+function closeCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null;}document.getElementById('cameraOverlay').style.display='none';}
+function renderWellPhotos(){
+const g=document.getElementById('wPhotoGrid');
+g.innerHTML=currentPhotos.map((p,i)=>`<div class="photo-cell"><img src="${p}" alt="Photo ${i+1}"><button onclick="currentPhotos.splice(${i},1);renderWellPhotos()" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center" aria-label="Remove photo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join('')+`<div class="photo-cell add-photo" onclick="openCamera()" role="button" tabindex="0" aria-label="Take photo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></div>`;
+}
+
+function saveWell(){
+const name=document.getElementById('wCustName').value.trim();
+if(!name){toast('Enter customer/property name');return;}
+const well={
+id:currentWellId||'w-'+Date.now(),
+customer:{name,phone:document.getElementById('wCustPhone').value.trim(),address:document.getElementById('wAddr').value.trim()},
+well:{depth:parseInt(document.getElementById('wDepth').value)||0,staticLevel:parseInt(document.getElementById('wStaticLevel').value)||0,yield:parseInt(document.getElementById('wYield').value)||0,casing:document.getElementById('wCasing').value.trim(),pump:document.getElementById('wPump').value.trim(),date:document.getElementById('wDate').value},
+geology:[...currentGeoLayers],photos:[...currentPhotos],notes:document.getElementById('wNotes').value.trim(),created:currentWellId?undefined:Date.now()
+};
+if(currentWellId){dbGet('wells',currentWellId).then(ex=>{well.created=ex?.created||Date.now();return dbPut('wells',well);}).then(()=>{toast('Well log updated');renderWells();showView('viewWells');});}
+else{dbPut('wells',well).then(()=>{toast('Well log saved');renderWells();showView('viewWells');});}
+}
+
+function viewWell(id){
+dbGet('wells',id).then(w=>{
+if(!w)return;
+const dateStr=w.well?.date?new Date(w.well.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}):'';
+const geoHtml=w.geology?.length?`<div class="geo-column">${w.geology.map(l=>`<div class="geo-layer"><span class="depth">${l.from}-${l.to} ft</span><span class="formation">${l.type}</span></div>`).join('')}</div>`:'<p style="color:var(--text-muted);font-size:.85rem">No geology recorded</p>';
+const photosHtml=w.photos?.length?`<div class="photo-grid">${w.photos.map((p,i)=>`<div class="photo-cell"><img src="${p}" alt="Photo ${i+1}"></div>`).join('')}</div>`:'';
+document.getElementById('detailContent').innerHTML=`
+<button class="back-btn" onclick="showView('viewWells')" aria-label="Back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg> Back</button>
+<div class="card"><h2>${w.customer?.name}</h2><p style="font-size:.85rem;color:var(--text-muted);margin-top:4px">${w.customer?.address||''}</p><p style="font-size:.8rem;color:var(--text-muted)">${dateStr}</p>
+<div class="well-stats" style="margin-top:12px">
+<div class="stat"><div class="stat-value">${w.well?.depth||'--'}</div><div class="stat-label">Depth (ft)</div></div>
+<div class="stat"><div class="stat-value">${w.well?.yield||'--'}</div><div class="stat-label">GPM</div></div>
+<div class="stat"><div class="stat-value">${w.well?.staticLevel||'--'}</div><div class="stat-label">Static (ft)</div></div>
+<div class="stat"><div class="stat-value">${w.well?.casing||'--'}</div><div class="stat-label">Casing</div></div>
+</div></div>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Pump</h3><p style="font-size:.85rem">${w.well?.pump||'Not recorded'}</p></div>
+<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Geology Log</h3>${geoHtml}</div>
+${w.notes?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Notes</h3><p style="font-size:.85rem;color:var(--text-muted)">${w.notes}</p></div>`:''}
+${photosHtml?`<div class="card"><h3 style="font-size:.9rem;margin-bottom:8px">Photos</h3>${photosHtml}</div>`:''}
+<div style="display:flex;gap:8px;margin-top:16px"><button class="btn btn-primary" style="flex:1" onclick="editWell('${id}')">Edit</button><button class="btn btn-outline" style="flex:1" onclick="shareWell('${id}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button></div>
+<button class="btn btn-danger btn-block" style="margin-top:8px" onclick="deleteWell('${id}')">Delete Well</button>`;
+showView('viewDetail');
+});
+}
+
+function editWell(id){
+dbGet('wells',id).then(w=>{
+if(!w)return;currentWellId=id;currentGeoLayers=[...(w.geology||[])];currentPhotos=[...(w.photos||[])];
+document.getElementById('editTitle').textContent='Edit Well';
+document.getElementById('wCustName').value=w.customer?.name||'';document.getElementById('wCustPhone').value=w.customer?.phone||'';document.getElementById('wAddr').value=w.customer?.address||'';
+document.getElementById('wDepth').value=w.well?.depth||'';document.getElementById('wStaticLevel').value=w.well?.staticLevel||'';document.getElementById('wYield').value=w.well?.yield||'';document.getElementById('wCasing').value=w.well?.casing||'';document.getElementById('wPump').value=w.well?.pump||'';document.getElementById('wDate').value=w.well?.date||'';document.getElementById('wNotes').value=w.notes||'';
+renderGeoLayers();renderWellPhotos();showView('viewEdit');
+});
+}
+function deleteWell(id){if(!confirm('Delete this well log?'))return;dbDelete('wells',id).then(()=>{toast('Well deleted');renderWells();showView('viewWells');});}
+function shareWell(id){
+dbGet('wells',id).then(w=>{
+if(!w)return;
+const geo=(w.geology||[]).map(l=>`  ${l.from}-${l.to}ft: ${l.type}`).join('\n');
+const text=`Magill Drilling - Well Log\n\nProperty: ${w.customer?.name}\nLocation: ${w.customer?.address}\nDate: ${w.well?.date}\n\nTotal Depth: ${w.well?.depth}ft\nStatic Water Level: ${w.well?.staticLevel}ft\nYield: ${w.well?.yield} GPM\nCasing: ${w.well?.casing}\nPump: ${w.well?.pump}\n\nGeology:\n${geo}\n\nNotes: ${w.notes||'None'}\n\nMagill Drilling (325) 456-5090`;
+if(navigator.share){navigator.share({title:'Well Log',text}).catch(()=>{});}
+else{navigator.clipboard.writeText(text).then(()=>toast('Copied to clipboard'));}
+});
+}
+function exportData(){dbGetAll('wells').then(d=>{const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='welllog-backup.json';a.click();URL.revokeObjectURL(u);toast('Exported');});}
+function importData(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!Array.isArray(d)){toast('Invalid file');return;}Promise.all(d.map(x=>dbPut('wells',x))).then(()=>{toast('Imported');renderWells();});}catch{toast('Could not read file');}};r.readAsText(f);ev.target.value='';}
+function clearAllData(){const tx=db.transaction('wells','readwrite');tx.objectStore('wells').clear();tx.oncomplete=()=>{localStorage.removeItem('wl_visited');toast('All data deleted');renderWells();};}
+function toast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;document.getElementById('toastContainer').appendChild(el);setTimeout(()=>el.remove(),3000);}
+</script>
+</body>
+</html>
