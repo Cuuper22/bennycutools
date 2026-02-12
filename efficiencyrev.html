@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AuditSnap - Efficiency Revolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --grn:#1B5E20;--grn-l:#2E7D32;--grn-p:#E8F5E9;
+  --org:#FF6F00;--org-l:#FF8F00;--org-p:#FFF3E0;
+  --blu:#0D47A1;--blu-l:#1565C0;--blu-p:#E3F2FD;
+  --red:#C62828;--red-p:#FFEBEE;
+  --bg:#FAFAFA;--wh:#FFFFFF;
+  --tx:#1A1A1A;--tx2:#555;--tx3:#999;
+  --bdr:#E0E0E0;
+  --sh-s:0 1px 3px rgba(0,0,0,.06);--sh-m:0 4px 12px rgba(0,0,0,.08);--sh-l:0 8px 24px rgba(0,0,0,.1);
+  --r:8px;--rm:12px;--rl:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+*:focus-visible{outline:2px solid var(--blu);outline-offset:2px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;padding-bottom:120px;-webkit-font-smoothing:antialiased}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.hdr{background:linear-gradient(135deg,var(--grn),var(--grn-l));color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:var(--sh-m)}
+.hdr h1{font-family:'Barlow',sans-serif;font-size:21px;font-weight:700;letter-spacing:-.3px}
+.hdr .sub{font-size:12px;opacity:.8;margin-top:2px;font-weight:300}
+
+.demo-bar{background:var(--org-p);border-bottom:1px solid var(--org-l);padding:10px 20px;font-size:13px;color:#5D4037;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.demo-bar button{background:none;border:1px solid var(--org);color:var(--org);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap}
+
+.wrap{padding:0 16px;max-width:500px;margin:0 auto}
+.vw{display:none}.vw.on{display:block}
+
+/* AUDIT CARDS */
+.acard{background:var(--wh);border-radius:var(--rl);padding:20px;margin:16px 0;box-shadow:var(--sh-m);border:1px solid var(--bdr);cursor:pointer;transition:transform .15s;animation:sUp .4s cubic-bezier(.34,1.56,.64,1) both;position:relative}
+.acard:active{transform:scale(.98)}
+.acard:nth-child(1){animation-delay:.05s}.acard:nth-child(2){animation-delay:.1s}.acard:nth-child(3){animation-delay:.15s}
+.ac-addr{font-family:'Barlow',sans-serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.ac-meta{font-size:13px;color:var(--tx2);margin-bottom:10px}
+.ac-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.ac-metric{background:var(--bg);border-radius:var(--r);padding:8px;text-align:center}
+.ac-metric .val{font-family:'Barlow',sans-serif;font-size:18px;font-weight:700}
+.ac-metric .lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.ac-metric.good .val{color:var(--grn)}.ac-metric.warn .val{color:var(--org)}.ac-metric.bad .val{color:var(--red)}
+.ac-foot{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--tx3)}
+.ac-status{padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.ac-status.complete{background:var(--grn-p);color:var(--grn)}
+.ac-status.progress{background:var(--org-p);color:var(--org)}
+.ac-status.draft{background:var(--bg);color:var(--tx3)}
+
+.fab{position:fixed;bottom:130px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--grn-l),var(--grn));color:#fff;border:none;box-shadow:var(--sh-l);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:90;transition:transform .2s;animation:pulse 2s ease-in-out infinite}
+.fab:active{transform:scale(.9)}.fab svg{width:24px;height:24px}
+@keyframes pulse{0%,100%{box-shadow:var(--sh-l),0 0 0 0 rgba(27,94,32,.3)}50%{box-shadow:var(--sh-l),0 0 0 10px rgba(27,94,32,0)}}
+
+/* BUILDER SECTIONS */
+.bsec{background:var(--wh);border-radius:var(--rl);padding:20px;margin:16px 0;box-shadow:var(--sh-s);border:1px solid var(--bdr);animation:sUp .3s ease-out both}
+.bsec h2{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;color:var(--grn);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.bsec h2 svg{width:20px;height:20px}
+.fg{margin-bottom:14px}.fg label{display:block;font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:16px;font-family:inherit;background:var(--wh);color:var(--tx);transition:.15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blu);box-shadow:0 0 0 3px rgba(13,71,161,.12)}
+.fg textarea{resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* ACH GAUGE */
+.gauge-wrap{text-align:center;padding:20px 0}
+.gauge-val{font-family:'Barlow',sans-serif;font-size:56px;font-weight:700;transition:color .3s}
+.gauge-val.good{color:var(--grn)}.gauge-val.warn{color:var(--org)}.gauge-val.bad{color:var(--red)}
+.gauge-label{font-size:13px;color:var(--tx2);margin-top:4px}
+.gauge-bar{height:8px;background:var(--bdr);border-radius:4px;margin:12px auto 0;max-width:280px;overflow:hidden;position:relative}
+.gauge-bar::before{content:'';position:absolute;height:100%;border-radius:4px;transition:width .6s ease,background .3s}
+.gauge-bar.good::before{width:30%;background:var(--grn)}
+.gauge-bar.warn::before{width:60%;background:var(--org)}
+.gauge-bar.bad::before{width:90%;background:var(--red)}
+.gauge-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);max-width:280px;margin:4px auto 0}
+
+/* INSULATION TABLE */
+.ins-row{display:grid;grid-template-columns:100px 1fr 1fr 40px;gap:8px;align-items:center;margin-bottom:8px;font-size:13px}
+.ins-row input{padding:8px 10px;font-size:14px}
+.ins-row .zone{font-weight:500;color:var(--tx2)}
+.ins-row .target{font-size:11px;color:var(--tx3);text-align:center}
+.ins-status{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ins-status.pass{background:var(--grn-p);color:var(--grn)}.ins-status.fail{background:var(--red-p);color:var(--red)}
+
+/* RECOMMENDATIONS */
+.rec-toggle{background:var(--bg);border:2px solid var(--bdr);border-radius:var(--rm);padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:8px;transition:.15s;user-select:none}
+.rec-toggle:active{transform:scale(.98)}
+.rec-toggle.on{background:var(--grn-p);border-color:var(--grn-l)}
+.rec-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--bdr);display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.rec-toggle.on .rec-check{background:var(--grn);border-color:var(--grn)}
+.rec-toggle.on .rec-check svg{display:block}.rec-check svg{display:none;width:14px;height:14px;color:#fff}
+.rec-info{flex:1}.rec-title{font-size:14px;font-weight:500}.rec-cost{font-size:12px;color:var(--tx3);margin-top:2px}
+
+/* PHOTO ROW */
+.photo-row{display:flex;gap:8px;overflow-x:auto;padding:8px 0;-webkit-overflow-scrolling:touch}
+.photo-thumb{width:80px;height:80px;border-radius:var(--r);overflow:hidden;background:var(--grn-p);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--bdr)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb.has{border-style:solid;border-color:transparent}
+
+/* SUMMARY */
+.summary-strip{background:linear-gradient(135deg,var(--grn),var(--grn-l));border-radius:var(--rl);padding:20px;margin:16px 0;color:#fff;box-shadow:var(--sh-l);position:sticky;bottom:125px;z-index:50}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center}
+.sum-val{font-family:'Barlow',sans-serif;font-size:28px;font-weight:700}.sum-lbl{font-size:11px;opacity:.8;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+/* BUTTONS */
+.abr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.btn{padding:14px 20px;border-radius:var(--rm);font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s;border:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}.btn svg{width:18px;height:18px}
+.bp{background:linear-gradient(135deg,var(--grn-l),var(--grn));color:#fff;box-shadow:var(--sh-m)}
+.bs{background:var(--wh);color:var(--grn);border:2px solid var(--grn)}
+.bf{grid-column:1/-1}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:60px;left:0;right:0;background:var(--wh);border-top:1px solid var(--bdr);display:flex;justify-content:space-around;padding:8px 0 12px;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06)}
+.nb{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 16px;color:var(--tx3);transition:.15s;font-family:inherit}
+.nb.on{color:var(--grn)}.nb svg{width:22px;height:22px}.nb span{font-size:11px;font-weight:500}
+
+.tc{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none}
+.tst{background:var(--tx);color:#fff;padding:12px 20px;border-radius:var(--rm);font-size:14px;box-shadow:var(--sh-l);animation:tIn .3s ease-out;margin-bottom:8px}
+.tst.ok{background:var(--grn)}.tst.err{background:var(--red)}
+
+.empty{text-align:center;padding:48px 24px}
+.empty svg{width:80px;height:80px;color:var(--tx3);opacity:.4;margin-bottom:16px}
+.empty h3{font-family:'Barlow',sans-serif;font-size:18px;margin-bottom:8px}
+.empty p{font-size:14px;color:var(--tx3);max-width:260px;margin:0 auto 20px}
+
+.sg{background:var(--wh);border-radius:var(--rl);padding:20px;margin:16px 0;box-shadow:var(--sh-s);border:1px solid var(--bdr)}
+.sg h3{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;margin-bottom:12px;color:var(--grn)}
+.locked{position:relative;opacity:.5;min-height:120px}
+.lock-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.85);border-radius:var(--rl);z-index:10}
+.lock-lbl{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:var(--tx2);margin-top:8px}
+
+@keyframes sUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+@media print{.bnav,.fab,.demo-bar,.tc,.hdr,#bct-demo-disclaimer{display:none!important}body{padding:0;background:#fff}.wrap{max-width:100%}}
+@media(min-width:1024px){.bnav{display:none}body{padding-bottom:80px}.wrap{max-width:600px}.fab{bottom:80px}.summary-strip{bottom:75px}}
+body{padding-bottom:60px!important}
+</style>
+</head>
+<body>
+<header class="hdr" role="banner">
+  <h1>AuditSnap</h1>
+  <div class="sub">Efficiency Revolution -- Golden, CO</div>
+</header>
+<div class="demo-bar" id="demoBanner" style="display:none" role="status">
+  <span>Sample Denver-area audits loaded. Clear to start fresh.</span>
+  <button onclick="clearDemo()" aria-label="Clear sample data">Clear</button>
+</div>
+<div class="tc" id="toasts" aria-live="polite" aria-atomic="true"></div>
+
+<main class="wrap" role="main">
+  <section class="vw on" id="listView" aria-label="Audit list">
+    <div id="auditList"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="10" y="10" width="60" height="60" rx="4"/><line x1="10" y1="30" x2="70" y2="30"/><line x1="25" y1="10" x2="25" y2="30"/><circle cx="40" cy="52" r="12"/><path d="M40 44v16M34 52h12"/></svg>
+      <h3>No audits yet</h3>
+      <p>Start your first energy audit report right from the job site.</p>
+      <button class="btn bp" onclick="switchVw('build')">New Audit</button>
+    </div>
+  </section>
+
+  <section class="vw" id="buildView" aria-label="Audit builder">
+    <div class="bsec" style="animation-delay:.05s">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Home Info</h2>
+      <div class="fg"><label for="hAddr">Address</label><input type="text" id="hAddr" placeholder="1234 Pine St, Lakewood, CO"></div>
+      <div class="frow">
+        <div class="fg"><label for="hSqft">Square Feet</label><input type="number" id="hSqft" placeholder="1850" inputmode="numeric"></div>
+        <div class="fg"><label for="hYear">Year Built</label><input type="number" id="hYear" placeholder="1972" inputmode="numeric"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label for="hHeat">Heating</label><select id="hHeat"><option value="gas">Gas Furnace</option><option value="electric">Electric</option><option value="heatpump">Heat Pump</option><option value="boiler">Boiler</option></select></div>
+        <div class="fg"><label for="hStatus">Status</label><select id="hStatus"><option value="draft">Draft</option><option value="progress">In Progress</option><option value="complete">Complete</option></select></div>
+      </div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.1s">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Blower Door Results</h2>
+      <div class="frow">
+        <div class="fg"><label for="cfm50">CFM50</label><input type="number" id="cfm50" placeholder="3200" inputmode="numeric" oninput="calcACH()"></div>
+        <div class="fg"><label for="ceilHt">Ceiling Height (ft)</label><input type="number" id="ceilHt" placeholder="8" value="8" step="0.5" oninput="calcACH()"></div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge-val" id="achVal">--</div>
+        <div class="gauge-label">Air Changes per Hour at 50 Pa (ACH50)</div>
+        <div class="gauge-bar" id="achBar"></div>
+        <div class="gauge-scale"><span>Tight (3)</span><span>OK (5)</span><span>Leaky (10+)</span></div>
+      </div>
+      <div class="fg"><label for="achNote">Notes</label><input type="text" id="achNote" placeholder="Major leaks at attic hatch, recessed lights, rim joists"></div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.15s">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg> Insulation Assessment</h2>
+      <div class="ins-row" style="font-weight:600;font-size:11px;color:var(--tx3)">
+        <span>Zone</span><span>Current R</span><span>Target R</span><span></span>
+      </div>
+      <div class="ins-row"><span class="zone">Attic</span><input type="number" id="rAttic" placeholder="19" oninput="checkIns()" aria-label="Current attic R-value"><span class="target">R-49</span><span class="ins-status" id="sAttic"></span></div>
+      <div class="ins-row"><span class="zone">Walls</span><input type="number" id="rWalls" placeholder="11" oninput="checkIns()" aria-label="Current wall R-value"><span class="target">R-13</span><span class="ins-status" id="sWalls"></span></div>
+      <div class="ins-row"><span class="zone">Floor</span><input type="number" id="rFloor" placeholder="0" oninput="checkIns()" aria-label="Current floor R-value"><span class="target">R-25</span><span class="ins-status" id="sFloor"></span></div>
+      <div class="ins-row"><span class="zone">Rim Joist</span><input type="number" id="rRim" placeholder="0" oninput="checkIns()" aria-label="Current rim joist R-value"><span class="target">R-15</span><span class="ins-status" id="sRim"></span></div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.2s">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg> Thermal Images</h2>
+      <div class="photo-row" id="photoRow">
+        <div class="photo-thumb" onclick="addImg(0)" tabindex="0" role="button" aria-label="Add thermal image 1"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="photo-thumb" onclick="addImg(1)" tabindex="0" role="button" aria-label="Add thermal image 2"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="photo-thumb" onclick="addImg(2)" tabindex="0" role="button" aria-label="Add thermal image 3"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+        <div class="photo-thumb" onclick="addImg(3)" tabindex="0" role="button" aria-label="Add thermal image 4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      </div>
+      <button class="btn bs bf" onclick="document.getElementById('imgIn').click()" style="margin-top:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Capture Thermal Image
+      </button>
+    </div>
+
+    <div class="bsec" style="animation-delay:.25s">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Recommendations</h2>
+      <div id="recList"></div>
+    </div>
+
+    <div class="summary-strip" id="sumStrip">
+      <div class="sum-grid">
+        <div><div class="sum-val" id="sumCost">$0</div><div class="sum-lbl">Total Recommended</div></div>
+        <div><div class="sum-val" id="sumSave">$0</div><div class="sum-lbl">Est. Annual Savings</div></div>
+      </div>
+    </div>
+
+    <div class="abr">
+      <button class="btn bs" onclick="saveAudit()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg> Save</button>
+      <button class="btn bp" onclick="shareReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Report</button>
+    </div>
+    <button class="btn bs bf" onclick="resetBuild()" style="margin-bottom:24px">Start Over</button>
+  </section>
+
+  <section class="vw" id="settingsView" aria-label="Settings">
+    <div class="sg">
+      <h3>Data</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn bs" onclick="exportAll()" aria-label="Export backup">Export Backup (JSON)</button>
+        <button class="btn bs" onclick="document.getElementById('fileIn').click()" aria-label="Import backup">Import Backup (JSON)</button>
+      </div>
+    </div>
+    <div class="sg locked">
+      <div class="lock-ov">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span class="lock-lbl">Rebate Calculator -- Full Version</span>
+        <span style="font-size:12px;color:var(--tx3);margin-top:4px">Auto-lookup Xcel Energy rebates and IRA tax credits</span>
+      </div>
+      <h3>Rebate Calculator</h3>
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="fab" onclick="switchVw('build')" aria-label="New audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+
+<nav class="bnav" aria-label="Main navigation">
+  <button class="nb on" onclick="switchVw('list')" data-v="list" aria-label="Audits"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span>Audits</span></button>
+  <button class="nb" onclick="switchVw('build')" data-v="build" aria-label="New audit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>New</span></button>
+  <button class="nb" onclick="switchVw('settings')" data-v="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></button>
+</nav>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+  <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Efficiency Revolution LLC. All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Efficiency%20Revolution&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Permanent Deletion
+  </a>
+</div>
+<input type="file" id="imgIn" accept="image/*" capture="environment" style="display:none" onchange="handleImg(event)">
+<input type="file" id="fileIn" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-265042532;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Required</h1><p style="color:#999">This tool needs a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center;"><p style="margin:0"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with Efficiency Revolution LLC.</p></div>';throw new Error('x');
+}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let audits=[],editId=null,photos=[null,null,null,null],imgTarget=0,DB;
+const RECS=[
+  {id:'airseal',name:'Air Sealing Package',cost:2500,save:320,desc:'Seal attic bypasses, rim joists, penetrations'},
+  {id:'attic',name:'Attic Insulation to R-49',cost:4500,save:280,desc:'Blown cellulose or fiberglass to code'},
+  {id:'rim',name:'Rim Joist Insulation',cost:1800,save:120,desc:'Spray foam rim joists'},
+  {id:'crawl',name:'Crawl Space Encapsulation',cost:5500,save:180,desc:'Vapor barrier, insulation, dehumidifier'},
+  {id:'duct',name:'Duct Sealing',cost:1200,save:150,desc:'Seal supply and return duct connections'},
+  {id:'whfan',name:'Whole House Fan',cost:3500,save:200,desc:'Quiet Cool or similar whole-house ventilation'},
+  {id:'windows',name:'Window Upgrades',cost:8000,save:160,desc:'Replace single-pane with double-pane low-E'},
+  {id:'furnace',name:'High-Efficiency Furnace',cost:6000,save:280,desc:'95%+ AFUE replacement'}
+];
+const TARGETS={attic:49,walls:13,floor:25,rim:15};
+
+function initDB(){return new Promise((res,rej)=>{const r=indexedDB.open('AuditSnapDB',1);r.onupgradeneeded=e=>{if(!e.target.result.objectStoreNames.contains('audits'))e.target.result.createObjectStore('audits',{keyPath:'id'})};r.onsuccess=e=>{DB=e.target.result;res()};r.onerror=rej})}
+function dbPut(a){return new Promise((r,j)=>{const t=DB.transaction('audits','readwrite');t.objectStore('audits').put(a);t.oncomplete=r;t.onerror=j})}
+function dbAll(){return new Promise((r,j)=>{const t=DB.transaction('audits','readonly');const q=t.objectStore('audits').getAll();q.onsuccess=()=>r(q.result);q.onerror=j})}
+function dbDel(id){return new Promise((r,j)=>{const t=DB.transaction('audits','readwrite');t.objectStore('audits').delete(id);t.oncomplete=r;t.onerror=j})}
+
+function getDemos(){const n=Date.now();return[
+  {id:'d1',isDemo:true,addr:'2847 Carr St, Lakewood, CO',sqft:1850,year:1972,heat:'gas',cfm50:3200,ceilHt:8,ach:14.1,achNote:'Major leaks at attic hatch and recessed lights',rAttic:19,rWalls:11,rFloor:0,rRim:0,recs:['airseal','attic','rim'],photos:[],status:'complete',total:8800,savings:720,created:n-86400000*3},
+  {id:'d2',isDemo:true,addr:'14 Table Mountain Dr, Golden, CO',sqft:2400,year:2023,heat:'heatpump',cfm50:980,ceilHt:9,ach:2.7,achNote:'Tight new construction, good air barrier',rAttic:49,rWalls:15,rFloor:30,rRim:15,recs:[],photos:[],status:'complete',total:0,savings:0,created:n-86400000},
+  {id:'d3',isDemo:true,addr:'508 Garrison St, Arvada, CO',sqft:1620,year:1965,heat:'gas',cfm50:4100,ceilHt:8,ach:20.5,achNote:'Original windows, no weatherstripping, balloon framing',rAttic:11,rWalls:0,rFloor:0,rRim:0,recs:['airseal','attic','rim','crawl','duct','windows'],photos:[],status:'progress',total:23500,savings:1210,created:n-7200000}
+]}
+
+async function loadDemos(){const ex=await dbAll();if(!ex.length&&!localStorage.getItem('as_cleared')){for(const d of getDemos())await dbPut(d);document.getElementById('demoBanner').style.display='flex';await loadAudits()}}
+async function clearDemo(){const all=await dbAll();for(const a of all)if(a.isDemo)await dbDel(a.id);localStorage.setItem('as_cleared','1');document.getElementById('demoBanner').style.display='none';toast('Sample data cleared');await loadAudits()}
+
+function switchVw(v){document.querySelectorAll('.vw').forEach(x=>x.classList.remove('on'));document.getElementById(v+'View').classList.add('on');document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('on',b.dataset.v===v));document.getElementById('fab').style.display=v==='build'?'none':'flex';if(v==='list')loadAudits();if(v==='build'&&!editId){resetBuild();renderRecs()}}
+
+async function loadAudits(){
+  audits=await dbAll();audits.sort((a,b)=>(b.created||0)-(a.created||0));
+  document.getElementById('demoBanner').style.display=audits.some(a=>a.isDemo)?'flex':'none';
+  const list=document.getElementById('auditList'),empty=document.getElementById('emptyState');
+  if(!audits.length){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  list.innerHTML=audits.map(a=>{
+    const achClass=a.ach<=5?'good':a.ach<=10?'warn':'bad';
+    const recCount=(a.recs||[]).length;
+    return`<div class="acard" onclick="openAudit('${a.id}')">
+      <div class="ac-addr">${esc(a.addr||'Untitled')}</div>
+      <div class="ac-meta">${a.year||'?'} | ${(a.sqft||0).toLocaleString()} sqft | ${a.heat||'?'}</div>
+      <div class="ac-metrics">
+        <div class="ac-metric ${achClass}"><div class="val">${a.ach||'--'}</div><div class="lbl">ACH50</div></div>
+        <div class="ac-metric"><div class="val">${recCount}</div><div class="lbl">Findings</div></div>
+        <div class="ac-metric"><div class="val">$${((a.savings||0)/1000).toFixed(1)}k</div><div class="lbl">Savings/yr</div></div>
+      </div>
+      <div class="ac-foot"><span>${timeAgo(a.created)}</span><span class="ac-status ${a.status}">${a.status}</span></div>
+    </div>`}).join('');
+}
+
+function openAudit(id){
+  const a=audits.find(x=>x.id===id);if(!a)return;editId=id;
+  document.getElementById('hAddr').value=a.addr||'';
+  document.getElementById('hSqft').value=a.sqft||'';
+  document.getElementById('hYear').value=a.year||'';
+  document.getElementById('hHeat').value=a.heat||'gas';
+  document.getElementById('hStatus').value=a.status||'draft';
+  document.getElementById('cfm50').value=a.cfm50||'';
+  document.getElementById('ceilHt').value=a.ceilHt||8;
+  document.getElementById('achNote').value=a.achNote||'';
+  document.getElementById('rAttic').value=a.rAttic||'';
+  document.getElementById('rWalls').value=a.rWalls||'';
+  document.getElementById('rFloor').value=a.rFloor||'';
+  document.getElementById('rRim').value=a.rRim||'';
+  photos=a.photos?[...a.photos]:new Array(4).fill(null);while(photos.length<4)photos.push(null);
+  renderPhotos();renderRecs(a.recs||[]);calcACH();checkIns();
+  switchVw('build');
+}
+
+function resetBuild(){
+  editId=null;
+  ['hAddr','hSqft','hYear','cfm50','achNote','rAttic','rWalls','rFloor','rRim'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('hHeat').value='gas';document.getElementById('hStatus').value='draft';document.getElementById('ceilHt').value='8';
+  photos=new Array(4).fill(null);renderPhotos();
+  document.getElementById('achVal').textContent='--';document.getElementById('achVal').className='gauge-val';
+  document.getElementById('achBar').className='gauge-bar';
+  ['sAttic','sWalls','sFloor','sRim'].forEach(id=>document.getElementById(id).innerHTML='');
+  document.getElementById('sumCost').textContent='$0';document.getElementById('sumSave').textContent='$0';
+}
+
+function calcACH(){
+  const cfm=parseFloat(document.getElementById('cfm50').value)||0;
+  const sqft=parseFloat(document.getElementById('hSqft').value)||0;
+  const ht=parseFloat(document.getElementById('ceilHt').value)||8;
+  if(!cfm||!sqft){document.getElementById('achVal').textContent='--';return}
+  const vol=sqft*ht;const ach=Math.round((cfm*60/vol)*10)/10;
+  const el=document.getElementById('achVal');
+  el.textContent=ach.toFixed(1);
+  const cls=ach<=5?'good':ach<=10?'warn':'bad';
+  el.className='gauge-val '+cls;
+  document.getElementById('achBar').className='gauge-bar '+cls;
+}
+
+function checkIns(){
+  const zones=[{id:'rAttic',s:'sAttic',t:49},{id:'rWalls',s:'sWalls',t:13},{id:'rFloor',s:'sFloor',t:25},{id:'rRim',s:'sRim',t:15}];
+  zones.forEach(z=>{
+    const v=parseFloat(document.getElementById(z.id).value);
+    const el=document.getElementById(z.s);
+    if(isNaN(v)||v===0){el.innerHTML='';return}
+    const pass=v>=z.t;
+    el.className='ins-status '+(pass?'pass':'fail');
+    el.innerHTML=pass?'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  });
+}
+
+function renderRecs(selected=[]){
+  document.getElementById('recList').innerHTML=RECS.map(r=>{
+    const on=selected.includes(r.id);
+    return`<div class="rec-toggle${on?' on':''}" onclick="toggleRec(this,'${r.id}')" role="checkbox" aria-checked="${on}" tabindex="0">
+      <span class="rec-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span>
+      <div class="rec-info"><div class="rec-title">${r.name}</div><div class="rec-cost">$${r.cost.toLocaleString()} | saves ~$${r.save}/yr</div></div>
+    </div>`}).join('');
+  calcSums();
+}
+
+function toggleRec(el,id){el.classList.toggle('on');el.setAttribute('aria-checked',el.classList.contains('on'));calcSums()}
+
+function calcSums(){
+  let cost=0,save=0;
+  document.querySelectorAll('.rec-toggle.on').forEach(el=>{
+    const id=el.onclick.toString().match(/'(\w+)'/)?.[1];
+    const r=RECS.find(x=>x.id===id);
+    if(r){cost+=r.cost;save+=r.save}
+  });
+  document.getElementById('sumCost').textContent='$'+cost.toLocaleString();
+  document.getElementById('sumSave').textContent='$'+save.toLocaleString();
+}
+
+function renderPhotos(){
+  document.getElementById('photoRow').innerHTML=photos.map((p,i)=>
+    `<div class="photo-thumb${p?' has':''}" onclick="addImg(${i})" tabindex="0" role="button" aria-label="Thermal image ${i+1}">
+      ${p?`<img src="${p}" alt="Thermal image ${i+1}">`:`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
+    </div>`).join('');
+}
+function addImg(i){imgTarget=i;document.getElementById('imgIn').click()}
+function handleImg(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');let w=img.width,h=img.height;if(w>600){h=h*(600/w);w=600}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);photos[imgTarget]=c.toDataURL('image/jpeg',.7);renderPhotos()};img.src=ev.target.result};r.readAsDataURL(f);e.target.value=''}
+
+async function saveAudit(){
+  const addr=document.getElementById('hAddr').value.trim();
+  if(!addr){toast('Add an address','err');return}
+  const selRecs=[];document.querySelectorAll('.rec-toggle.on').forEach(el=>{const id=el.onclick.toString().match(/'(\w+)'/)?.[1];if(id)selRecs.push(id)});
+  const cfm=parseFloat(document.getElementById('cfm50').value)||0;
+  const sqft=parseFloat(document.getElementById('hSqft').value)||0;
+  const ht=parseFloat(document.getElementById('ceilHt').value)||8;
+  const ach=sqft&&cfm?Math.round((cfm*60/(sqft*ht))*10)/10:0;
+  let totalCost=0,totalSave=0;selRecs.forEach(id=>{const r=RECS.find(x=>x.id===id);if(r){totalCost+=r.cost;totalSave+=r.save}});
+  const audit={
+    id:editId||'a-'+Date.now(),addr,sqft,year:parseInt(document.getElementById('hYear').value)||0,
+    heat:document.getElementById('hHeat').value,cfm50:cfm,ceilHt:ht,ach,
+    achNote:document.getElementById('achNote').value,
+    rAttic:parseFloat(document.getElementById('rAttic').value)||0,
+    rWalls:parseFloat(document.getElementById('rWalls').value)||0,
+    rFloor:parseFloat(document.getElementById('rFloor').value)||0,
+    rRim:parseFloat(document.getElementById('rRim').value)||0,
+    recs:selRecs,photos:photos.filter(Boolean),
+    status:document.getElementById('hStatus').value,total:totalCost,savings:totalSave,
+    created:editId?(audits.find(a=>a.id===editId)||{}).created||Date.now():Date.now()
+  };
+  await dbPut(audit);toast('Audit saved','ok');editId=null;switchVw('list');
+}
+
+async function shareReport(){
+  await saveAudit();
+  const addr=document.getElementById('hAddr').value;
+  const ach=document.getElementById('achVal').textContent;
+  const selRecs=[];document.querySelectorAll('.rec-toggle.on').forEach(el=>{const id=el.onclick.toString().match(/'(\w+)'/)?.[1];if(id)selRecs.push(id)});
+  const recNames=selRecs.map(id=>{const r=RECS.find(x=>x.id===id);return r?r.name:id}).join(', ');
+  const text=`Energy Audit Summary\nEfficiency Revolution\n\nProperty: ${addr}\nACH50: ${ach} air changes/hour\n\nRecommendations: ${recNames||'None'}\nEstimated Investment: ${document.getElementById('sumCost').textContent}\nProjected Annual Savings: ${document.getElementById('sumSave').textContent}\n\nMark Rogers | (303) 868-6653\nmark@efficiencyrevolution.com`;
+  if(navigator.share){try{await navigator.share({title:'Energy Audit Report',text});toast('Report shared','ok')}catch(e){}}
+  else{try{await navigator.clipboard.writeText(text);toast('Report copied to clipboard','ok')}catch(e){toast('Could not share','err')}}
+}
+
+async function exportAll(){const all=await dbAll();const b=new Blob([JSON.stringify({audits:all,exported:new Date().toISOString()},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`auditsnap-${new Date().toISOString().split('T')[0]}.json`;a.click();toast('Backup downloaded','ok')}
+async function handleImport(e){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.audits)for(const a of d.audits)await dbPut(a);toast('Imported','ok');await loadAudits()}catch(e){toast('Could not read file','err')}e.target.value=''}
+
+function toast(m,t){const el=document.createElement('div');el.className='tst'+(t?' '+t:'');el.textContent=m;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000)}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return'Just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';const dy=Math.floor(h/24);if(dy<7)return dy+'d ago';return new Date(ts).toLocaleDateString()}
+
+document.querySelectorAll('.rec-toggle').forEach(el=>{el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();el.click()}})});
+
+(async function(){await initDB();await loadDemos();await loadAudits();renderRecs()})();
+</script>
+</body>
+</html>
