@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>WeldQuote - Alamo City Custom Welding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f0f1f3;--card:#ffffff;--text:#1a1a1a;--text-muted:#5a6068;
+--blue:#2c5282;--blue-soft:rgba(44,82,130,.08);--orange:#e67e22;--orange-soft:rgba(230,126,34,.1);
+--border:#dde0e5;--success:#2d7a4f;--danger:#b44030;
+--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.06),0 2px 8px rgba(0,0,0,.04);
+--shadow-lg:0 4px 12px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+--font-head:'Oswald',Impact,sans-serif;--font-body:'Open Sans',system-ui,sans-serif;
+}
+html{font-size:16px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;padding-bottom:140px!important;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-head);font-weight:700;line-height:1.15;text-transform:uppercase;letter-spacing:.03em}
+h1{font-size:1.4rem}h2{font-size:1.15rem}h3{font-size:1rem}
+*:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+button,input,select,textarea{font-family:var(--font-body);font-size:1rem;border:none;outline:none;background:none}
+
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.025;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+.app-header{background:linear-gradient(135deg,var(--blue) 0%,#1a3654 100%);color:#fff;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.app-header h1{color:#fff;font-size:1.3rem;letter-spacing:.06em}
+.app-header .subtitle{color:var(--orange);font-family:var(--font-body);font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
+
+.demo-banner{background:var(--orange-soft);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.8rem;color:var(--text-muted);line-height:1.3}
+.demo-banner button{background:var(--orange);color:#fff;font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:transform .15s}
+.demo-banner button:active{transform:scale(.96)}
+
+.view{display:none;padding:16px;animation:fadeUp .3s ease-out}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.skip-link{position:absolute;top:-40px;left:0;background:var(--orange);color:#fff;padding:8px 16px;z-index:9999;font-weight:600}
+.skip-link:focus{top:0}
+
+/* ESTIMATE CARDS */
+.est-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;border-left:4px solid var(--blue)}
+.est-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.est-card:active{transform:scale(.985)}
+.est-card-inner{padding:14px 16px}
+.est-card .ec-title{font-family:var(--font-head);font-size:1rem;text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px}
+.est-card .ec-client{font-size:.84rem;color:var(--text-muted);margin-bottom:6px}
+.est-card .ec-row{display:flex;justify-content:space-between;align-items:center}
+.est-card .ec-total{font-family:var(--font-head);font-size:1.3rem;color:var(--blue)}
+.badge{display:inline-flex;align-items:center;font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.badge--quoted{background:var(--orange-soft);color:var(--orange)}
+.badge--accepted{background:rgba(45,122,79,.1);color:var(--success)}
+.badge--completed{background:rgba(44,82,130,.08);color:var(--blue)}
+.badge--declined{background:rgba(180,64,48,.1);color:var(--danger)}
+
+/* FORM */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.95rem;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--orange);box-shadow:0 0 0 3px var(--orange-soft)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* LINE ITEMS */
+.line-item{background:var(--bg);border-radius:8px;padding:12px;margin-bottom:8px;position:relative;animation:fadeUp .2s ease-out}
+.line-item .li-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.line-item .li-title{font-weight:600;font-size:.9rem}
+.line-item .li-remove{width:28px;height:28px;border-radius:50%;background:rgba(180,64,48,.08);color:var(--danger);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.line-item .li-remove:hover{background:rgba(180,64,48,.15)}
+.line-item .li-row{display:grid;grid-template-columns:1fr 80px 80px;gap:8px;align-items:end}
+.line-item .li-row input{padding:8px 10px;font-size:.88rem}
+.line-item .li-subtotal{text-align:right;font-weight:600;font-size:.92rem;color:var(--blue);margin-top:6px}
+
+/* TOTAL BAR */
+.total-bar{background:var(--blue);color:#fff;padding:16px 20px;border-radius:var(--radius);margin:16px 0;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 16px rgba(44,82,130,.25)}
+.total-bar .tb-label{font-family:var(--font-head);font-size:.9rem;text-transform:uppercase;letter-spacing:.06em}
+.total-bar .tb-amount{font-family:var(--font-head);font-size:1.8rem;letter-spacing:.02em}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s,box-shadow .15s;text-transform:uppercase;letter-spacing:.03em}
+.btn:active{transform:scale(.97)}
+.btn--primary{background:var(--orange);color:#fff;box-shadow:0 2px 8px rgba(230,126,34,.3)}
+.btn--secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn--full{width:100%}
+.btn--disabled{opacity:.45;cursor:not-allowed;position:relative}
+.btn--disabled::after{content:'Full version';position:absolute;top:-8px;right:-8px;background:var(--text);color:#fff;font-size:.55rem;padding:2px 6px;border-radius:4px;text-transform:none;letter-spacing:0}
+
+/* PROJECT TYPE PILLS */
+.type-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.type-pill{padding:8px 16px;border-radius:20px;font-size:.82rem;font-weight:600;background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.03em}
+.type-pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.type-pill:active{transform:scale(.95)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:8px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .stat-num{font-family:var(--font-head);font-size:1.5rem;color:var(--blue);line-height:1}
+.stat-card .stat-label{font-size:.7rem;color:var(--text-muted);margin-top:4px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);padding:4px 0}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:none;cursor:pointer;color:var(--text-muted);transition:color .15s;border:none}
+.bottom-nav button.active{color:var(--orange)}
+.bottom-nav button svg{width:22px;height:22px}
+.bottom-nav button span{font-size:.66rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+
+.fab{position:fixed;bottom:128px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--orange);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(230,126,34,.4);cursor:pointer;z-index:99;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.fab:hover{transform:scale(1.08)}
+.fab:active{transform:scale(.92)}
+
+.toast-container{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease-out;pointer-events:auto}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:1px solid var(--border);transition:background .15s}
+.back-btn:hover{background:var(--border)}
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+
+.camera-area{position:relative;width:100%;max-width:400px;margin:0 auto 12px;border-radius:8px;overflow:hidden;background:#111}
+.camera-area video{width:100%;display:block}
+.camera-area canvas{display:none}
+.camera-btn-area{text-align:center;margin:8px 0}
+.captured-photos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.captured-photos img{width:60px;height:60px;border-radius:6px;object-fit:cover;border:2px solid var(--border)}
+
+/* SHARE PREVIEW */
+.share-preview{background:var(--card);border:1px dashed var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.share-preview .sp-line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg);font-size:.88rem}
+.share-preview .sp-line:last-child{border-bottom:none;font-weight:700;color:var(--blue)}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none!important}body{background:#fff;padding:0}.view{display:block!important}}
+@media(min-width:768px){.view{max-width:600px;margin:0 auto;padding:24px}.bottom-nav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:12px 12px 0 0}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="app-header" role="banner">
+<h1>WeldQuote</h1>
+<div class="subtitle">Alamo City Custom Welding</div>
+</header>
+
+<div class="demo-banner" id="demoBanner" style="display:none" role="status" aria-label="Demo data notice">
+<p>Sample estimates from San Antonio. Tap to clear and add your own jobs.</p>
+<button onclick="clearDemoData()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<div aria-live="polite" class="toast-container" id="toastContainer"></div>
+
+<main id="main-content">
+<!-- ESTIMATES LIST -->
+<section class="view active" id="viewEstimates" role="region" aria-label="Estimates">
+<div id="estimateList"></div>
+</section>
+
+<!-- NEW ESTIMATE -->
+<section class="view" id="viewNewEstimate" role="region" aria-label="New estimate">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewEstimates')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<h2 id="newEstTitle">New Estimate</h2>
+</div>
+
+<form id="estimateForm" onsubmit="saveEstimate(event)">
+<div class="form-group"><label for="ef-client">Client Name</label><input type="text" id="ef-client" required placeholder="Who is this for?"></div>
+<div class="form-group"><label for="ef-address">Job Site Address</label><input type="text" id="ef-address" placeholder="Where is the work?"></div>
+<div class="form-group"><label for="ef-phone">Phone</label><input type="tel" id="ef-phone" placeholder="Client phone number"></div>
+
+<div class="form-group">
+<label>Project Type</label>
+<div class="type-pills" id="typePills">
+<button type="button" class="type-pill" data-type="fence" onclick="selectType(this)">Fence</button>
+<button type="button" class="type-pill" data-type="gate" onclick="selectType(this)">Gate</button>
+<button type="button" class="type-pill" data-type="railing" onclick="selectType(this)">Railing</button>
+<button type="button" class="type-pill" data-type="carport" onclick="selectType(this)">Carport</button>
+<button type="button" class="type-pill" data-type="stairs" onclick="selectType(this)">Stairs</button>
+<button type="button" class="type-pill" data-type="repair" onclick="selectType(this)">Repair</button>
+<button type="button" class="type-pill" data-type="custom" onclick="selectType(this)">Custom Fab</button>
+</div>
+</div>
+
+<div class="form-group"><label>Material</label>
+<select id="ef-material"><option value="carbon-steel">Carbon Steel</option><option value="stainless">Stainless Steel</option><option value="aluminum">Aluminum</option><option value="wrought-iron">Wrought Iron</option></select>
+</div>
+
+<h3 style="margin:20px 0 12px">Line Items</h3>
+<div id="lineItems"></div>
+<button type="button" class="btn btn--secondary btn--full" onclick="addLineItem()" style="margin-bottom:16px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+Add Line Item
+</button>
+
+<div class="form-row">
+<div class="form-group"><label for="ef-labor-hrs">Labor Hours</label><input type="number" id="ef-labor-hrs" min="0" step="0.5" placeholder="0"></div>
+<div class="form-group"><label for="ef-labor-rate">Rate ($/hr)</label><input type="number" id="ef-labor-rate" min="0" step="5" placeholder="85"></div>
+</div>
+
+<div class="form-group"><label for="ef-notes">Notes</label><textarea id="ef-notes" placeholder="Special conditions, access issues, design details..."></textarea></div>
+
+<!-- Camera -->
+<div class="form-group">
+<label>Job Site Photos</label>
+<div class="captured-photos" id="capturedPhotos"></div>
+<button type="button" class="btn btn--secondary btn--full" onclick="openCamera()" aria-label="Take a photo">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+Take Photo
+</button>
+<div class="camera-area" id="cameraArea" style="display:none">
+<video id="cameraVideo" autoplay playsinline></video>
+<canvas id="cameraCanvas"></canvas>
+</div>
+<div class="camera-btn-area" id="cameraBtnArea" style="display:none">
+<button type="button" class="btn btn--primary" onclick="capturePhoto()">Snap</button>
+<button type="button" class="btn btn--secondary" onclick="closeCamera()">Done</button>
+</div>
+</div>
+
+<div class="total-bar">
+<div class="tb-label">Estimate Total</div>
+<div class="tb-amount" id="estimateTotal">$0</div>
+</div>
+
+<input type="hidden" id="ef-id">
+<input type="hidden" id="ef-status" value="quoted">
+<button type="submit" class="btn btn--primary btn--full">Save Estimate</button>
+</form>
+</section>
+
+<!-- ESTIMATE DETAIL -->
+<section class="view" id="viewEstDetail" role="region" aria-label="Estimate detail">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewEstimates')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<h2 id="estDetailTitle">Estimate</h2>
+</div>
+<div id="estDetailContent"></div>
+</section>
+
+<!-- OVERVIEW -->
+<section class="view" id="viewOverview" role="region" aria-label="Overview">
+<h2 style="margin-bottom:16px">Job Overview</h2>
+<div class="stats-row" id="statsRow"></div>
+<h3 style="margin-bottom:12px">Recent Estimates</h3>
+<div id="recentList"></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="viewSettings" role="region" aria-label="Settings">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div class="form-group"><label for="set-labor-rate">Default Labor Rate ($/hr)</label><input type="number" id="set-labor-rate" value="85" onchange="localStorage.setItem('wq_rate',this.value)"></div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+<button class="btn btn--secondary btn--full" onclick="exportData()" aria-label="Export data">Export Data (JSON)</button>
+<button class="btn btn--secondary btn--full" onclick="document.getElementById('importFile').click()" aria-label="Import data">Import Data (JSON)</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+<button class="btn btn--disabled btn--full" disabled aria-label="Generate branded PDF, available in full version">Generate Branded PDF</button>
+<button class="btn btn--disabled btn--full" disabled aria-label="Customer signature capture, available in full version">Customer Signature Capture</button>
+</div>
+</section>
+</main>
+
+<button class="fab" onclick="showNewEstimate()" aria-label="Create new estimate">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewEstimates')" id="navEst" class="active" aria-label="Estimates list">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+<span>Estimates</span>
+</button>
+<button onclick="showView('viewOverview')" id="navOver" aria-label="Overview">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+<span>Overview</span>
+</button>
+<button onclick="showView('viewSettings')" id="navSet" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+<span>Settings</span>
+</button>
+</nav>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Alamo City Custom Welding. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Alamo%20City%20Custom%20Welding&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=23437989;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){sessionStorage.setItem('wq_auth','1')}
+if(!sessionStorage.getItem('wq_auth')){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Oswald,sans-serif;background:linear-gradient(135deg,#2c5282,#1a3654);color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;letter-spacing:.06em;margin-bottom:.5rem">WELDQUOTE</h1><p style="color:#ccc;margin-bottom:1.5rem;font-family:Open Sans,sans-serif">Access key required</p><input id="keyIn" type="text" placeholder="Enter key" style="padding:12px 16px;border-radius:8px;border:1px solid #555;background:rgba(255,255,255,.1);color:#fff;font-size:1rem;width:200px;text-align:center"><br><button onclick="var k=document.getElementById(\'keyIn\').value;if(_h(k)===_V){sessionStorage.setItem(\'wq_auth\',\'1\');location.reload();}else{document.getElementById(\'keyErr\').style.display=\'block\'}" style="margin-top:12px;padding:10px 24px;background:#e67e22;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Enter</button><p id="keyErr" style="color:#e74c3c;margin-top:8px;display:none;font-size:.85rem;font-family:Open Sans,sans-serif">Invalid key</p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;"><p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. Not affiliated with Alamo City Custom Welding.</p></div>';
+throw new Error('Auth required');
+}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+const DB_NAME='WeldQuoteDB';const DB_VER=1;let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('estimates')){d.createObjectStore('estimates',{keyPath:'id'})}};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbPut(data){return new Promise((r,j)=>{const t=db.transaction('estimates','readwrite');t.objectStore('estimates').put(data);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
+function dbGetAll(){return new Promise((r,j)=>{const t=db.transaction('estimates','readonly');const q=t.objectStore('estimates').getAll();q.onsuccess=()=>r(q.result);q.onerror=e=>j(e)})}
+function dbGet(id){return new Promise((r,j)=>{const t=db.transaction('estimates','readonly');const q=t.objectStore('estimates').get(id);q.onsuccess=()=>r(q.result);q.onerror=e=>j(e)})}
+function dbDelete(id){return new Promise((r,j)=>{const t=db.transaction('estimates','readwrite');t.objectStore('estimates').delete(id);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
+
+let allEstimates=[];let capturedImages=[];let cameraStream=null;let lineItemCount=0;let selectedType='';
+
+const DEMO=[
+{id:'demo-1',client:'Martinez Residence',address:'1847 Stone Oak Pkwy, San Antonio',phone:'210-555-0134',type:'fence',material:'wrought-iron',lineItems:[{desc:'Wrought iron fence panels',qty:12,unit:85},{desc:'Posts (4x4 steel)',qty:14,unit:35},{desc:'Custom gate (6ft)',qty:1,unit:650}],laborHrs:16,laborRate:85,notes:'Customer wants ornamental design matching the neighbor\'s fence. Access from side yard. Two dogs, need to coordinate entry.',status:'accepted',photos:[],total:3160,created:Date.now()-86400000*3,isDemo:true},
+{id:'demo-2',client:'Riverwalk Apartments (SAAA)',address:'410 E Commerce St, San Antonio',phone:'210-555-0287',type:'gate',material:'carbon-steel',lineItems:[{desc:'Automatic gate motor replacement',qty:1,unit:420},{desc:'Steel track and rollers',qty:1,unit:185},{desc:'Welding repair on frame',qty:1,unit:150}],laborHrs:6,laborRate:95,notes:'Gate motor burned out. Residents have been propping it open. Property manager wants this done by Friday. Will need to shut gate access for 4 hours during install.',status:'quoted',photos:[],total:1325,created:Date.now()-86400000,isDemo:true},
+{id:'demo-3',client:'Converse Business Park',address:'8719 Converse Business Cir, Converse',phone:'210-555-0456',type:'railing',material:'stainless',lineItems:[{desc:'Stainless steel handrail (per linear ft)',qty:40,unit:45},{desc:'Wall brackets',qty:12,unit:18},{desc:'End caps and returns',qty:4,unit:25}],laborHrs:10,laborRate:85,notes:'ADA compliant handrail for new ramp at entrance. Must meet 34-38 inch height requirement. Building inspector will check.',status:'completed',photos:[],total:2966,created:Date.now()-86400000*10,isDemo:true}
+];
+
+async function loadDemoData(){
+if(localStorage.getItem('wq_demoCleared')) return;
+const est=await dbGetAll();
+if(est.length>0) return;
+for(const d of DEMO) await dbPut(d);
+localStorage.setItem('wq_hasDemo','1');
+}
+async function clearDemoData(){
+const all=await dbGetAll();
+for(const e of all){if(e.isDemo) await dbDelete(e.id)}
+localStorage.removeItem('wq_hasDemo');localStorage.setItem('wq_demoCleared','1');
+document.getElementById('demoBanner').style.display='none';
+await refreshData();showToast('Demo data cleared');
+}
+
+function calcTotal(){
+let mat=0;
+document.querySelectorAll('.line-item').forEach(li=>{
+const qty=parseFloat(li.querySelector('.li-qty').value)||0;
+const unit=parseFloat(li.querySelector('.li-unit').value)||0;
+const sub=qty*unit;mat+=sub;
+li.querySelector('.li-subtotal').textContent='$'+sub.toLocaleString();
+});
+const hrs=parseFloat(document.getElementById('ef-labor-hrs').value)||0;
+const rate=parseFloat(document.getElementById('ef-labor-rate').value)||85;
+const total=mat+(hrs*rate);
+document.getElementById('estimateTotal').textContent='$'+total.toLocaleString();
+return total;
+}
+
+function addLineItem(desc='',qty='',unit=''){
+lineItemCount++;
+const div=document.createElement('div');div.className='line-item';div.innerHTML=`
+<div class="li-header"><span class="li-title">Item ${lineItemCount}</span><button type="button" class="li-remove" onclick="this.closest('.line-item').remove();calcTotal()" aria-label="Remove item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+<div class="li-row">
+<input type="text" class="li-desc" placeholder="Description" value="${desc}" aria-label="Item description">
+<input type="number" class="li-qty" placeholder="Qty" value="${qty}" min="0" step="1" oninput="calcTotal()" aria-label="Quantity">
+<input type="number" class="li-unit" placeholder="$/ea" value="${unit}" min="0" step="1" oninput="calcTotal()" aria-label="Unit price">
+</div>
+<div class="li-subtotal">$0</div>`;
+document.getElementById('lineItems').appendChild(div);
+calcTotal();
+}
+
+function selectType(el){
+document.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('active'));
+el.classList.add('active');selectedType=el.dataset.type;
+}
+
+function showNewEstimate(){
+document.getElementById('estimateForm').reset();
+document.getElementById('ef-id').value='';
+document.getElementById('ef-status').value='quoted';
+document.getElementById('ef-labor-rate').value=localStorage.getItem('wq_rate')||85;
+document.getElementById('lineItems').innerHTML='';lineItemCount=0;
+document.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('active'));selectedType='';
+capturedImages=[];renderCapturedPhotos();
+document.getElementById('newEstTitle').textContent='NEW ESTIMATE';
+document.getElementById('estimateTotal').textContent='$0';
+addLineItem();
+showView('viewNewEstimate');
+}
+
+async function saveEstimate(e){
+e.preventDefault();closeCamera();
+const items=[];
+document.querySelectorAll('.line-item').forEach(li=>{
+const desc=li.querySelector('.li-desc').value;
+const qty=parseFloat(li.querySelector('.li-qty').value)||0;
+const unit=parseFloat(li.querySelector('.li-unit').value)||0;
+if(desc||qty||unit) items.push({desc,qty,unit});
+});
+const id=document.getElementById('ef-id').value||'est-'+Date.now();
+const est={
+id,client:document.getElementById('ef-client').value,
+address:document.getElementById('ef-address').value,
+phone:document.getElementById('ef-phone').value,
+type:selectedType,material:document.getElementById('ef-material').value,
+lineItems:items,
+laborHrs:parseFloat(document.getElementById('ef-labor-hrs').value)||0,
+laborRate:parseFloat(document.getElementById('ef-labor-rate').value)||85,
+notes:document.getElementById('ef-notes').value,
+status:document.getElementById('ef-status').value||'quoted',
+photos:capturedImages.slice(0,5),
+total:calcTotal(),created:Date.now()
+};
+await dbPut(est);await refreshData();
+showToast('Estimate saved');showView('viewEstimates');
+}
+
+async function showEstDetail(id){
+const est=await dbGet(id);if(!est) return;
+document.getElementById('estDetailTitle').textContent=est.type?est.type.toUpperCase()+' ESTIMATE':'ESTIMATE';
+const statusCls={'quoted':'badge--quoted','accepted':'badge--accepted','completed':'badge--completed','declined':'badge--declined'}[est.status]||'';
+let html=`<div style="background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+<div><h3 style="margin-bottom:2px">${est.client}</h3><p style="font-size:.85rem;color:var(--text-muted)">${est.address||'No address'}</p>${est.phone?`<p style="font-size:.82rem;color:var(--text-muted)">${est.phone}</p>`:''}</div>
+<span class="badge ${statusCls}">${est.status||'Quoted'}</span>
+</div>
+${est.material?`<p style="font-size:.85rem;margin-bottom:8px"><strong>Material:</strong> ${est.material.replace('-',' ')}</p>`:''}
+${est.notes?`<p style="font-size:.85rem;color:var(--text-muted);margin-bottom:12px">${est.notes}</p>`:''}
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn--primary" onclick="shareEstimate('${id}')" aria-label="Share estimate"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+<select onchange="updateStatus('${id}',this.value)" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border);font-size:.85rem;font-weight:600" aria-label="Update status">
+<option value="quoted" ${est.status==='quoted'?'selected':''}>Quoted</option>
+<option value="accepted" ${est.status==='accepted'?'selected':''}>Accepted</option>
+<option value="completed" ${est.status==='completed'?'selected':''}>Completed</option>
+<option value="declined" ${est.status==='declined'?'selected':''}>Declined</option>
+</select>
+</div></div>`;
+
+html+=`<div class="share-preview"><h3 style="margin-bottom:8px">Estimate Breakdown</h3>`;
+(est.lineItems||[]).forEach(li=>{
+html+=`<div class="sp-line"><span>${li.desc||'Item'} (x${li.qty})</span><span>$${(li.qty*li.unit).toLocaleString()}</span></div>`;
+});
+if(est.laborHrs){
+html+=`<div class="sp-line"><span>Labor (${est.laborHrs} hrs @ $${est.laborRate}/hr)</span><span>$${(est.laborHrs*est.laborRate).toLocaleString()}</span></div>`;
+}
+html+=`<div class="sp-line" style="font-size:1rem;padding-top:8px;border-top:2px solid var(--border)"><span>TOTAL</span><span>$${(est.total||0).toLocaleString()}</span></div></div>`;
+
+if(est.photos&&est.photos.length){
+html+=`<div class="captured-photos" style="margin-top:12px">${est.photos.map(p=>`<img src="${p}" alt="Job site photo">`).join('')}</div>`;
+}
+document.getElementById('estDetailContent').innerHTML=html;
+showView('viewEstDetail');
+}
+
+async function updateStatus(id,status){
+const est=await dbGet(id);if(!est) return;
+est.status=status;await dbPut(est);await refreshData();showToast('Status updated');
+}
+
+async function shareEstimate(id){
+const est=await dbGet(id);if(!est) return;
+let text=`Alamo City Custom Welding - Estimate\n`;
+text+=`Client: ${est.client}\nJob Site: ${est.address||'TBD'}\n\n`;
+(est.lineItems||[]).forEach(li=>{text+=`${li.desc||'Item'} (x${li.qty}) - $${(li.qty*li.unit).toLocaleString()}\n`});
+if(est.laborHrs) text+=`Labor (${est.laborHrs} hrs) - $${(est.laborHrs*est.laborRate).toLocaleString()}\n`;
+text+=`\nTOTAL: $${(est.total||0).toLocaleString()}\n\n`;
+text+=`Alamo City Custom Welding | (210) 233-6340\n1 year workmanship warranty included.`;
+if(navigator.share){
+try{await navigator.share({title:'Estimate - '+est.client,text});showToast('Estimate shared')}catch(e){if(e.name!=='AbortError') fallbackCopy(text)}
+}else{fallbackCopy(text)}
+}
+function fallbackCopy(t){navigator.clipboard.writeText(t).then(()=>showToast('Copied to clipboard')).catch(()=>showToast('Could not share'))}
+
+// Camera
+let cameraActive=false;
+async function openCamera(){
+if(cameraActive){closeCamera();return}
+try{
+cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+document.getElementById('cameraVideo').srcObject=cameraStream;
+document.getElementById('cameraArea').style.display='block';
+document.getElementById('cameraBtnArea').style.display='block';cameraActive=true;
+}catch(e){showToast('Camera not available')}
+}
+function closeCamera(){
+if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+document.getElementById('cameraArea').style.display='none';
+document.getElementById('cameraBtnArea').style.display='none';cameraActive=false;
+}
+function capturePhoto(){
+const v=document.getElementById('cameraVideo');const c=document.getElementById('cameraCanvas');
+c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+capturedImages.push(c.toDataURL('image/jpeg',0.7));renderCapturedPhotos();showToast('Photo captured');
+}
+function renderCapturedPhotos(){
+document.getElementById('capturedPhotos').innerHTML=capturedImages.map((img,i)=>`<img src="${img}" alt="Photo ${i+1}">`).join('');
+}
+
+function renderEstimateList(){
+const list=document.getElementById('estimateList');
+const sorted=[...allEstimates].sort((a,b)=>b.created-a.created);
+if(sorted.length===0){
+list.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text-muted)">
+<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:12px;opacity:.4"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+<p style="font-size:.95rem;font-weight:600;margin-bottom:4px">No estimates yet</p>
+<p style="font-size:.85rem">Tap + to create your first field estimate.</p></div>`;return;
+}
+list.innerHTML=sorted.map(e=>{
+const statusCls={'quoted':'badge--quoted','accepted':'badge--accepted','completed':'badge--completed','declined':'badge--declined'}[e.status]||'';
+const date=new Date(e.created).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+return`<article class="est-card" onclick="showEstDetail('${e.id}')" role="button" tabindex="0" aria-label="View estimate for ${e.client}">
+<div class="est-card-inner">
+<div class="ec-title">${e.type||'Custom'} - ${e.material?e.material.replace('-',' '):''}</div>
+<div class="ec-client">${e.client} | ${e.address||'No address'} | ${date}</div>
+<div class="ec-row"><span class="badge ${statusCls}">${e.status||'quoted'}</span><span class="ec-total">$${(e.total||0).toLocaleString()}</span></div>
+</div></article>`}).join('');
+}
+
+async function renderOverview(){
+const total=allEstimates.length;
+const quoted=allEstimates.filter(e=>e.status==='quoted').length;
+const accepted=allEstimates.filter(e=>e.status==='accepted').length;
+const revenue=allEstimates.filter(e=>e.status==='accepted'||e.status==='completed').reduce((s,e)=>s+(e.total||0),0);
+document.getElementById('statsRow').innerHTML=`
+<div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--orange)">${quoted}</div><div class="stat-label">Pending</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--success)">$${(revenue/1000).toFixed(1)}k</div><div class="stat-label">Won</div></div>`;
+const recent=[...allEstimates].sort((a,b)=>b.created-a.created).slice(0,5);
+document.getElementById('recentList').innerHTML=recent.map(e=>`<div class="est-card" onclick="showEstDetail('${e.id}')" role="button" tabindex="0">
+<div class="est-card-inner"><div class="ec-title">${e.client}</div><div class="ec-row"><span class="badge badge--${e.status||'quoted'}">${e.status||'quoted'}</span><span class="ec-total">$${(e.total||0).toLocaleString()}</span></div></div></div>`).join('');
+}
+
+async function refreshData(){
+allEstimates=await dbGetAll();renderEstimateList();
+if(localStorage.getItem('wq_hasDemo')&&!localStorage.getItem('wq_demoCleared')){document.getElementById('demoBanner').style.display='flex'}
+}
+
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+const fab=document.querySelector('.fab');
+if(id==='viewEstimates'){document.getElementById('navEst').classList.add('active');fab.style.display='flex'}
+else if(id==='viewOverview'){document.getElementById('navOver').classList.add('active');fab.style.display='none';renderOverview()}
+else if(id==='viewSettings'){document.getElementById('navSet').classList.add('active');fab.style.display='none';document.getElementById('set-labor-rate').value=localStorage.getItem('wq_rate')||85}
+else{fab.style.display='none'}
+window.scrollTo(0,0);
+}
+
+// Recalc on labor changes
+document.getElementById('ef-labor-hrs').addEventListener('input',calcTotal);
+document.getElementById('ef-labor-rate').addEventListener('input',calcTotal);
+
+async function exportData(){
+const data={estimates:allEstimates,exported:new Date().toISOString()};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;
+a.download='weldquote-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
+showToast('Data exported');
+}
+async function importData(e){
+const file=e.target.files[0];if(!file) return;
+try{const data=JSON.parse(await file.text());if(data.estimates){for(const est of data.estimates) await dbPut(est)}await refreshData();showToast('Data imported')}catch(err){showToast('Invalid file')}
+e.target.value='';
+}
+
+function showToast(msg){
+const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast';t.textContent=msg;
+c.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+
+(async()=>{await openDB();await loadDemoData();await refreshData()})();
+</script>
+</body>
+</html>
