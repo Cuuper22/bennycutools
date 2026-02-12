@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TintView - Sun Tint Quote Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#111113;--surface:#1a1a1e;--card:#222228;--border:#333339;
+--text:#e8e6e3;--muted:#8a8a96;--gold:#c9a227;--gold-dim:#8a7020;
+--safe:#2d6a4f;--danger:#c0392b;--primary:#c9a227;
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html{font-size:16px;background:var(--bg);color:var(--text)}
+body{font-family:'Source Sans 3',sans-serif;min-height:100vh;padding-bottom:120px!important;background:var(--bg);overflow-x:hidden}
+a{color:var(--gold)}
+h1,h2,h3{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;color:var(--text)}
+
+/* Skip link */
+.skip-link{position:absolute;top:-40px;left:8px;background:var(--gold);color:#111;padding:8px 16px;z-index:10000;border-radius:4px;font-weight:600;text-decoration:none}
+.skip-link:focus{top:8px}
+
+/* Header */
+.app-header{background:linear-gradient(180deg,#1a1a1e 0%,#111113 100%);border-bottom:1px solid var(--border);padding:16px;text-align:center;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:1.8rem;color:var(--gold);margin-bottom:2px}
+.app-header p{font-size:.8rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+
+/* Demo banner */
+.demo-banner{background:#2a2518;border:1px solid var(--gold-dim);padding:10px 16px;margin:12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.82rem;color:var(--gold)}
+.demo-banner button{background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;white-space:nowrap}
+.demo-banner button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Main content */
+main{padding:0 12px 24px}
+
+/* Vehicle selector */
+.vehicle-selector{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.vehicle-selector h2{font-size:1.3rem;margin-bottom:12px;color:var(--gold)}
+.form-row{display:flex;gap:8px;margin-bottom:12px}
+.form-group{flex:1}
+.form-group label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em}
+.form-group select,.form-group input{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:.95rem;font-family:inherit;-webkit-appearance:none;appearance:none}
+.form-group select:focus,.form-group input:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(201,162,39,.15)}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a8a96' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Tint Preview Area */
+.tint-preview{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;text-align:center}
+.tint-preview h2{font-size:1.3rem;margin-bottom:16px;color:var(--gold)}
+.vehicle-visual{position:relative;width:100%;max-width:360px;margin:0 auto 20px;aspect-ratio:16/9}
+.vehicle-svg{width:100%;height:100%}
+.window-tint{transition:opacity .3s ease}
+
+/* Tint slider */
+.tint-slider-wrap{margin:0 auto;max-width:320px}
+.tint-slider-wrap label{display:block;font-size:.8rem;color:var(--muted);margin-bottom:8px;text-align:center}
+.tint-level-display{font-size:2.2rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);text-align:center;margin-bottom:4px}
+.tint-level-label{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:12px}
+input[type=range]{width:100%;height:6px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,#111 0%,var(--gold) 50%,#eee 100%);border-radius:3px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;background:var(--gold);border-radius:50%;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:4px}
+
+/* Tint info cards */
+.tint-info{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.tint-info-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.tint-info-card .value{font-size:1.4rem;font-family:'Bebas Neue',sans-serif;color:var(--gold)}
+.tint-info-card .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* Film type selector */
+.film-selector{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.film-selector h2{font-size:1.3rem;margin-bottom:12px;color:var(--gold)}
+.film-options{display:flex;flex-direction:column;gap:8px}
+.film-option{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .2s,transform .15s}
+.film-option.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+.film-option:hover{transform:scale(1.01)}
+.film-option:active{transform:scale(.99)}
+.film-option:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.film-option h3{font-size:1rem;margin-bottom:4px;font-family:'Source Sans 3',sans-serif;font-weight:600}
+.film-option p{font-size:.82rem;color:var(--muted);line-height:1.4}
+.film-option .film-price{font-size:1.3rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);margin-top:6px}
+
+/* Quote summary */
+.quote-summary{background:linear-gradient(135deg,#1a1a1e,#222228);border:2px solid var(--gold-dim);border-radius:12px;padding:24px;margin-bottom:16px}
+.quote-summary h2{font-size:1.5rem;color:var(--gold);margin-bottom:16px}
+.quote-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.9rem}
+.quote-line:last-of-type{border-bottom:none}
+.quote-total{display:flex;justify-content:space-between;padding:16px 0 0;font-size:1.1rem;font-weight:700;border-top:2px solid var(--gold-dim);margin-top:8px}
+.quote-total .price{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--gold)}
+
+/* Action buttons */
+.actions{display:flex;gap:8px;margin-bottom:16px}
+.btn{flex:1;padding:14px;border:none;border-radius:10px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.06em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .2s}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.btn-primary{background:var(--gold);color:#111}
+.btn-primary:hover{box-shadow:0 4px 20px rgba(201,162,39,.3)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{border-color:var(--gold)}
+
+/* Quote history */
+.history-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.history-section h2{font-size:1.3rem;color:var(--gold);margin-bottom:12px}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px}
+.history-item .hi-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.history-item .hi-name{font-weight:600;font-size:.9rem}
+.history-item .hi-price{font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:1.1rem}
+.history-item .hi-detail{font-size:.78rem;color:var(--muted)}
+
+/* Upsell */
+.upsell-tab{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;opacity:.6;position:relative}
+.upsell-tab::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(0,0,0,.05) 10px,rgba(0,0,0,.05) 20px);border-radius:12px;pointer-events:none}
+.upsell-tab h2{font-size:1.3rem;color:var(--muted);margin-bottom:8px}
+.upsell-tab p{font-size:.85rem;color:var(--muted);line-height:1.5}
+.coming-soon-badge{display:inline-block;background:var(--gold-dim);color:var(--bg);padding:2px 10px;border-radius:4px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-left:8px}
+
+/* Toast */
+.toast-container{position:fixed;top:80px;right:16px;z-index:9000}
+.toast{background:var(--safe);color:#fff;padding:12px 20px;border-radius:8px;font-size:.85rem;opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding:4px 0}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);padding:8px 4px;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Source Sans 3',sans-serif}
+.bottom-nav button.active{color:var(--gold)}
+.bottom-nav button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.bottom-nav svg{width:22px;height:22px}
+
+/* Sections */
+.section{display:none}
+.section.active{display:block}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp .4s ease-out both}
+.animate-in:nth-child(2){animation-delay:60ms}
+.animate-in:nth-child(3){animation-delay:120ms}
+.animate-in:nth-child(4){animation-delay:180ms}
+
+/* Print */
+@media print{
+.bottom-nav,.app-header,.demo-banner,.actions,.upsell-tab,.toast-container,#bct-demo-disclaimer{display:none!important}
+body{background:#fff;color:#111;padding:20px}
+.vehicle-selector,.tint-preview,.film-selector,.quote-summary{background:#fff;border:1px solid #ccc;color:#111}
+h1,h2,h3,.tint-level-display,.quote-total .price,.film-option .film-price{color:#111}
+.tint-info-card .value{color:#333}
+}
+
+/* Desktop */
+@media(min-width:768px){
+main{max-width:600px;margin:0 auto}
+.bottom-nav{display:none}
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="app-header">
+<h1>TintView</h1>
+<p>Sun Tint -- Louisville, KY</p>
+</header>
+
+<div class="demo-banner" id="demoBanner" role="status">
+<p>Sample data for Louisville. Tap x to clear and add your own.</p>
+<button onclick="clearDemo()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<div class="toast-container" aria-live="polite"><div class="toast" id="toast"></div></div>
+
+<main id="main-content">
+
+<!-- QUOTE TAB -->
+<section class="section active" id="sec-quote">
+
+<div class="vehicle-selector animate-in">
+<h2>Vehicle</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="custName">Customer Name</label>
+<input type="text" id="custName" placeholder="e.g. Mike Johnson" autocomplete="off">
+</div>
+<div class="form-group">
+<label for="custPhone">Phone</label>
+<input type="tel" id="custPhone" placeholder="(502) 555-0123">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="vehYear">Year</label>
+<select id="vehYear" aria-label="Vehicle year"></select>
+</div>
+<div class="form-group">
+<label for="vehMake">Make</label>
+<select id="vehMake" aria-label="Vehicle make">
+<option value="">Select</option>
+<option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option>
+<option>Nissan</option><option>Hyundai</option><option>Kia</option><option>Jeep</option>
+<option>Ram</option><option>Subaru</option><option>BMW</option><option>Mercedes</option>
+<option>Tesla</option><option>GMC</option><option>Dodge</option><option>Mazda</option>
+<option>Volkswagen</option><option>Lexus</option><option>Audi</option><option>Other</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="vehType">Vehicle Type</label>
+<select id="vehType" aria-label="Vehicle type">
+<option value="sedan">Sedan / Coupe</option>
+<option value="suv">SUV / Crossover</option>
+<option value="truck">Truck</option>
+<option value="van">Van / Minivan</option>
+</select>
+</div>
+<div class="form-group">
+<label for="vehModel">Model</label>
+<input type="text" id="vehModel" placeholder="e.g. Camry">
+</div>
+</div>
+</div>
+
+<div class="tint-preview animate-in">
+<h2>Tint Preview</h2>
+<div class="vehicle-visual" id="vehicleVisual">
+<svg class="vehicle-svg" viewBox="0 0 400 200" aria-label="Vehicle tint preview">
+<!-- Sedan silhouette -->
+<g id="svgSedan">
+<path d="M30,160 L30,130 Q30,120 40,115 L80,100 Q100,80 140,70 L260,70 Q300,80 320,100 L360,115 Q370,120 370,130 L370,160" fill="#333" stroke="#555" stroke-width="1.5"/>
+<circle cx="100" cy="165" r="22" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="100" cy="165" r="12" fill="#333"/>
+<circle cx="300" cy="165" r="22" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="300" cy="165" r="12" fill="#333"/>
+<!-- Windows -->
+<path id="winFront" d="M150,72 L130,100 L180,100 Z" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<rect id="winSide1" x="155" y="72" width="60" height="28" rx="2" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<rect id="winSide2" x="220" y="72" width="55" height="28" rx="2" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<path id="winRear" d="M280,72 L310,100 L275,100 Z" fill="rgba(140,180,220,.4)" class="window-tint"/>
+</g>
+<!-- SUV silhouette (hidden by default) -->
+<g id="svgSuv" style="display:none">
+<path d="M30,160 L30,120 Q30,110 40,105 L70,95 Q90,65 130,55 L270,55 Q310,65 330,95 L360,105 Q370,110 370,120 L370,160" fill="#333" stroke="#555" stroke-width="1.5"/>
+<circle cx="95" cy="165" r="24" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="95" cy="165" r="13" fill="#333"/>
+<circle cx="305" cy="165" r="24" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="305" cy="165" r="13" fill="#333"/>
+<rect id="winSuvF" x="135" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<rect id="winSuvM" x="190" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<rect id="winSuvR" x="245" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)" class="window-tint"/>
+</g>
+<!-- Truck silhouette (hidden by default) -->
+<g id="svgTruck" style="display:none">
+<path d="M30,160 L30,130 Q30,120 40,115 L60,105 Q80,70 120,60 L200,60 Q210,60 210,70 L210,115 L350,115 Q370,115 370,130 L370,160" fill="#333" stroke="#555" stroke-width="1.5"/>
+<circle cx="90" cy="165" r="23" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="90" cy="165" r="12" fill="#333"/>
+<circle cx="320" cy="165" r="23" fill="#222" stroke="#444" stroke-width="2"/>
+<circle cx="320" cy="165" r="12" fill="#333"/>
+<rect id="winTrkF" x="125" y="62" width="40" height="35" rx="3" fill="rgba(140,180,220,.4)" class="window-tint"/>
+<rect id="winTrkR" x="170" y="62" width="35" height="35" rx="3" fill="rgba(140,180,220,.4)" class="window-tint"/>
+</g>
+</svg>
+</div>
+<div class="tint-slider-wrap">
+<div class="tint-level-display" id="tintDisplay">35%</div>
+<div class="tint-level-label" id="tintLabel">Medium -- Good privacy, some visibility</div>
+<label for="tintSlider">Tint Darkness (VLT %)</label>
+<input type="range" id="tintSlider" min="5" max="70" value="35" step="5" aria-label="Tint darkness percentage">
+</div>
+<div class="tint-info">
+<div class="tint-info-card"><div class="value" id="uvBlock">99%</div><div class="label">UV Blocked</div></div>
+<div class="tint-info-card"><div class="value" id="heatReject">45%</div><div class="label">Heat Rejected</div></div>
+<div class="tint-info-card"><div class="value" id="glareReduce">65%</div><div class="label">Glare Cut</div></div>
+<div class="tint-info-card"><div class="value" id="privacyLevel">High</div><div class="label">Privacy</div></div>
+</div>
+</div>
+
+<div class="film-selector animate-in">
+<h2>Film Type</h2>
+<div class="film-options" role="radiogroup" aria-label="Film type selection">
+<div class="film-option selected" tabindex="0" role="radio" aria-checked="true" data-film="ceramic" onclick="selectFilm(this)">
+<h3>Ceramic Film</h3>
+<p>Top-tier heat rejection, no signal interference, color-stable for 10+ years</p>
+<div class="film-price" id="ceramicPrice">$270</div>
+</div>
+<div class="film-option" tabindex="0" role="radio" aria-checked="false" data-film="carbon" onclick="selectFilm(this)">
+<h3>Carbon Film</h3>
+<p>Good heat rejection, matte finish, won't fade. Mid-range option.</p>
+<div class="film-price" id="carbonPrice">$200</div>
+</div>
+<div class="film-option" tabindex="0" role="radio" aria-checked="false" data-film="dyed" onclick="selectFilm(this)">
+<h3>Dyed Film</h3>
+<p>Budget-friendly, solid privacy, may fade over 3-5 years</p>
+<div class="film-price" id="dyedPrice">$130</div>
+</div>
+</div>
+</div>
+
+<div class="quote-summary animate-in" id="quoteSummary">
+<h2>Quote</h2>
+<div class="quote-line"><span>Vehicle</span><span id="qVehicle">2023 Toyota Camry</span></div>
+<div class="quote-line"><span>Tint Level</span><span id="qTint">35% VLT</span></div>
+<div class="quote-line"><span>Film</span><span id="qFilm">Ceramic</span></div>
+<div class="quote-line"><span>Windows</span><span id="qWindows">All sides + rear</span></div>
+<div class="quote-total"><span>Total</span><span class="price" id="qTotal">$270</span></div>
+</div>
+
+<div class="actions animate-in">
+<button class="btn btn-primary" onclick="shareQuote()" aria-label="Share this quote">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+Share Quote
+</button>
+<button class="btn btn-secondary" onclick="saveQuote()" aria-label="Save this quote">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+Save
+</button>
+</div>
+</section>
+
+<!-- HISTORY TAB -->
+<section class="section" id="sec-history">
+<div class="history-section">
+<h2>Saved Quotes</h2>
+<div id="historyList"></div>
+</div>
+
+<div class="upsell-tab" aria-disabled="true">
+<h2>Monthly Reports <span class="coming-soon-badge">Coming Soon</span></h2>
+<p>See which tint levels sell best, conversion rates by film type, and revenue breakdown per location. Track seasonal trends and customer preferences over time.</p>
+</div>
+</section>
+
+<!-- SETTINGS TAB -->
+<section class="section" id="sec-settings">
+<div class="vehicle-selector">
+<h2>Pricing Setup</h2>
+<p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">Set your base prices per vehicle type. Prices adjust by tint level automatically.</p>
+<div class="form-row">
+<div class="form-group">
+<label for="priceSedanCeramic">Sedan - Ceramic</label>
+<input type="number" id="priceSedanCeramic" value="270" min="0" step="10">
+</div>
+<div class="form-group">
+<label for="priceSuvCeramic">SUV - Ceramic</label>
+<input type="number" id="priceSuvCeramic" value="320" min="0" step="10">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="priceTruckCeramic">Truck - Ceramic</label>
+<input type="number" id="priceTruckCeramic" value="300" min="0" step="10">
+</div>
+<div class="form-group">
+<label for="priceVanCeramic">Van - Ceramic</label>
+<input type="number" id="priceVanCeramic" value="350" min="0" step="10">
+</div>
+</div>
+<p style="font-size:.78rem;color:var(--muted);margin-top:8px">Carbon = 74% of ceramic price. Dyed = 48% of ceramic price.</p>
+<button class="btn btn-primary" onclick="savePricing()" style="margin-top:12px;width:100%">Save Pricing</button>
+</div>
+<div class="vehicle-selector" style="margin-top:16px">
+<h2>Data</h2>
+<div class="actions" style="margin-bottom:0">
+<button class="btn btn-secondary" onclick="exportData()" aria-label="Export data as JSON">Export JSON</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()" aria-label="Import data from JSON file">Import JSON</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav" aria-label="Main navigation">
+<button class="active" data-tab="sec-quote" onclick="switchTab(this)" aria-label="Quote builder">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+Quote
+</button>
+<button data-tab="sec-history" onclick="switchTab(this)" aria-label="Quote history">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+History
+</button>
+<button data-tab="sec-settings" onclick="switchTab(this)" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Sun Tint. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Sun%20Tint&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// Access key gate
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-1000700727;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:Bebas Neue,sans-serif;color:#c9a227">Access Required</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#c9a227">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;"><p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Sun Tint.</p></div>';
+throw new Error('Invalid key');
+}
+
+// Anti-scrape
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// DB
+let db;
+const DB_NAME='TintViewDB';const DB_VER=1;const STORE='quotes';const PRICING_STORE='pricing';
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});if(!d.objectStoreNames.contains(PRICING_STORE))d.createObjectStore(PRICING_STORE,{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+
+// State
+let selectedFilm='ceramic';
+let pricing={sedan:{ceramic:270},suv:{ceramic:320},truck:{ceramic:300},van:{ceramic:350}};
+
+// Tint data
+const tintData={5:{label:'Limo -- Nearly opaque, max privacy',uv:99,heat:60,glare:95,privacy:'Max'},10:{label:'Very Dark -- Hard to see inside',uv:99,heat:55,glare:90,privacy:'Max'},15:{label:'Dark -- Strong privacy',uv:99,heat:52,glare:85,privacy:'Very High'},20:{label:'Medium Dark -- Popular choice',uv:99,heat:48,glare:78,privacy:'High'},25:{label:'Medium -- Good balance',uv:99,heat:46,glare:72,privacy:'High'},30:{label:'Medium -- Subtle but effective',uv:99,heat:44,glare:68,privacy:'Medium'},35:{label:'Medium -- Good privacy, some visibility',uv:99,heat:42,glare:65,privacy:'Medium'},40:{label:'Light Medium -- Visible from outside',uv:98,heat:38,glare:58,privacy:'Low'},45:{label:'Light -- Mostly for UV/heat',uv:98,heat:35,glare:50,privacy:'Low'},50:{label:'Very Light -- Barely noticeable',uv:97,heat:30,glare:42,privacy:'Minimal'},55:{label:'Almost Clear -- UV protection only',uv:95,heat:25,glare:35,privacy:'Minimal'},60:{label:'Near Clear',uv:92,heat:22,glare:28,privacy:'None'},65:{label:'Barely Tinted',uv:88,heat:18,glare:22,privacy:'None'},70:{label:'Factory Tint Level',uv:85,heat:15,glare:18,privacy:'None'}};
+
+// Init
+(async function(){
+await openDB();
+populateYears();
+await loadPricing();
+const isFirst=!localStorage.getItem('tintview_visited');
+if(isFirst){await loadDemoData();localStorage.setItem('tintview_visited','1')}
+updateTintPreview();
+updatePrices();
+loadHistory();
+})();
+
+function populateYears(){const sel=document.getElementById('vehYear');sel.innerHTML='<option value="">Year</option>';for(let y=2026;y>=2005;y--)sel.innerHTML+=`<option>${y}</option>`}
+
+async function loadPricing(){try{const p=await dbGetAll(PRICING_STORE);if(p.length){p.forEach(r=>{if(r.key==='pricing')Object.assign(pricing,r.data)})}updatePricingInputs()}catch(e){}}
+function updatePricingInputs(){document.getElementById('priceSedanCeramic').value=pricing.sedan.ceramic;document.getElementById('priceSuvCeramic').value=pricing.suv.ceramic;document.getElementById('priceTruckCeramic').value=pricing.truck.ceramic;document.getElementById('priceVanCeramic').value=pricing.van.ceramic}
+
+async function savePricing(){pricing.sedan.ceramic=+document.getElementById('priceSedanCeramic').value||270;pricing.suv.ceramic=+document.getElementById('priceSuvCeramic').value||320;pricing.truck.ceramic=+document.getElementById('priceTruckCeramic').value||300;pricing.van.ceramic=+document.getElementById('priceVanCeramic').value||350;await dbPut(PRICING_STORE,{key:'pricing',data:pricing});updatePrices();showToast('Pricing saved')}
+
+function getPrice(vehType,filmType){const base=pricing[vehType]?.ceramic||270;const mult={ceramic:1,carbon:.74,dyed:.48};return Math.round(base*(mult[filmType]||1))}
+
+function updatePrices(){const vt=document.getElementById('vehType').value;document.getElementById('ceramicPrice').textContent='$'+getPrice(vt,'ceramic');document.getElementById('carbonPrice').textContent='$'+getPrice(vt,'carbon');document.getElementById('dyedPrice').textContent='$'+getPrice(vt,'dyed');updateQuoteSummary()}
+
+// Tint slider
+const slider=document.getElementById('tintSlider');
+slider.addEventListener('input',updateTintPreview);
+document.getElementById('vehType').addEventListener('change',function(){updateVehicleSvg();updatePrices()});
+
+function updateTintPreview(){
+const val=+slider.value;
+const d=tintData[val]||tintData[35];
+document.getElementById('tintDisplay').textContent=val+'%';
+document.getElementById('tintLabel').textContent=d.label;
+document.getElementById('uvBlock').textContent=d.uv+'%';
+document.getElementById('heatReject').textContent=d.heat+'%';
+document.getElementById('glareReduce').textContent=d.glare+'%';
+document.getElementById('privacyLevel').textContent=d.privacy;
+// Apply tint to windows
+const opacity=1-(val/100);
+document.querySelectorAll('.window-tint').forEach(w=>{w.setAttribute('fill',`rgba(10,10,10,${opacity})`)});
+updateQuoteSummary();
+}
+
+function updateVehicleSvg(){
+const vt=document.getElementById('vehType').value;
+document.getElementById('svgSedan').style.display=vt==='sedan'?'':'none';
+document.getElementById('svgSuv').style.display=vt==='suv'?'':'none';
+document.getElementById('svgTruck').style.display=vt==='truck'?'':'none';
+// Van uses SUV silhouette
+if(vt==='van'){document.getElementById('svgSuv').style.display='';document.getElementById('svgSedan').style.display='none'}
+updateTintPreview();
+}
+
+function selectFilm(el){
+document.querySelectorAll('.film-option').forEach(f=>{f.classList.remove('selected');f.setAttribute('aria-checked','false')});
+el.classList.add('selected');el.setAttribute('aria-checked','true');
+selectedFilm=el.dataset.film;
+updateQuoteSummary();
+}
+
+function updateQuoteSummary(){
+const yr=document.getElementById('vehYear').value;
+const mk=document.getElementById('vehMake').value;
+const md=document.getElementById('vehModel').value;
+const vt=document.getElementById('vehType').value;
+const tint=slider.value;
+const filmNames={ceramic:'Ceramic',carbon:'Carbon',dyed:'Dyed'};
+document.getElementById('qVehicle').textContent=[yr,mk,md].filter(Boolean).join(' ')||'Select vehicle';
+document.getElementById('qTint').textContent=tint+'% VLT';
+document.getElementById('qFilm').textContent=filmNames[selectedFilm];
+document.getElementById('qWindows').textContent='All sides + rear';
+document.getElementById('qTotal').textContent='$'+getPrice(vt,selectedFilm);
+}
+
+// Share
+async function shareQuote(){
+const text=buildQuoteText();
+if(navigator.share){
+try{await navigator.share({title:'Sun Tint Quote',text:text});showToast('Quote shared')}catch(e){}
+}else{
+try{await navigator.clipboard.writeText(text);showToast('Quote copied to clipboard')}catch(e){showToast('Could not share')}
+}
+}
+
+function buildQuoteText(){
+const yr=document.getElementById('vehYear').value;
+const mk=document.getElementById('vehMake').value;
+const md=document.getElementById('vehModel').value;
+const vt=document.getElementById('vehType').value;
+const tint=slider.value;
+const filmNames={ceramic:'Ceramic Film',carbon:'Carbon Film',dyed:'Dyed Film'};
+const price=getPrice(vt,selectedFilm);
+return`Sun Tint - Window Tinting Quote\n${[yr,mk,md].filter(Boolean).join(' ')}\nTint: ${tint}% VLT\nFilm: ${filmNames[selectedFilm]}\nWindows: All sides + rear\n\nTotal: $${price}\n\nSun Tint - Louisville, KY\n(502) 254-0001\nsun-tint.com`;
+}
+
+// Save quote
+async function saveQuote(){
+const name=document.getElementById('custName').value.trim();
+const phone=document.getElementById('custPhone').value.trim();
+const yr=document.getElementById('vehYear').value;
+const mk=document.getElementById('vehMake').value;
+const md=document.getElementById('vehModel').value;
+const vt=document.getElementById('vehType').value;
+const tint=+slider.value;
+const price=getPrice(vt,selectedFilm);
+const quote={name:name||'Walk-in',phone,vehicle:[yr,mk,md].filter(Boolean).join(' '),type:vt,tint:tint+'%',film:selectedFilm,price,date:new Date().toISOString(),isDemo:false};
+await dbPut(STORE,quote);showToast('Quote saved');loadHistory();
+}
+
+async function loadHistory(){
+const quotes=await dbGetAll(STORE);
+const el=document.getElementById('historyList');
+if(!quotes.length){el.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:12px">No saved quotes yet. Build a quote and tap Save.</p>';return}
+quotes.sort((a,b)=>new Date(b.date)-new Date(a.date));
+el.innerHTML=quotes.map(q=>`<div class="history-item"><div class="hi-top"><span class="hi-name">${esc(q.name)}</span><span class="hi-price">$${q.price}</span></div><div class="hi-detail">${esc(q.vehicle)} | ${q.tint} ${q.film} | ${new Date(q.date).toLocaleDateString()}</div></div>`).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Demo data
+async function loadDemoData(){
+const demos=[
+{name:'Mike Johnson',phone:'(502) 555-0147',vehicle:'2023 Toyota Camry',type:'sedan',tint:'35%',film:'ceramic',price:270,date:new Date(Date.now()-3600000).toISOString(),isDemo:true},
+{name:'Sarah Chen',phone:'(502) 555-0293',vehicle:'2024 Honda CR-V',type:'suv',tint:'20%',film:'ceramic',price:320,date:new Date(Date.now()-86400000).toISOString(),isDemo:true},
+{name:'Daryl Watson',phone:'(502) 555-0518',vehicle:'2022 Ford F-150',type:'truck',tint:'5%',film:'carbon',price:222,date:new Date(Date.now()-172800000).toISOString(),isDemo:true},
+{name:'Lisa Park',phone:'(502) 555-0681',vehicle:'2025 Tesla Model Y',type:'suv',tint:'25%',film:'ceramic',price:320,date:new Date(Date.now()-259200000).toISOString(),isDemo:true}
+];
+for(const d of demos)await dbPut(STORE,d);
+// Set default vehicle
+document.getElementById('vehYear').value='2023';
+document.getElementById('vehMake').value='Toyota';
+document.getElementById('vehModel').value='Camry';
+document.getElementById('vehType').value='sedan';
+slider.value=35;
+updateVehicleSvg();
+updateTintPreview();
+updatePrices();
+}
+
+async function clearDemo(){
+const all=await dbGetAll(STORE);
+const keep=all.filter(q=>!q.isDemo);
+await dbClear(STORE);
+for(const q of keep)await dbPut(STORE,q);
+document.getElementById('demoBanner').style.display='none';
+document.getElementById('custName').value='';
+document.getElementById('custPhone').value='';
+loadHistory();showToast('Demo data cleared');
+}
+
+// Tab switching
+function switchTab(btn){
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(btn.dataset.tab).classList.add('active');
+if(btn.dataset.tab==='sec-history')loadHistory();
+}
+
+// Export/Import
+async function exportData(){
+const quotes=await dbGetAll(STORE);
+const blob=new Blob([JSON.stringify({quotes,pricing},null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');a.href=url;a.download='tintview-backup.json';a.click();
+URL.revokeObjectURL(url);showToast('Data exported');
+}
+
+async function importData(e){
+const file=e.target.files[0];if(!file)return;
+try{const text=await file.text();const data=JSON.parse(text);
+if(data.quotes){await dbClear(STORE);for(const q of data.quotes)await dbPut(STORE,q)}
+if(data.pricing){Object.assign(pricing,data.pricing);await dbPut(PRICING_STORE,{key:'pricing',data:pricing});updatePricingInputs();updatePrices()}
+loadHistory();showToast('Data imported')}catch(err){showToast('Import failed')}
+e.target.value='';
+}
+
+// Toast
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+</script>
+</body>
+</html>

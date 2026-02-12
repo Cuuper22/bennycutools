@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LeadLog - LeadProbe XRF Reading Logger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#ecf0f1;--surface:#ffffff;--card:#f5f6f8;--border:#d5d8dc;
+--text:#2c3e50;--muted:#7f8c8d;--slate:#2c3e50;--orange:#e67e22;
+--danger:#c0392b;--danger-bg:#fadbd8;--warn:#f39c12;--warn-bg:#fef5e7;
+--safe:#27ae60;--safe-bg:#d5f5e3;
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html{font-size:16px;background:var(--bg);color:var(--text)}
+body{font-family:'Roboto',sans-serif;min-height:100vh;padding-bottom:120px!important;background:var(--bg);overflow-x:hidden}
+a{color:var(--slate)}
+h1,h2,h3{font-family:'Roboto Slab',serif;color:var(--text)}
+
+.skip-link{position:absolute;top:-40px;left:8px;background:var(--orange);color:#fff;padding:8px 16px;z-index:10000;border-radius:4px;font-weight:600;text-decoration:none}
+.skip-link:focus{top:8px}
+
+/* Header */
+.app-header{background:linear-gradient(135deg,#2c3e50 0%,#34495e 100%);padding:16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(44,62,80,.2)}
+.app-header h1{font-size:1.6rem;color:#fff;margin-bottom:2px}
+.app-header p{font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.1em;text-transform:uppercase;font-family:'Roboto',sans-serif}
+
+.demo-banner{background:#fef5e7;border:1px solid #f5dca0;padding:10px 16px;margin:12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.82rem;color:#8a6d1a}
+.demo-banner button{background:none;border:1px solid #d4b85c;color:#8a6d1a;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;white-space:nowrap}
+.demo-banner button:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+main{padding:0 12px 24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card h2{font-size:1.15rem;margin-bottom:12px}
+
+/* Form */
+.form-row{display:flex;gap:8px;margin-bottom:12px}
+.form-group{flex:1}
+.form-group label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.form-group select,.form-group input{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:.95rem;font-family:inherit;-webkit-appearance:none;appearance:none}
+.form-group select:focus,.form-group input:focus{border-color:var(--slate);outline:none;box-shadow:0 0 0 3px rgba(44,62,80,.1)}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%237f8c8d' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Room list */
+.room-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.room-chip{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;transition:border-color .2s,background .2s}
+.room-chip.active{border-color:var(--slate);background:rgba(44,62,80,.04)}
+.room-chip:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+.room-chip .rc-name{font-weight:500;font-size:.9rem}
+.room-chip .rc-count{font-size:.78rem;color:var(--muted)}
+.room-chip .rc-status{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rc-status.pass{background:var(--safe)}
+.rc-status.fail{background:var(--danger)}
+.rc-status.empty{background:var(--border)}
+.add-room-btn{background:none;border:2px dashed var(--border);border-radius:8px;padding:10px;text-align:center;color:var(--muted);cursor:pointer;font-family:inherit;font-size:.85rem;width:100%;transition:border-color .2s}
+.add-room-btn:hover{border-color:var(--slate)}
+.add-room-btn:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+
+/* Reading entry */
+.reading-entry{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;gap:10px;align-items:center}
+.reading-entry .re-component{flex:1}
+.reading-entry .re-component select,.reading-entry .re-component input{font-size:.85rem;padding:8px}
+.reading-entry .re-value{width:80px}
+.reading-entry .re-value input{font-size:.85rem;padding:8px;text-align:center;font-weight:700}
+.reading-entry .re-value input.pass{color:var(--safe);border-color:var(--safe);background:var(--safe-bg)}
+.reading-entry .re-value input.fail{color:var(--danger);border-color:var(--danger);background:var(--danger-bg)}
+.reading-entry .re-photo{width:40px;height:40px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;position:relative}
+.reading-entry .re-photo:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+.reading-entry .re-photo svg{width:18px;height:18px;color:var(--muted)}
+.reading-entry .re-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.reading-entry .re-remove{width:28px;height:28px;border:none;background:var(--danger-bg);color:var(--danger);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.reading-entry .re-remove:focus-visible{outline:2px solid var(--danger);outline-offset:2px}
+
+.add-reading-btn{background:var(--slate);color:#fff;border:none;border-radius:8px;padding:10px;text-align:center;font-family:inherit;font-size:.85rem;font-weight:500;width:100%;cursor:pointer;margin-top:8px}
+.add-reading-btn:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+
+/* Heat map */
+.heat-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px}
+.hm-room{border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:transform .15s}
+.hm-room:hover{transform:scale(1.03)}
+.hm-room:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+.hm-room.hm-safe{background:var(--safe-bg);border:2px solid var(--safe);color:var(--safe)}
+.hm-room.hm-warn{background:var(--warn-bg);border:2px solid var(--warn);color:var(--warn)}
+.hm-room.hm-danger{background:var(--danger-bg);border:2px solid var(--danger);color:var(--danger)}
+.hm-room.hm-empty{background:var(--card);border:2px solid var(--border);color:var(--muted)}
+.hm-room .hm-name{font-weight:600;font-size:.85rem;margin-bottom:4px}
+.hm-room .hm-readings{font-size:.72rem}
+.hm-room .hm-max{font-size:1.3rem;font-weight:700;font-family:'Roboto Slab',serif}
+
+/* Report */
+.report-card{background:linear-gradient(135deg,#2c3e50,#34495e);border:none;border-radius:12px;padding:24px;color:#fff;margin-bottom:16px}
+.report-card h2{color:#fff;margin-bottom:16px}
+.rpt-line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:.88rem}
+.rpt-line:last-of-type{border-bottom:none}
+.rpt-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.rpt-stat{background:rgba(255,255,255,.1);border-radius:8px;padding:10px;text-align:center}
+.rpt-stat .val{font-size:1.4rem;font-weight:700;font-family:'Roboto Slab',serif}
+.rpt-stat .lbl{font-size:.65rem;color:rgba(255,255,255,.6);text-transform:uppercase;margin-top:2px}
+
+/* Buttons */
+.actions{display:flex;gap:8px;margin-bottom:16px}
+.btn{flex:1;padding:14px;border:none;border-radius:10px;font-weight:600;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .2s;font-family:'Roboto',sans-serif}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--slate);outline-offset:2px}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(230,126,34,.25)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+
+/* History */
+.insp-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.insp-item:hover{border-color:var(--slate)}
+.insp-item .ii-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.insp-item .ii-name{font-weight:600;font-size:.9rem}
+.insp-item .ii-status{font-size:.72rem;font-weight:600;text-transform:uppercase}
+.insp-item .ii-status.pass{color:var(--safe)}
+.insp-item .ii-status.fail{color:var(--danger)}
+.insp-item .ii-detail{font-size:.78rem;color:var(--muted)}
+
+/* Upsell */
+.upsell-tab{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;opacity:.5}
+.upsell-tab h2{font-size:1.1rem;color:var(--muted);margin-bottom:8px}
+.upsell-tab p{font-size:.85rem;color:var(--muted);line-height:1.5}
+.coming-soon-badge{display:inline-block;background:var(--orange);color:#fff;padding:2px 10px;border-radius:4px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-left:8px}
+
+/* Toast */
+.toast-container{position:fixed;top:72px;right:16px;z-index:9000}
+.toast{background:var(--safe);color:#fff;padding:12px 20px;border-radius:8px;font-size:.85rem;opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding:4px 0;box-shadow:0 -2px 8px rgba(0,0,0,.04)}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);padding:8px 4px;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Roboto',sans-serif;font-weight:500}
+.bottom-nav button.active{color:var(--slate)}
+.bottom-nav button:focus-visible{outline:2px solid var(--slate);outline-offset:-2px}
+.bottom-nav svg{width:22px;height:22px}
+
+.section{display:none}.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp .4s ease-out both}
+.animate-in:nth-child(2){animation-delay:60ms}
+.animate-in:nth-child(3){animation-delay:120ms}
+
+@media print{
+.bottom-nav,.app-header,.demo-banner,.actions,.upsell-tab,.toast-container,#bct-demo-disclaimer{display:none!important}
+body{background:#fff;padding:20px}
+.report-card{background:#2c3e50!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.hm-room{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media(min-width:768px){main{max-width:640px;margin:0 auto}.bottom-nav{display:none}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="app-header">
+<h1>LeadLog</h1>
+<p>LeadProbe -- Ellicott City, MD</p>
+</header>
+
+<div class="demo-banner" id="demoBanner" role="status">
+<p>Sample inspection for a Baltimore rowhouse. Tap x to clear and start fresh.</p>
+<button onclick="clearDemo()" aria-label="Clear demo data">Clear</button>
+</div>
+<div class="toast-container" aria-live="polite"><div class="toast" id="toast"></div></div>
+
+<main id="main-content">
+
+<!-- INSPECT TAB -->
+<section class="section active" id="sec-inspect">
+
+<div class="card animate-in">
+<h2>Property</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="propAddr">Address</label>
+<input type="text" id="propAddr" placeholder="1420 E. North Ave, Baltimore, MD">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="propOwner">Landlord / Owner</label>
+<input type="text" id="propOwner" placeholder="Property owner name">
+</div>
+<div class="form-group">
+<label for="propYear">Year Built</label>
+<input type="number" id="propYear" min="1800" max="2026" placeholder="1942">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="inspType">Inspection Type</label>
+<select id="inspType" aria-label="Inspection type">
+<option value="risk-reduction">Lead Risk Reduction</option>
+<option value="clearance">Post-Remediation Clearance</option>
+<option value="presale">Pre-Sale Inspection</option>
+<option value="full">Full Lead Inspection</option>
+</select>
+</div>
+<div class="form-group">
+<label for="inspDate">Date</label>
+<input type="date" id="inspDate">
+</div>
+</div>
+</div>
+
+<div class="card animate-in">
+<h2>Rooms</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">Tap a room to log readings for it. Color shows pass/fail status.</p>
+<div class="room-list" id="roomList"></div>
+<button class="add-room-btn" onclick="addRoom()" aria-label="Add a room">+ Add Room</button>
+</div>
+
+<div class="card animate-in" id="readingPanel" style="display:none">
+<h2 id="readingRoomTitle">Living Room</h2>
+<p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">Action level: 1.0 mg/cm2. Readings above this are flagged.</p>
+<div id="readingsList"></div>
+<button class="add-reading-btn" onclick="addReading()">+ Add Reading</button>
+</div>
+
+<div class="card animate-in">
+<h2>Room Heat Map</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:10px">Color-coded overview. Green = clear. Red = positive readings found.</p>
+<div class="heat-map" id="heatMap"></div>
+</div>
+
+<div class="report-card animate-in" id="reportCard">
+<h2>Inspection Summary</h2>
+<div class="rpt-line"><span>Property</span><span id="rptAddr">1420 E. North Ave</span></div>
+<div class="rpt-line"><span>Year Built</span><span id="rptYear">1942</span></div>
+<div class="rpt-line"><span>Type</span><span id="rptType">Lead Risk Reduction</span></div>
+<div class="rpt-line"><span>Inspector</span><span>LeadProbe - NADCA Cert.</span></div>
+<div class="rpt-stats">
+<div class="rpt-stat"><div class="val" id="rptTotal">0</div><div class="lbl">Total Readings</div></div>
+<div class="rpt-stat"><div class="val" id="rptPositive" style="color:#e74c3c">0</div><div class="lbl">Positive</div></div>
+<div class="rpt-stat"><div class="val" id="rptHighest">0.0</div><div class="lbl">Highest (mg/cm2)</div></div>
+</div>
+</div>
+
+<div class="actions animate-in">
+<button class="btn btn-primary" onclick="shareReport()" aria-label="Share inspection report">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+Share Report
+</button>
+<button class="btn btn-secondary" onclick="copyReport()" aria-label="Copy report to clipboard">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+Copy
+</button>
+</div>
+
+<button class="btn btn-secondary" onclick="saveInspection()" style="width:100%;margin-bottom:16px" aria-label="Save this inspection">Save Inspection</button>
+</section>
+
+<!-- HISTORY TAB -->
+<section class="section" id="sec-history">
+<div class="card">
+<h2>Saved Inspections</h2>
+<div id="historyList"></div>
+</div>
+<div class="upsell-tab" aria-disabled="true">
+<h2>Multi-Property Dashboard <span class="coming-soon-badge">Coming Soon</span></h2>
+<p>Track compliance status across all your landlord's properties. See which ones need re-inspection this quarter. Flag properties nearing their certification expiration. Available in the full version.</p>
+</div>
+</section>
+
+<!-- SETTINGS TAB -->
+<section class="section" id="sec-settings">
+<div class="card">
+<h2>Inspector Info</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="inspectorName">Inspector Name</label>
+<input type="text" id="inspectorName" value="Neil Roseman" placeholder="Your name">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="certNumber">MDE Cert Number</label>
+<input type="text" id="certNumber" placeholder="Certification #">
+</div>
+<div class="form-group">
+<label for="actionLevel">Action Level (mg/cm2)</label>
+<input type="number" id="actionLevel" value="1.0" min="0" step="0.1">
+</div>
+</div>
+<button class="btn btn-primary" onclick="saveSettings()" style="margin-top:12px;width:100%">Save</button>
+</div>
+<div class="card" style="margin-top:16px">
+<h2>Data</h2>
+<div class="actions" style="margin-bottom:0">
+<button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+</section>
+
+</main>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+<button class="active" data-tab="sec-inspect" onclick="switchTab(this)" aria-label="New inspection">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+Inspect
+</button>
+<button data-tab="sec-history" onclick="switchTab(this)" aria-label="Inspection history">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+History
+</button>
+<button data-tab="sec-settings" onclick="switchTab(this)" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by LeadProbe, Inc. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20LeadProbe&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+
+<script>
+// Access gate
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=1017171158;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#ecf0f1;color:#2c3e50;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:Roboto Slab,serif">Access Required</h1><p style="color:#7f8c8d">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#2c3e50">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center"><p style="margin:0"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with LeadProbe, Inc.</p></div>';
+throw new Error('Invalid key');
+}
+
+// DB
+let db;const DB_NAME='LeadLogDB';const DB_VER=1;const STORE='inspections';const SETTINGS_STORE='settings';
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});if(!d.objectStoreNames.contains(SETTINGS_STORE))d.createObjectStore(SETTINGS_STORE,{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+
+// Component presets
+const COMPONENTS=['Wall','Door','Door Frame','Window Sill','Window Frame','Baseboard','Trim','Ceiling','Cabinet','Closet','Railing','Other'];
+const ACTIONS_LEVEL=1.0;
+
+// State
+let rooms=[];
+let activeRoomIdx=0;
+let currentPhotoReading=null;
+
+// Init
+(async function(){
+await openDB();
+document.getElementById('inspDate').value=new Date().toISOString().split('T')[0];
+const isFirst=!localStorage.getItem('leadlog_visited');
+if(isFirst){loadDemoData();localStorage.setItem('leadlog_visited','1')}
+else if(!rooms.length){rooms=[{name:'Living Room',readings:[]}];activeRoomIdx=0}
+renderRooms();renderHeatMap();updateReport();loadHistory();
+
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(pos=>{window._geo={lat:pos.coords.latitude,lon:pos.coords.longitude}},()=>{},{timeout:5000,maximumAge:60000});
+}
+})();
+
+// Photo handler
+document.getElementById('photoInput').addEventListener('change',function(e){
+const file=e.target.files[0];if(!file||currentPhotoReading===null)return;
+const reader=new FileReader();
+reader.onload=function(ev){
+const room=rooms[activeRoomIdx];
+if(room&&room.readings[currentPhotoReading]){
+room.readings[currentPhotoReading].photo=ev.target.result;
+renderReadings();
+}
+};reader.readAsDataURL(file);e.target.value='';
+});
+
+function renderRooms(){
+const el=document.getElementById('roomList');
+el.innerHTML=rooms.map((r,i)=>{
+const positives=r.readings.filter(rd=>rd.value>ACTIONS_LEVEL).length;
+const total=r.readings.length;
+const statusCls=total===0?'empty':positives>0?'fail':'pass';
+const activeCls=i===activeRoomIdx?'active':'';
+return`<div class="room-chip ${activeCls}" tabindex="0" role="button" onclick="selectRoom(${i})" aria-label="${r.name}: ${total} readings, ${positives} positive"><span class="rc-name">${esc(r.name)}</span><span class="rc-count">${total} readings${positives>0?', '+positives+' positive':''}</span><span class="rc-status ${statusCls}"></span></div>`;
+}).join('');
+renderReadings();
+}
+
+function selectRoom(i){
+activeRoomIdx=i;
+renderRooms();
+}
+
+function addRoom(){
+const name=prompt('Room name (e.g. Bedroom 2, Kitchen):');
+if(!name)return;
+rooms.push({name:name.trim(),readings:[]});
+activeRoomIdx=rooms.length-1;
+renderRooms();renderHeatMap();updateReport();
+}
+
+function renderReadings(){
+const panel=document.getElementById('readingPanel');
+const room=rooms[activeRoomIdx];
+if(!room){panel.style.display='none';return}
+panel.style.display='block';
+document.getElementById('readingRoomTitle').textContent=room.name;
+const list=document.getElementById('readingsList');
+list.innerHTML=room.readings.map((rd,i)=>{
+const passFail=rd.value>ACTIONS_LEVEL?'fail':'pass';
+return`<div class="reading-entry">
+<div class="re-component"><select onchange="updateReading(${i},'component',this.value)" aria-label="Component for reading ${i+1}">${COMPONENTS.map(c=>`<option${c===rd.component?' selected':''}>${c}</option>`).join('')}</select></div>
+<div class="re-value"><input type="number" step="0.1" min="0" value="${rd.value}" class="${passFail}" onchange="updateReading(${i},'value',+this.value)" aria-label="XRF reading value for ${rd.component}"></div>
+<div class="re-photo" tabindex="0" role="button" aria-label="Add photo for ${rd.component}" onclick="takeReadingPhoto(${i})">${rd.photo?`<img src="${rd.photo}" alt="${rd.component} photo">`:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>'}</div>
+<button class="re-remove" onclick="removeReading(${i})" aria-label="Remove reading for ${rd.component}">x</button>
+</div>`;
+}).join('');
+}
+
+function addReading(){
+const room=rooms[activeRoomIdx];if(!room)return;
+room.readings.push({component:'Wall',value:0,condition:'intact',photo:null});
+renderReadings();renderHeatMap();updateReport();
+}
+
+function updateReading(i,field,val){
+const room=rooms[activeRoomIdx];if(!room)return;
+room.readings[i][field]=val;
+renderReadings();renderHeatMap();updateReport();
+}
+
+function removeReading(i){
+const room=rooms[activeRoomIdx];if(!room)return;
+room.readings.splice(i,1);
+renderReadings();renderHeatMap();updateReport();
+}
+
+function takeReadingPhoto(i){
+currentPhotoReading=i;
+document.getElementById('photoInput').click();
+}
+
+// Heat map
+function renderHeatMap(){
+const el=document.getElementById('heatMap');
+el.innerHTML=rooms.map((r,i)=>{
+const total=r.readings.length;
+const positives=r.readings.filter(rd=>rd.value>ACTIONS_LEVEL).length;
+const maxVal=total?Math.max(...r.readings.map(rd=>rd.value)):0;
+let cls='hm-empty';
+if(total>0){if(positives>0)cls='hm-danger';else if(maxVal>0.5)cls='hm-warn';else cls='hm-safe'}
+return`<div class="hm-room ${cls}" tabindex="0" onclick="selectRoom(${i});document.getElementById('readingPanel').scrollIntoView({behavior:'smooth'})" aria-label="${r.name}: ${positives} positive out of ${total}">
+<div class="hm-name">${esc(r.name)}</div>
+<div class="hm-max">${total?maxVal.toFixed(1):'-'}</div>
+<div class="hm-readings">${total} readings${positives>0?', '+positives+' positive':''}</div>
+</div>`;
+}).join('');
+}
+
+function updateReport(){
+const addr=document.getElementById('propAddr').value||'Address';
+const year=document.getElementById('propYear').value||'--';
+const types={['risk-reduction']:'Lead Risk Reduction',clearance:'Post-Remediation Clearance',presale:'Pre-Sale Inspection',full:'Full Lead Inspection'};
+document.getElementById('rptAddr').textContent=addr;
+document.getElementById('rptYear').textContent=year;
+document.getElementById('rptType').textContent=types[document.getElementById('inspType').value]||'Inspection';
+let totalR=0,totalP=0,highest=0;
+rooms.forEach(r=>{r.readings.forEach(rd=>{totalR++;if(rd.value>ACTIONS_LEVEL)totalP++;if(rd.value>highest)highest=rd.value})});
+document.getElementById('rptTotal').textContent=totalR;
+document.getElementById('rptPositive').textContent=totalP;
+document.getElementById('rptPositive').style.color=totalP>0?'#e74c3c':'#27ae60';
+document.getElementById('rptHighest').textContent=highest.toFixed(1);
+document.getElementById('rptHighest').style.color=highest>ACTIONS_LEVEL?'#e74c3c':highest>0.5?'#f39c12':'#27ae60';
+}
+
+['propAddr','propOwner','propYear','inspType'].forEach(id=>{
+const el=document.getElementById(id);
+if(el){el.addEventListener('change',updateReport);el.addEventListener('input',updateReport)}
+});
+
+// Share
+async function shareReport(){
+const text=buildReportText();
+if(navigator.share){try{await navigator.share({title:'Lead Inspection Report - LeadProbe',text});showToast('Report shared')}catch(e){}}
+else{try{await navigator.clipboard.writeText(text);showToast('Report copied')}catch(e){showToast('Could not share')}}
+}
+async function copyReport(){
+try{await navigator.clipboard.writeText(buildReportText());showToast('Report copied to clipboard')}catch(e){showToast('Could not copy')}
+}
+
+function buildReportText(){
+const addr=document.getElementById('propAddr').value||'Address';
+const owner=document.getElementById('propOwner').value||'Owner';
+const year=document.getElementById('propYear').value||'--';
+const date=document.getElementById('inspDate').value;
+let totalR=0,totalP=0,highest=0;
+let roomLines='';
+rooms.forEach(r=>{
+if(!r.readings.length)return;
+roomLines+=`\n${r.name}:\n`;
+r.readings.forEach(rd=>{
+totalR++;
+const pf=rd.value>ACTIONS_LEVEL?'POSITIVE':'pass';
+if(rd.value>ACTIONS_LEVEL)totalP++;
+if(rd.value>highest)highest=rd.value;
+roomLines+=`  ${rd.component}: ${rd.value} mg/cm2 [${pf}]\n`;
+});
+});
+return`Lead Paint Inspection Report\nLeadProbe, Inc. -- Ellicott City, MD\nInspector: Neil Roseman\n\nProperty: ${addr}\nOwner: ${owner}\nYear Built: ${year}\nDate: ${date}\nAction Level: ${ACTIONS_LEVEL} mg/cm2\n\nResults:\nTotal Readings: ${totalR}\nPositive: ${totalP}\nHighest: ${highest.toFixed(1)} mg/cm2\n${roomLines}\n${totalP>0?'RESULT: Positive findings. Remediation may be required per Maryland Lead Law.':'RESULT: No positive findings at or above action level.'}\n\nLeadProbe, Inc.\n(410) 591-4597\nleadprobe.com`;
+}
+
+// Save
+async function saveInspection(){
+const insp={
+address:document.getElementById('propAddr').value||'',
+owner:document.getElementById('propOwner').value||'',
+yearBuilt:document.getElementById('propYear').value||'',
+inspType:document.getElementById('inspType').value,
+date:document.getElementById('inspDate').value,
+rooms:JSON.parse(JSON.stringify(rooms.map(r=>({name:r.name,readings:r.readings.map(rd=>({component:rd.component,value:rd.value,condition:rd.condition}))})))),
+totalReadings:0,positives:0,isDemo:false
+};
+rooms.forEach(r=>r.readings.forEach(rd=>{insp.totalReadings++;if(rd.value>ACTIONS_LEVEL)insp.positives++}));
+await dbPut(STORE,insp);showToast('Inspection saved');loadHistory();
+}
+
+async function loadHistory(){
+const insps=await dbGetAll(STORE);
+const el=document.getElementById('historyList');
+if(!insps.length){el.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:12px">No saved inspections yet.</p>';return}
+insps.sort((a,b)=>new Date(b.date)-new Date(a.date));
+el.innerHTML=insps.map(ins=>{
+const statusCls=ins.positives>0?'fail':'pass';
+return`<div class="insp-item" tabindex="0"><div class="ii-top"><span class="ii-name">${esc(ins.address||'No address')}</span><span class="ii-status ${statusCls}">${ins.positives>0?ins.positives+' Positive':'Clear'}</span></div><div class="ii-detail">${ins.owner?esc(ins.owner)+' | ':''}${ins.totalReadings} readings | ${ins.date||'--'}</div></div>`;
+}).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Demo data
+function loadDemoData(){
+document.getElementById('propAddr').value='1420 E. North Ave, Baltimore, MD 21213';
+document.getElementById('propOwner').value='Marcus Williams';
+document.getElementById('propYear').value='1942';
+document.getElementById('inspType').value='risk-reduction';
+
+rooms=[
+{name:'Living Room',readings:[
+{component:'Wall',value:0.4,condition:'intact',photo:null},
+{component:'Door Frame',value:1.8,condition:'fair',photo:null},
+{component:'Window Sill',value:3.2,condition:'poor',photo:null},
+{component:'Baseboard',value:0.6,condition:'intact',photo:null},
+{component:'Window Frame',value:2.1,condition:'fair',photo:null},
+{component:'Trim',value:0.3,condition:'intact',photo:null},
+{component:'Door',value:0.5,condition:'intact',photo:null},
+{component:'Ceiling',value:0.2,condition:'intact',photo:null}
+]},
+{name:'Kitchen',readings:[
+{component:'Wall',value:0.3,condition:'intact',photo:null},
+{component:'Cabinet',value:1.2,condition:'fair',photo:null},
+{component:'Window Sill',value:0.8,condition:'intact',photo:null},
+{component:'Door Frame',value:0.5,condition:'intact',photo:null},
+{component:'Baseboard',value:0.4,condition:'intact',photo:null},
+{component:'Trim',value:0.2,condition:'intact',photo:null}
+]},
+{name:'Bedroom 1',readings:[
+{component:'Wall',value:0.5,condition:'intact',photo:null},
+{component:'Window Sill',value:4.5,condition:'poor',photo:null},
+{component:'Window Frame',value:3.8,condition:'poor',photo:null},
+{component:'Door',value:0.7,condition:'intact',photo:null},
+{component:'Door Frame',value:1.1,condition:'fair',photo:null},
+{component:'Baseboard',value:0.6,condition:'intact',photo:null},
+{component:'Closet',value:0.3,condition:'intact',photo:null}
+]},
+{name:'Bedroom 2',readings:[
+{component:'Wall',value:0.4,condition:'intact',photo:null},
+{component:'Window Sill',value:2.9,condition:'fair',photo:null},
+{component:'Door Frame',value:0.8,condition:'intact',photo:null},
+{component:'Baseboard',value:0.5,condition:'intact',photo:null}
+]},
+{name:'Bathroom',readings:[
+{component:'Wall',value:0.2,condition:'intact',photo:null},
+{component:'Window Sill',value:0.6,condition:'intact',photo:null},
+{component:'Door',value:0.4,condition:'intact',photo:null}
+]},
+{name:'Hallway',readings:[
+{component:'Wall',value:0.3,condition:'intact',photo:null},
+{component:'Trim',value:1.4,condition:'fair',photo:null},
+{component:'Railing',value:0.9,condition:'intact',photo:null}
+]}
+];
+activeRoomIdx=0;
+renderRooms();renderHeatMap();updateReport();
+
+const demos=[
+{address:'1420 E. North Ave, Baltimore, MD',owner:'Marcus Williams',yearBuilt:'1942',inspType:'risk-reduction',date:new Date().toISOString().split('T')[0],rooms:[{name:'Living Room',readings:[{component:'Wall',value:0.4},{component:'Window Sill',value:3.2}]},{name:'Kitchen',readings:[{component:'Cabinet',value:1.2}]}],totalReadings:31,positives:8,isDemo:true},
+{address:'2340 E. Pratt St, Baltimore, MD',owner:'Rebecca Torres',yearBuilt:'1925',inspType:'presale',date:new Date(Date.now()-604800000).toISOString().split('T')[0],rooms:[{name:'Living Room',readings:[{component:'Wall',value:0.2}]}],totalReadings:42,positives:12,isDemo:true}
+];
+(async()=>{for(const d of demos)await dbPut(STORE,d);loadHistory()})();
+}
+
+async function clearDemo(){
+const all=await dbGetAll(STORE);const keep=all.filter(i=>!i.isDemo);
+await dbClear(STORE);for(const i of keep)await dbPut(STORE,i);
+document.getElementById('demoBanner').style.display='none';
+['propAddr','propOwner','propYear'].forEach(id=>document.getElementById(id).value='');
+rooms=[{name:'Living Room',readings:[]}];activeRoomIdx=0;
+renderRooms();renderHeatMap();updateReport();loadHistory();showToast('Demo data cleared');
+}
+
+async function saveSettings(){
+const data={name:document.getElementById('inspectorName').value,cert:document.getElementById('certNumber').value,actionLevel:+document.getElementById('actionLevel').value};
+await dbPut(SETTINGS_STORE,{key:'inspector',data});showToast('Settings saved');
+}
+
+function switchTab(btn){
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(btn.dataset.tab).classList.add('active');
+if(btn.dataset.tab==='sec-history')loadHistory();
+}
+
+async function exportData(){
+const insps=await dbGetAll(STORE);const blob=new Blob([JSON.stringify({inspections:insps,currentRooms:rooms},null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='leadlog-backup.json';a.click();URL.revokeObjectURL(url);showToast('Data exported');
+}
+async function importData(e){
+const file=e.target.files[0];if(!file)return;
+try{const text=await file.text();const data=JSON.parse(text);
+if(data.inspections){await dbClear(STORE);for(const i of data.inspections)await dbPut(STORE,i)}
+if(data.currentRooms){rooms=data.currentRooms;activeRoomIdx=0;renderRooms();renderHeatMap();updateReport()}
+loadHistory();showToast('Data imported')}catch(err){showToast('Import failed')}e.target.value='';
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+</script>
+</body>
+</html>

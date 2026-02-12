@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VentSnap - Nagler Duct Cleaning Job Logger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#fafafa;--surface:#ffffff;--card:#f5f7fa;--border:#e0e4ea;
+--text:#1a2332;--muted:#6b7a8d;--steel:#1a5276;--steel-light:#2980b9;
+--danger:#c0392b;--danger-bg:#fdeaea;--warn:#e67e22;--warn-bg:#fef5e7;
+--safe:#27ae60;--safe-bg:#e8f8f0;
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html{font-size:16px;background:var(--bg);color:var(--text)}
+body{font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:120px!important;background:var(--bg);overflow-x:hidden}
+a{color:var(--steel)}
+h1,h2,h3{font-family:'DM Sans',sans-serif;font-weight:700;color:var(--text)}
+
+.skip-link{position:absolute;top:-40px;left:8px;background:var(--steel);color:#fff;padding:8px 16px;z-index:10000;border-radius:4px;font-weight:600;text-decoration:none}
+.skip-link:focus{top:8px}
+
+/* Header */
+.app-header{background:linear-gradient(135deg,#1a5276 0%,#2471a3 100%);padding:16px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(26,82,118,.2)}
+.app-header h1{font-size:1.6rem;color:#fff;margin-bottom:2px}
+.app-header p{font-size:.72rem;color:rgba(255,255,255,.7);letter-spacing:.1em;text-transform:uppercase;font-family:'Inter',sans-serif}
+
+/* Demo banner */
+.demo-banner{background:#e8f4fd;border:1px solid #b8d8f0;padding:10px 16px;margin:12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.82rem;color:#1a5276}
+.demo-banner button{background:none;border:1px solid #7fb8d8;color:#1a5276;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;white-space:nowrap}
+.demo-banner button:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+
+main{padding:0 12px 24px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card h2{font-size:1.15rem;margin-bottom:12px}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.status-danger{background:var(--danger-bg);color:var(--danger)}
+.status-warn{background:var(--warn-bg);color:var(--warn)}
+.status-safe{background:var(--safe-bg);color:var(--safe)}
+.status-dot{width:8px;height:8px;border-radius:50%;background:currentColor}
+
+/* Form */
+.form-row{display:flex;gap:8px;margin-bottom:12px}
+.form-group{flex:1}
+.form-group label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.form-group select,.form-group input,.form-group textarea{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:.95rem;font-family:inherit;-webkit-appearance:none;appearance:none}
+.form-group select:focus,.form-group input:focus,.form-group textarea:focus{border-color:var(--steel);outline:none;box-shadow:0 0 0 3px rgba(26,82,118,.1)}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7a8d' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* Before/after comparison */
+.comparison-area{margin-bottom:16px}
+.comparison-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.photo-capture{aspect-ratio:4/3;background:var(--card);border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s;overflow:hidden;position:relative}
+.photo-capture.before-slot{border-color:var(--danger)}
+.photo-capture.after-slot{border-color:var(--safe)}
+.photo-capture:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.photo-capture svg{width:32px;height:32px;color:var(--muted)}
+.photo-capture .label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:6px}
+.photo-capture .label.before-label{color:var(--danger)}
+.photo-capture .label.after-label{color:var(--safe)}
+.photo-capture img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px}
+.photo-capture .remove-btn{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:.8rem;display:none;align-items:center;justify-content:center;z-index:2}
+.photo-capture:hover .remove-btn{display:flex}
+.photo-capture img ~ .remove-btn{display:flex}
+
+/* Slider comparison */
+.slider-compare{position:relative;width:100%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;cursor:col-resize;touch-action:none;background:var(--card)}
+.slider-compare img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+.slider-compare .after-img{clip-path:inset(0 0 0 50%)}
+.slider-divider{position:absolute;top:0;bottom:0;left:50%;width:3px;background:#fff;z-index:3;box-shadow:0 0 6px rgba(0,0,0,.4);transform:translateX(-50%)}
+.slider-handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:36px;height:36px;background:#fff;border-radius:50%;z-index:4;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+.slider-handle svg{width:18px;height:18px;color:#333}
+.slider-label-before{position:absolute;top:8px;left:8px;background:var(--danger);color:#fff;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;text-transform:uppercase;z-index:5}
+.slider-label-after{position:absolute;top:8px;right:8px;background:var(--safe);color:#fff;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;text-transform:uppercase;z-index:5}
+
+/* Fire risk meter */
+.risk-meter{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;text-align:center}
+.risk-meter h3{font-size:.85rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.risk-bar{height:10px;background:linear-gradient(to right,#27ae60,#f1c40f,#e67e22,#c0392b);border-radius:5px;position:relative;margin:8px 0}
+.risk-indicator{position:absolute;top:-4px;width:18px;height:18px;background:#fff;border:3px solid var(--text);border-radius:50%;transition:left .4s ease;transform:translateX(-50%)}
+.risk-text{font-size:1.3rem;font-weight:700;margin-top:6px}
+.risk-text.danger{color:var(--danger)}
+.risk-text.warn{color:var(--warn)}
+.risk-text.safe{color:var(--safe)}
+
+/* Job report summary */
+.report-card{background:linear-gradient(135deg,#1a5276,#2471a3);border:none;border-radius:12px;padding:24px;color:#fff;margin-bottom:16px}
+.report-card h2{color:#fff;margin-bottom:16px}
+.report-line{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:.88rem}
+.report-line:last-of-type{border-bottom:none}
+.report-stat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.report-stat-item{background:rgba(255,255,255,.1);border-radius:8px;padding:10px;text-align:center}
+.report-stat-item .val{font-size:1.4rem;font-weight:700}
+.report-stat-item .lbl{font-size:.7rem;color:rgba(255,255,255,.7);text-transform:uppercase;margin-top:2px}
+
+/* Review link */
+.review-cta{background:var(--safe-bg);border:1px solid #a3d9b1;border-radius:10px;padding:16px;text-align:center;margin-bottom:16px}
+.review-cta p{font-size:.85rem;color:var(--safe);margin-bottom:8px}
+.review-cta button{background:var(--safe);color:#fff;border:none;padding:10px 24px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:.9rem}
+.review-cta button:focus-visible{outline:2px solid var(--safe);outline-offset:2px}
+
+/* Buttons */
+.actions{display:flex;gap:8px;margin-bottom:16px}
+.btn{flex:1;padding:14px;border:none;border-radius:10px;font-weight:600;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .2s;font-family:'Inter',sans-serif}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.btn-primary{background:var(--steel);color:#fff}
+.btn-primary:hover{box-shadow:0 4px 16px rgba(26,82,118,.25)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}
+
+/* History */
+.job-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.job-item:hover{border-color:var(--steel)}
+.job-item:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+.job-item .ji-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.job-item .ji-name{font-weight:600;font-size:.9rem}
+.job-item .ji-status{font-size:.72rem;font-weight:600;text-transform:uppercase}
+.job-item .ji-status.danger{color:var(--danger)}
+.job-item .ji-status.safe{color:var(--safe)}
+.job-item .ji-detail{font-size:.78rem;color:var(--muted)}
+
+/* Upsell */
+.upsell-tab{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;opacity:.5}
+.upsell-tab h2{font-size:1.1rem;color:var(--muted);margin-bottom:8px}
+.upsell-tab p{font-size:.85rem;color:var(--muted);line-height:1.5}
+.coming-soon-badge{display:inline-block;background:var(--steel);color:#fff;padding:2px 10px;border-radius:4px;font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-left:8px}
+
+/* Toast */
+.toast-container{position:fixed;top:72px;right:16px;z-index:9000}
+.toast{background:var(--safe);color:#fff;padding:12px 20px;border-radius:8px;font-size:.85rem;opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding:4px 0;box-shadow:0 -2px 8px rgba(0,0,0,.04)}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);padding:8px 4px;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'Inter',sans-serif;font-weight:500}
+.bottom-nav button.active{color:var(--steel)}
+.bottom-nav button:focus-visible{outline:2px solid var(--steel);outline-offset:-2px}
+.bottom-nav svg{width:22px;height:22px}
+
+.section{display:none}.section.active{display:block}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp .4s ease-out both}
+.animate-in:nth-child(2){animation-delay:60ms}
+.animate-in:nth-child(3){animation-delay:120ms}
+
+@media print{
+.bottom-nav,.app-header,.demo-banner,.actions,.upsell-tab,.toast-container,.review-cta,#bct-demo-disclaimer{display:none!important}
+body{background:#fff;padding:20px}
+.report-card{background:#1a5276!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media(min-width:768px){main{max-width:600px;margin:0 auto}.bottom-nav{display:none}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="app-header">
+<h1>VentSnap</h1>
+<p>Nagler Duct Cleaning -- Eldersburg, MD</p>
+</header>
+
+<div class="demo-banner" id="demoBanner" role="status">
+<p>Sample job data for Eldersburg area. Tap x to clear and start logging.</p>
+<button onclick="clearDemo()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<div class="toast-container" aria-live="polite"><div class="toast" id="toast"></div></div>
+
+<main id="main-content">
+
+<!-- LOG JOB TAB -->
+<section class="section active" id="sec-log">
+
+<div class="card animate-in">
+<h2>Job Info</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="custName">Customer Name</label>
+<input type="text" id="custName" placeholder="e.g. Johnson" autocomplete="off">
+</div>
+<div class="form-group">
+<label for="custPhone">Phone</label>
+<input type="tel" id="custPhone" placeholder="(410) 555-0123">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="address">Address</label>
+<input type="text" id="address" placeholder="123 Main St, Eldersburg, MD">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="ventType">Vent Type</label>
+<select id="ventType" aria-label="Dryer vent type">
+<option value="rigid">Rigid Metal</option>
+<option value="semi-rigid">Semi-Rigid</option>
+<option value="flex">Flex / Foil</option>
+<option value="unknown">Not Sure</option>
+</select>
+</div>
+<div class="form-group">
+<label for="ventLength">Run Length (ft)</label>
+<input type="number" id="ventLength" min="1" max="100" value="25" placeholder="25">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="dryerAge">Dryer Age (years)</label>
+<input type="number" id="dryerAge" min="0" max="50" value="8" placeholder="8">
+</div>
+<div class="form-group">
+<label for="lastCleaned">Last Cleaned</label>
+<select id="lastCleaned" aria-label="When was the vent last cleaned">
+<option value="never">Never</option>
+<option value="1yr">Within 1 year</option>
+<option value="2yr">1-2 years ago</option>
+<option value="3yr">2-3 years ago</option>
+<option value="5yr">3-5 years ago</option>
+<option value="5plus">5+ years ago</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="card animate-in">
+<h2>Before and After Photos</h2>
+<p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Snap the vent before cleaning, then after. The report will show them side by side.</p>
+<div class="comparison-pair">
+<div class="photo-capture before-slot" tabindex="0" role="button" aria-label="Take before photo" onclick="capturePhoto('before')">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+<span class="label before-label">Before</span>
+</div>
+<div class="photo-capture after-slot" tabindex="0" role="button" aria-label="Take after photo" onclick="capturePhoto('after')">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+<span class="label after-label">After</span>
+</div>
+</div>
+<div id="sliderCompareContainer" style="display:none">
+<p style="font-size:.78rem;color:var(--muted);margin-bottom:6px;text-align:center">Drag the slider to compare before and after</p>
+<div class="slider-compare" id="sliderCompare" role="slider" aria-label="Before and after comparison slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+<img class="before-img" id="sliderBefore" src="" alt="Before cleaning">
+<img class="after-img" id="sliderAfter" src="" alt="After cleaning">
+<div class="slider-divider" id="sliderDivider"></div>
+<div class="slider-handle" id="sliderHandle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3l-5 9 5 9"/><path d="M16 3l5 9-5 9"/></svg></div>
+<div class="slider-label-before">Before</div>
+<div class="slider-label-after">After</div>
+</div>
+</div>
+<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhotoCapture(event)">
+</div>
+
+<div class="risk-meter animate-in" id="riskMeter">
+<h3>Fire Risk Assessment</h3>
+<div class="risk-bar"><div class="risk-indicator" id="riskIndicator" style="left:70%"></div></div>
+<div class="risk-text danger" id="riskText">HIGH RISK</div>
+<p style="font-size:.78rem;color:var(--muted);margin-top:4px" id="riskExplain">Vent not cleaned in 5+ years with 25ft run. NFPA recommends annual cleaning.</p>
+</div>
+
+<div class="card animate-in">
+<h2>Notes</h2>
+<div class="form-group">
+<label for="jobNotes">Condition Notes</label>
+<textarea id="jobNotes" rows="3" placeholder="Describe what you found: lint buildup level, vent condition, any damage or concerns..."></textarea>
+</div>
+</div>
+
+<div class="report-card animate-in" id="reportCard">
+<h2>Job Report</h2>
+<div class="report-line"><span>Customer</span><span id="rptName">Johnson Residence</span></div>
+<div class="report-line"><span>Address</span><span id="rptAddr">123 Main St, Eldersburg</span></div>
+<div class="report-line"><span>Vent Type</span><span id="rptVent">Rigid Metal, 25ft</span></div>
+<div class="report-line"><span>Dryer Age</span><span id="rptAge">8 years</span></div>
+<div class="report-stat">
+<div class="report-stat-item"><div class="val" id="rptRiskBefore" style="color:#e74c3c">HIGH</div><div class="lbl">Risk Before</div></div>
+<div class="report-stat-item"><div class="val" id="rptRiskAfter" style="color:#27ae60">CLEAR</div><div class="lbl">Risk After</div></div>
+</div>
+</div>
+
+<div class="review-cta animate-in">
+<p>Happy with our service? A quick review helps other homeowners find safe vent cleaning.</p>
+<button onclick="copyReviewLink()" aria-label="Copy Google review link">Copy Review Link</button>
+</div>
+
+<div class="actions animate-in">
+<button class="btn btn-primary" onclick="shareReport()" aria-label="Share job report">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+Share Report
+</button>
+<button class="btn btn-secondary" onclick="saveJob()" aria-label="Save this job">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+Save Job
+</button>
+</div>
+</section>
+
+<!-- HISTORY TAB -->
+<section class="section" id="sec-history">
+<div class="card">
+<h2>Job Log</h2>
+<div id="historyList"></div>
+</div>
+<div class="upsell-tab" aria-disabled="true">
+<h2>Auto-Post to Google and Instagram <span class="coming-soon-badge">Coming Soon</span></h2>
+<p>Automatically share your before/after photos to your Google Business Profile and Instagram. Post once, show up everywhere. Available in the full version.</p>
+</div>
+</section>
+
+<!-- SETTINGS TAB -->
+<section class="section" id="sec-settings">
+<div class="card">
+<h2>Review Link</h2>
+<div class="form-group">
+<label for="reviewUrl">Google Business Review URL</label>
+<input type="url" id="reviewUrl" value="https://g.page/r/nagler-duct-cleaning/review" placeholder="Your Google review link">
+</div>
+<button class="btn btn-primary" onclick="saveSettings()" style="margin-top:12px;width:100%">Save</button>
+</div>
+<div class="card" style="margin-top:16px">
+<h2>Data</h2>
+<div class="actions" style="margin-bottom:0">
+<button class="btn btn-secondary" onclick="exportData()">Export JSON</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import JSON</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+</section>
+
+</main>
+
+<nav class="bottom-nav" aria-label="Main navigation">
+<button class="active" data-tab="sec-log" onclick="switchTab(this)" aria-label="Log new job">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+New Job
+</button>
+<button data-tab="sec-history" onclick="switchTab(this)" aria-label="Job history">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+History
+</button>
+<button data-tab="sec-settings" onclick="switchTab(this)" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Nagler Duct and Dryer Vent Cleaning. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Nagler%20Duct&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// Access gate
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-929639045;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#fafafa;color:#1a5276;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:DM Sans,sans-serif">Access Required</h1><p style="color:#6b7a8d">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#1a5276">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center"><p style="margin:0"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with Nagler Duct Cleaning.</p></div>';
+throw new Error('Invalid key');
+}
+
+// DB
+let db;const DB_NAME='VentSnapDB';const DB_VER=1;const STORE='jobs';const SETTINGS_STORE='settings';
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});if(!d.objectStoreNames.contains(SETTINGS_STORE))d.createObjectStore(SETTINGS_STORE,{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+
+// State
+let photos={before:null,after:null};
+let captureTarget='before';
+
+// Init
+(async function(){
+await openDB();
+const isFirst=!localStorage.getItem('ventsnap_visited');
+if(isFirst){loadDemoData();localStorage.setItem('ventsnap_visited','1')}
+updateRisk();updateReport();loadHistory();
+
+// Auto-fill address via geolocation
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(pos=>{
+// Store for use in report
+window._geoLat=pos.coords.latitude;
+window._geoLon=pos.coords.longitude;
+},()=>{},{timeout:5000,maximumAge:60000});
+}
+})();
+
+// Risk calculation
+function updateRisk(){
+const len=+document.getElementById('ventLength').value||25;
+const last=document.getElementById('lastCleaned').value;
+const type=document.getElementById('ventType').value;
+let score=0;
+// Length factor
+if(len>40)score+=35;else if(len>25)score+=25;else if(len>15)score+=15;else score+=5;
+// Last cleaned factor
+const lastScores={never:40,'5plus':35,'5yr':25,'3yr':15,'2yr':10,'1yr':0};
+score+=lastScores[last]||20;
+// Vent type factor
+const typeScores={flex:20,'semi-rigid':10,rigid:5,unknown:15};
+score+=typeScores[type]||10;
+// Dryer age
+const age=+document.getElementById('dryerAge').value||5;
+if(age>15)score+=10;else if(age>8)score+=5;
+
+score=Math.min(100,Math.max(0,score));
+const indicator=document.getElementById('riskIndicator');
+const text=document.getElementById('riskText');
+const explain=document.getElementById('riskExplain');
+indicator.style.left=score+'%';
+
+if(score>=60){
+text.textContent='HIGH RISK';text.className='risk-text danger';
+explain.textContent=`Vent not cleaned in ${last==='never'?'unknown timeframe':'over '+last.replace('yr',' year').replace('plus','+')}, ${len}ft run with ${type} vent. NFPA recommends annual cleaning.`;
+}else if(score>=30){
+text.textContent='MODERATE';text.className='risk-text warn';
+explain.textContent=`Some risk factors present. Regular cleaning recommended. ${len}ft run length.`;
+}else{
+text.textContent='LOW RISK';text.className='risk-text safe';
+explain.textContent='Recently cleaned with short run length. Keep up the annual schedule.';
+}
+document.getElementById('rptRiskBefore').textContent=score>=60?'HIGH':score>=30?'MODERATE':'LOW';
+document.getElementById('rptRiskBefore').style.color=score>=60?'#e74c3c':score>=30?'#e67e22':'#27ae60';
+}
+
+['ventLength','lastCleaned','ventType','dryerAge'].forEach(id=>{
+document.getElementById(id).addEventListener('change',()=>{updateRisk();updateReport()});
+document.getElementById(id).addEventListener('input',()=>{updateRisk();updateReport()});
+});
+['custName','address'].forEach(id=>{
+document.getElementById(id).addEventListener('input',updateReport);
+});
+
+function updateReport(){
+const name=document.getElementById('custName').value||'Customer';
+const addr=document.getElementById('address').value||'Address';
+const vt=document.getElementById('ventType').selectedOptions[0].text;
+const len=document.getElementById('ventLength').value;
+const age=document.getElementById('dryerAge').value;
+document.getElementById('rptName').textContent=name+' Residence';
+document.getElementById('rptAddr').textContent=addr;
+document.getElementById('rptVent').textContent=vt+', '+len+'ft';
+document.getElementById('rptAge').textContent=age+' years';
+}
+
+// Photo capture
+function capturePhoto(type){captureTarget=type;document.getElementById('photoInput').click()}
+function handlePhotoCapture(e){
+const file=e.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=function(ev){
+photos[captureTarget]=ev.target.result;
+renderPhotoSlots();
+if(photos.before&&photos.after)showSliderComparison();
+};reader.readAsDataURL(file);e.target.value='';
+}
+
+function renderPhotoSlots(){
+const pair=document.querySelector('.comparison-pair');
+pair.innerHTML=['before','after'].map(type=>{
+const p=photos[type];
+const cls=type==='before'?'before-slot':'after-slot';
+const lbl=type==='before'?'Before':'After';
+const lblCls=type==='before'?'before-label':'after-label';
+if(p)return`<div class="photo-capture ${cls}" tabindex="0" onclick="capturePhoto('${type}')"><img src="${p}" alt="${lbl} photo"><button class="remove-btn" onclick="event.stopPropagation();removePhoto('${type}')" aria-label="Remove ${lbl} photo">x</button></div>`;
+return`<div class="photo-capture ${cls}" tabindex="0" role="button" aria-label="Take ${lbl} photo" onclick="capturePhoto('${type}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg><span class="label ${lblCls}">${lbl}</span></div>`;
+}).join('');
+}
+function removePhoto(type){photos[type]=null;renderPhotoSlots();document.getElementById('sliderCompareContainer').style.display='none'}
+
+// Slider comparison
+function showSliderComparison(){
+if(!photos.before||!photos.after)return;
+document.getElementById('sliderCompareContainer').style.display='block';
+document.getElementById('sliderBefore').src=photos.before;
+document.getElementById('sliderAfter').src=photos.after;
+initSlider();
+}
+
+function initSlider(){
+const container=document.getElementById('sliderCompare');
+const afterImg=container.querySelector('.after-img');
+const divider=document.getElementById('sliderDivider');
+const handle=document.getElementById('sliderHandle');
+
+function setPosition(x){
+const rect=container.getBoundingClientRect();
+let pct=((x-rect.left)/rect.width)*100;
+pct=Math.max(0,Math.min(100,pct));
+afterImg.style.clipPath=`inset(0 0 0 ${pct}%)`;
+divider.style.left=pct+'%';
+handle.style.left=pct+'%';
+}
+
+container.addEventListener('mousedown',e=>{
+e.preventDefault();
+setPosition(e.clientX);
+const onMove=ev=>setPosition(ev.clientX);
+const onUp=()=>{document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp)};
+document.addEventListener('mousemove',onMove);
+document.addEventListener('mouseup',onUp);
+});
+
+container.addEventListener('touchstart',e=>{
+e.preventDefault();
+setPosition(e.touches[0].clientX);
+const onMove=ev=>{ev.preventDefault();setPosition(ev.touches[0].clientX)};
+const onEnd=()=>{container.removeEventListener('touchmove',onMove);container.removeEventListener('touchend',onEnd)};
+container.addEventListener('touchmove',onMove,{passive:false});
+container.addEventListener('touchend',onEnd);
+},{passive:false});
+}
+
+// Review link
+function copyReviewLink(){
+const url=document.getElementById('reviewUrl')?.value||'https://g.page/r/nagler-duct-cleaning/review';
+navigator.clipboard.writeText(url).then(()=>showToast('Review link copied')).catch(()=>showToast('Could not copy'));
+}
+
+// Share
+async function shareReport(){
+const text=buildReportText();
+if(navigator.share){try{await navigator.share({title:'Vent Cleaning Report - Nagler Duct Cleaning',text});showToast('Report shared')}catch(e){}}
+else{try{await navigator.clipboard.writeText(text);showToast('Report copied to clipboard')}catch(e){showToast('Could not share')}}
+}
+
+function buildReportText(){
+const name=document.getElementById('custName').value||'Customer';
+const addr=document.getElementById('address').value||'';
+const vt=document.getElementById('ventType').selectedOptions[0].text;
+const len=document.getElementById('ventLength').value;
+const notes=document.getElementById('jobNotes').value.trim();
+return`Dryer Vent Cleaning Report\nNagler Duct and Dryer Vent Cleaning -- NADCA Certified\n\nCustomer: ${name}\n${addr?'Address: '+addr+'\n':''}Vent: ${vt}, ${len}ft run\nFire Risk Before: ${document.getElementById('rptRiskBefore').textContent}\nFire Risk After: CLEAR\n${notes?'\nNotes: '+notes+'\n':''}\nYour dryer vent has been professionally cleaned and inspected.\n\nNagler Duct Cleaning\n(240) 896-2404\nnaglerducts.com\nNADCA Certified`;
+}
+
+// Save job
+async function saveJob(){
+const job={
+name:document.getElementById('custName').value||'Customer',
+phone:document.getElementById('custPhone').value,
+address:document.getElementById('address').value,
+ventType:document.getElementById('ventType').value,
+ventLength:+document.getElementById('ventLength').value,
+dryerAge:+document.getElementById('dryerAge').value,
+lastCleaned:document.getElementById('lastCleaned').value,
+notes:document.getElementById('jobNotes').value.trim(),
+riskBefore:document.getElementById('rptRiskBefore').textContent,
+date:new Date().toISOString(),
+isDemo:false
+};
+await dbPut(STORE,job);showToast('Job saved');loadHistory();
+}
+
+async function loadHistory(){
+const jobs=await dbGetAll(STORE);
+const el=document.getElementById('historyList');
+if(!jobs.length){el.innerHTML='<p style="color:var(--muted);font-size:.85rem;padding:12px">No jobs logged yet.</p>';return}
+jobs.sort((a,b)=>new Date(b.date)-new Date(a.date));
+el.innerHTML=jobs.map(j=>`<div class="job-item" tabindex="0"><div class="ji-top"><span class="ji-name">${esc(j.name)}</span><span class="ji-status ${j.riskBefore==='HIGH'?'danger':'safe'}">${j.riskBefore||'--'} Risk</span></div><div class="ji-detail">${esc(j.address||'No address')} | ${j.ventLength||'?'}ft ${j.ventType||''} | ${new Date(j.date).toLocaleDateString()}</div></div>`).join('');
+}
+
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Demo data
+function loadDemoData(){
+document.getElementById('custName').value='Johnson';
+document.getElementById('custPhone').value='(410) 555-0289';
+document.getElementById('address').value='847 Liberty Rd, Eldersburg, MD 21784';
+document.getElementById('ventType').value='semi-rigid';
+document.getElementById('ventLength').value='25';
+document.getElementById('dryerAge').value='8';
+document.getElementById('lastCleaned').value='never';
+document.getElementById('jobNotes').value='Heavy lint buildup throughout the entire run. Semi-rigid vent had a kink at the second elbow causing extra accumulation. Replaced connector with rigid elbow. Recommend switching entire run to rigid metal.';
+
+const demos=[
+{name:'Johnson',address:'847 Liberty Rd, Eldersburg, MD',ventType:'semi-rigid',ventLength:25,dryerAge:8,lastCleaned:'never',notes:'Heavy buildup, replaced connector.',riskBefore:'HIGH',date:new Date(Date.now()-3600000).toISOString(),isDemo:true},
+{name:'Martinez',address:'2310 Old Washington Rd, Sykesville',ventType:'rigid',ventLength:15,dryerAge:3,lastCleaned:'2yr',notes:'Moderate lint, clean job.',riskBefore:'MODERATE',date:new Date(Date.now()-172800000).toISOString(),isDemo:true},
+{name:'Kim',address:'1455 Ridge Rd, Mt Airy',ventType:'flex',ventLength:35,dryerAge:12,lastCleaned:'5plus',notes:'Flex vent was crushed behind dryer. Major fire hazard. Replaced entire run with rigid.',riskBefore:'HIGH',date:new Date(Date.now()-432000000).toISOString(),isDemo:true}
+];
+(async()=>{for(const d of demos)await dbPut(STORE,d);loadHistory()})();
+updateRisk();updateReport();
+}
+
+async function clearDemo(){
+const all=await dbGetAll(STORE);const keep=all.filter(j=>!j.isDemo);
+await dbClear(STORE);for(const j of keep)await dbPut(STORE,j);
+document.getElementById('demoBanner').style.display='none';
+['custName','custPhone','address','jobNotes'].forEach(id=>document.getElementById(id).value='');
+document.getElementById('ventLength').value='20';document.getElementById('dryerAge').value='5';
+document.getElementById('lastCleaned').value='never';document.getElementById('ventType').value='rigid';
+updateRisk();updateReport();loadHistory();showToast('Demo data cleared');
+}
+
+async function saveSettings(){
+const url=document.getElementById('reviewUrl').value;
+await dbPut(SETTINGS_STORE,{key:'reviewUrl',data:url});
+showToast('Settings saved');
+}
+
+function switchTab(btn){
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(btn.dataset.tab).classList.add('active');
+if(btn.dataset.tab==='sec-history')loadHistory();
+}
+
+async function exportData(){
+const jobs=await dbGetAll(STORE);const blob=new Blob([JSON.stringify({jobs},null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ventsnap-backup.json';a.click();URL.revokeObjectURL(url);showToast('Data exported');
+}
+async function importData(e){
+const file=e.target.files[0];if(!file)return;
+try{const text=await file.text();const data=JSON.parse(text);
+if(data.jobs){await dbClear(STORE);for(const j of data.jobs)await dbPut(STORE,j)}
+loadHistory();showToast('Data imported')}catch(err){showToast('Import failed')}e.target.value='';
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+</script>
+</body>
+</html>
