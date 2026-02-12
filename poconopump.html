@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PumpLog - Pocono Well & Pump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0F1117;--card:#1A1D27;--card-hover:#22252F;--border:#2A2D3A;--text:#E4E4E7;--muted:#71717A;--blue:#3B82F6;--blue-dim:rgba(59,130,246,.12);--green:#22C55E;--green-dim:rgba(34,197,94,.12);--amber:#F59E0B;--amber-dim:rgba(245,158,11,.12);--red:#EF4444;--red-dim:rgba(239,68,68,.12);--purple:#A855F7;--purple-dim:rgba(168,85,247,.12);--white:#FFF;--radius:12px;--radius-sm:8px;--shadow:0 4px 12px rgba(0,0,0,.3)}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Source Sans 3',sans-serif;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:120px;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'DM Sans',sans-serif;line-height:1.25;color:var(--white)}
+h2{font-size:1.2rem;font-weight:700}h3{font-size:1rem;font-weight:600}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text)}
+.skip{position:absolute;top:-40px;left:0;background:var(--blue);color:#fff;padding:8px 16px;z-index:10000;font-size:.875rem}.skip:focus{top:0}
+.hdr{background:var(--card);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:1.05rem;flex:1;font-weight:700}
+.view{display:none;padding:16px;animation:fu .3s ease-out both}.view.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius-sm);font-weight:600;font-size:.88rem;transition:transform .12s,opacity .12s;min-height:48px;font-family:'DM Sans',sans-serif}
+.btn:active{transform:scale(.97)}.btn svg{width:18px;height:18px;flex-shrink:0}
+.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{opacity:.9}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{opacity:.9}
+.btn-outline{border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{background:var(--card-hover)}
+.btn-ghost{color:var(--muted);padding:8px}.btn-ghost:hover{color:var(--text)}
+.btn-f{width:100%}.btn-sm{padding:8px 14px;font-size:.8rem;min-height:36px}
+.btn-dis{opacity:.3;pointer-events:none;background:var(--border);color:var(--muted)}
+*:focus-visible{outline:2px solid var(--blue);outline-offset:2px}*:focus:not(:focus-visible){outline:none}
+.fg{margin-bottom:14px}.fg label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.6px;font-family:'DM Sans',sans-serif}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);outline:none}
+.fg select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2371717A' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.fg textarea{min-height:70px;resize:vertical}
+
+/* Job cards */
+.job-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:10px;cursor:pointer;transition:background .15s,border-color .15s}
+.job-card:hover{background:var(--card-hover);border-color:var(--blue)}
+.job-card .top{display:flex;align-items:flex-start;gap:10px}
+.job-card .dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot-scheduled{background:var(--amber)}.dot-enroute{background:var(--purple)}.dot-progress{background:var(--blue)}.dot-done{background:var(--green)}
+.job-card .info{flex:1;min-width:0}
+.job-card .info h4{font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.job-card .info .sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.job-card .cost{font-family:'DM Sans',sans-serif;font-weight:700;font-size:.95rem;white-space:nowrap}
+.job-card .sts{font-size:.68rem;font-weight:600;padding:3px 10px;border-radius:12px;margin-top:6px;display:inline-block;font-family:'DM Sans',sans-serif}
+.sts-scheduled{background:var(--amber-dim);color:var(--amber)}.sts-enroute{background:var(--purple-dim);color:var(--purple)}
+.sts-progress{background:var(--blue-dim);color:var(--blue)}.sts-done{background:var(--green-dim);color:var(--green)}
+
+/* Status buttons */
+.status-bar{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.status-bar button{padding:8px 14px;border-radius:20px;font-size:.78rem;font-weight:600;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;transition:all .15s}
+.status-bar button.active{color:#fff;border-color:transparent}
+.status-bar button[data-s="scheduled"].active{background:var(--amber)}
+.status-bar button[data-s="enroute"].active{background:var(--purple)}
+.status-bar button[data-s="progress"].active{background:var(--blue)}
+.status-bar button[data-s="done"].active{background:var(--green)}
+
+/* Day tabs */
+.day-tabs{display:flex;gap:4px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.day-tab{padding:8px 16px;border-radius:20px;font-size:.8rem;font-weight:600;background:var(--card);border:1px solid var(--border);white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all .15s}
+.day-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* GPS badge */
+.gps-badge{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;color:var(--green);padding:3px 8px;background:var(--green-dim);border-radius:12px;font-family:'DM Sans',sans-serif;margin-top:4px}
+.gps-badge svg{width:12px;height:12px;stroke:var(--green);fill:none;stroke-width:2}
+
+/* Service presets */
+.preset-grid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.preset{padding:6px 12px;border-radius:16px;font-size:.75rem;font-weight:500;border:1px solid var(--border);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .12s}
+.preset:hover{border-color:var(--blue);color:var(--blue)}
+.preset.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.upsell{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:18px;text-align:center;margin:14px 0}
+.upsell h4{color:var(--muted);margin-bottom:4px;font-family:'DM Sans',sans-serif}.upsell p{font-size:.8rem;color:#52525B;margin-bottom:8px}
+
+.demo-ban{background:#422006;border-bottom:1px solid #713F12;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:#FBBF24}
+.demo-ban button{font-size:1rem;color:#FBBF24;padding:4px 8px}
+
+.toast-w{position:fixed;top:65px;right:16px;z-index:9999}
+.toast{background:var(--card);color:var(--text);padding:11px 16px;border-radius:var(--radius-sm);box-shadow:var(--shadow);border:1px solid var(--border);font-size:.84rem;display:flex;align-items:center;gap:6px;animation:si .3s ease-out;margin-bottom:6px}
+@keyframes si{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 0 5px;font-size:.6rem;font-weight:600;color:var(--muted);min-height:52px;gap:2px;font-family:'DM Sans',sans-serif;transition:color .15s}
+nav.tabs button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button.act{color:var(--blue)}nav.tabs button.act svg{stroke:var(--blue)}
+
+@media print{nav.tabs,.hdr,.demo-ban,#bct-demo-disclaimer,.btn,.upsell{display:none!important}body{padding:0;background:#fff;color:#000}.view{display:block!important}.card{background:#fff;border:1px solid #ddd}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(min-width:768px){.view{max-width:600px;margin:0 auto}nav.tabs{max-width:600px;left:50%;transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<a href="#mc" class="skip">Skip to content</a>
+<div class="demo-ban" id="db" role="alert" style="display:none"><span>Sample jobs for the Poconos. Tap X to clear.</span><button onclick="clearDemo()" aria-label="Clear demo">X</button></div>
+<div class="hdr" role="banner">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 007-7c0-2-1-3.9-3-5.5s-3-4-3-6.5a7 7 0 00-7 7c0 2 1 3.9 3 5.5s3 4 3 6.5z"/></svg>
+  <h1>PumpLog</h1>
+</div>
+<div class="toast-w" id="tw" aria-live="polite"></div>
+<main id="mc">
+
+<!-- Job Board -->
+<section class="view active" id="vBoard">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <h2>Job Board</h2>
+    <button class="btn btn-blue btn-sm" onclick="newJob()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Log Job</button>
+  </div>
+  <div class="day-tabs" id="dayTabs"></div>
+  <div id="jobList"></div>
+</section>
+
+<!-- Job Form -->
+<section class="view" id="vForm">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <button class="btn-ghost" onclick="toBoard()" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <h2 id="fTitle">Log Job</h2>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">Customer</h3>
+    <div class="fg"><label for="jName">Name</label><input type="text" id="jName" placeholder="Anderson Family"></div>
+    <div class="fg"><label for="jAddr">Address</label><input type="text" id="jAddr" placeholder="1420 Main St, Stroudsburg, PA"></div>
+    <div class="fg"><label for="jPhone">Phone</label><input type="tel" id="jPhone" placeholder="(570) 555-0123"></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">Service</h3>
+    <div class="fg"><label>Quick Select</label></div>
+    <div class="preset-grid" id="presets"></div>
+    <div class="fg" style="margin-top:10px"><label for="jService">Service Description</label><input type="text" id="jService" placeholder="Submersible pump replacement, 200ft"></div>
+    <div style="display:flex;gap:12px">
+      <div class="fg" style="flex:1"><label for="jCost">Cost ($)</label><input type="number" id="jCost" placeholder="4200" min="0" step="50"></div>
+      <div class="fg" style="flex:1"><label for="jDate">Date</label><input type="date" id="jDate"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="margin-bottom:10px">Status</h3>
+    <div class="status-bar">
+      <button data-s="scheduled" onclick="setSts(this)" class="active">Scheduled</button>
+      <button data-s="enroute" onclick="setSts(this)">En Route</button>
+      <button data-s="progress" onclick="setSts(this)">In Progress</button>
+      <button data-s="done" onclick="setSts(this)">Done</button>
+    </div>
+    <div id="gpsSection" style="display:none;margin-top:10px">
+      <button class="btn btn-green btn-f" onclick="captureGPS()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Stamp Location</button>
+      <div id="gpsResult" style="margin-top:8px"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="fg"><label for="jNotes">Notes</label><textarea id="jNotes" placeholder="Replaced submersible at 200ft depth. New pressure switch. Tested at 45 PSI."></textarea></div>
+  </div>
+  <button class="btn btn-blue btn-f" onclick="saveJob()" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>Save Job</button>
+  <button class="btn btn-outline btn-f" onclick="shareJob()" style="margin-bottom:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>Share with Customer</button>
+  <div class="upsell"><h4>Customer Notifications</h4><p>Send automated text updates: "Your technician is en route" and "Job completed" notifications.</p><button class="btn btn-sm btn-dis" aria-disabled="true">Available in Full Version</button></div>
+</section>
+
+<!-- Settings -->
+<section class="view" id="vSet">
+  <h2 style="margin-bottom:14px">Settings</h2>
+  <div class="card"><h3 style="margin-bottom:10px">Service Presets</h3><p style="font-size:.82rem;color:var(--muted);margin-bottom:10px">These are the quick-select buttons when logging a new job.</p><div id="presetSettings"></div></div>
+  <div class="card"><h3 style="margin-bottom:10px">Data</h3><button class="btn btn-outline btn-f" onclick="doExport()" style="margin-bottom:8px">Export (JSON)</button><button class="btn btn-outline btn-f" onclick="document.getElementById('impF').click()">Import (JSON)</button><input type="file" id="impF" accept=".json" style="display:none"></div>
+</section>
+</main>
+
+<nav class="tabs" role="navigation" aria-label="Main">
+  <button class="act" onclick="swt('vBoard',this)" aria-label="Job Board"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Board</button>
+  <button onclick="newJob();swt('vForm',this)" aria-label="Log Job"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Log</button>
+  <button onclick="swt('vSet',this)" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+</nav>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:52px;left:0;right:0;background:#1A1D27;border-top:1px solid #2A2D3A;padding:8px 16px;font-size:11px;line-height:1.4;color:#71717A;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 12px;text-align:center;">
+  <p style="margin:0;max-width:600px;"><strong style="color:#A1A1AA;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Pocono Well & Pump Service. All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Pocono%20Well%20Pump&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:500;white-space:nowrap;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=1710090518;const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Required</h1><p style="color:#999">Valid access key needed.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';throw new Error('No key');}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let db;
+function openDB(){return new Promise((r,j)=>{const q=indexedDB.open('PumpLogDB',1);q.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('jobs'))d.createObjectStore('jobs',{keyPath:'id'})};q.onsuccess=e=>{db=e.target.result;r()};q.onerror=j})}
+function dbP(d){return new Promise((r,j)=>{const t=db.transaction('jobs','readwrite');t.objectStore('jobs').put(d);t.oncomplete=r;t.onerror=j})}
+function dbA(){return new Promise((r,j)=>{const t=db.transaction('jobs','readonly');const q=t.objectStore('jobs').getAll();q.onsuccess=()=>r(q.result);q.onerror=j})}
+function dbD(id){return new Promise((r,j)=>{const t=db.transaction('jobs','readwrite');t.objectStore('jobs').delete(id);t.oncomplete=r;t.onerror=j})}
+
+const SERVICES=[
+  {name:'Pump Replacement',cost:4200},{name:'Pressure Tank',cost:1800},{name:'Water Test',cost:0},
+  {name:'Well Drilling',cost:12000},{name:'Water Softener Install',cost:3500},{name:'Grinder Pump',cost:3800},
+  {name:'Septic Pump',cost:2500},{name:'Water Heater',cost:2200},{name:'Diagnostic/Service Call',cost:150}
+];
+
+let curJob=null;let curStatus='scheduled';let curGPS=null;let selectedDay=0;
+
+function sv(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function swt(v,btn){document.querySelectorAll('nav.tabs button').forEach(b=>{b.classList.remove('act');b.removeAttribute('aria-current')});if(btn){btn.classList.add('act');btn.setAttribute('aria-current','page')}if(v==='vBoard'){buildDayTabs();loadBoard()}sv(v)}
+function toBoard(){swt('vBoard',document.querySelector('nav.tabs button:first-child'))}
+
+function dateStr(d){return d.toISOString().slice(0,10)}
+function dayLabel(offset){const d=new Date();d.setDate(d.getDate()+offset);if(offset===0)return'Today';if(offset===1)return'Tomorrow';if(offset===-1)return'Yesterday';return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}
+
+function buildDayTabs(){const c=document.getElementById('dayTabs');let html='';for(let i=-1;i<=5;i++){html+=`<button class="day-tab ${i===selectedDay?'active':''}" onclick="selectDay(${i})">${dayLabel(i)}</button>`}c.innerHTML=html}
+function selectDay(i){selectedDay=i;buildDayTabs();loadBoard()}
+
+async function loadBoard(){const all=await dbA();const c=document.getElementById('jobList');const target=new Date();target.setDate(target.getDate()+selectedDay);const tStr=dateStr(target);
+const dayJobs=all.filter(j=>j.date===tStr).sort((a,b)=>{const order={scheduled:0,enroute:1,progress:2,done:3};return(order[a.status]||0)-(order[b.status]||0)});
+if(!dayJobs.length){c.innerHTML=`<div style="text-align:center;padding:40px 16px;color:var(--muted)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2A2D3A" stroke-width="1" style="display:block;margin:0 auto 10px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><h3 style="margin-bottom:4px">No jobs for ${dayLabel(selectedDay).toLowerCase()}</h3><p style="font-size:.85rem">Tap "Log Job" to add one</p></div>`;return}
+c.innerHTML=dayJobs.map(j=>{
+  const gps=j.gps?`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${j.gps.lat.toFixed(4)}, ${j.gps.lng.toFixed(4)}</div>`:'';
+  const time=j.completedAt?new Date(j.completedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
+  return`<div class="job-card" tabindex="0" role="button" onclick="openJob('${j.id}')" onkeypress="if(event.key==='Enter')openJob('${j.id}')" aria-label="Open job ${j.name}"><div class="top"><div class="dot dot-${j.status}"></div><div class="info"><h4>${j.name||'No name'}</h4><div class="sub">${j.service||''}${time?' -- '+time:''}</div><span class="sts sts-${j.status}">${j.status.replace('progress','In Progress').replace('enroute','En Route')}</span>${gps}</div><div class="cost">${j.cost?'$'+j.cost.toLocaleString():''}</div></div></div>`}).join('')}
+
+function newJob(){curJob={id:crypto.randomUUID(),created:Date.now()};curStatus='scheduled';curGPS=null;
+document.getElementById('jName').value='';document.getElementById('jAddr').value='';document.getElementById('jPhone').value='';document.getElementById('jService').value='';document.getElementById('jCost').value='';document.getElementById('jDate').value=dateStr(new Date());document.getElementById('jNotes').value='';
+document.getElementById('fTitle').textContent='Log Job';document.getElementById('gpsResult').innerHTML='';
+renderPresets();renderStatusBar();sv('vForm')}
+
+async function openJob(id){const all=await dbA();const j=all.find(x=>x.id===id);if(!j)return;
+curJob=j;curStatus=j.status||'scheduled';curGPS=j.gps||null;
+document.getElementById('jName').value=j.name||'';document.getElementById('jAddr').value=j.address||'';document.getElementById('jPhone').value=j.phone||'';document.getElementById('jService').value=j.service||'';document.getElementById('jCost').value=j.cost||'';document.getElementById('jDate').value=j.date||'';document.getElementById('jNotes').value=j.notes||'';document.getElementById('fTitle').textContent='Edit Job';
+if(curGPS)document.getElementById('gpsResult').innerHTML=`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${curGPS.lat.toFixed(4)}, ${curGPS.lng.toFixed(4)} at ${new Date(curGPS.time).toLocaleTimeString()}</div>`;
+else document.getElementById('gpsResult').innerHTML='';
+renderPresets();renderStatusBar();sv('vForm')}
+
+function renderPresets(){const c=document.getElementById('presets');const cur=document.getElementById('jService').value;c.innerHTML=SERVICES.map(s=>`<button class="preset ${cur===s.name?'sel':''}" onclick="selectPreset('${s.name}',${s.cost})">${s.name}</button>`).join('')}
+
+function selectPreset(name,cost){document.getElementById('jService').value=name;if(cost>0)document.getElementById('jCost').value=cost;renderPresets()}
+
+function setSts(btn){curStatus=btn.dataset.s;renderStatusBar()}
+function renderStatusBar(){document.querySelectorAll('.status-bar button').forEach(b=>{b.classList.toggle('active',b.dataset.s===curStatus)});
+document.getElementById('gpsSection').style.display=curStatus==='done'?'block':'none'}
+
+function captureGPS(){if(!navigator.geolocation){toast('GPS not available','e');return}
+navigator.geolocation.getCurrentPosition(pos=>{curGPS={lat:pos.coords.latitude,lng:pos.coords.longitude,time:Date.now()};
+document.getElementById('gpsResult').innerHTML=`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${curGPS.lat.toFixed(4)}, ${curGPS.lng.toFixed(4)} stamped at ${new Date().toLocaleTimeString()}</div>`;
+toast('Location stamped')},err=>{toast('Could not get location','e')},{enableHighAccuracy:true,timeout:10000})}
+
+async function saveJob(){const name=document.getElementById('jName').value.trim();if(!name){toast('Enter customer name','e');return}
+curJob.name=name;curJob.address=document.getElementById('jAddr').value.trim();curJob.phone=document.getElementById('jPhone').value.trim();curJob.service=document.getElementById('jService').value.trim();curJob.cost=parseFloat(document.getElementById('jCost').value)||0;curJob.date=document.getElementById('jDate').value;curJob.status=curStatus;curJob.notes=document.getElementById('jNotes').value.trim();curJob.gps=curGPS;curJob.updated=Date.now();
+if(curStatus==='done'&&!curJob.completedAt)curJob.completedAt=Date.now();
+await dbP(curJob);toast('Saved');loadBoard()}
+
+async function shareJob(){if(!document.getElementById('jName').value.trim()){toast('Save first','e');return}await saveJob();
+let txt=`JOB RECORD - Pocono Well & Pump\n${curJob.name}\n${curJob.address}\n\nService: ${curJob.service}\nCost: $${(curJob.cost||0).toLocaleString()}\nStatus: ${curJob.status}\n`;
+if(curJob.gps)txt+=`Location verified: ${curJob.gps.lat.toFixed(4)}, ${curJob.gps.lng.toFixed(4)}\n`;
+if(curJob.notes)txt+=`Notes: ${curJob.notes}\n`;
+txt+=`\nPocono Well & Pump Service\n(570) 243-1679`;
+if(navigator.share){try{await navigator.share({title:`Job: ${curJob.name}`,text:txt});toast('Shared')}catch(e){if(e.name!=='AbortError')clipCp(txt)}}else{clipCp(txt)}}
+async function clipCp(t){try{await navigator.clipboard.writeText(t);toast('Copied')}catch(e){toast('Copy failed','e')}}
+
+async function doExport(){const all=await dbA();const d=JSON.stringify({jobs:all},null,2);const b=new Blob([d],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='pumplog-backup.json';a.click();URL.revokeObjectURL(u);toast('Exported')}
+document.getElementById('impF').addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.jobs)for(const j of d.jobs)await dbP(j);toast('Imported');loadBoard()}catch(er){toast('Bad file','e')}e.target.value=''});
+
+const today=dateStr(new Date());
+const yesterday=dateStr(new Date(Date.now()-86400000));
+const tomorrow=dateStr(new Date(Date.now()+86400000));
+
+const DEMO=[
+  {id:'demo-1',created:Date.now()-14400000,name:'Kowalski Residence',address:'1847 Clearview Ave, Stroudsburg',phone:'(570) 555-0187',service:'Pump Replacement',cost:4200,date:today,status:'done',notes:'Replaced submersible pump at 200ft. New pressure switch. Tested at 45 PSI. Old pump was 14 years old, motor seized.',gps:{lat:41.0051,lng:-75.2284,time:Date.now()-7200000},completedAt:Date.now()-7200000,isDemo:true},
+  {id:'demo-2',created:Date.now()-3600000,name:'Miller Property',address:'2290 Route 209, Saylorsburg',phone:'(570) 555-0244',service:'Pressure Tank',cost:1800,date:today,status:'scheduled',notes:'',gps:null,isDemo:true},
+  {id:'demo-3',created:Date.now()-1800000,name:'Chen Family',address:'78 Pocono Blvd, Mount Pocono',phone:'(570) 555-0312',service:'Water Test',cost:0,date:tomorrow,status:'scheduled',notes:'Follow-up water test after softener install last month. Check hardness and iron levels.',gps:null,isDemo:true}
+];
+
+async function loadDemo(){const all=await dbA();if(all.length>0||localStorage.getItem('pl_demoCleared'))return;
+for(const d of DEMO)await dbP(d);document.getElementById('db').style.display='flex';loadBoard()}
+
+async function clearDemo(){const all=await dbA();for(const j of all)if(j.isDemo)await dbD(j.id);document.getElementById('db').style.display='none';localStorage.setItem('pl_demoCleared','1');loadBoard();toast('Cleared')}
+
+function toast(m,t){const w=document.getElementById('tw');const el=document.createElement('div');el.className='toast';const sv=t==='e'?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';el.innerHTML=sv+m;w.appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},2500)}
+
+async function init(){await openDB();await loadDemo();const all=await dbA();if(all.some(x=>x.isDemo))document.getElementById('db').style.display='flex';buildDayTabs();await loadBoard()}
+init();
+</script>
+</body>
+</html>
