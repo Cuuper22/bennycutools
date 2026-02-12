@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PondVision - Peaceful Ponds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal:#2E6B5A;--teal-dark:#1D4A3E;--teal-light:#3D8B74;--teal-pale:#E6F0EC;
+  --stone:#8B7355;--stone-dark:#6B5840;--stone-light:#A89478;--stone-pale:#F0EBE3;
+  --water:#4A90A4;--water-pale:#E3F0F5;
+  --bg:#F7F5F0;--white:#FFFFFF;
+  --text:#2A2822;--text-2:#5A574E;--text-3:#8A8780;
+  --border:#E5E2DA;--success:#2D8A4E;--error:#B7392B;--warning:#C49A2E;
+  --sh-sm:0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.07);
+  --sh-md:0 4px 12px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.05);
+  --sh-lg:0 8px 24px rgba(0,0,0,.09),0 4px 8px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03);
+  --r-sm:8px;--r-md:12px;--r-lg:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+*:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:'Lato',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:120px;-webkit-font-smoothing:antialiased}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+.hdr{background:linear-gradient(135deg,var(--teal-dark),var(--teal));color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:var(--sh-md)}
+.hdr h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;letter-spacing:-.5px}
+.hdr .sub{font-size:12px;opacity:.8;margin-top:2px;font-weight:300}
+
+.demo-bar{background:var(--stone-pale);border-bottom:1px solid var(--stone-light);padding:10px 20px;font-size:13px;color:var(--stone-dark);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.demo-bar button{background:none;border:1px solid var(--stone);color:var(--stone);padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;font-family:inherit;white-space:nowrap;transition:.15s}
+
+.wrap{padding:0 16px;max-width:500px;margin:0 auto}
+.vw{display:none}.vw.on{display:block}
+
+/* PROJECT CARDS */
+.proj{background:var(--white);border-radius:var(--r-lg);overflow:hidden;margin:16px 0;box-shadow:var(--sh-md);border:1px solid var(--border);cursor:pointer;transition:transform .15s;animation:sUp .4s cubic-bezier(.34,1.56,.64,1) both}
+.proj:active{transform:scale(.98)}
+.proj:nth-child(1){animation-delay:.05s}.proj:nth-child(2){animation-delay:.1s}.proj:nth-child(3){animation-delay:.15s}
+.proj-img{width:100%;height:160px;object-fit:cover;background:var(--teal-pale);display:flex;align-items:center;justify-content:center;position:relative}
+.proj-img img{width:100%;height:100%;object-fit:cover}
+.proj-img .no-img{color:var(--text-3);font-size:13px}
+.proj-status{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;backdrop-filter:blur(8px)}
+.proj-status.proposal{background:rgba(74,144,164,.85);color:#fff}
+.proj-status.approved{background:rgba(196,154,46,.85);color:#fff}
+.proj-status.progress{background:rgba(45,138,78,.85);color:#fff}
+.proj-status.complete{background:rgba(46,107,90,.85);color:#fff}
+.proj-body{padding:16px 20px}
+.proj-name{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:4px}
+.proj-type{font-size:13px;color:var(--text-2);margin-bottom:8px}
+.proj-foot{display:flex;justify-content:space-between;align-items:center}
+.proj-total{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--teal)}
+.proj-date{font-size:12px;color:var(--text-3)}
+
+/* PROGRESS BAR */
+.pbar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal-light),var(--teal));transition:width .6s ease}
+
+/* FAB */
+.fab{position:fixed;bottom:130px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;border:none;box-shadow:var(--sh-lg);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:90;transition:transform .2s cubic-bezier(.34,1.56,.64,1);animation:pulse 2s ease-in-out infinite}
+.fab:active{transform:scale(.9)}.fab svg{width:24px;height:24px}
+@keyframes pulse{0%,100%{box-shadow:var(--sh-lg),0 0 0 0 rgba(46,107,90,.3)}50%{box-shadow:var(--sh-lg),0 0 0 10px rgba(46,107,90,0)}}
+
+/* BUILDER */
+.bsec{background:var(--white);border-radius:var(--r-lg);padding:20px;margin:16px 0;box-shadow:var(--sh-sm);border:1px solid var(--border);animation:sUp .3s ease-out both}
+.bsec h2{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--teal-dark);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.bsec h2 svg{width:20px;height:20px;color:var(--teal)}
+.fg{margin-bottom:16px}.fg label{display:block;font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:16px;font-family:inherit;background:var(--white);color:var(--text);transition:border .15s,box-shadow .15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(46,107,90,.15)}
+.fg textarea{resize:vertical}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* PHOTO GRID */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.photo-slot{aspect-ratio:1;border-radius:var(--r-sm);overflow:hidden;background:var(--teal-pale);display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px dashed var(--border);transition:.15s}
+.photo-slot:hover{border-color:var(--teal)}
+.photo-slot img{width:100%;height:100%;object-fit:cover}
+.photo-slot svg{width:24px;height:24px;color:var(--text-3)}
+.photo-slot.has-img{border-style:solid;border-color:transparent}
+
+/* MATERIAL LINES */
+.mat-line{display:grid;grid-template-columns:1fr 100px 32px;gap:8px;align-items:center;margin-bottom:10px}
+.mat-line input{padding:10px 12px;font-size:14px}
+.mat-del{width:32px;height:32px;border-radius:50%;background:none;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-3);transition:.15s}
+.mat-del:hover{border-color:var(--error);color:var(--error)}
+.add-mat{background:var(--teal-pale);border:1px dashed var(--teal);border-radius:var(--r-sm);padding:10px;text-align:center;cursor:pointer;color:var(--teal);font-size:13px;font-weight:500;transition:.15s;margin-top:8px}
+.add-mat:hover{background:var(--teal);color:#fff}
+
+/* PRICE STRIP */
+.price-strip{background:linear-gradient(135deg,var(--teal-dark),var(--teal));border-radius:var(--r-lg);padding:24px 20px;margin:16px 0;color:#fff;text-align:center;box-shadow:var(--sh-lg);position:sticky;bottom:125px;z-index:50}
+.price-strip .lbl{font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.price-strip .amt{font-family:'Playfair Display',serif;font-size:40px;font-weight:700;letter-spacing:-1px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.price-strip .amt.bump{transform:scale(1.08)}
+
+/* BUTTONS */
+.abr{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.btn{padding:14px 20px;border-radius:var(--r-md);font-family:'Playfair Display',serif;font-size:15px;font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .15s;border:none;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.97)}.btn svg{width:18px;height:18px}
+.bp{background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;box-shadow:var(--sh-md)}
+.bs{background:var(--white);color:var(--teal-dark);border:2px solid var(--teal)}
+.bf{grid-column:1/-1}
+.bd{background:var(--white);color:var(--error);border:2px solid var(--error)}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:60px;left:0;right:0;background:var(--white);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 12px;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06)}
+.nb{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 16px;color:var(--text-3);transition:.15s;font-family:inherit}
+.nb.on{color:var(--teal-dark)}.nb svg{width:22px;height:22px}.nb span{font-size:11px;font-weight:500}
+
+/* TOAST */
+.tc{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none}
+.tst{background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r-md);font-size:14px;box-shadow:var(--sh-lg);animation:tIn .3s ease-out;margin-bottom:8px}
+.tst.ok{background:var(--success)}.tst.err{background:var(--error)}
+
+/* EMPTY */
+.empty{text-align:center;padding:48px 24px}
+.empty svg{width:80px;height:80px;color:var(--text-3);opacity:.4;margin-bottom:16px}
+.empty h3{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:8px}
+.empty p{font-size:14px;color:var(--text-3);max-width:260px;margin:0 auto 20px}
+
+/* SETTINGS */
+.sg{background:var(--white);border-radius:var(--r-lg);padding:20px;margin:16px 0;box-shadow:var(--sh-sm);border:1px solid var(--border)}
+.sg h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;margin-bottom:12px;color:var(--teal-dark)}
+
+/* UPSELL */
+.locked{position:relative;opacity:.5;min-height:120px}
+.lock-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(255,255,255,.85);border-radius:var(--r-lg);z-index:10}
+.lock-lbl{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--text-2);margin-top:8px}
+
+@keyframes sUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+@media print{.bnav,.fab,.demo-bar,.tc,.hdr,#bct-demo-disclaimer{display:none!important}body{padding:0;background:#fff}.wrap{max-width:100%}}
+@media(min-width:1024px){.bnav{display:none}body{padding-bottom:80px}.wrap{max-width:600px}.fab{bottom:80px}.price-strip{bottom:75px}}
+body{padding-bottom:60px!important}
+</style>
+</head>
+<body>
+
+<header class="hdr" role="banner">
+  <h1>PondVision</h1>
+  <div class="sub">Peaceful Ponds -- Charlotte, NC</div>
+</header>
+
+<div class="demo-bar" id="demoBanner" style="display:none" role="status">
+  <span>Sample Charlotte-area projects loaded. Clear to start fresh.</span>
+  <button onclick="clearDemo()" aria-label="Clear sample data">Clear</button>
+</div>
+
+<div class="tc" id="toasts" aria-live="polite" aria-atomic="true"></div>
+
+<main class="wrap" role="main">
+  <!-- PROJECTS LIST -->
+  <section class="vw on" id="listView" aria-label="Project list">
+    <div id="projList"></div>
+    <div class="empty" id="emptyState" style="display:none">
+      <svg viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path d="M10 60 Q20 20 40 35 Q60 50 70 25"/>
+        <circle cx="25" cy="55" r="8"/>
+        <path d="M15 70 Q25 62 35 70"/>
+        <line x1="50" y1="45" x2="50" y2="65"/>
+        <path d="M45 55 L50 45 L55 55"/>
+      </svg>
+      <h3>No projects yet</h3>
+      <p>Start by adding your first landscape project or proposal.</p>
+      <button class="btn bp" onclick="switchVw('build')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Project
+      </button>
+    </div>
+  </section>
+
+  <!-- PROJECT BUILDER -->
+  <section class="vw" id="buildView" aria-label="Project builder">
+    <div class="bsec" style="animation-delay:.05s">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4-4V3"/><circle cx="12" cy="7" r="4"/></svg>
+        Client
+      </h2>
+      <div class="fg"><label for="cName">Client Name</label><input type="text" id="cName" placeholder="The Miller Family"></div>
+      <div class="frow">
+        <div class="fg"><label for="cPhone">Phone</label><input type="tel" id="cPhone" placeholder="(704) 555-1234"></div>
+        <div class="fg"><label for="cAddr">Neighborhood</label><input type="text" id="cAddr" placeholder="Myers Park"></div>
+      </div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.1s">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Project Type
+      </h2>
+      <div class="fg">
+        <select id="pType">
+          <option value="pond">Koi Pond</option>
+          <option value="waterfall">Waterfall</option>
+          <option value="swim">Swim Pond</option>
+          <option value="fountain">Fountain</option>
+          <option value="full">Full Backyard Transformation</option>
+          <option value="hardscape">Hardscape (Patio/Walkway)</option>
+          <option value="other">Other Custom</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="pStatus">Status</label>
+        <select id="pStatus">
+          <option value="proposal">Proposal</option>
+          <option value="approved">Approved</option>
+          <option value="progress">In Progress</option>
+          <option value="complete">Complete</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.15s">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Site Photos
+      </h2>
+      <div class="photo-grid" id="photoGrid">
+        <div class="photo-slot" onclick="addPhoto(0)" tabindex="0" role="button" aria-label="Add photo 1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div class="photo-slot" onclick="addPhoto(1)" tabindex="0" role="button" aria-label="Add photo 2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="photo-slot" onclick="addPhoto(2)" tabindex="0" role="button" aria-label="Add photo 3">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="photo-slot" onclick="addPhoto(3)" tabindex="0" role="button" aria-label="Add photo 4">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="photo-slot" onclick="addPhoto(4)" tabindex="0" role="button" aria-label="Add photo 5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="photo-slot" onclick="addPhoto(5)" tabindex="0" role="button" aria-label="Add photo 6">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+      <button class="btn bs bf" onclick="takePhoto()" style="margin-top:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Take Photo
+      </button>
+    </div>
+
+    <div class="bsec" style="animation-delay:.2s">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Materials &amp; Costs
+      </h2>
+      <div id="matLines"></div>
+      <div class="add-mat" onclick="addMaterial()" tabindex="0" role="button">+ Add Material Line</div>
+    </div>
+
+    <div class="bsec" style="animation-delay:.25s">
+      <h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Project Vision
+      </h2>
+      <div class="fg" style="margin-bottom:0">
+        <textarea id="pVision" rows="4" placeholder="Natural stone waterfall cascading into a 12x8 koi pond, surrounded by native ferns and hostas. Stone patio viewing area with embedded landscape lighting..."></textarea>
+      </div>
+    </div>
+
+    <div class="price-strip" id="priceStrip">
+      <div class="lbl">Project Estimate</div>
+      <div class="amt" id="totalAmt">$0</div>
+    </div>
+
+    <div class="abr">
+      <button class="btn bs" onclick="saveProj('draft')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        Save
+      </button>
+      <button class="btn bp" onclick="shareProposal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share Proposal
+      </button>
+    </div>
+    <button class="btn bs bf" onclick="resetBuild()" style="margin-bottom:24px">Start Over</button>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="vw" id="settingsView" aria-label="Settings">
+    <div class="sg">
+      <h3>Data</h3>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn bs" onclick="exportAll()" aria-label="Export backup">Export Backup (JSON)</button>
+        <button class="btn bs" onclick="document.getElementById('fileIn').click()" aria-label="Import backup">Import Backup (JSON)</button>
+      </div>
+    </div>
+    <div class="sg locked">
+      <div class="lock-ov">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.5" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        <span class="lock-lbl">Before &amp; After Gallery -- Full Version</span>
+        <span style="font-size:12px;color:var(--text-3);margin-top:4px">Auto-generate a shareable portfolio page</span>
+      </div>
+      <h3>Portfolio Generator</h3>
+    </div>
+  </section>
+</main>
+
+<button class="fab" id="fab" onclick="switchVw('build')" aria-label="New project">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<nav class="bnav" aria-label="Main navigation">
+  <button class="nb on" onclick="switchVw('list')" data-v="list" aria-label="Projects">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    <span>Projects</span>
+  </button>
+  <button class="nb" onclick="switchVw('build')" data-v="build" aria-label="New project">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span>New</span>
+  </button>
+  <button class="nb" onclick="switchVw('settings')" data-v="settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Settings</span>
+  </button>
+</nav>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+  <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Peaceful Ponds. All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Peaceful%20Ponds&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Permanent Deletion
+  </a>
+</div>
+
+<input type="file" id="photoIn" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+<input type="file" id="fileIn" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=1213325745;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#1a1a1a;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Required</h1><p style="color:#999;margin-bottom:1rem">This tool needs a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#4A90A4">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center;"><p style="margin:0"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with Peaceful Ponds.</p></div>';
+  throw new Error('Invalid key');
+}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let projects=[],editId=null,photos=[null,null,null,null,null,null],materials=[],photoTarget=0,DB;
+
+function initDB(){return new Promise((res,rej)=>{const r=indexedDB.open('PondVisionDB',1);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains('projects'))db.createObjectStore('projects',{keyPath:'id'})};r.onsuccess=e=>{DB=e.target.result;res()};r.onerror=rej})}
+function dbPut(p){return new Promise((res,rej)=>{const t=DB.transaction('projects','readwrite');t.objectStore('projects').put(p);t.oncomplete=res;t.onerror=rej})}
+function dbAll(){return new Promise((res,rej)=>{const t=DB.transaction('projects','readonly');const r=t.objectStore('projects').getAll();r.onsuccess=()=>res(r.result);r.onerror=rej})}
+function dbDel(id){return new Promise((res,rej)=>{const t=DB.transaction('projects','readwrite');t.objectStore('projects').delete(id);t.oncomplete=res;t.onerror=rej})}
+
+function getDemos(){
+  const n=Date.now();
+  return[
+    {id:'d1',isDemo:true,client:'The Andress Family',phone:'(704) 555-8821',addr:'Ballantyne',type:'pond',status:'complete',photos:[],materials:[{name:'Natural Stone',cost:4200},{name:'Pond Liner & Plumbing',cost:2800},{name:'Koi & Aquatic Plants',cost:1200},{name:'Filtration System',cost:1800},{name:'Labor (5 days)',cost:8000}],vision:'8x10 koi pond with natural stone edges, three-tier waterfall, underwater lighting, and native plantings. Stone seating area overlooking the water.',total:18000,created:n-86400000*14,progress:100},
+    {id:'d2',isDemo:true,client:'Lake Norman Retreat - Johnsons',phone:'(704) 555-3347',addr:'Lake Norman',type:'swim',status:'progress',photos:[],materials:[{name:'Excavation & Grading',cost:6500},{name:'Natural Stone & Boulders',cost:12000},{name:'Liner & Filtration',cost:5500},{name:'Aquatic Plants',cost:2000},{name:'Landscape Lighting',cost:3500},{name:'Labor (3 weeks)',cost:12500}],vision:'Natural swim pond with regeneration zone. Waterfall entry, sandy beach edge on south side. Native stone throughout. Automated biological filtration.',total:42000,created:n-86400000*5,progress:45},
+    {id:'d3',isDemo:true,client:'Weddington HOA Common Area',phone:'(704) 555-7104',addr:'Weddington',type:'waterfall',status:'proposal',photos:[],materials:[{name:'Stone & Boulders',cost:5500},{name:'Recirculating Pump',cost:1200},{name:'Basin & Liner',cost:1800},{name:'Plants & Softscape',cost:1500},{name:'Labor (4 days)',cost:5500}],vision:'15-foot cascading waterfall in community park entrance. Three-tier drop with pool at base. Low-maintenance design with auto-fill system. LED accent lighting for evening impact.',total:15500,created:n-3600000*5,progress:0}
+  ];
+}
+
+async function loadDemos(){
+  const ex=await dbAll();
+  if(ex.length===0&&!localStorage.getItem('pv_cleared')){
+    for(const d of getDemos())await dbPut(d);
+    document.getElementById('demoBanner').style.display='flex';
+    await loadProjects();
+  }
+}
+
+async function clearDemo(){
+  const all=await dbAll();
+  for(const p of all)if(p.isDemo)await dbDel(p.id);
+  localStorage.setItem('pv_cleared','1');
+  document.getElementById('demoBanner').style.display='none';
+  toast('Sample data cleared');
+  await loadProjects();
+}
+
+function switchVw(v){
+  document.querySelectorAll('.vw').forEach(x=>x.classList.remove('on'));
+  document.getElementById(v+'View').classList.add('on');
+  document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  document.getElementById('fab').style.display=v==='build'?'none':'flex';
+  if(v==='list')loadProjects();
+  if(v==='build'&&!editId){resetBuild();addMaterial();addMaterial();addMaterial()}
+}
+
+async function loadProjects(){
+  projects=await dbAll();
+  projects.sort((a,b)=>(b.created||0)-(a.created||0));
+  const hasDemo=projects.some(p=>p.isDemo);
+  document.getElementById('demoBanner').style.display=hasDemo?'flex':'none';
+  const list=document.getElementById('projList');
+  const empty=document.getElementById('emptyState');
+  if(!projects.length){list.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+
+  const typeMap={pond:'Koi Pond',waterfall:'Waterfall',swim:'Swim Pond',fountain:'Fountain',full:'Full Transformation',hardscape:'Hardscape',other:'Custom'};
+  const statusMap={proposal:'Proposal',approved:'Approved',progress:'In Progress',complete:'Complete'};
+
+  list.innerHTML=projects.map(p=>{
+    const prog=p.progress||0;
+    return`<div class="proj" onclick="openProj('${p.id}')">
+      <div class="proj-img">${p.photos&&p.photos[0]?`<img src="${p.photos[0]}" alt="Project photo">`:`<span class="no-img">${typeMap[p.type]||'Project'}</span>`}
+        <span class="proj-status ${p.status}">${statusMap[p.status]||p.status}</span>
+      </div>
+      <div class="proj-body">
+        <div class="proj-name">${esc(p.client)}</div>
+        <div class="proj-type">${typeMap[p.type]||p.type} -- ${esc(p.addr||'')}</div>
+        <div class="proj-foot">
+          <span class="proj-total">$${(p.total||0).toLocaleString()}</span>
+          <span class="proj-date">${timeAgo(p.created)}</span>
+        </div>
+        ${p.status==='progress'?`<div class="pbar"><div class="pbar-fill" style="width:${prog}%"></div></div>`:'' }
+      </div>
+    </div>`}).join('');
+}
+
+function openProj(id){
+  const p=projects.find(x=>x.id===id);if(!p)return;
+  editId=id;
+  document.getElementById('cName').value=p.client||'';
+  document.getElementById('cPhone').value=p.phone||'';
+  document.getElementById('cAddr').value=p.addr||'';
+  document.getElementById('pType').value=p.type||'pond';
+  document.getElementById('pStatus').value=p.status||'proposal';
+  document.getElementById('pVision').value=p.vision||'';
+  photos=p.photos?[...p.photos]:new Array(6).fill(null);
+  while(photos.length<6)photos.push(null);
+  renderPhotos();
+  materials=p.materials?p.materials.map(m=>({...m})):[];
+  renderMaterials();
+  calcTotal();
+  switchVw('build');
+}
+
+function resetBuild(){
+  editId=null;
+  document.getElementById('cName').value='';
+  document.getElementById('cPhone').value='';
+  document.getElementById('cAddr').value='';
+  document.getElementById('pType').value='pond';
+  document.getElementById('pStatus').value='proposal';
+  document.getElementById('pVision').value='';
+  photos=new Array(6).fill(null);
+  materials=[];
+  renderPhotos();
+  renderMaterials();
+  calcTotal();
+}
+
+// PHOTOS
+function renderPhotos(){
+  const grid=document.getElementById('photoGrid');
+  grid.innerHTML=photos.map((p,i)=>
+    `<div class="photo-slot${p?' has-img':''}" onclick="addPhoto(${i})" tabindex="0" role="button" aria-label="Photo ${i+1}">
+      ${p?`<img src="${p}" alt="Site photo ${i+1}">`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`}
+    </div>`).join('');
+}
+
+function addPhoto(idx){photoTarget=idx;document.getElementById('photoIn').click()}
+function takePhoto(){photoTarget=photos.findIndex(p=>!p);if(photoTarget<0)photoTarget=0;document.getElementById('photoIn').click()}
+
+function handlePhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      const max=800;
+      let w=img.width,h=img.height;
+      if(w>max){h=h*(max/w);w=max}
+      c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      photos[photoTarget]=c.toDataURL('image/jpeg',0.7);
+      renderPhotos();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+// MATERIALS
+function renderMaterials(){
+  document.getElementById('matLines').innerHTML=materials.map((m,i)=>
+    `<div class="mat-line">
+      <input type="text" value="${esc(m.name)}" placeholder="Material / service" oninput="materials[${i}].name=this.value" aria-label="Material name ${i+1}">
+      <input type="number" value="${m.cost||''}" placeholder="$" oninput="materials[${i}].cost=parseInt(this.value)||0;calcTotal()" aria-label="Cost for item ${i+1}">
+      <button class="mat-del" onclick="materials.splice(${i},1);renderMaterials();calcTotal()" aria-label="Remove material ${i+1}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addMaterial(){materials.push({name:'',cost:0});renderMaterials()}
+
+function calcTotal(){
+  const t=materials.reduce((s,m)=>s+(m.cost||0),0);
+  const el=document.getElementById('totalAmt');
+  el.textContent='$'+t.toLocaleString();
+  el.classList.add('bump');
+  setTimeout(()=>el.classList.remove('bump'),300);
+}
+
+// SAVE
+async function saveProj(){
+  const name=document.getElementById('cName').value.trim();
+  if(!name){toast('Add a client name','err');return}
+  const proj={
+    id:editId||'p-'+Date.now(),
+    client:name,
+    phone:document.getElementById('cPhone').value,
+    addr:document.getElementById('cAddr').value,
+    type:document.getElementById('pType').value,
+    status:document.getElementById('pStatus').value,
+    photos:photos.filter(Boolean),
+    materials:materials.filter(m=>m.name||m.cost),
+    vision:document.getElementById('pVision').value,
+    total:materials.reduce((s,m)=>s+(m.cost||0),0),
+    created:editId?(projects.find(p=>p.id===editId)||{}).created||Date.now():Date.now(),
+    progress:document.getElementById('pStatus').value==='complete'?100:document.getElementById('pStatus').value==='progress'?45:0
+  };
+  await dbPut(proj);
+  toast('Project saved','ok');
+  editId=null;
+  switchVw('list');
+}
+
+async function shareProposal(){
+  await saveProj();
+  const name=document.getElementById('cName').value.trim();
+  const type=document.getElementById('pType').value;
+  const typeMap={pond:'Koi Pond',waterfall:'Waterfall',swim:'Swim Pond',fountain:'Fountain',full:'Full Backyard Transformation',hardscape:'Hardscape',other:'Custom Project'};
+  const total=document.getElementById('totalAmt').textContent;
+  const vision=document.getElementById('pVision').value;
+
+  const text=`Project Proposal from Peaceful Ponds\n\nClient: ${name}\nProject: ${typeMap[type]||type}\nEstimate: ${total}\n\n${vision?'Vision: '+vision+'\n\n':''}Brian M. Kuchinski\nPeaceful Ponds\n(704) 643-6456\nBrian@peacefulponds.net`;
+
+  if(navigator.share){
+    try{await navigator.share({title:'Peaceful Ponds Proposal',text});toast('Proposal shared','ok')}catch(e){}
+  }else{
+    try{await navigator.clipboard.writeText(text);toast('Proposal copied to clipboard','ok')}catch(e){toast('Could not share','err')}
+  }
+}
+
+// EXPORT/IMPORT
+async function exportAll(){
+  const all=await dbAll();
+  const blob=new Blob([JSON.stringify({projects:all,exported:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`pondvision-backup-${new Date().toISOString().split('T')[0]}.json`;a.click();
+  toast('Backup downloaded','ok');
+}
+
+async function handleImport(e){
+  const f=e.target.files[0];if(!f)return;
+  try{const d=JSON.parse(await f.text());if(d.projects)for(const p of d.projects)await dbPut(p);toast(`Imported ${d.projects?.length||0} projects`,'ok');await loadProjects()}catch(e){toast('Could not read file','err')}
+  e.target.value='';
+}
+
+// UTILS
+function toast(msg,type){const t=document.createElement('div');t.className='tst'+(type?' '+type:'');t.textContent=msg;document.getElementById('toasts').appendChild(t);setTimeout(()=>t.remove(),4000)}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function timeAgo(ts){const d=Date.now()-ts,m=Math.floor(d/60000);if(m<1)return'Just now';if(m<60)return m+'m ago';const h=Math.floor(m/60);if(h<24)return h+'h ago';const dy=Math.floor(h/24);if(dy<7)return dy+'d ago';return new Date(ts).toLocaleDateString()}
+
+(async function(){
+  await initDB();
+  await loadDemos();
+  await loadProjects();
+  if(!materials.length){addMaterial();addMaterial();addMaterial()}
+  calcTotal();
+})();
+</script>
+</body>
+</html>
