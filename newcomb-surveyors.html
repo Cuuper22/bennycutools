@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SurveyDesk - Newcomb Land Surveyors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#2E5D3A;--primary-light:#408050;--primary-dark:#1A3D24;
+  --accent:#B8860B;--accent-light:#D4A843;
+  --parchment:#F4F0E8;--bg:#F4F0E8;--bg-card:#FFFFFF;--surface:#EDE8DD;
+  --text:#1A1A2E;--text-muted:#6B6B7B;
+  --success:#2E7D32;--success-bg:rgba(46,125,50,0.08);
+  --warning:#E65100;--warning-bg:rgba(230,81,0,0.08);
+  --error:#C62828;--info:#1565C0;--info-bg:rgba(21,101,192,0.08);
+  --radius:12px;--radius-sm:8px;
+  --shadow-1:0 1px 3px rgba(0,0,0,0.06);--shadow-2:0 4px 12px rgba(0,0,0,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Open Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:130px !important;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+h1,h2,h3{font-family:'Merriweather',serif;}
+.skip-link{position:absolute;left:-999px;top:0;z-index:10000;padding:8px 16px;background:var(--primary);color:#fff;font-size:14px;text-decoration:none;}
+.skip-link:focus{left:0;}
+*:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+
+.top-bar{background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.top-bar h1{color:#fff;font-size:1.15rem;font-weight:700;}
+.top-bar .logo{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;}
+
+.demo-banner{background:var(--accent);color:#fff;padding:10px 16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;font-weight:600;}
+.demo-banner button{background:rgba(0,0,0,0.15);border:none;color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+
+main{padding:16px;max-width:600px;margin:0 auto;}
+
+/* Deadline indicators */
+.deadline-bar{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;}
+.deadline-chip{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;transition:all 0.15s;border:none;}
+.deadline-chip.urgent{background:rgba(198,40,40,0.1);color:var(--error);}
+.deadline-chip.soon{background:rgba(230,81,0,0.1);color:var(--warning);}
+.deadline-chip.ok{background:rgba(46,125,50,0.1);color:var(--success);}
+
+/* Project cards */
+.proj-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:10px;border:1px solid rgba(0,0,0,0.06);box-shadow:var(--shadow-1);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;position:relative;animation:cardFade 0.3s ease-out backwards;}
+.proj-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-2);}
+.proj-card:active{transform:scale(0.98);}
+@keyframes cardFade{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.proj-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.proj-name{font-family:'Merriweather',serif;font-weight:700;font-size:0.95rem;}
+.proj-deadline{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;}
+.proj-deadline.urgent{background:rgba(198,40,40,0.1);color:var(--error);}
+.proj-deadline.soon{background:rgba(230,81,0,0.1);color:var(--warning);}
+.proj-deadline.ok{background:rgba(46,125,50,0.1);color:var(--success);}
+.proj-deadline.none{background:var(--surface);color:var(--text-muted);}
+.proj-type{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;background:var(--info-bg);color:var(--info);margin-bottom:4px;}
+.proj-addr{font-size:13px;color:var(--text-muted);margin-bottom:4px;}
+.proj-meta{display:flex;gap:10px;font-size:11px;color:var(--text-muted);}
+.proj-meta span{display:flex;align-items:center;gap:3px;}
+
+.status-badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
+.status-badge.quoting{background:rgba(184,134,11,0.1);color:var(--accent);}
+.status-badge.scheduled{background:var(--info-bg);color:var(--info);}
+.status-badge.field{background:var(--warning-bg);color:var(--warning);}
+.status-badge.drafting{background:rgba(124,58,237,0.08);color:#7C3AED;}
+.status-badge.complete{background:var(--success-bg);color:var(--success);}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;box-shadow:var(--shadow-1);}
+.stat-value{font-family:'Merriweather',serif;font-size:1.3rem;font-weight:700;color:var(--primary);}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* Service templates */
+.template-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.template-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:12px;text-align:center;box-shadow:var(--shadow-1);cursor:pointer;transition:transform 0.15s;border:2px solid transparent;}
+.template-card:hover{transform:translateY(-1px);border-color:var(--primary);}
+.template-card .t-name{font-weight:700;font-size:13px;margin-bottom:2px;}
+.template-card .t-price{font-size:12px;color:var(--text-muted);}
+
+.fab{position:fixed;bottom:140px;right:20px;z-index:90;padding:14px 20px;border-radius:50px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;color:#fff;cursor:pointer;font-family:'Open Sans',sans-serif;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(46,93,58,0.3);display:flex;align-items:center;gap:8px;transition:transform 0.15s;}
+.fab:hover{transform:scale(1.05);}
+.fab:active{transform:scale(0.95);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px 20px;animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal h2{font-size:1.1rem;margin-bottom:20px;}
+
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;background:var(--surface);border:1px solid rgba(0,0,0,0.08);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:16px;transition:border-color 0.15s,box-shadow 0.15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(46,93,58,0.1);outline:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border:none;border-radius:var(--radius-sm);font-family:'Open Sans',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:transform 0.1s;width:100%;}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-light);}
+.btn-secondary{background:var(--surface);color:var(--text);}
+.btn-danger{background:var(--error);color:#fff;}
+
+.btn-camera{background:var(--surface);border:2px dashed rgba(0,0,0,0.12);color:var(--text-muted);padding:14px;border-radius:var(--radius);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:border-color 0.15s;}
+.btn-camera:hover{border-color:var(--primary);}
+.photo-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.photo-thumb{width:52px;height:52px;border-radius:8px;object-fit:cover;border:2px solid var(--surface);}
+
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--bg-card);border-top:1px solid rgba(0,0,0,0.06);display:flex;z-index:100;padding:8px 0 12px;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;transition:color 0.15s;}
+.nav-item.active{color:var(--primary);}
+.nav-item svg{width:22px;height:22px;}
+
+.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;}
+.toast{background:var(--success);color:#fff;padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.1);animation:toastIn 0.3s ease-out;}
+.toast.error{background:var(--error);}
+@keyframes toastIn{from{transform:translateY(-20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+.section{display:none;}.section.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.upsell-card{background:linear-gradient(135deg,rgba(46,93,58,0.05),rgba(184,134,11,0.08));border:1px dashed rgba(46,93,58,0.2);border-radius:var(--radius);padding:16px;text-align:center;margin-top:16px;opacity:0.8;}
+.upsell-card h3{color:var(--primary);font-size:0.9rem;margin-bottom:4px;}
+.upsell-card p{font-size:12px;color:var(--text-muted);}
+.upsell-badge{display:inline-block;background:rgba(46,93,58,0.1);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
+
+@media print{.bottom-nav,.fab,.top-bar,.demo-banner,.toast-container,#bct-demo-disclaimer{display:none!important;}body{background:#fff;padding:0!important;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="top-bar" role="banner">
+  <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+  <h1>SurveyDesk</h1>
+</header>
+<div class="demo-banner" id="demoBanner" role="alert" style="display:none;">
+  <span>Sample Wake County projects loaded.</span>
+  <button onclick="clearDemoData()" aria-label="Clear sample data">Clear</button>
+</div>
+<div class="toast-container" id="toastContainer" aria-live="polite" role="status"></div>
+
+<main id="main-content">
+  <section class="section active" id="sec-projects" aria-label="Projects">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-value" id="statActive">0</div><div class="stat-label">Active</div></div>
+      <div class="stat-card"><div class="stat-value" id="statQuoting">0</div><div class="stat-label">Quoting</div></div>
+      <div class="stat-card"><div class="stat-value" id="statDue">0</div><div class="stat-label">Due This Week</div></div>
+    </div>
+    <div class="deadline-bar" id="deadlineBar"></div>
+    <div id="projectsList"></div>
+  </section>
+
+  <section class="section" id="sec-templates" aria-label="Service templates">
+    <h2 style="font-size:1rem;color:var(--text-muted);margin-bottom:12px;">Quick Quote Templates</h2>
+    <div class="template-grid" id="templateGrid"></div>
+    <div class="upsell-card">
+      <span class="upsell-badge">Full Version</span>
+      <h3>Client Status Portal</h3>
+      <p>Give clients a private link to check their survey status. Saves Cheryll from phone calls all day.</p>
+    </div>
+  </section>
+
+  <section class="section" id="sec-settings" aria-label="Settings">
+    <h2 style="font-size:1rem;color:var(--text-muted);margin-bottom:12px;">Settings</h2>
+    <button class="btn btn-secondary" style="margin-bottom:8px;" onclick="exportData()">Export All Data (JSON)</button>
+    <label for="importInput" class="btn btn-secondary" style="margin-bottom:8px;cursor:pointer;">Import Data</label>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn btn-secondary" onclick="exportCSV()">Export Projects (CSV)</button>
+  </section>
+</main>
+
+<button class="fab" onclick="showNewProject()" aria-label="Quick quote">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Quick Quote
+</button>
+
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+  <button class="nav-item active" data-section="sec-projects" aria-label="Projects">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+    Projects
+  </button>
+  <button class="nav-item" data-section="sec-templates" aria-label="Templates">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Templates
+  </button>
+  <button class="nav-item" data-section="sec-settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<div class="modal-overlay" id="projModal">
+  <div class="modal" role="dialog" aria-label="Project details">
+    <h2 id="modalTitle">New Project</h2>
+    <form id="projForm" onsubmit="saveProject(event)">
+      <input type="hidden" id="editId">
+      <div class="form-group"><label for="projName">Project Name</label><input type="text" id="projName" required placeholder="Thompson Boundary Survey"></div>
+      <div class="form-group"><label for="clientName">Client</label><input type="text" id="clientName" required placeholder="John Thompson"></div>
+      <div class="form-group"><label for="clientPhone">Phone</label><input type="tel" id="clientPhone" placeholder="919-555-0123"></div>
+      <div class="form-group"><label for="propAddr">Property Address</label><input type="text" id="propAddr" required placeholder="1234 Oak Dr, Cary, NC"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="surveyType">Survey Type</label>
+          <select id="surveyType">
+            <option value="boundary">Boundary Survey</option>
+            <option value="alta">ALTA/NSPS</option>
+            <option value="topo">Topographic</option>
+            <option value="staking">Construction Staking</option>
+            <option value="asbuilt">As-Built</option>
+            <option value="elevation">Elevation Certificate</option>
+            <option value="subdivision">Subdivision Plat</option>
+          </select>
+        </div>
+        <div class="form-group"><label for="lotSize">Lot Size (acres)</label><input type="number" id="lotSize" placeholder="1.2" step="0.01" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label for="price">Quote ($)</label><input type="number" id="price" placeholder="850" min="0"></div>
+        <div class="form-group"><label for="status">Status</label>
+          <select id="status">
+            <option value="quoting">Quoting</option>
+            <option value="scheduled">Scheduled</option>
+            <option value="field">In Field</option>
+            <option value="drafting">Drafting</option>
+            <option value="complete">Complete</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label for="deadline">Deadline</label><input type="date" id="deadline"></div>
+      <div class="form-group"><label for="referrer">Referred By</label><input type="text" id="referrer" placeholder="Agent name, builder, etc."></div>
+      <div class="form-group"><label for="notes">Notes</label><textarea id="notes" rows="2" placeholder="Wooded lot, add half day field time..."></textarea></div>
+      <div class="form-group"><label>Field Photos</label>
+        <button type="button" class="btn-camera" onclick="document.getElementById('photoIn').click()">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Snap field photo (GPS tagged)
+        </button>
+        <input type="file" id="photoIn" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+        <div class="photo-grid" id="photoPreview"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+      <div id="delRow" style="display:none;margin-top:10px;"><button type="button" class="btn btn-danger" onclick="deleteProject()">Delete</button></div>
+      <div id="shareRow" style="display:none;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="shareQuote()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Quote</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+  <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Newcomb Land Surveyors, PLLC. All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Newcomb%20Land%20Surveyors&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=577946915;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f4f0e8;color:#1a1a2e;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:serif">Access Required</h1><p style="color:#6b6b7b">This tool needs a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#2e5d3a">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+const DB_NAME='surveydesk_db';const DB_VERSION=1;let db;
+function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'});};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=e=>j(e);});}
+function dbPut(s,d){return new Promise((r,j)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).put(d);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+function dbGetAll(s){return new Promise((r,j)=>{const tx=db.transaction(s,'readonly');const req=tx.objectStore(s).getAll();req.onsuccess=()=>r(req.result);req.onerror=e=>j(e);});}
+function dbDelete(s,id){return new Promise((r,j)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).delete(id);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+
+let allProjects=[];let currentPhotos=[];
+const today=new Date();const td=d=>d.toISOString().slice(0,10);
+const TYPE_LABELS={boundary:'Boundary',alta:'ALTA/NSPS',topo:'Topographic',staking:'Construction Staking',asbuilt:'As-Built',elevation:'Elevation Cert',subdivision:'Subdivision Plat'};
+const STATUS_LABELS={quoting:'Quoting',scheduled:'Scheduled',field:'In Field',drafting:'Drafting',complete:'Complete'};
+const TEMPLATES=[
+  {type:'boundary',name:'Boundary Survey',basePrice:'$450-1,200',desc:'Residential lot'},
+  {type:'alta',name:'ALTA/NSPS',basePrice:'$1,500-3,000',desc:'Commercial/lender'},
+  {type:'topo',name:'Topographic',basePrice:'$800-2,500',desc:'Grading/design'},
+  {type:'staking',name:'Construction Staking',basePrice:'$400-1,000',desc:'Building layout'},
+  {type:'asbuilt',name:'As-Built Survey',basePrice:'$500-1,200',desc:'Post-construction'},
+  {type:'elevation',name:'Elevation Certificate',basePrice:'$300-600',desc:'FEMA/flood'}
+];
+
+const DEMO_PROJECTS=[
+  {id:'demo-1',projName:'Thompson Boundary Survey',clientName:'John Thompson',clientPhone:'919-555-0101',propAddr:'1420 Lake Wheeler Rd, Cary',surveyType:'boundary',lotSize:1.2,price:850,status:'field',deadline:td(new Date(today.getTime()+5*86400000)),referrer:'Self',notes:'Found 3 of 4 corners. Setting new pin on NE corner tomorrow.',photos:[],created:Date.now()-432000000,isDemo:true},
+  {id:'demo-2',projName:'KW Agent ALTA - Wake Forest',clientName:'Keller Williams (Agent: Lisa Park)',clientPhone:'919-555-0202',propAddr:'5700 Capital Blvd, Wake Forest',surveyType:'alta',lotSize:0.85,price:2200,status:'quoting',deadline:td(new Date(today.getTime()+14*86400000)),referrer:'Lisa Park, KW Realty',notes:'Commercial closing Mar 1. Need full ALTA with Table A items.',photos:[],created:Date.now()-172800000,isDemo:true},
+  {id:'demo-3',projName:'Henderson Topo',clientName:'Mark Henderson',clientPhone:'919-555-0303',propAddr:'2800 Apex Peakway, Apex',surveyType:'topo',lotSize:3.8,price:1800,status:'scheduled',deadline:td(new Date(today.getTime()+21*86400000)),referrer:'Henderson Builders',notes:'3.8 acres, mostly cleared. Architect needs topo for new home design.',photos:[],created:Date.now()-604800000,isDemo:true},
+  {id:'demo-4',projName:'Rivera Boundary - Fence Project',clientName:'Ana Rivera',clientPhone:'919-555-0404',propAddr:'108 Briardale Ave, Holly Springs',surveyType:'boundary',lotSize:0.45,price:650,status:'drafting',deadline:td(new Date(today.getTime()+2*86400000)),referrer:'Fence contractor',notes:'Simple quarter acre lot. Subdivision, existing plat on file. Drawing up now.',photos:[],created:Date.now()-864000000,isDemo:true},
+  {id:'demo-5',projName:'Garner Elevation Cert',clientName:'Tom Whitfield',clientPhone:'919-555-0505',propAddr:'440 Timber Dr, Garner',surveyType:'elevation',lotSize:0.3,price:425,status:'complete',deadline:td(new Date(today.getTime()-3*86400000)),referrer:'Insurance company',notes:'Completed. FEMA zone X confirmed. Sent to insurance.',photos:[],created:Date.now()-1209600000,isDemo:true}
+];
+
+async function init(){
+  const isFirst=!localStorage.getItem('sd_visited');
+  if(isFirst){allProjects=[...DEMO_PROJECTS];document.getElementById('demoBanner').style.display='flex';render();}
+  setupNav();renderTemplates();
+  try{await openDB();
+    if(isFirst){localStorage.setItem('sd_visited','1');for(const p of DEMO_PROJECTS)await dbPut('projects',p);}
+    else{allProjects=await dbGetAll('projects');if(allProjects.some(p=>p.isDemo))document.getElementById('demoBanner').style.display='flex';render();}
+  }catch(e){console.warn('IDB error:',e);}
+}
+
+function render(){renderStats();renderDeadlineBar();renderProjects();}
+
+function renderStats(){
+  const active=allProjects.filter(p=>p.status!=='complete'&&p.status!=='quoting').length;
+  const quoting=allProjects.filter(p=>p.status==='quoting').length;
+  const weekEnd=new Date(today);weekEnd.setDate(weekEnd.getDate()+7);
+  const dueThisWeek=allProjects.filter(p=>p.deadline&&new Date(p.deadline+'T23:59:59')<=weekEnd&&p.status!=='complete').length;
+  document.getElementById('statActive').textContent=active;
+  document.getElementById('statQuoting').textContent=quoting;
+  document.getElementById('statDue').textContent=dueThisWeek;
+}
+
+function daysUntil(dateStr){if(!dateStr)return 999;return Math.ceil((new Date(dateStr+'T23:59:59')-today)/(86400000));}
+
+function renderDeadlineBar(){
+  const c=document.getElementById('deadlineBar');
+  const urgent=allProjects.filter(p=>p.status!=='complete'&&daysUntil(p.deadline)<=2).length;
+  const soon=allProjects.filter(p=>p.status!=='complete'&&daysUntil(p.deadline)>2&&daysUntil(p.deadline)<=7).length;
+  const ok=allProjects.filter(p=>p.status!=='complete'&&daysUntil(p.deadline)>7).length;
+  c.innerHTML='';
+  if(urgent)c.innerHTML+=`<span class="deadline-chip urgent">${urgent} due in 1-2 days</span>`;
+  if(soon)c.innerHTML+=`<span class="deadline-chip soon">${soon} due this week</span>`;
+  if(ok)c.innerHTML+=`<span class="deadline-chip ok">${ok} on track</span>`;
+}
+
+function renderProjects(){
+  const c=document.getElementById('projectsList');
+  const sorted=[...allProjects].sort((a,b)=>{
+    if(a.status==='complete'&&b.status!=='complete')return 1;
+    if(b.status==='complete'&&a.status!=='complete')return -1;
+    return daysUntil(a.deadline)-daysUntil(b.deadline);
+  });
+  if(sorted.length===0){c.innerHTML='<div style="text-align:center;padding:40px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><p style="color:var(--text-muted);margin-top:12px;">No projects yet. Tap Quick Quote to start.</p></div>';return;}
+  c.innerHTML=sorted.map((p,i)=>{
+    const days=daysUntil(p.deadline);
+    const dlClass=p.status==='complete'?'none':days<=2?'urgent':days<=7?'soon':'ok';
+    const dlText=p.status==='complete'?'Done':days<0?Math.abs(days)+'d overdue':days===0?'Due today':days+'d left';
+    return `<div class="proj-card" onclick="editProject('${p.id}')" style="animation-delay:${i*50}ms" tabindex="0" role="button" aria-label="Edit ${p.projName}">
+      <div class="proj-top"><div><span class="proj-type">${TYPE_LABELS[p.surveyType]||p.surveyType}</span><div class="proj-name">${p.projName}</div></div><span class="proj-deadline ${dlClass}">${dlText}</span></div>
+      <div class="proj-addr">${p.propAddr}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <span class="status-badge ${p.status}">${STATUS_LABELS[p.status]}</span>
+        ${p.price?`<span style="font-family:'Merriweather',serif;font-weight:700;color:var(--primary);">$${Number(p.price).toLocaleString()}</span>`:''}
+      </div>
+      <div class="proj-meta" style="margin-top:6px;">
+        <span>${p.clientName}</span>
+        ${p.lotSize?`<span>${p.lotSize} acres</span>`:''}
+        ${p.photos&&p.photos.length?`<span>${p.photos.length} photos</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTemplates(){
+  const g=document.getElementById('templateGrid');
+  g.innerHTML=TEMPLATES.map(t=>`<div class="template-card" onclick="useTemplate('${t.type}')" tabindex="0" role="button" aria-label="Use ${t.name} template"><div class="t-name">${t.name}</div><div class="t-price">${t.basePrice}</div><div style="font-size:10px;color:var(--text-muted)">${t.desc}</div></div>`).join('');
+}
+
+function setupNav(){document.querySelectorAll('.nav-item').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(btn.dataset.section).classList.add('active');});});}
+
+function showNewProject(){
+  document.getElementById('modalTitle').textContent='New Project';
+  document.getElementById('projForm').reset();
+  document.getElementById('editId').value='';
+  document.getElementById('delRow').style.display='none';
+  document.getElementById('shareRow').style.display='none';
+  document.getElementById('saveBtn').textContent='Save';
+  currentPhotos=[];
+  document.getElementById('photoPreview').innerHTML='';
+  document.getElementById('projModal').classList.add('active');
+  // Try GPS
+  if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{},()=>{});}
+}
+
+function useTemplate(type){
+  showNewProject();
+  document.getElementById('surveyType').value=type;
+}
+
+function editProject(id){
+  const p=allProjects.find(x=>x.id===id);if(!p)return;
+  document.getElementById('modalTitle').textContent='Edit Project';
+  document.getElementById('editId').value=p.id;
+  document.getElementById('projName').value=p.projName;
+  document.getElementById('clientName').value=p.clientName;
+  document.getElementById('clientPhone').value=p.clientPhone||'';
+  document.getElementById('propAddr').value=p.propAddr;
+  document.getElementById('surveyType').value=p.surveyType;
+  document.getElementById('lotSize').value=p.lotSize||'';
+  document.getElementById('price').value=p.price||'';
+  document.getElementById('status').value=p.status;
+  document.getElementById('deadline').value=p.deadline||'';
+  document.getElementById('referrer').value=p.referrer||'';
+  document.getElementById('notes').value=p.notes||'';
+  document.getElementById('delRow').style.display='block';
+  document.getElementById('shareRow').style.display='block';
+  document.getElementById('saveBtn').textContent='Update';
+  currentPhotos=p.photos||[];
+  document.getElementById('photoPreview').innerHTML=currentPhotos.map((ph,i)=>`<img src="${ph}" class="photo-thumb" alt="Field photo ${i+1}">`).join('');
+  document.getElementById('projModal').classList.add('active');
+}
+
+function closeModal(){document.getElementById('projModal').classList.remove('active');}
+
+async function saveProject(e){
+  e.preventDefault();
+  const eid=document.getElementById('editId').value;
+  const proj={
+    id:eid||'proj-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),
+    projName:document.getElementById('projName').value,
+    clientName:document.getElementById('clientName').value,
+    clientPhone:document.getElementById('clientPhone').value,
+    propAddr:document.getElementById('propAddr').value,
+    surveyType:document.getElementById('surveyType').value,
+    lotSize:parseFloat(document.getElementById('lotSize').value)||0,
+    price:parseFloat(document.getElementById('price').value)||0,
+    status:document.getElementById('status').value,
+    deadline:document.getElementById('deadline').value,
+    referrer:document.getElementById('referrer').value,
+    notes:document.getElementById('notes').value,
+    photos:currentPhotos,
+    created:eid?(allProjects.find(x=>x.id===eid)||{}).created||Date.now():Date.now(),
+    isDemo:false
+  };
+  await dbPut('projects',proj);allProjects=await dbGetAll('projects');
+  render();closeModal();showToast(eid?'Updated':'Project saved');
+}
+
+async function deleteProject(){const id=document.getElementById('editId').value;if(!id)return;await dbDelete('projects',id);allProjects=await dbGetAll('projects');render();closeModal();showToast('Deleted','error');}
+
+function handlePhoto(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const s=Math.min(800/img.width,1);c.width=img.width*s;c.height=img.height*s;c.getContext('2d').drawImage(img,0,0,c.width,c.height);currentPhotos.push(c.toDataURL('image/jpeg',0.7));document.getElementById('photoPreview').innerHTML=currentPhotos.map((ph,i)=>`<img src="${ph}" class="photo-thumb" alt="Field photo ${i+1}">`).join('');};img.src=ev.target.result;};reader.readAsDataURL(file);e.target.value='';}
+
+async function shareQuote(){
+  const id=document.getElementById('editId').value;
+  const p=allProjects.find(x=>x.id===id);if(!p)return;
+  const text=`Survey Quote from Newcomb Land Surveyors\n\n${TYPE_LABELS[p.surveyType]} - ${p.propAddr}\nLot: ${p.lotSize||'TBD'} acres\nQuote: $${p.price||'TBD'}\nEst. completion: ${p.deadline||'TBD'}\n\nNewcomb Land Surveyors, PLLC\n(919) 847-1800`;
+  if(navigator.share){try{await navigator.share({title:'Survey Quote',text});}catch(e){}}
+  else{await navigator.clipboard.writeText(text);showToast('Copied to clipboard');}
+}
+
+async function clearDemoData(){for(const p of allProjects.filter(x=>x.isDemo))await dbDelete('projects',p.id);allProjects=await dbGetAll('projects');document.getElementById('demoBanner').style.display='none';render();showToast('Sample data cleared');}
+
+async function exportData(){const d={projects:allProjects,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='surveydesk-backup.json';a.click();}
+async function importData(e){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.projects)for(const p of d.projects)await dbPut('projects',p);allProjects=await dbGetAll('projects');render();showToast('Imported');}catch(err){showToast('Failed','error');}}
+function exportCSV(){const h=['Name','Client','Phone','Address','Type','Acres','Quote','Status','Deadline','Referrer','Notes'];const rows=allProjects.map(p=>[p.projName,p.clientName,p.clientPhone,p.propAddr,TYPE_LABELS[p.surveyType],p.lotSize,p.price,STATUS_LABELS[p.status],p.deadline,p.referrer,p.notes]);const csv=[h,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='surveydesk-projects.csv';a.click();}
+
+function showToast(msg,type='success'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast'+(type==='error'?' error':'');t.textContent=msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+
+init();
+</script>
+</body>
+</html>
