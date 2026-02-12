@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PianoLog - Stay Tuned Piano Services</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f7f5f0;--card:#ffffff;--text:#2b2b2b;--text-muted:#6b6560;--gold:#c8a96e;--gold-soft:rgba(200,169,110,.12);
+--dark:#2b2b2b;--border:#e8e3dc;--success:#3a8a5c;--warning:#c48a1a;--danger:#b44030;
+--radius:12px;--shadow:0 1px 3px rgba(43,43,43,.06),0 4px 12px rgba(43,43,43,.04);
+--shadow-lg:0 4px 12px rgba(43,43,43,.08),0 12px 32px rgba(43,43,43,.06);
+--font-head:'Playfair Display',Georgia,serif;--font-body:'Source Sans 3','Source Sans Pro',system-ui,sans-serif;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;padding-bottom:140px;-webkit-font-smoothing:antialiased}
+body{padding-bottom:140px!important}
+h1,h2,h3{font-family:var(--font-head);font-weight:700;line-height:1.2}
+h1{font-size:1.5rem}h2{font-size:1.25rem}h3{font-size:1.1rem}
+a{color:var(--gold);text-decoration:none}
+button,input,select,textarea{font-family:var(--font-body);font-size:1rem;border:none;outline:none;background:none}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);outline-offset:2px}
+*:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* NOISE TEXTURE */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9998;opacity:.03;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")}
+
+/* HEADER */
+.app-header{background:var(--dark);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;
+box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.app-header h1{color:#fff;font-size:1.35rem;letter-spacing:.02em}
+.app-header .subtitle{color:var(--gold);font-family:var(--font-body);font-size:.8rem;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
+
+/* DEMO BANNER */
+.demo-banner{background:var(--gold-soft);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.82rem;color:var(--text-muted);line-height:1.3}
+.demo-banner button{background:var(--gold);color:#fff;font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;white-space:nowrap;transition:transform .15s}
+.demo-banner button:active{transform:scale(.96)}
+
+/* VIEWS */
+.view{display:none;padding:16px;animation:fadeUp .35s ease-out}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* SEARCH BAR */
+.search-bar{position:relative;margin-bottom:16px}
+.search-bar input{width:100%;padding:12px 16px 12px 44px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);font-size:.95rem;box-shadow:var(--shadow);transition:border-color .2s,box-shadow .2s}
+.search-bar input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.search-bar svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:20px;letter-spacing:.02em;text-transform:uppercase}
+.badge--due{background:rgba(58,138,92,.1);color:var(--success)}
+.badge--soon{background:rgba(196,138,26,.1);color:var(--warning)}
+.badge--overdue{background:rgba(180,64,48,.1);color:var(--danger)}
+
+/* PIANO CARDS */
+.piano-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;cursor:pointer;
+transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s;position:relative}
+.piano-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.piano-card:active{transform:scale(.985)}
+.piano-card-inner{padding:16px;display:flex;gap:14px;align-items:flex-start}
+.piano-thumb{width:56px;height:56px;border-radius:10px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+.piano-thumb img{width:100%;height:100%;object-fit:cover}
+.piano-thumb svg{color:var(--gold);width:28px;height:28px}
+.piano-info{flex:1;min-width:0}
+.piano-info .client-name{font-family:var(--font-head);font-weight:700;font-size:1rem;margin-bottom:2px}
+.piano-info .piano-model{font-size:.85rem;color:var(--text-muted);margin-bottom:6px}
+.piano-info .meta-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.piano-info .meta-item{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:3px}
+.piano-card .arrow{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--text-muted);opacity:.4}
+
+/* SERVICE LOG ENTRIES */
+.service-entry{background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid var(--gold);box-shadow:var(--shadow)}
+.service-entry .se-date{font-size:.78rem;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.service-entry .se-type{font-weight:600;font-size:.92rem;margin-bottom:4px}
+.service-entry .se-notes{font-size:.85rem;color:var(--text-muted);line-height:1.45}
+.service-entry .se-photos{display:flex;gap:6px;margin-top:8px;overflow-x:auto}
+.service-entry .se-photos img{width:52px;height:52px;border-radius:6px;object-fit:cover;flex-shrink:0}
+
+/* FORM STYLES */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.82rem;font-weight:600;color:var(--text-muted);margin-bottom:6px;letter-spacing:.02em}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:.95rem;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold-soft)}
+.form-group textarea{resize:vertical;min-height:80px}
+
+.checkbox-row{display:flex;flex-wrap:wrap;gap:8px}
+.checkbox-item{display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:background .15s,border-color .15s;font-size:.85rem}
+.checkbox-item.checked{background:var(--gold-soft);border-color:var(--gold)}
+.checkbox-item input{width:16px;height:16px;accent-color:var(--gold)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 24px;border-radius:10px;font-weight:600;font-size:.92rem;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.btn:active{transform:scale(.97)}
+.btn--primary{background:var(--gold);color:#fff;box-shadow:0 2px 8px rgba(200,169,110,.3)}
+.btn--primary:hover{box-shadow:0 4px 16px rgba(200,169,110,.4)}
+.btn--secondary{background:var(--bg);color:var(--text);border:1px solid var(--border)}
+.btn--danger{background:var(--danger);color:#fff}
+.btn--full{width:100%}
+.btn--disabled{opacity:.45;cursor:not-allowed;position:relative}
+.btn--disabled::after{content:'Full version';position:absolute;top:-8px;right:-8px;background:var(--dark);color:#fff;font-size:.6rem;padding:2px 6px;border-radius:4px}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06);padding:4px 0}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:none;cursor:pointer;color:var(--text-muted);transition:color .2s;border:none;-webkit-tap-highlight-color:transparent}
+.bottom-nav button.active{color:var(--gold)}
+.bottom-nav button svg{width:22px;height:22px}
+.bottom-nav button span{font-size:.68rem;font-weight:600;letter-spacing:.03em}
+
+/* FAB */
+.fab{position:fixed;bottom:130px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(200,169,110,.4);cursor:pointer;z-index:99;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s}
+.fab:hover{transform:scale(1.08)}
+.fab:active{transform:scale(.92)}
+.fab svg{width:24px;height:24px}
+
+/* TOAST */
+.toast-container{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none}
+.toast{background:var(--dark);color:#fff;padding:10px 20px;border-radius:10px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease-out;pointer-events:auto;white-space:nowrap}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* DETAIL VIEW */
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;flex-shrink:0;border:1px solid var(--border)}
+.back-btn:hover{background:var(--border)}
+.detail-hero{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.detail-hero .piano-name{font-family:var(--font-head);font-size:1.3rem;margin-bottom:4px}
+.detail-hero .client-detail{font-size:.88rem;color:var(--text-muted);margin-bottom:12px}
+.detail-hero .status-row{display:flex;gap:12px;flex-wrap:wrap}
+
+/* DUE METER */
+.due-meter{height:6px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:8px}
+.due-meter-fill{height:100%;border-radius:3px;transition:width .5s ease-out}
+
+/* SHARE REPORT */
+.share-preview{background:var(--card);border-radius:var(--radius);padding:16px;border:1px dashed var(--border);margin-bottom:16px}
+.share-preview h3{margin-bottom:8px}
+.share-preview .report-line{font-size:.85rem;color:var(--text-muted);padding:4px 0;border-bottom:1px solid var(--border)}
+
+/* CAMERA */
+.camera-area{position:relative;width:100%;max-width:400px;margin:0 auto 16px;border-radius:var(--radius);overflow:hidden;background:#111}
+.camera-area video{width:100%;display:block;border-radius:var(--radius)}
+.camera-area canvas{display:none}
+.camera-btn{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.9);border:4px solid var(--gold);cursor:pointer;transition:transform .15s}
+.camera-btn:active{transform:translateX(-50%) scale(.9)}
+.captured-photos{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.captured-photos .cp-img{width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid var(--border);position:relative}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:10px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .stat-num{font-family:var(--font-head);font-size:1.6rem;color:var(--gold);line-height:1}
+.stat-card .stat-label{font-size:.72rem;color:var(--text-muted);margin-top:4px;font-weight:500}
+
+/* REDUCED MOTION */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* PRINT */
+@media print{
+.bottom-nav,.fab,.demo-banner,.app-header,.back-btn,#bct-demo-disclaimer{display:none!important}
+body{background:#fff;padding:0}
+.view{display:block!important;padding:0}
+.piano-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+}
+
+/* DESKTOP */
+@media(min-width:768px){
+.view{max-width:600px;margin:0 auto;padding:24px}
+.bottom-nav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:16px 16px 0 0}
+.fab{right:calc(50% - 280px)}
+}
+
+/* SKIP LINK */
+.skip-link{position:absolute;top:-40px;left:0;background:var(--gold);color:#fff;padding:8px 16px;z-index:9999;font-weight:600}
+.skip-link:focus{top:0}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="app-header" role="banner">
+<h1>PianoLog</h1>
+<div class="subtitle">Stay Tuned Piano Services</div>
+</header>
+
+<div class="demo-banner" id="demoBanner" role="status" aria-label="Demo data notice" style="display:none">
+<p>Sample data for Portland, OR. Tap to clear and add your own pianos.</p>
+<button onclick="clearDemoData()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<div aria-live="polite" class="toast-container" id="toastContainer"></div>
+
+<main id="main-content">
+<!-- PIANOS LIST -->
+<section class="view active" id="viewPianos" role="region" aria-label="Piano list">
+<div class="search-bar">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+<input type="text" id="searchInput" placeholder="Search by client, piano, or neighborhood..." aria-label="Search pianos">
+</div>
+<div id="pianoList"></div>
+</section>
+
+<!-- PIANO DETAIL -->
+<section class="view" id="viewDetail" role="region" aria-label="Piano detail">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewPianos')" aria-label="Go back">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<h2 id="detailTitle">Piano Detail</h2>
+</div>
+<div id="detailContent"></div>
+</section>
+
+<!-- ADD/EDIT PIANO -->
+<section class="view" id="viewAddPiano" role="region" aria-label="Add piano">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewPianos')" aria-label="Go back">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<h2 id="addPianoTitle">Add Piano</h2>
+</div>
+<form id="pianoForm" onsubmit="savePiano(event)">
+<div class="form-group"><label for="pf-client">Client Name</label><input type="text" id="pf-client" required></div>
+<div class="form-group"><label for="pf-address">Address / Neighborhood</label><input type="text" id="pf-address"></div>
+<div class="form-group"><label for="pf-phone">Phone</label><input type="tel" id="pf-phone"></div>
+<div class="form-group"><label for="pf-make">Piano Make</label><input type="text" id="pf-make" placeholder="e.g., Yamaha, Steinway, Kawai"></div>
+<div class="form-group"><label for="pf-model">Model / Size</label><input type="text" id="pf-model" placeholder="e.g., C3 Grand, Upright Console"></div>
+<div class="form-group"><label for="pf-year">Year (approximate)</label><input type="text" id="pf-year" placeholder="e.g., 1985, unknown"></div>
+<div class="form-group"><label for="pf-notes">Notes</label><textarea id="pf-notes" placeholder="Anything worth remembering about this piano or client..."></textarea></div>
+<input type="hidden" id="pf-id">
+<button type="submit" class="btn btn--primary btn--full">Save Piano</button>
+</form>
+</section>
+
+<!-- LOG SERVICE -->
+<section class="view" id="viewLogService" role="region" aria-label="Log service visit">
+<div class="detail-header">
+<button class="back-btn" onclick="showDetail(currentPianoId)" aria-label="Go back">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<h2>Log Service Visit</h2>
+</div>
+<form id="serviceForm" onsubmit="saveService(event)">
+<div class="form-group"><label for="sf-date">Date</label><input type="date" id="sf-date" required></div>
+<div class="form-group">
+<label>Work Performed</label>
+<div class="checkbox-row" id="workChecks">
+<label class="checkbox-item"><input type="checkbox" value="Tuning"> Tuning</label>
+<label class="checkbox-item"><input type="checkbox" value="Voicing"> Voicing</label>
+<label class="checkbox-item"><input type="checkbox" value="Regulation"> Regulation</label>
+<label class="checkbox-item"><input type="checkbox" value="String Repair"> String Repair</label>
+<label class="checkbox-item"><input type="checkbox" value="Pedal Repair"> Pedal Repair</label>
+<label class="checkbox-item"><input type="checkbox" value="Deep Clean"> Deep Clean</label>
+<label class="checkbox-item"><input type="checkbox" value="Evaluation"> Evaluation</label>
+<label class="checkbox-item"><input type="checkbox" value="Action Repair"> Action Repair</label>
+</div>
+</div>
+<div class="form-group"><label for="sf-condition">Overall Condition (1-10)</label><input type="number" id="sf-condition" min="1" max="10" placeholder="Rate the piano's current condition"></div>
+<div class="form-group"><label for="sf-notes">Service Notes</label><textarea id="sf-notes" placeholder="What did you find? What needs attention next time? Specific issues..."></textarea></div>
+<div class="form-group"><label for="sf-next">Next Service Due</label><input type="date" id="sf-next"></div>
+
+<!-- Camera -->
+<div class="form-group">
+<label>Photos</label>
+<div class="captured-photos" id="capturedPhotos"></div>
+<button type="button" class="btn btn--secondary btn--full" onclick="openCamera()" aria-label="Take a photo">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+Take Photo
+</button>
+</div>
+
+<div class="camera-area" id="cameraArea" style="display:none" role="dialog" aria-label="Camera viewfinder">
+<video id="cameraVideo" autoplay playsinline></video>
+<canvas id="cameraCanvas"></canvas>
+<button type="button" class="camera-btn" onclick="capturePhoto()" aria-label="Capture photo"></button>
+</div>
+
+<button type="submit" class="btn btn--primary btn--full" style="margin-top:8px">Save Service Log</button>
+</form>
+</section>
+
+<!-- OVERVIEW / STATS -->
+<section class="view" id="viewOverview" role="region" aria-label="Overview">
+<h2 style="margin-bottom:16px">Your Pianos at a Glance</h2>
+<div class="stats-row" id="statsRow"></div>
+<h3 style="margin-bottom:12px">Needs Attention</h3>
+<div id="attentionList"></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="viewSettings" role="region" aria-label="Settings">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div style="display:flex;flex-direction:column;gap:10px">
+<button class="btn btn--secondary btn--full" onclick="exportData()" aria-label="Export data as JSON">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Export Data (JSON)
+</button>
+<button class="btn btn--secondary btn--full" onclick="document.getElementById('importFile').click()" aria-label="Import data from JSON">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+Import Data (JSON)
+</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+<button class="btn btn--disabled btn--full" aria-label="Generate PDF report, available in full version" disabled>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+Generate PDF Reports
+</button>
+<button class="btn btn--disabled btn--full" aria-label="Automatic reminders, available in full version" disabled>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+Automatic Client Reminders
+</button>
+</div>
+</section>
+</main>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="showAddPiano()" aria-label="Add new piano">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewPianos')" id="navPianos" class="active" aria-label="Pianos list">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/><path d="M8 14h1m2 0h2m2 0h1"/><path d="M8 18h8"/></svg>
+<span>Pianos</span>
+</button>
+<button onclick="showView('viewOverview')" id="navOverview" aria-label="Overview">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+<span>Overview</span>
+</button>
+<button onclick="showView('viewSettings')" id="navSettings" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+<span>Settings</span>
+</button>
+</nav>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Stay Tuned Piano Services. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Stay%20Tuned%20Piano%20Services&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// ACCESS KEY GATE
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-1736152011;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){sessionStorage.setItem('pl_auth','1')}
+if(!sessionStorage.getItem('pl_auth')){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#2b2b2b;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:1.8rem;margin-bottom:1rem;font-family:Playfair Display,serif">PianoLog</h1><p style="color:#999;margin-bottom:1.5rem">This tool requires a valid access key.</p><input id="keyIn" type="text" placeholder="Enter access key" style="padding:12px 16px;border-radius:8px;border:1px solid #555;background:#333;color:#fff;font-size:1rem;width:220px;text-align:center"><br><button onclick="var k=document.getElementById(\'keyIn\').value;if(_h(k)===_V){sessionStorage.setItem(\'pl_auth\',\'1\');location.reload();}else{document.getElementById(\'keyErr\').style.display=\'block\'}" style="margin-top:12px;padding:10px 24px;background:#c8a96e;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Enter</button><p id="keyErr" style="color:#b44030;margin-top:8px;display:none;font-size:.85rem">Invalid key. Contact ben@bennycutools.com</p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;"><p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Stay Tuned Piano Services.</p></div>';
+throw new Error('Auth required');
+}
+
+// ANTI-SCRAPE
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// DATABASE
+const DB_NAME='PianoLogDB';const DB_VER=1;let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('pianos')){const s=d.createObjectStore('pianos',{keyPath:'id'});s.createIndex('client','client',{unique:false})}if(!d.objectStoreNames.contains('services')){const s=d.createObjectStore('services',{keyPath:'id'});s.createIndex('pianoId','pianoId',{unique:false})}};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbGet(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).get(key);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbDelete(store,key){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetByIndex(store,idx,val){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).index(idx).getAll(val);r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+
+// STATE
+let allPianos=[];let allServices=[];let currentPianoId=null;let capturedImages=[];let cameraStream=null;
+
+// DEMO DATA
+const DEMO_PIANOS=[
+{id:'demo-1',client:'Margaret Chen',address:'Lake Oswego, OR',phone:'503-555-0142',make:'Yamaha',model:'C3 Grand',year:'2008',notes:'Beautiful grand in the living room. Margaret plays daily. Husband is a violinist.',isDemo:true,created:Date.now()},
+{id:'demo-2',client:'First Presbyterian Church',address:'Beaverton, OR',phone:'503-555-0198',make:'Baldwin',model:'Concert Grand 9ft',year:'1972',notes:'Stage piano in the sanctuary. Gets heavy use for Sunday services and choir practice.',isDemo:true,created:Date.now()},
+{id:'demo-3',client:'David Park',address:'Tigard, OR',phone:'503-555-0231',make:'Kawai',model:'K-300 Upright',year:'2019',notes:'Newer upright. David\'s daughter is taking lessons. Piano is in good shape overall.',isDemo:true,created:Date.now()},
+{id:'demo-4',client:'Rose Villa Senior Living',address:'Milwaukie, OR',phone:'503-555-0315',make:'Yamaha',model:'GB1K Baby Grand',year:'2015',notes:'Common area piano. Gets played by several residents. Needs attention every 6 months due to heavy use.',isDemo:true,created:Date.now()}
+];
+const DEMO_SERVICES=[
+{id:'ds-1',pianoId:'demo-1',date:'2025-11-15',work:['Tuning','Voicing'],condition:8,notes:'G#4 string showing wear. Recommend replacement at next visit. Hammers in decent shape but could use full voicing in 6 months. Sustain pedal slightly sticky, adjusted spring tension.',nextDue:'2026-09-15',photos:[],isDemo:true},
+{id:'ds-2',pianoId:'demo-1',date:'2025-05-10',work:['Tuning','Evaluation'],condition:7,notes:'First visit. Piano hadn\'t been tuned in 14 months. Pitch was about 15 cents flat across the board. Full tuning brought it up nicely. Action feels a little sluggish in the upper register.',nextDue:'2025-11-10',photos:[],isDemo:true},
+{id:'ds-3',pianoId:'demo-2',date:'2026-01-08',work:['Tuning','Regulation','Pedal Repair'],condition:6,notes:'Soft pedal mechanism was worn. Replaced the felt pads. Action regulation needed in the middle octaves, keys were uneven. This old Baldwin has character but needs consistent work.',nextDue:'2026-07-08',photos:[],isDemo:true},
+{id:'ds-4',pianoId:'demo-3',date:'2026-02-01',work:['Tuning'],condition:9,notes:'Quick tuning, piano holds pitch well. Only 2 years old and well maintained. Suggested to the family they keep the humidity controlled during Oregon winters.',nextDue:'2027-02-01',photos:[],isDemo:true},
+{id:'ds-5',pianoId:'demo-4',date:'2025-12-20',work:['Tuning','Deep Clean','Voicing'],condition:5,notes:'Piano gets a LOT of use. Keys were dirty, action was sluggish. Full deep clean took 3 hours. Re-voiced the hammers, they were compacted from heavy playing. Recommended 6-month visits going forward.',nextDue:'2026-06-20',photos:[],isDemo:true}
+];
+
+async function loadDemoData(){
+if(localStorage.getItem('pl_demoCleared')) return;
+const pianos=await dbGetAll('pianos');
+if(pianos.length>0) return;
+for(const p of DEMO_PIANOS) await dbPut('pianos',p);
+for(const s of DEMO_SERVICES) await dbPut('services',s);
+localStorage.setItem('pl_hasDemo','1');
+}
+
+async function clearDemoData(){
+const pianos=await dbGetAll('pianos');
+const services=await dbGetAll('services');
+for(const p of pianos){if(p.isDemo) await dbDelete('pianos',p.id)}
+for(const s of services){if(s.isDemo) await dbDelete('services',s.id)}
+localStorage.removeItem('pl_hasDemo');
+localStorage.setItem('pl_demoCleared','1');
+document.getElementById('demoBanner').style.display='none';
+await refreshData();
+showToast('Demo data cleared');
+}
+
+// RENDER
+function getDueStatus(dateStr){
+if(!dateStr) return{label:'No date set',cls:'',pct:50};
+const due=new Date(dateStr);const now=new Date();
+const diff=Math.floor((due-now)/(1000*60*60*24));
+if(diff<0) return{label:`Overdue by ${Math.abs(diff)} days`,cls:'badge--overdue',pct:100};
+if(diff<=30) return{label:`Due in ${diff} days`,cls:'badge--soon',pct:80};
+if(diff<=90) return{label:`Due in ${Math.floor(diff/7)} weeks`,cls:'badge--due',pct:50};
+return{label:`Due ${due.toLocaleDateString('en-US',{month:'short',year:'numeric'})}`,cls:'badge--due',pct:20};
+}
+
+function renderPianoCard(piano,latestService){
+const due=latestService?getDueStatus(latestService.nextDue):{label:'No visits yet',cls:'',pct:0};
+const lastDate=latestService?new Date(latestService.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Never';
+return`<article class="piano-card" onclick="showDetail('${piano.id}')" role="button" tabindex="0" aria-label="View ${piano.client}'s ${piano.make} ${piano.model}">
+<div class="piano-card-inner">
+<div class="piano-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16"/><path d="M12 4v16"/><path d="M17 4v16"/><rect x="6" y="4" width="3" height="10" rx=".5" fill="currentColor" opacity=".15"/><rect x="11" y="4" width="3" height="10" rx=".5" fill="currentColor" opacity=".15"/><rect x="16" y="4" width="3" height="10" rx=".5" fill="currentColor" opacity=".15"/></svg></div>
+<div class="piano-info">
+<div class="client-name">${piano.client}</div>
+<div class="piano-model">${piano.make||''} ${piano.model||''}</div>
+<div class="meta-row">
+<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${piano.address||'No address'}</span>
+<span class="meta-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>${lastDate}</span>
+</div>
+${due.cls?`<span class="badge ${due.cls}" style="margin-top:6px">${due.label}</span>`:''}
+</div>
+<svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+</div>
+</article>`;
+}
+
+async function refreshData(){
+allPianos=await dbGetAll('pianos');
+allServices=await dbGetAll('services');
+renderPianoList();
+if(localStorage.getItem('pl_hasDemo')&&!localStorage.getItem('pl_demoCleared')){
+document.getElementById('demoBanner').style.display='flex';
+}
+}
+
+function renderPianoList(filter=''){
+const list=document.getElementById('pianoList');
+const f=filter.toLowerCase();
+let sorted=[...allPianos].sort((a,b)=>{
+const sa=allServices.filter(s=>s.pianoId===a.id).sort((x,y)=>new Date(y.date)-new Date(x.date))[0];
+const sb=allServices.filter(s=>s.pianoId===b.id).sort((x,y)=>new Date(y.date)-new Date(x.date))[0];
+if(!sa) return 1;if(!sb) return -1;
+const da=sa.nextDue?new Date(sa.nextDue):new Date('2099-01-01');
+const dbn=sb.nextDue?new Date(sb.nextDue):new Date('2099-01-01');
+return da-dbn;
+});
+if(f){sorted=sorted.filter(p=>(p.client+' '+p.make+' '+p.model+' '+p.address+' '+(p.notes||'')).toLowerCase().includes(f))}
+if(sorted.length===0){
+list.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text-muted)">
+<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:12px;opacity:.4" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 4v16M12 4v16M17 4v16"/></svg>
+<p style="font-size:.95rem;font-weight:600;margin-bottom:4px">${f?'No pianos match your search':'No pianos yet'}</p>
+<p style="font-size:.85rem">Tap the + button to add your first piano.</p></div>`;return;
+}
+list.innerHTML=sorted.map(p=>{
+const svcs=allServices.filter(s=>s.pianoId===p.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+return renderPianoCard(p,svcs[0]);
+}).join('');
+}
+
+// DETAIL VIEW
+async function showDetail(id){
+currentPianoId=id;
+const piano=await dbGet('pianos',id);
+if(!piano) return;
+const services=(await dbGetByIndex('services','pianoId',id)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+const latestDue=services[0]?getDueStatus(services[0].nextDue):null;
+document.getElementById('detailTitle').textContent=piano.client;
+
+let html=`<div class="detail-hero">
+<div class="piano-name">${piano.make||''} ${piano.model||''}</div>
+<div class="client-detail">${piano.address||'No address'} ${piano.year?'| Est. '+piano.year:''}</div>
+${piano.phone?`<div class="client-detail" style="margin-top:-8px">Phone: ${piano.phone}</div>`:''}
+${piano.notes?`<div style="font-size:.85rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${piano.notes}</div>`:''}
+${latestDue&&latestDue.cls?`<div style="margin-top:12px"><span class="badge ${latestDue.cls}">${latestDue.label}</span>
+<div class="due-meter"><div class="due-meter-fill" style="width:${latestDue.pct}%;background:${latestDue.cls.includes('overdue')?'var(--danger)':latestDue.cls.includes('soon')?'var(--warning)':'var(--success)'}"></div></div></div>`:''}
+<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+<button class="btn btn--primary" onclick="showLogService('${id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Log Visit</button>
+<button class="btn btn--secondary" onclick="shareReport('${id}')" aria-label="Share service report"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+<button class="btn btn--secondary" onclick="editPiano('${id}')" aria-label="Edit piano details"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
+</div>
+</div>`;
+
+html+=`<h3 style="margin-bottom:12px">Service History (${services.length})</h3>`;
+if(services.length===0){
+html+=`<div style="text-align:center;padding:32px;color:var(--text-muted);font-size:.9rem">No service visits logged yet. Tap "Log Visit" after your next appointment.</div>`;
+}else{
+services.forEach(s=>{
+const dt=new Date(s.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+html+=`<div class="service-entry">
+<div class="se-date">${dt}</div>
+<div class="se-type">${(s.work||[]).join(', ')||'Service'}</div>
+${s.condition?`<div style="font-size:.8rem;color:var(--text-muted);margin-bottom:2px">Condition: ${s.condition}/10</div>`:''}
+<div class="se-notes">${s.notes||''}</div>
+${s.photos&&s.photos.length?`<div class="se-photos">${s.photos.map(p=>`<img src="${p}" alt="Service photo" loading="lazy">`).join('')}</div>`:''}
+</div>`;
+});
+}
+document.getElementById('detailContent').innerHTML=html;
+showView('viewDetail');
+}
+
+// SHARE REPORT
+async function shareReport(pianoId){
+const piano=await dbGet('pianos',pianoId);
+const services=(await dbGetByIndex('services','pianoId',pianoId)).sort((a,b)=>new Date(b.date)-new Date(a.date));
+const latest=services[0];
+let text=`Piano Service Report\n${piano.client} - ${piano.make||''} ${piano.model||''}\n`;
+text+=`Location: ${piano.address||'N/A'}\n\n`;
+if(latest){
+text+=`Last Service: ${new Date(latest.date).toLocaleDateString()}\n`;
+text+=`Work: ${(latest.work||[]).join(', ')}\n`;
+text+=`Condition: ${latest.condition||'N/A'}/10\n`;
+if(latest.notes) text+=`Notes: ${latest.notes}\n`;
+if(latest.nextDue) text+=`Next Service Due: ${new Date(latest.nextDue).toLocaleDateString()}\n`;
+}
+text+=`\n-- Stay Tuned Piano Services | Ben Wasson | (503) 419-8547`;
+
+if(navigator.share){
+try{await navigator.share({title:'Piano Service Report - '+piano.client,text:text});showToast('Report shared');}catch(e){if(e.name!=='AbortError') fallbackCopy(text)}
+}else{fallbackCopy(text)}
+}
+function fallbackCopy(text){
+navigator.clipboard.writeText(text).then(()=>showToast('Report copied to clipboard')).catch(()=>showToast('Could not share'));
+}
+
+// CAMERA
+let cameraActive=false;
+async function openCamera(){
+const area=document.getElementById('cameraArea');
+if(cameraActive){closeCamera();return}
+try{
+cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+document.getElementById('cameraVideo').srcObject=cameraStream;
+area.style.display='block';cameraActive=true;
+}catch(e){showToast('Camera not available. You can still add notes.')}
+}
+function closeCamera(){
+if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+document.getElementById('cameraArea').style.display='none';cameraActive=false;
+}
+function capturePhoto(){
+const video=document.getElementById('cameraVideo');
+const canvas=document.getElementById('cameraCanvas');
+canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+canvas.getContext('2d').drawImage(video,0,0);
+const dataUrl=canvas.toDataURL('image/jpeg',0.7);
+capturedImages.push(dataUrl);
+renderCapturedPhotos();
+showToast('Photo captured');
+}
+function renderCapturedPhotos(){
+const c=document.getElementById('capturedPhotos');
+c.innerHTML=capturedImages.map((img,i)=>`<img src="${img}" class="cp-img" alt="Captured photo ${i+1}">`).join('');
+}
+
+// FORMS
+function showAddPiano(){
+document.getElementById('pianoForm').reset();
+document.getElementById('pf-id').value='';
+document.getElementById('addPianoTitle').textContent='Add Piano';
+showView('viewAddPiano');
+}
+async function editPiano(id){
+const p=await dbGet('pianos',id);
+if(!p) return;
+document.getElementById('pf-id').value=p.id;
+document.getElementById('pf-client').value=p.client||'';
+document.getElementById('pf-address').value=p.address||'';
+document.getElementById('pf-phone').value=p.phone||'';
+document.getElementById('pf-make').value=p.make||'';
+document.getElementById('pf-model').value=p.model||'';
+document.getElementById('pf-year').value=p.year||'';
+document.getElementById('pf-notes').value=p.notes||'';
+document.getElementById('addPianoTitle').textContent='Edit Piano';
+showView('viewAddPiano');
+}
+async function savePiano(e){
+e.preventDefault();
+const id=document.getElementById('pf-id').value||'piano-'+Date.now();
+const piano={
+id,client:document.getElementById('pf-client').value,address:document.getElementById('pf-address').value,
+phone:document.getElementById('pf-phone').value,make:document.getElementById('pf-make').value,
+model:document.getElementById('pf-model').value,year:document.getElementById('pf-year').value,
+notes:document.getElementById('pf-notes').value,created:Date.now()
+};
+await dbPut('pianos',piano);
+await refreshData();
+showToast('Piano saved');
+showView('viewPianos');
+}
+
+function showLogService(pianoId){
+currentPianoId=pianoId;
+document.getElementById('serviceForm').reset();
+document.getElementById('sf-date').value=new Date().toISOString().split('T')[0];
+const nextDate=new Date();nextDate.setMonth(nextDate.getMonth()+10);
+document.getElementById('sf-next').value=nextDate.toISOString().split('T')[0];
+capturedImages=[];renderCapturedPhotos();
+document.querySelectorAll('#workChecks input').forEach(cb=>{cb.checked=false;cb.closest('.checkbox-item').classList.remove('checked')});
+showView('viewLogService');
+}
+// Toggle checkbox styling
+document.querySelectorAll('#workChecks input').forEach(cb=>{
+cb.addEventListener('change',()=>{cb.closest('.checkbox-item').classList.toggle('checked',cb.checked)})
+});
+
+async function saveService(e){
+e.preventDefault();
+closeCamera();
+const work=[];document.querySelectorAll('#workChecks input:checked').forEach(cb=>work.push(cb.value));
+const svc={
+id:'svc-'+Date.now(),pianoId:currentPianoId,date:document.getElementById('sf-date').value,
+work,condition:parseInt(document.getElementById('sf-condition').value)||null,
+notes:document.getElementById('sf-notes').value,nextDue:document.getElementById('sf-next').value,
+photos:capturedImages.slice(0,5)
+};
+await dbPut('services',svc);
+await refreshData();
+showToast('Service visit logged');
+showDetail(currentPianoId);
+}
+
+// OVERVIEW
+async function renderOverview(){
+const pianos=allPianos;
+const now=new Date();
+let overdue=0,dueSoon=0,ok=0;
+const attention=[];
+pianos.forEach(p=>{
+const svcs=allServices.filter(s=>s.pianoId===p.id).sort((a,b)=>new Date(b.date)-new Date(a.date));
+const latest=svcs[0];
+if(!latest){attention.push({piano:p,status:'Never visited',cls:'badge--overdue'});overdue++;return}
+if(!latest.nextDue){ok++;return}
+const diff=Math.floor((new Date(latest.nextDue)-now)/(1000*60*60*24));
+if(diff<0){overdue++;attention.push({piano:p,status:`Overdue by ${Math.abs(diff)} days`,cls:'badge--overdue'})}
+else if(diff<=30){dueSoon++;attention.push({piano:p,status:`Due in ${diff} days`,cls:'badge--soon'})}
+else{ok++}
+});
+document.getElementById('statsRow').innerHTML=`
+<div class="stat-card"><div class="stat-num">${pianos.length}</div><div class="stat-label">Total Pianos</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--danger)">${overdue}</div><div class="stat-label">Overdue</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--warning)">${dueSoon}</div><div class="stat-label">Due Soon</div></div>`;
+const al=document.getElementById('attentionList');
+if(attention.length===0){al.innerHTML='<p style="color:var(--text-muted);font-size:.9rem;text-align:center;padding:20px">All pianos are up to date. Nice work.</p>';}
+else{al.innerHTML=attention.map(a=>`<div class="piano-card" onclick="showDetail('${a.piano.id}')" role="button" tabindex="0">
+<div class="piano-card-inner"><div class="piano-info"><div class="client-name">${a.piano.client}</div><div class="piano-model">${a.piano.make||''} ${a.piano.model||''}</div>
+<span class="badge ${a.cls}" style="margin-top:4px">${a.status}</span></div>
+<svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></div></div>`).join('')}
+}
+
+// NAVIGATION
+function showView(viewId){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(viewId).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+const fab=document.getElementById('fab');
+if(viewId==='viewPianos'){document.getElementById('navPianos').classList.add('active');fab.style.display='flex'}
+else if(viewId==='viewOverview'){document.getElementById('navOverview').classList.add('active');fab.style.display='none';renderOverview()}
+else if(viewId==='viewSettings'){document.getElementById('navSettings').classList.add('active');fab.style.display='none'}
+else{fab.style.display='none'}
+window.scrollTo(0,0);
+}
+
+// SEARCH
+document.getElementById('searchInput').addEventListener('input',e=>renderPianoList(e.target.value));
+
+// EXPORT / IMPORT
+async function exportData(){
+const data={pianos:allPianos,services:allServices,exported:new Date().toISOString()};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');a.href=url;a.download='pianolog-backup-'+new Date().toISOString().split('T')[0]+'.json';
+a.click();URL.revokeObjectURL(url);showToast('Data exported');
+}
+async function importData(e){
+const file=e.target.files[0];if(!file) return;
+const text=await file.text();
+try{
+const data=JSON.parse(text);
+if(data.pianos){for(const p of data.pianos) await dbPut('pianos',p)}
+if(data.services){for(const s of data.services) await dbPut('services',s)}
+await refreshData();showToast(`Imported ${(data.pianos||[]).length} pianos`);
+}catch(err){showToast('Invalid file format')}
+e.target.value='';
+}
+
+// TOAST
+function showToast(msg){
+const c=document.getElementById('toastContainer');
+const t=document.createElement('div');t.className='toast';t.textContent=msg;
+c.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
+
+// INIT
+(async()=>{
+await openDB();
+await loadDemoData();
+await refreshData();
+})();
+</script>
+</body>
+</html>
