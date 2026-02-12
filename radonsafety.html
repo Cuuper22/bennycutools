@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RadonTrack - Radon Safety LLC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Lato:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f5f6f8;--card:#ffffff;--text:#222222;--text-muted:#5c636a;
+--green:#2d8c3c;--green-soft:rgba(45,140,60,.08);--red:#c0392b;--red-soft:rgba(192,57,43,.08);
+--navy:#1a3a5c;--navy-soft:rgba(26,58,92,.06);--amber:#d4880f;--amber-soft:rgba(212,136,15,.1);
+--border:#dfe2e6;--radius:10px;
+--shadow:0 1px 3px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.03);
+--shadow-lg:0 4px 16px rgba(0,0,0,.08);
+--font-head:'Barlow',system-ui,sans-serif;--font-body:'Lato',system-ui,sans-serif;
+}
+html{font-size:16px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;padding-bottom:140px!important;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-head);font-weight:700;line-height:1.2}
+*:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+button,input,select,textarea{font-family:var(--font-body);font-size:1rem;border:none;outline:none;background:none}
+
+.app-header{background:linear-gradient(135deg,var(--navy) 0%,#0f2640 100%);color:#fff;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.app-header h1{color:#fff;font-size:1.3rem}
+.app-header .subtitle{color:var(--green);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
+
+.demo-banner{background:var(--green-soft);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.demo-banner p{font-size:.8rem;color:var(--text-muted)}
+.demo-banner button{background:var(--green);color:#fff;font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;transition:transform .15s}
+.demo-banner button:active{transform:scale(.96)}
+
+.view{display:none;padding:16px;animation:fadeUp .3s ease-out}.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--green);color:#fff;padding:8px 16px;z-index:9999;font-weight:600}.skip-link:focus{top:0}
+
+/* JOB CARDS */
+.job-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.job-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.job-card:active{transform:scale(.985)}
+.job-card-inner{padding:14px 16px;display:flex;gap:14px}
+.job-status-bar{width:4px;border-radius:2px;flex-shrink:0}
+.job-status-bar.green{background:var(--green)}.job-status-bar.amber{background:var(--amber)}.job-status-bar.red{background:var(--red)}.job-status-bar.navy{background:var(--navy)}
+.job-info{flex:1}
+.job-info .jc-address{font-family:var(--font-head);font-weight:600;font-size:.95rem;margin-bottom:2px}
+.job-info .jc-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:4px}
+.job-info .jc-levels{display:flex;gap:12px;align-items:center;margin-top:6px}
+.level-badge{display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:600;padding:3px 8px;border-radius:6px}
+.level-badge.high{background:var(--red-soft);color:var(--red)}
+.level-badge.safe{background:var(--green-soft);color:var(--green)}
+.level-badge.pending{background:var(--amber-soft);color:var(--amber)}
+.badge{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.03em}
+.badge--installed{background:var(--amber-soft);color:var(--amber)}
+.badge--complete{background:var(--green-soft);color:var(--green)}
+.badge--needs-return{background:var(--red-soft);color:var(--red)}
+.badge--warranty{background:var(--navy-soft);color:var(--navy)}
+.badge--scheduled{background:var(--navy-soft);color:var(--navy)}
+
+/* RADON BAR CHART */
+.radon-bar{display:flex;align-items:flex-end;gap:12px;margin:16px 0;padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow)}
+.rb-col{flex:1;text-align:center}
+.rb-col .rb-bar{width:100%;border-radius:6px 6px 0 0;min-height:8px;transition:height .5s ease-out;position:relative}
+.rb-col .rb-val{font-family:var(--font-head);font-weight:700;font-size:1.1rem;margin-top:6px}
+.rb-col .rb-label{font-size:.72rem;color:var(--text-muted);margin-top:2px}
+.rb-danger-line{position:absolute;bottom:0;left:-8px;right:-8px;border-top:2px dashed var(--red);opacity:.4}
+
+/* FORM */
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:5px}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.95rem;transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-soft)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.btn--primary{background:var(--green);color:#fff;box-shadow:0 2px 8px rgba(45,140,60,.25)}
+.btn--secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn--full{width:100%}
+.btn--disabled{opacity:.45;cursor:not-allowed;position:relative}
+.btn--disabled::after{content:'Full version';position:absolute;top:-8px;right:-8px;background:var(--text);color:#fff;font-size:.55rem;padding:2px 6px;border-radius:4px}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:8px;padding:14px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .stat-num{font-family:var(--font-head);font-size:1.5rem;color:var(--navy);line-height:1}
+.stat-card .stat-label{font-size:.7rem;color:var(--text-muted);margin-top:4px;font-weight:500}
+
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);padding:4px 0}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:none;cursor:pointer;color:var(--text-muted);transition:color .15s;border:none}
+.bottom-nav button.active{color:var(--green)}
+.bottom-nav button svg{width:22px;height:22px}
+.bottom-nav button span{font-size:.66rem;font-weight:600;letter-spacing:.03em}
+
+.fab{position:fixed;bottom:128px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(45,140,60,.35);cursor:pointer;z-index:99;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.92)}
+
+.toast-container{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease-out;pointer-events:auto}
+@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+.back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:1px solid var(--border)}
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+
+.camera-area{width:100%;max-width:400px;margin:0 auto 12px;border-radius:8px;overflow:hidden;background:#111}
+.camera-area video{width:100%;display:block}.camera-area canvas{display:none}
+.captured-photos{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.captured-photos img{width:60px;height:60px;border-radius:6px;object-fit:cover;border:2px solid var(--border)}
+
+.countdown{font-family:var(--font-head);font-size:1.1rem;color:var(--amber);font-weight:700}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none!important}body{background:#fff;padding:0}.view{display:block!important}}
+@media(min-width:768px){.view{max-width:600px;margin:0 auto;padding:24px}.bottom-nav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:12px 12px 0 0}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="app-header" role="banner"><h1>RadonTrack</h1><div class="subtitle">Radon Safety LLC</div></header>
+<div class="demo-banner" id="demoBanner" style="display:none" role="status" aria-label="Demo data notice">
+<p>Sample jobs from Denver metro. Tap to clear and add your own.</p>
+<button onclick="clearDemoData()" aria-label="Clear demo data">Clear</button>
+</div>
+<div aria-live="polite" class="toast-container" id="toastContainer"></div>
+
+<main id="main-content">
+<section class="view active" id="viewJobs" role="region" aria-label="Jobs"><div id="jobList"></div></section>
+
+<section class="view" id="viewNewJob" role="region" aria-label="New job">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewJobs')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<h2 id="newJobTitle">New Job</h2>
+</div>
+<form id="jobForm" onsubmit="saveJob(event)">
+<div class="form-group"><label for="jf-address">Property Address</label><input type="text" id="jf-address" required placeholder="Full address"></div>
+<div class="form-group"><label for="jf-client">Homeowner / Contact</label><input type="text" id="jf-client" placeholder="Name"></div>
+<div class="form-group"><label for="jf-phone">Phone</label><input type="tel" id="jf-phone"></div>
+<div class="form-group"><label for="jf-agent">Real Estate Agent (if applicable)</label><input type="text" id="jf-agent" placeholder="Agent name and contact"></div>
+<div class="form-row">
+<div class="form-group"><label for="jf-preLevel">Pre-Test Level (pCi/L)</label><input type="number" id="jf-preLevel" step="0.1" min="0" placeholder="e.g., 8.0"></div>
+<div class="form-group"><label for="jf-testDate">Test Date</label><input type="date" id="jf-testDate"></div>
+</div>
+<div class="form-group"><label for="jf-system">System Type</label>
+<select id="jf-system"><option value="">Select...</option><option value="sub-slab">Sub-Slab Depressurization</option><option value="sump-pit">Sump Pit / Perimeter Drain</option><option value="block-wall">Block Wall Suction</option><option value="crawlspace">Crawlspace Membrane</option></select>
+</div>
+<div class="form-row">
+<div class="form-group"><label for="jf-fan">Fan Model</label><input type="text" id="jf-fan" placeholder="e.g., GP501"></div>
+<div class="form-group"><label for="jf-route">Pipe Route</label>
+<select id="jf-route"><option value="">Select...</option><option value="garage">Through Garage</option><option value="exterior">Exterior Wall</option><option value="interior">Interior to Attic</option><option value="closet">Utility Closet</option></select>
+</div>
+</div>
+<div class="form-group"><label for="jf-installDate">Install Date</label><input type="date" id="jf-installDate"></div>
+<div class="form-group"><label for="jf-notes">Notes</label><textarea id="jf-notes" placeholder="Slab condition, access notes, special requirements..."></textarea></div>
+
+<div class="form-group">
+<label>Photos</label>
+<div class="captured-photos" id="capturedPhotos"></div>
+<button type="button" class="btn btn--secondary btn--full" onclick="openCamera()" aria-label="Take a photo">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+Take Photo
+</button>
+<div class="camera-area" id="cameraArea" style="display:none"><video id="cameraVideo" autoplay playsinline></video><canvas id="cameraCanvas"></canvas></div>
+<div id="cameraBtnArea" style="display:none;text-align:center;margin-top:8px">
+<button type="button" class="btn btn--primary" onclick="capturePhoto()">Snap</button>
+<button type="button" class="btn btn--secondary" onclick="closeCamera()">Done</button>
+</div>
+</div>
+
+<div class="form-group"><label for="jf-status">Status</label>
+<select id="jf-status"><option value="scheduled">Scheduled</option><option value="installed">Installed - Awaiting Retest</option><option value="complete">Complete - Passed</option><option value="needs-return">Needs Return Visit</option><option value="warranty">Warranty Check Due</option></select>
+</div>
+<div class="form-row">
+<div class="form-group"><label for="jf-postLevel">Post-Test Level (pCi/L)</label><input type="number" id="jf-postLevel" step="0.1" min="0" placeholder="After retest"></div>
+<div class="form-group"><label for="jf-retestDate">Retest Date</label><input type="date" id="jf-retestDate"></div>
+</div>
+<input type="hidden" id="jf-id">
+<button type="submit" class="btn btn--primary btn--full" style="margin-top:8px">Save Job</button>
+</form>
+</section>
+
+<section class="view" id="viewJobDetail" role="region" aria-label="Job detail">
+<div class="detail-header">
+<button class="back-btn" onclick="showView('viewJobs')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<h2 id="jobDetailTitle">Job Detail</h2>
+</div>
+<div id="jobDetailContent"></div>
+</section>
+
+<section class="view" id="viewOverview" role="region" aria-label="Overview">
+<h2 style="margin-bottom:16px">Job Overview</h2>
+<div class="stats-row" id="statsRow"></div>
+<h3 style="margin-bottom:12px">Needs Attention</h3>
+<div id="attentionList"></div>
+</section>
+
+<section class="view" id="viewSettings" role="region" aria-label="Settings">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div style="display:flex;flex-direction:column;gap:10px">
+<button class="btn btn--secondary btn--full" onclick="exportData()">Export Data (JSON)</button>
+<button class="btn btn--secondary btn--full" onclick="document.getElementById('importFile').click()">Import Data (JSON)</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+<button class="btn btn--disabled btn--full" disabled aria-label="Branded PDF reports available in full version">Generate PDF Reports</button>
+<button class="btn btn--disabled btn--full" disabled aria-label="Neighborhood radon map available in full version">Neighborhood Radon Map</button>
+</div>
+</section>
+</main>
+
+<button class="fab" onclick="showNewJob()" aria-label="Add new job"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<button onclick="showView('viewJobs')" id="navJobs" class="active" aria-label="Jobs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg><span>Jobs</span></button>
+<button onclick="showView('viewOverview')" id="navOver" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg><span>Overview</span></button>
+<button onclick="showView('viewSettings')" id="navSet" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></button>
+</nav>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Radon Safety LLC. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Radon%20Safety%20LLC&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=241475208;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){sessionStorage.setItem('rt_auth','1')}
+if(!sessionStorage.getItem('rt_auth')){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Barlow,sans-serif;background:linear-gradient(135deg,#1a3a5c,#0f2640);color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:1.8rem;margin-bottom:.5rem">RadonTrack</h1><p style="color:#aaa;margin-bottom:1.5rem;font-family:Lato,sans-serif">Access key required</p><input id="keyIn" type="text" placeholder="Enter key" style="padding:12px 16px;border-radius:8px;border:1px solid #555;background:rgba(255,255,255,.1);color:#fff;font-size:1rem;width:200px;text-align:center"><br><button onclick="var k=document.getElementById(\'keyIn\').value;if(_h(k)===_V){sessionStorage.setItem(\'rt_auth\',\'1\');location.reload();}else{document.getElementById(\'keyErr\').style.display=\'block\'}" style="margin-top:12px;padding:10px 24px;background:#2d8c3c;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Enter</button><p id="keyErr" style="color:#e74c3c;margin-top:8px;display:none;font-size:.85rem;font-family:Lato">Invalid key</p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center;"><p style="margin:0;"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with Radon Safety LLC.</p></div>';
+throw new Error('Auth required');
+}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+const DB_NAME='RadonTrackDB';const DB_VER=1;let db;
+function openDB(){return new Promise((r,j)=>{const q=indexedDB.open(DB_NAME,DB_VER);q.onupgradeneeded=e=>{e.target.result.createObjectStore('jobs',{keyPath:'id'})};q.onsuccess=e=>{db=e.target.result;r(db)};q.onerror=e=>j(e)})}
+function dbPut(d){return new Promise((r,j)=>{const t=db.transaction('jobs','readwrite');t.objectStore('jobs').put(d);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
+function dbGetAll(){return new Promise((r,j)=>{const t=db.transaction('jobs','readonly');const q=t.objectStore('jobs').getAll();q.onsuccess=()=>r(q.result);q.onerror=e=>j(e)})}
+function dbGet(id){return new Promise((r,j)=>{const t=db.transaction('jobs','readonly');const q=t.objectStore('jobs').get(id);q.onsuccess=()=>r(q.result);q.onerror=e=>j(e)})}
+function dbDelete(id){return new Promise((r,j)=>{const t=db.transaction('jobs','readwrite');t.objectStore('jobs').delete(id);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
+
+let allJobs=[];let capturedImages=[];let cameraStream=null;
+
+const DEMO=[
+{id:'demo-1',address:'W 101st Pl, Westminster, CO',client:'Johnson Family',phone:'303-555-0142',agent:'',preLevel:8.0,testDate:'2026-01-20',system:'sub-slab',fan:'GP501',route:'garage',installDate:'2026-01-28',postLevel:2.0,retestDate:'2026-01-30',status:'complete',notes:'Standard sub-slab install. Slab in good condition, single suction point sufficient. Pipe routed through garage per homeowner preference.',photos:[],created:Date.now()-86400000*14,isDemo:true},
+{id:'demo-2',address:'Lantana Dr, Broomfield, CO',client:'Park Residence',phone:'303-555-0287',agent:'Sarah Chen, RE/MAX',preLevel:18.0,testDate:'2026-02-01',system:'sump-pit',fan:'GP501',route:'exterior',installDate:'2026-02-08',postLevel:null,retestDate:null,status:'installed',notes:'Very high pre-test. Used sump pit depressurization. Two suction points needed due to complex foundation. Waiting for 48hr retest.',photos:[],created:Date.now()-86400000*4,isDemo:true},
+{id:'demo-3',address:'Galena St, Denver, CO',client:'Rivera Home',phone:'303-555-0456',agent:'',preLevel:11.5,testDate:'2025-11-10',system:'sump-pit',fan:'RadonAway RP145',route:'interior',installDate:'2025-11-18',postLevel:5.1,retestDate:'2025-11-20',status:'needs-return',notes:'Post-test still above 4.0 pCi/L. Need to add second suction point in the north wing. Scheduled return visit.',photos:[],created:Date.now()-86400000*85,isDemo:true},
+{id:'demo-4',address:'High St, Boulder, CO',client:'Martinez Family',phone:'303-555-0789',agent:'Mike Torres, Keller Williams',preLevel:6.5,testDate:'2025-06-15',system:'sub-slab',fan:'GP501',route:'garage',installDate:'2025-06-22',postLevel:2.5,retestDate:'2025-06-24',status:'warranty',notes:'Install went smoothly. 1-year warranty check due June 2026. Homeowner asked about extending warranty.',photos:[],created:Date.now()-86400000*240,isDemo:true}
+];
+
+async function loadDemoData(){
+if(localStorage.getItem('rt_demoCleared')) return;
+const jobs=await dbGetAll();if(jobs.length>0) return;
+for(const d of DEMO) await dbPut(d);
+localStorage.setItem('rt_hasDemo','1');
+}
+async function clearDemoData(){
+const all=await dbGetAll();
+for(const j of all){if(j.isDemo) await dbDelete(j.id)}
+localStorage.removeItem('rt_hasDemo');localStorage.setItem('rt_demoCleared','1');
+document.getElementById('demoBanner').style.display='none';
+await refreshData();showToast('Demo data cleared');
+}
+
+function getStatusInfo(status){
+const map={
+'scheduled':{label:'Scheduled',cls:'badge--scheduled',bar:'navy'},
+'installed':{label:'Awaiting Retest',cls:'badge--installed',bar:'amber'},
+'complete':{label:'Complete',cls:'badge--complete',bar:'green'},
+'needs-return':{label:'Needs Return Visit',cls:'badge--needs-return',bar:'red'},
+'warranty':{label:'Warranty Check Due',cls:'badge--warranty',bar:'navy'}
+};return map[status]||{label:status,cls:'',bar:'navy'};
+}
+
+function renderJobList(){
+const list=document.getElementById('jobList');
+const sorted=[...allJobs].sort((a,b)=>{
+const order={['needs-return']:0,installed:1,scheduled:2,warranty:3,complete:4};
+return(order[a.status]??5)-(order[b.status]??5)||(b.created-a.created);
+});
+if(sorted.length===0){
+list.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text-muted)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:12px;opacity:.4"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg><p style="font-size:.95rem;font-weight:600">No jobs yet</p><p style="font-size:.85rem">Tap + to add your first radon job.</p></div>`;return;
+}
+list.innerHTML=sorted.map(j=>{
+const si=getStatusInfo(j.status);
+const pre=j.preLevel?`<span class="level-badge ${j.preLevel>=4?'high':'safe'}">${j.preLevel} pCi/L</span>`:'';
+const post=j.postLevel!=null?`<span class="level-badge ${j.postLevel>=4?'high':'safe'}">${j.postLevel} pCi/L</span>`:j.status==='installed'?'<span class="level-badge pending">Pending</span>':'';
+return`<article class="job-card" onclick="showJobDetail('${j.id}')" role="button" tabindex="0" aria-label="${j.address} - ${si.label}">
+<div class="job-card-inner"><div class="job-status-bar ${si.bar}"></div><div class="job-info">
+<div class="jc-address">${j.address}</div>
+<div class="jc-meta">${j.client||'Unknown'} | ${j.system?j.system.replace('-',' '):''}</div>
+<div class="jc-levels">${pre}${post?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)"><polyline points="9 18 15 12 9 6"/></svg>'+post:''}</div>
+<span class="badge ${si.cls}" style="margin-top:6px">${si.label}</span>
+</div></div></article>`;
+}).join('');
+}
+
+async function showJobDetail(id){
+const j=await dbGet(id);if(!j) return;
+const si=getStatusInfo(j.status);
+document.getElementById('jobDetailTitle').textContent=j.address.split(',')[0];
+
+const maxLevel=Math.max(j.preLevel||0,j.postLevel||0,4.1);
+const preH=j.preLevel?Math.min((j.preLevel/maxLevel)*100,100):0;
+const postH=j.postLevel!=null?Math.min((j.postLevel/maxLevel)*100,100):0;
+const dangerH=(4/maxLevel)*100;
+
+let html=`<div style="background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+<div><h3 style="margin-bottom:2px">${j.address}</h3><p style="font-size:.85rem;color:var(--text-muted)">${j.client||''} ${j.phone?'| '+j.phone:''}</p>
+${j.agent?`<p style="font-size:.82rem;color:var(--text-muted)">Agent: ${j.agent}</p>`:''}</div>
+<span class="badge ${si.cls}">${si.label}</span></div>
+${j.system?`<p style="font-size:.85rem;margin-bottom:4px"><strong>System:</strong> ${j.system.replace('-',' ')}</p>`:''}
+${j.fan?`<p style="font-size:.85rem;margin-bottom:4px"><strong>Fan:</strong> ${j.fan}</p>`:''}
+${j.route?`<p style="font-size:.85rem;margin-bottom:4px"><strong>Route:</strong> ${j.route}</p>`:''}
+${j.installDate?`<p style="font-size:.85rem;margin-bottom:4px"><strong>Installed:</strong> ${new Date(j.installDate).toLocaleDateString()}</p>`:''}
+${j.notes?`<p style="font-size:.85rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${j.notes}</p>`:''}
+</div>`;
+
+// Radon level chart
+if(j.preLevel){
+html+=`<div class="radon-bar"><div class="rb-col"><div class="rb-bar" style="height:${preH}px;max-height:120px;background:${j.preLevel>=4?'var(--red)':'var(--green)'};position:relative">
+${j.preLevel>=4?`<div style="position:absolute;bottom:${dangerH}%;left:-4px;right:-4px;border-top:2px dashed var(--red);opacity:.3"></div>`:''}</div>
+<div class="rb-val" style="color:${j.preLevel>=4?'var(--red)':'var(--green)'}">${j.preLevel}</div>
+<div class="rb-label">Pre-Test (pCi/L)</div></div>`;
+if(j.postLevel!=null){
+html+=`<div class="rb-col"><div class="rb-bar" style="height:${postH}px;max-height:120px;background:${j.postLevel>=4?'var(--red)':'var(--green)'}"></div>
+<div class="rb-val" style="color:${j.postLevel>=4?'var(--red)':'var(--green)'}">${j.postLevel}</div>
+<div class="rb-label">Post-Test (pCi/L)</div></div>`;
+const reduction=((1-j.postLevel/j.preLevel)*100).toFixed(0);
+html+=`<div class="rb-col" style="padding-bottom:8px"><div style="font-family:var(--font-head);font-size:2rem;color:${j.postLevel<4?'var(--green)':'var(--red)'}">-${reduction}%</div><div class="rb-label">Reduction</div></div>`;
+}else{
+html+=`<div class="rb-col" style="text-align:center;padding:20px 0"><span class="countdown">Awaiting Retest</span></div>`;
+}
+html+=`</div>`;
+}
+
+html+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+<button class="btn btn--primary" onclick="shareJob('${j.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
+<button class="btn btn--secondary" onclick="editJob('${j.id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button></div>`;
+
+if(j.photos&&j.photos.length){html+=`<div class="captured-photos" style="margin-top:16px">${j.photos.map(p=>`<img src="${p}" alt="Job photo">`).join('')}</div>`}
+
+document.getElementById('jobDetailContent').innerHTML=html;
+showView('viewJobDetail');
+}
+
+async function shareJob(id){
+const j=await dbGet(id);if(!j) return;
+let text=`Radon Mitigation Summary\n${j.address}\nClient: ${j.client||'N/A'}\n\n`;
+if(j.preLevel) text+=`Pre-Test: ${j.preLevel} pCi/L\n`;
+if(j.system) text+=`System: ${j.system.replace('-',' ')}\n`;
+if(j.fan) text+=`Fan: ${j.fan}\n`;
+if(j.installDate) text+=`Installed: ${new Date(j.installDate).toLocaleDateString()}\n`;
+if(j.postLevel!=null){text+=`Post-Test: ${j.postLevel} pCi/L\n`;const red=((1-j.postLevel/j.preLevel)*100).toFixed(0);text+=`Reduction: ${red}%\n`;text+=j.postLevel<4?`Status: PASSED (below 4.0 pCi/L EPA action level)\n`:`Status: NEEDS ADDITIONAL WORK\n`}
+text+=`\nRadon Safety LLC | 303-462-5000`;
+if(navigator.share){try{await navigator.share({title:'Radon Report - '+j.address,text});showToast('Shared')}catch(e){if(e.name!=='AbortError') fallbackCopy(text)}}else{fallbackCopy(text)}
+}
+function fallbackCopy(t){navigator.clipboard.writeText(t).then(()=>showToast('Copied')).catch(()=>showToast('Could not share'))}
+
+function showNewJob(){
+document.getElementById('jobForm').reset();document.getElementById('jf-id').value='';
+document.getElementById('newJobTitle').textContent='New Job';
+capturedImages=[];renderCapturedPhotos();showView('viewNewJob');
+}
+async function editJob(id){
+const j=await dbGet(id);if(!j) return;
+document.getElementById('jf-id').value=j.id;
+document.getElementById('jf-address').value=j.address||'';
+document.getElementById('jf-client').value=j.client||'';
+document.getElementById('jf-phone').value=j.phone||'';
+document.getElementById('jf-agent').value=j.agent||'';
+document.getElementById('jf-preLevel').value=j.preLevel||'';
+document.getElementById('jf-testDate').value=j.testDate||'';
+document.getElementById('jf-system').value=j.system||'';
+document.getElementById('jf-fan').value=j.fan||'';
+document.getElementById('jf-route').value=j.route||'';
+document.getElementById('jf-installDate').value=j.installDate||'';
+document.getElementById('jf-notes').value=j.notes||'';
+document.getElementById('jf-status').value=j.status||'scheduled';
+document.getElementById('jf-postLevel').value=j.postLevel!=null?j.postLevel:'';
+document.getElementById('jf-retestDate').value=j.retestDate||'';
+capturedImages=j.photos||[];renderCapturedPhotos();
+document.getElementById('newJobTitle').textContent='Edit Job';
+showView('viewNewJob');
+}
+async function saveJob(e){
+e.preventDefault();closeCamera();
+const id=document.getElementById('jf-id').value||'job-'+Date.now();
+const job={
+id,address:document.getElementById('jf-address').value,client:document.getElementById('jf-client').value,
+phone:document.getElementById('jf-phone').value,agent:document.getElementById('jf-agent').value,
+preLevel:parseFloat(document.getElementById('jf-preLevel').value)||null,
+testDate:document.getElementById('jf-testDate').value,system:document.getElementById('jf-system').value,
+fan:document.getElementById('jf-fan').value,route:document.getElementById('jf-route').value,
+installDate:document.getElementById('jf-installDate').value,notes:document.getElementById('jf-notes').value,
+status:document.getElementById('jf-status').value,
+postLevel:document.getElementById('jf-postLevel').value?parseFloat(document.getElementById('jf-postLevel').value):null,
+retestDate:document.getElementById('jf-retestDate').value,
+photos:capturedImages.slice(0,5),created:Date.now()
+};
+await dbPut(job);await refreshData();showToast('Job saved');showView('viewJobs');
+}
+
+let cameraActive=false;
+async function openCamera(){if(cameraActive){closeCamera();return}try{cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});document.getElementById('cameraVideo').srcObject=cameraStream;document.getElementById('cameraArea').style.display='block';document.getElementById('cameraBtnArea').style.display='block';cameraActive=true}catch(e){showToast('Camera not available')}}
+function closeCamera(){if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}document.getElementById('cameraArea').style.display='none';document.getElementById('cameraBtnArea').style.display='none';cameraActive=false}
+function capturePhoto(){const v=document.getElementById('cameraVideo');const c=document.getElementById('cameraCanvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);capturedImages.push(c.toDataURL('image/jpeg',0.7));renderCapturedPhotos();showToast('Photo captured')}
+function renderCapturedPhotos(){document.getElementById('capturedPhotos').innerHTML=capturedImages.map((img,i)=>`<img src="${img}" alt="Photo ${i+1}">`).join('')}
+
+async function renderOverview(){
+const total=allJobs.length;const pending=allJobs.filter(j=>j.status==='installed').length;
+const returns=allJobs.filter(j=>j.status==='needs-return').length;
+document.getElementById('statsRow').innerHTML=`
+<div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Jobs</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--amber)">${pending}</div><div class="stat-label">Awaiting Retest</div></div>
+<div class="stat-card"><div class="stat-num" style="color:var(--red)">${returns}</div><div class="stat-label">Return Needed</div></div>`;
+const attention=allJobs.filter(j=>['installed','needs-return','warranty'].includes(j.status));
+const al=document.getElementById('attentionList');
+if(attention.length===0){al.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:20px">All jobs on track.</p>'}
+else{al.innerHTML=attention.map(j=>{const si=getStatusInfo(j.status);return`<div class="job-card" onclick="showJobDetail('${j.id}')" role="button" tabindex="0"><div class="job-card-inner"><div class="job-status-bar ${si.bar}"></div><div class="job-info"><div class="jc-address">${j.address}</div><span class="badge ${si.cls}" style="margin-top:4px">${si.label}</span></div></div></div>`}).join('')}
+}
+
+async function refreshData(){allJobs=await dbGetAll();renderJobList();if(localStorage.getItem('rt_hasDemo')&&!localStorage.getItem('rt_demoCleared')){document.getElementById('demoBanner').style.display='flex'}}
+
+function showView(id){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
+const fab=document.querySelector('.fab');
+if(id==='viewJobs'){document.getElementById('navJobs').classList.add('active');fab.style.display='flex'}
+else if(id==='viewOverview'){document.getElementById('navOver').classList.add('active');fab.style.display='none';renderOverview()}
+else if(id==='viewSettings'){document.getElementById('navSet').classList.add('active');fab.style.display='none'}
+else{fab.style.display='none'}
+window.scrollTo(0,0);
+}
+
+async function exportData(){const d={jobs:allJobs,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='radontrack-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(u);showToast('Exported')}
+async function importData(e){const f=e.target.files[0];if(!f) return;try{const d=JSON.parse(await f.text());if(d.jobs){for(const j of d.jobs) await dbPut(j)}await refreshData();showToast('Imported')}catch(err){showToast('Invalid file')}e.target.value=''}
+
+function showToast(msg){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast';t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),2500)}
+
+(async()=>{await openDB();await loadDemoData();await refreshData()})();
+</script>
+</body>
+</html>
