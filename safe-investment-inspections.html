@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>InspectBook - Safe Investment Home Inspections</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#1B3A5C;--primary-light:#2B5A8C;--primary-dark:#0F2640;
+  --accent:#D4A843;--accent-light:#E4C06A;
+  --bg:#F5F7FA;--bg-card:#FFFFFF;--surface:#EDF1F7;
+  --text:#1A1D23;--text-muted:#6B7280;
+  --success:#059669;--success-bg:rgba(5,150,105,0.08);
+  --warning:#D97706;--warning-bg:rgba(217,119,6,0.08);
+  --error:#DC2626;--info:#2563EB;--info-bg:rgba(37,99,235,0.08);
+  --purple:#7C3AED;--purple-bg:rgba(124,58,237,0.08);
+  --radius:12px;--radius-sm:8px;
+  --shadow-1:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-2:0 4px 12px rgba(0,0,0,0.08);
+  --shadow-3:0 8px 24px rgba(0,0,0,0.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:130px !important;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+h1,h2,h3,h4{font-family:'Inter',sans-serif;font-weight:700;}
+.skip-link{position:absolute;left:-999px;top:0;z-index:10000;padding:8px 16px;background:var(--primary);color:#fff;font-size:14px;text-decoration:none;}
+.skip-link:focus{left:0;}
+*:focus-visible{outline:2px solid var(--primary-light);outline-offset:2px;}
+
+.top-bar{background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:16px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.top-bar h1{color:#fff;font-size:1.2rem;font-weight:700;}
+.top-bar .logo{width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;}
+
+.demo-banner{background:var(--accent);color:var(--primary-dark);padding:10px 16px;font-size:13px;display:flex;align-items:center;justify-content:space-between;font-weight:600;}
+.demo-banner button{background:rgba(0,0,0,0.1);border:none;color:var(--primary-dark);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+
+main{padding:16px;max-width:700px;margin:0 auto;}
+
+/* Schedule timeline */
+.schedule-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.schedule-header h2{font-size:1rem;color:var(--text-muted);}
+.day-nav{display:flex;gap:4px;background:var(--surface);border-radius:8px;padding:3px;overflow-x:auto;}
+.day-btn{padding:8px 14px;border:none;background:transparent;border-radius:6px;cursor:pointer;color:var(--text-muted);font-size:12px;font-weight:600;white-space:nowrap;transition:all 0.15s;}
+.day-btn.active{background:var(--bg-card);color:var(--primary);box-shadow:var(--shadow-1);}
+.day-btn .day-label{display:block;font-size:10px;color:var(--text-muted);}
+.day-btn.active .day-label{color:var(--primary);}
+
+/* Inspector rows */
+.inspector-row{margin-bottom:16px;}
+.inspector-label{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.inspector-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;}
+.inspector-name{font-weight:600;font-size:14px;}
+
+/* Inspection cards */
+.insp-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:8px;border-left:4px solid var(--primary);box-shadow:var(--shadow-1);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;animation:cardSlide 0.3s ease-out backwards;}
+.insp-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-2);}
+.insp-card:active{transform:scale(0.98);}
+.insp-card.bundle{border-left-color:var(--purple);}
+.insp-card.sewer{border-left-color:var(--success);}
+.insp-card.radon{border-left-color:var(--warning);}
+@keyframes cardSlide{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+
+.insp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.insp-address{font-weight:600;font-size:0.95rem;}
+.insp-time{font-size:12px;color:var(--text-muted);font-weight:600;}
+.insp-meta{display:flex;gap:10px;font-size:12px;color:var(--text-muted);}
+.insp-meta span{display:flex;align-items:center;gap:3px;}
+.service-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;}
+.service-badge.home{background:var(--info-bg);color:var(--info);}
+.service-badge.sewer{background:var(--success-bg);color:var(--success);}
+.service-badge.radon{background:var(--warning-bg);color:var(--warning);}
+.service-badge.bundle{background:var(--purple-bg);color:var(--purple);}
+.service-badge.termite{background:rgba(220,38,38,0.08);color:var(--error);}
+
+/* Agent hot list */
+.agent-card{background:var(--bg-card);border-radius:var(--radius);padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-1);cursor:pointer;transition:transform 0.15s;}
+.agent-card:hover{transform:translateY(-1px);}
+.agent-avatar{width:40px;height:40px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:var(--primary);}
+.agent-info{flex:1;}
+.agent-name{font-weight:600;font-size:14px;}
+.agent-stats{font-size:12px;color:var(--text-muted);}
+.agent-count{font-family:'Inter',sans-serif;font-weight:700;font-size:1.1rem;color:var(--accent);}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg-card);border-radius:var(--radius-sm);padding:14px 10px;text-align:center;box-shadow:var(--shadow-1);}
+.stat-value{font-family:'Inter',sans-serif;font-size:1.4rem;font-weight:700;color:var(--primary);}
+.stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+
+/* Quick book btn */
+.quick-book{position:fixed;bottom:140px;right:20px;z-index:90;padding:14px 20px;border-radius:50px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border:none;color:#fff;cursor:pointer;font-family:'Inter',sans-serif;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(27,58,92,0.3);display:flex;align-items:center;gap:8px;transition:transform 0.15s;}
+.quick-book:hover{transform:scale(1.05);}
+.quick-book:active{transform:scale(0.95);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.active{display:flex;}
+.modal{background:var(--bg-card);border-radius:20px 20px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;padding:24px 20px;animation:slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal h2{font-size:1.15rem;margin-bottom:20px;}
+
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 13px;background:var(--surface);border:1px solid rgba(0,0,0,0.08);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:16px;transition:border-color 0.15s,box-shadow 0.15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(27,58,92,0.1);outline:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 20px;border:none;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:0.95rem;font-weight:700;cursor:pointer;transition:transform 0.1s;width:100%;}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-light);}
+.btn-secondary{background:var(--surface);color:var(--text);}
+.btn-danger{background:var(--error);color:#fff;}
+
+/* Service checkboxes */
+.service-checks{display:flex;gap:8px;flex-wrap:wrap;}
+.svc-check{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:2px solid var(--surface);cursor:pointer;transition:all 0.15s;font-size:13px;font-weight:600;}
+.svc-check.active{border-color:var(--primary);background:rgba(27,58,92,0.05);}
+.svc-check input{display:none;}
+
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--bg-card);border-top:1px solid rgba(0,0,0,0.06);display:flex;z-index:100;padding:8px 0 12px;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;transition:color 0.15s;}
+.nav-item.active{color:var(--primary);}
+.nav-item svg{width:22px;height:22px;}
+
+.toast-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;}
+.toast{background:var(--success);color:#fff;padding:12px 20px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;box-shadow:var(--shadow-3);animation:toastIn 0.3s ease-out;}
+.toast.error{background:var(--error);}
+@keyframes toastIn{from{transform:translateY(-20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+
+.section{display:none;}.section.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+.upsell-card{background:linear-gradient(135deg,rgba(27,58,92,0.05),rgba(212,168,67,0.08));border:1px dashed rgba(27,58,92,0.2);border-radius:var(--radius);padding:16px;text-align:center;margin-top:16px;opacity:0.8;}
+.upsell-card h3{color:var(--primary);font-size:0.9rem;margin-bottom:4px;}
+.upsell-card p{font-size:12px;color:var(--text-muted);}
+.upsell-badge{display:inline-block;background:rgba(27,58,92,0.1);color:var(--primary);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;}
+
+@media print{.bottom-nav,.quick-book,.top-bar,.demo-banner,.toast-container,#bct-demo-disclaimer{display:none!important;}body{background:#fff;padding:0!important;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important;}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="top-bar" role="banner">
+  <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+  <h1>InspectBook</h1>
+</header>
+<div class="demo-banner" id="demoBanner" role="alert" style="display:none;">
+  <span>Sample Denver metro inspections loaded.</span>
+  <button onclick="clearDemoData()" aria-label="Clear sample data">Clear</button>
+</div>
+<div class="toast-container" id="toastContainer" aria-live="polite" role="status"></div>
+
+<main id="main-content">
+  <!-- SCHEDULE -->
+  <section class="section active" id="sec-schedule" aria-label="Schedule">
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card"><div class="stat-value" id="statToday">0</div><div class="stat-label">Today</div></div>
+      <div class="stat-card"><div class="stat-value" id="statWeek">0</div><div class="stat-label">This Week</div></div>
+      <div class="stat-card"><div class="stat-value" id="statRevenue">$0</div><div class="stat-label">Week Revenue</div></div>
+    </div>
+    <div class="day-nav" id="dayNav" role="tablist" aria-label="Select day"></div>
+    <div id="scheduleView"></div>
+  </section>
+
+  <!-- AGENTS -->
+  <section class="section" id="sec-agents" aria-label="Agent referrals">
+    <div class="schedule-header"><h2>Agent Referral List</h2></div>
+    <div id="agentsList"></div>
+    <div class="upsell-card">
+      <span class="upsell-badge">Full Version</span>
+      <h3>Agent Self-Booking Portal</h3>
+      <p>Give your top agents a private link to check availability and book inspections directly. No phone call needed.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="section" id="sec-settings" aria-label="Settings">
+    <div class="schedule-header"><h2>Settings</h2></div>
+    <div style="margin-bottom:16px;">
+      <button class="btn btn-secondary" style="margin-bottom:8px;" onclick="exportData()">Export All Data (JSON)</button>
+      <label for="importInput" class="btn btn-secondary" style="margin-bottom:8px;cursor:pointer;">Import Data</label>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-secondary" onclick="exportCSV()">Export Schedule (CSV)</button>
+    </div>
+  </section>
+</main>
+
+<button class="quick-book" onclick="showBooking()" aria-label="Quick book inspection">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Quick Book
+</button>
+
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+  <button class="nav-item active" data-section="sec-schedule" aria-label="Schedule">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Schedule
+  </button>
+  <button class="nav-item" data-section="sec-agents" aria-label="Agents">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+    Agents
+  </button>
+  <button class="nav-item" data-section="sec-settings" aria-label="Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<!-- Booking Modal -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal" role="dialog" aria-label="Book inspection">
+    <h2 id="bookTitle">Quick Book</h2>
+    <form id="bookForm" onsubmit="saveInspection(event)">
+      <input type="hidden" id="editId">
+      <div class="form-group"><label for="propAddr">Property Address</label><input type="text" id="propAddr" required placeholder="1234 Main St, Lakewood, CO"></div>
+      <div class="form-group"><label for="clientName">Client Name</label><input type="text" id="clientName" required placeholder="Buyer name"></div>
+      <div class="form-group"><label for="clientPhone">Client Phone</label><input type="tel" id="clientPhone" placeholder="303-555-0123"></div>
+      <div class="form-group"><label for="agentName">Referring Agent</label><input type="text" id="agentName" placeholder="Agent name (optional)"></div>
+      <div class="form-group"><label>Services</label>
+        <div class="service-checks" id="serviceChecks">
+          <label class="svc-check active"><input type="checkbox" name="svc" value="home" checked> Home</label>
+          <label class="svc-check"><input type="checkbox" name="svc" value="sewer"> Sewer</label>
+          <label class="svc-check"><input type="checkbox" name="svc" value="radon"> Radon</label>
+          <label class="svc-check"><input type="checkbox" name="svc" value="termite"> Termite</label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label for="inspDate">Date</label><input type="date" id="inspDate" required></div>
+        <div class="form-group"><label for="inspTime">Time</label><input type="time" id="inspTime" required value="09:00"></div>
+      </div>
+      <div class="form-group"><label for="inspector">Inspector</label>
+        <select id="inspector">
+          <option value="nathan">Nathan F. (CMI)</option>
+          <option value="chad">Chad M.</option>
+          <option value="jeremiah">Jeremiah S.</option>
+        </select>
+      </div>
+      <div class="form-group"><label for="fee">Fee ($)</label><input type="number" id="fee" placeholder="450" min="0"></div>
+      <div class="form-group"><label for="inspNotes">Notes</label><textarea id="inspNotes" rows="2" placeholder="Access code, lock box, special instructions..."></textarea></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveBookBtn">Book</button>
+      </div>
+      <div id="delRow" style="display:none;margin-top:10px;"><button type="button" class="btn btn-danger" onclick="deleteInspection()">Delete</button></div>
+      <div id="shareRow" style="display:none;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="shareConfirmation()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Confirmation</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+  <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Safe Investment Home Inspections, LLC. All brand references are used solely for demonstration purposes.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Safe%20Investment%20Home%20Inspections&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=405276100;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f5f7fa;color:#1a1d23;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Required</h1><p style="color:#6b7280">This tool needs a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#1b3a5c">ben@bennycutools.com</a></p></div></div>';throw new Error('Invalid key');}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+const DB_NAME='inspectbook_db';const DB_VERSION=1;let db;
+function openDB(){return new Promise((r,j)=>{const req=indexedDB.open(DB_NAME,DB_VERSION);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('inspections'))d.createObjectStore('inspections',{keyPath:'id'});if(!d.objectStoreNames.contains('agents'))d.createObjectStore('agents',{keyPath:'id'});};req.onsuccess=e=>{db=e.target.result;r(db);};req.onerror=e=>j(e);});}
+function dbPut(s,d){return new Promise((r,j)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).put(d);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+function dbGetAll(s){return new Promise((r,j)=>{const tx=db.transaction(s,'readonly');const req=tx.objectStore(s).getAll();req.onsuccess=()=>r(req.result);req.onerror=e=>j(e);});}
+function dbDelete(s,id){return new Promise((r,j)=>{const tx=db.transaction(s,'readwrite');tx.objectStore(s).delete(id);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+
+let allInspections=[];let allAgents=[];let selectedDay=new Date();
+const INSPECTORS={nathan:{name:'Nathan F.',color:'#1B3A5C'},chad:{name:'Chad M.',color:'#059669'},jeremiah:{name:'Jeremiah S.',color:'#7C3AED'}};
+
+const today=new Date();const td=d=>d.toISOString().slice(0,10);
+const DEMO_AGENTS=[
+  {id:'agent-1',name:'Sarah Mitchell',company:'Keller Williams',phone:'303-555-0101',referrals:12,lastRef:td(new Date(today.getTime()-3*86400000)),isDemo:true},
+  {id:'agent-2',name:'David Chen',company:'RE/MAX Alliance',phone:'720-555-0202',referrals:8,lastRef:td(new Date(today.getTime()-7*86400000)),isDemo:true},
+  {id:'agent-3',name:'Maria Gonzalez',company:'Coldwell Banker',phone:'303-555-0303',referrals:5,lastRef:td(new Date(today.getTime()-14*86400000)),isDemo:true}
+];
+const DEMO_INSPECTIONS=[
+  {id:'demo-1',propAddr:'4521 Wadsworth Blvd, Lakewood',clientName:'James & Tracy Powell',clientPhone:'303-555-1001',agentName:'Sarah Mitchell',services:['home','sewer','radon'],inspDate:td(today),inspTime:'09:00',inspector:'chad',fee:575,notes:'Lock box code 4421. Large ranch, est 3 hrs.',isDemo:true,created:Date.now()},
+  {id:'demo-2',propAddr:'8832 W Colfax Ave, Lakewood',clientName:'Robert Kim',clientPhone:'720-555-2002',agentName:'David Chen',services:['home'],inspDate:td(today),inspTime:'13:00',inspector:'nathan',fee:395,notes:'Condo unit 204. Key with front desk.',isDemo:true,created:Date.now()},
+  {id:'demo-3',propAddr:'1190 S Sheridan Blvd, Denver',clientName:'Emily Torres',clientPhone:'303-555-3003',agentName:'Sarah Mitchell',services:['home','radon'],inspDate:td(new Date(today.getTime()+86400000)),inspTime:'10:00',inspector:'jeremiah',fee:475,notes:'New construction. Builder will be on site.',isDemo:true,created:Date.now()},
+  {id:'demo-4',propAddr:'3344 Pierce St, Wheat Ridge',clientName:'Mark & Lisa Hoffman',clientPhone:'303-555-4004',agentName:'Maria Gonzalez',services:['home','sewer','radon','termite'],inspDate:td(new Date(today.getTime()+86400000)),inspTime:'09:00',inspector:'chad',fee:695,notes:'Full bundle. Older home, 1960s foundation.',isDemo:true,created:Date.now()},
+  {id:'demo-5',propAddr:'6700 W 38th Ave, Wheat Ridge',clientName:'Priya Patel',clientPhone:'720-555-5005',agentName:'David Chen',services:['home'],inspDate:td(new Date(today.getTime()+2*86400000)),inspTime:'11:00',inspector:'nathan',fee:395,notes:'',isDemo:true,created:Date.now()},
+  {id:'demo-6',propAddr:'2100 Youngfield St, Lakewood',clientName:'Carlos Ramirez',clientPhone:'303-555-6006',agentName:'',services:['sewer'],inspDate:td(new Date(today.getTime()+3*86400000)),inspTime:'14:00',inspector:'jeremiah',fee:195,notes:'Sewer only. Existing homeowner.',isDemo:true,created:Date.now()}
+];
+
+async function init(){
+  const isFirst=!localStorage.getItem('ib_visited');
+  if(isFirst){allInspections=[...DEMO_INSPECTIONS];allAgents=[...DEMO_AGENTS];document.getElementById('demoBanner').style.display='flex';render();}
+  setupNav();setupServiceChecks();
+  try{await openDB();
+    if(isFirst){localStorage.setItem('ib_visited','1');for(const a of DEMO_AGENTS)await dbPut('agents',a);for(const i of DEMO_INSPECTIONS)await dbPut('inspections',i);}
+    else{allInspections=await dbGetAll('inspections');allAgents=await dbGetAll('agents');if(allInspections.some(i=>i.isDemo))document.getElementById('demoBanner').style.display='flex';render();}
+  }catch(e){console.warn('IDB error:',e);}
+}
+
+function render(){renderStats();renderDayNav();renderSchedule();renderAgents();}
+
+function renderStats(){
+  const todayStr=td(today);
+  const todayCount=allInspections.filter(i=>i.inspDate===todayStr).length;
+  const weekStart=new Date(today);weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+  const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+7);
+  const weekInsps=allInspections.filter(i=>{const d=new Date(i.inspDate+'T12:00:00');return d>=weekStart&&d<weekEnd;});
+  const weekRev=weekInsps.reduce((s,i)=>s+Number(i.fee||0),0);
+  document.getElementById('statToday').textContent=todayCount;
+  document.getElementById('statWeek').textContent=weekInsps.length;
+  document.getElementById('statRevenue').textContent='$'+weekRev.toLocaleString();
+}
+
+function renderDayNav(){
+  const nav=document.getElementById('dayNav');
+  const days=[];const base=new Date(today);
+  for(let i=-1;i<6;i++){const d=new Date(base);d.setDate(d.getDate()+i);days.push(d);}
+  nav.innerHTML=days.map(d=>{
+    const isSelected=td(d)===td(selectedDay);
+    const isToday=td(d)===td(today);
+    const label=d.toLocaleDateString('en-US',{weekday:'short'});
+    const num=d.getDate();
+    return `<button class="day-btn${isSelected?' active':''}" onclick="selectDay('${td(d)}')" role="tab" aria-selected="${isSelected}" aria-label="${d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}"><span class="day-label">${label}</span>${num}${isToday?' *':''}</button>`;
+  }).join('');
+}
+
+function selectDay(dateStr){selectedDay=new Date(dateStr+'T12:00:00');renderDayNav();renderSchedule();}
+
+function renderSchedule(){
+  const container=document.getElementById('scheduleView');
+  const dayStr=td(selectedDay);
+  const dayInsps=allInspections.filter(i=>i.inspDate===dayStr).sort((a,b)=>a.inspTime.localeCompare(b.inspTime));
+  if(dayInsps.length===0){container.innerHTML='<div style="text-align:center;padding:40px 20px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p style="color:var(--text-muted);margin-top:12px;font-size:14px;">No inspections this day. Tap Quick Book to add one.</p></div>';return;}
+  const grouped={};dayInsps.forEach(i=>{if(!grouped[i.inspector])grouped[i.inspector]=[];grouped[i.inspector].push(i);});
+  container.innerHTML=Object.entries(grouped).map(([insp,items])=>{
+    const info=INSPECTORS[insp]||{name:insp,color:'#666'};
+    return `<div class="inspector-row"><div class="inspector-label"><div class="inspector-avatar" style="background:${info.color}">${info.name.charAt(0)}</div><span class="inspector-name">${info.name}</span></div>${items.map((item,idx)=>{
+      const svcType=item.services.length>1?'bundle':item.services[0]||'home';
+      return `<div class="insp-card ${svcType}" onclick="editInspection('${item.id}')" style="animation-delay:${idx*60}ms" tabindex="0" role="button" aria-label="Edit inspection at ${item.propAddr}"><div class="insp-top"><div><div class="insp-address">${item.propAddr}</div><div style="display:flex;gap:4px;margin-top:4px;">${item.services.map(s=>`<span class="service-badge ${s}">${s}</span>`).join('')}</div></div><div><div class="insp-time">${formatTime(item.inspTime)}</div>${item.fee?`<div style="font-weight:700;color:var(--primary);font-size:13px;text-align:right;">$${item.fee}</div>`:''}</div></div><div class="insp-meta"><span>${item.clientName}</span>${item.agentName?`<span>via ${item.agentName}</span>`:''}</div></div>`;
+    }).join('')}</div>`;
+  }).join('');
+}
+
+function formatTime(t){const[h,m]=t.split(':');const hr=parseInt(h);return(hr>12?hr-12:hr)+':'+m+(hr>=12?' PM':' AM');}
+
+function renderAgents(){
+  const container=document.getElementById('agentsList');
+  const sorted=[...allAgents].sort((a,b)=>b.referrals-a.referrals);
+  if(sorted.length===0){container.innerHTML='<div style="text-align:center;padding:30px;"><p style="color:var(--text-muted);font-size:14px;">No agents tracked yet. Add referring agent names when booking.</p></div>';return;}
+  container.innerHTML=sorted.map(a=>`
+    <div class="agent-card" tabindex="0" role="button" aria-label="${a.name}, ${a.referrals} referrals">
+      <div class="agent-avatar">${a.name.split(' ').map(n=>n[0]).join('')}</div>
+      <div class="agent-info"><div class="agent-name">${a.name}</div><div class="agent-stats">${a.company||'Independent'} -- Last: ${a.lastRef||'N/A'}</div></div>
+      <div class="agent-count">${a.referrals}</div>
+    </div>`).join('');
+}
+
+function setupNav(){document.querySelectorAll('.nav-item').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(btn.dataset.section).classList.add('active');});});}
+
+function setupServiceChecks(){document.querySelectorAll('.svc-check input').forEach(cb=>{cb.addEventListener('change',()=>{cb.parentElement.classList.toggle('active',cb.checked);});});}
+
+function showBooking(){
+  document.getElementById('bookTitle').textContent='Quick Book';
+  document.getElementById('bookForm').reset();
+  document.getElementById('editId').value='';
+  document.getElementById('delRow').style.display='none';
+  document.getElementById('shareRow').style.display='none';
+  document.getElementById('saveBookBtn').textContent='Book';
+  document.getElementById('inspDate').value=td(selectedDay);
+  document.querySelectorAll('.svc-check').forEach(el=>{const cb=el.querySelector('input');if(cb.value==='home'){cb.checked=true;el.classList.add('active');}else{cb.checked=false;el.classList.remove('active');}});
+  document.getElementById('bookModal').classList.add('active');
+  if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>{/*could auto-suggest nearby*/},()=>{});}
+}
+
+function editInspection(id){
+  const i=allInspections.find(x=>x.id===id);if(!i)return;
+  document.getElementById('bookTitle').textContent='Edit Inspection';
+  document.getElementById('editId').value=i.id;
+  document.getElementById('propAddr').value=i.propAddr;
+  document.getElementById('clientName').value=i.clientName;
+  document.getElementById('clientPhone').value=i.clientPhone;
+  document.getElementById('agentName').value=i.agentName||'';
+  document.getElementById('inspDate').value=i.inspDate;
+  document.getElementById('inspTime').value=i.inspTime;
+  document.getElementById('inspector').value=i.inspector;
+  document.getElementById('fee').value=i.fee||'';
+  document.getElementById('inspNotes').value=i.notes||'';
+  document.querySelectorAll('.svc-check').forEach(el=>{const cb=el.querySelector('input');const on=i.services.includes(cb.value);cb.checked=on;el.classList.toggle('active',on);});
+  document.getElementById('delRow').style.display='block';
+  document.getElementById('shareRow').style.display='block';
+  document.getElementById('saveBookBtn').textContent='Update';
+  document.getElementById('bookModal').classList.add('active');
+}
+
+function closeBookModal(){document.getElementById('bookModal').classList.remove('active');}
+
+async function saveInspection(e){
+  e.preventDefault();
+  const eid=document.getElementById('editId').value;
+  const svcs=Array.from(document.querySelectorAll('.svc-check input:checked')).map(cb=>cb.value);
+  const insp={
+    id:eid||'insp-'+Date.now()+'-'+Math.random().toString(36).slice(2,5),
+    propAddr:document.getElementById('propAddr').value,
+    clientName:document.getElementById('clientName').value,
+    clientPhone:document.getElementById('clientPhone').value,
+    agentName:document.getElementById('agentName').value,
+    services:svcs,inspDate:document.getElementById('inspDate').value,
+    inspTime:document.getElementById('inspTime').value,
+    inspector:document.getElementById('inspector').value,
+    fee:parseFloat(document.getElementById('fee').value)||0,
+    notes:document.getElementById('inspNotes').value,
+    created:eid?(allInspections.find(x=>x.id===eid)||{}).created||Date.now():Date.now(),
+    isDemo:false
+  };
+  await dbPut('inspections',insp);
+  // Update agent referral tracking
+  if(insp.agentName&&!eid){
+    let agent=allAgents.find(a=>a.name.toLowerCase()===insp.agentName.toLowerCase());
+    if(agent){agent.referrals=(agent.referrals||0)+1;agent.lastRef=insp.inspDate;await dbPut('agents',agent);}
+    else{const newAgent={id:'agent-'+Date.now(),name:insp.agentName,company:'',phone:'',referrals:1,lastRef:insp.inspDate,isDemo:false};await dbPut('agents',newAgent);}
+    allAgents=await dbGetAll('agents');
+  }
+  allInspections=await dbGetAll('inspections');
+  render();closeBookModal();showToast(eid?'Updated':'Inspection booked');
+}
+
+async function deleteInspection(){
+  const id=document.getElementById('editId').value;if(!id)return;
+  await dbDelete('inspections',id);allInspections=await dbGetAll('inspections');
+  render();closeBookModal();showToast('Deleted','error');
+}
+
+async function shareConfirmation(){
+  const id=document.getElementById('editId').value;
+  const i=allInspections.find(x=>x.id===id);if(!i)return;
+  const text=`Inspection Confirmation\n\nProperty: ${i.propAddr}\nDate: ${i.inspDate}\nTime: ${formatTime(i.inspTime)}\nServices: ${i.services.join(', ')}\nInspector: ${(INSPECTORS[i.inspector]||{}).name||i.inspector}\n${i.fee?'Fee: $'+i.fee:''}\n\nSafe Investment Home Inspections\n(303) 233-0750`;
+  if(navigator.share){try{await navigator.share({title:'Inspection Confirmation',text});}catch(e){}}
+  else{await navigator.clipboard.writeText(text);showToast('Copied to clipboard');}
+}
+
+async function clearDemoData(){
+  for(const i of allInspections.filter(x=>x.isDemo))await dbDelete('inspections',i.id);
+  for(const a of allAgents.filter(x=>x.isDemo))await dbDelete('agents',a.id);
+  allInspections=await dbGetAll('inspections');allAgents=await dbGetAll('agents');
+  document.getElementById('demoBanner').style.display='none';render();showToast('Sample data cleared');
+}
+
+async function exportData(){const d={inspections:allInspections,agents:allAgents,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inspectbook-backup.json';a.click();}
+async function importData(e){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.inspections)for(const i of d.inspections)await dbPut('inspections',i);if(d.agents)for(const a of d.agents)await dbPut('agents',a);allInspections=await dbGetAll('inspections');allAgents=await dbGetAll('agents');render();showToast('Imported');}catch(err){showToast('Failed','error');}}
+function exportCSV(){const h=['Date','Time','Address','Client','Phone','Agent','Services','Inspector','Fee','Notes'];const rows=allInspections.map(i=>[i.inspDate,i.inspTime,i.propAddr,i.clientName,i.clientPhone,i.agentName,i.services.join('+'),INSPECTORS[i.inspector]?.name||i.inspector,i.fee,i.notes]);const csv=[h,...rows].map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');const b=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='inspectbook-schedule.csv';a.click();}
+
+function showToast(msg,type='success'){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast'+(type==='error'?' error':'');t.textContent=msg;c.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},3000);}
+
+init();
+</script>
+</body>
+</html>
