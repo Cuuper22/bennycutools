@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MortarMatch Pro | M L Webb Masonry</title>
+    <meta name="description" content="Camera-based mortar color analyzer and mix calculator for repointing jobs">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Condensed:wght@700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brick: oklch(0.55 0.14 35);
+            --brick-dark: oklch(0.45 0.12 35);
+            --mortar: oklch(0.58 0.01 80);
+            --mortar-dark: oklch(0.48 0.01 80);
+            --orange: oklch(0.68 0.18 40);
+            --cream: oklch(0.98 0.01 90);
+            --white: oklch(1 0 0);
+            --charcoal: oklch(0.25 0.01 80);
+            --text: oklch(0.22 0.01 80);
+            --text-muted: oklch(0.5 0.01 80);
+            --border: oklch(0.88 0.01 80);
+            --success: oklch(0.62 0.15 145);
+            --warning: oklch(0.72 0.15 80);
+            --error: oklch(0.55 0.2 25);
+            --radius: 12px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+            --shadow: 0 2px 8px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--cream);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-font-smoothing: antialiased;
+            padding-bottom: 60px !important;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Roboto Condensed', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .mono {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 500;
+        }
+
+        /* Auth Screen */
+        .auth-screen {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: linear-gradient(165deg, var(--brick-dark) 0%, var(--brick) 50%, var(--mortar-dark) 100%);
+        }
+
+        .auth-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--brick);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .auth-logo svg {
+            width: 48px;
+            height: 48px;
+            color: var(--white);
+        }
+
+        .auth-title {
+            font-size: 24px;
+            color: var(--charcoal);
+            margin-bottom: 8px;
+        }
+
+        .auth-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        /* Grain texture overlay */
+        .auth-screen::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            font-family: 'Roboto Mono', monospace;
+            letter-spacing: 2px;
+            transition: border-color 150ms;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--brick);
+        }
+
+        .auth-input.error {
+            border-color: var(--error);
+            animation: shake 400ms;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            background: var(--brick);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), background 150ms, box-shadow 150ms;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.08);
+        }
+
+        .auth-btn:hover {
+            background: var(--brick-dark);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .auth-btn:active {
+            transform: scale(0.96) translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .auth-btn:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 3px;
+        }
+
+        .auth-error {
+            color: var(--error);
+            font-size: 14px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .auth-error.visible {
+            display: block;
+        }
+
+        /* Main App */
+        .app {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 400ms ease-out, transform 400ms ease-out;
+        }
+
+        .app.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Staggered entrance animations */
+        .app.active .header { animation: fadeInDown 300ms ease-out 100ms both; }
+        .app.active .nav-tabs { animation: fadeInDown 300ms ease-out 200ms both; }
+        .app.active .tab-content.active { animation: fadeInUp 350ms ease-out 250ms both; }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(16px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Header */
+        .header {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo {
+            width: 36px;
+            height: 36px;
+            background: var(--brick);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-logo svg {
+            width: 22px;
+            height: 22px;
+            color: var(--white);
+        }
+
+        .header-title {
+            font-size: 18px;
+            color: var(--charcoal);
+        }
+
+        .header-jobs {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: var(--cream);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        /* Nav Tabs */
+        .nav-tabs {
+            display: flex;
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 8px;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 12px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: color 150ms, border-color 150ms, transform 100ms;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .nav-tab:active {
+            transform: scale(0.95);
+        }
+
+        .nav-tab svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .nav-tab:hover {
+            color: var(--brick);
+        }
+
+        .nav-tab.active {
+            color: var(--brick);
+            border-bottom-color: var(--brick);
+        }
+
+        .nav-tab:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: -2px;
+        }
+
+        .nav-tab.pro-locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-tab .pro-badge {
+            font-size: 9px;
+            font-weight: 700;
+            background: var(--orange);
+            color: var(--white);
+            padding: 2px 5px;
+            border-radius: 4px;
+            margin-left: 4px;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 16px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Camera Tab */
+        .camera-view {
+            position: relative;
+            background: var(--charcoal);
+            border-radius: var(--radius);
+            overflow: hidden;
+            aspect-ratio: 3/4;
+            max-height: 60vh;
+            margin-bottom: 16px;
+        }
+
+        .camera-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .camera-canvas.visible {
+            display: block;
+        }
+
+        .camera-target {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border: 3px solid var(--white);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+
+        .camera-target::before,
+        .camera-target::after {
+            content: '';
+            position: absolute;
+            background: var(--white);
+        }
+
+        .camera-target::before {
+            width: 2px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .camera-target::after {
+            width: 20px;
+            height: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .camera-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            text-align: center;
+            padding: 24px;
+        }
+
+        .camera-placeholder svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.6;
+        }
+
+        .camera-placeholder p {
+            opacity: 0.8;
+        }
+
+        .camera-btn {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white);
+            background: var(--brick);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), background 150ms, box-shadow 150ms;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(198, 93, 59, 0.2);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .camera-btn:hover {
+            background: var(--brick-dark);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15), 0 8px 20px rgba(198, 93, 59, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .camera-btn:active {
+            transform: scale(0.96) translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .camera-btn:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 3px;
+        }
+
+        .camera-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .camera-btn.secondary {
+            background: var(--mortar);
+            color: var(--charcoal);
+        }
+
+        .camera-btn.secondary:hover {
+            background: var(--mortar-dark);
+            color: var(--white);
+        }
+
+        .camera-actions {
+            display: none;
+            gap: 12px;
+        }
+
+        .camera-actions.visible {
+            display: flex;
+        }
+
+        .camera-actions .camera-btn {
+            flex: 1;
+        }
+
+        /* Analysis Result */
+        .analysis-result {
+            display: none;
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .analysis-result.visible {
+            display: block;
+        }
+
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .color-swatch {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .analysis-info h3 {
+            font-size: 18px;
+            color: var(--charcoal);
+            margin-bottom: 4px;
+        }
+
+        .match-confidence {
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .recipe-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+
+        .recipe-section h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .recipe-item {
+            background: var(--cream);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .recipe-item-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .recipe-item-value {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .recipe-notes {
+            background: var(--cream);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .analysis-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .analysis-actions button {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: transform 150ms, background 150ms;
+        }
+
+        .analysis-actions button:active {
+            transform: scale(0.98);
+        }
+
+        .analysis-actions button:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 2px;
+        }
+
+        .analysis-actions button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-save {
+            background: var(--brick);
+            color: var(--white);
+            border: none;
+        }
+
+        .btn-save:hover {
+            background: var(--brick-dark);
+        }
+
+        .btn-share {
+            background: var(--white);
+            color: var(--charcoal);
+            border: 2px solid var(--border);
+        }
+
+        .btn-share:hover {
+            border-color: var(--mortar);
+            background: var(--cream);
+        }
+
+        .btn-copy {
+            background: var(--mortar);
+            color: var(--charcoal);
+            border: none;
+        }
+
+        .btn-copy:hover {
+            background: var(--mortar-dark);
+            color: var(--white);
+        }
+
+        /* Saved Jobs Tab */
+        .jobs-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .jobs-header h2 {
+            font-size: 20px;
+            color: var(--charcoal);
+        }
+
+        .jobs-count {
+            font-size: 13px;
+            color: var(--text-muted);
+            background: var(--white);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .jobs-count.at-limit {
+            background: var(--warning);
+            color: var(--charcoal);
+        }
+
+        .jobs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .job-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms;
+            animation: cardEnter 350ms ease-out backwards;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .job-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .job-card:active {
+            transform: translateY(-1px) scale(0.995);
+        }
+
+        .job-card:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 3px;
+        }
+
+        .job-card:nth-child(1) { animation-delay: 50ms; }
+        .job-card:nth-child(2) { animation-delay: 100ms; }
+        .job-card:nth-child(3) { animation-delay: 150ms; }
+        .job-card:nth-child(4) { animation-delay: 200ms; }
+        .job-card:nth-child(5) { animation-delay: 250ms; }
+
+        .job-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .job-color {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .job-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .job-name {
+            font-weight: 600;
+            color: var(--charcoal);
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .job-date {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .job-recipe {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 13px;
+            color: var(--text);
+            background: var(--cream);
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        .job-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .job-action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 150ms;
+        }
+
+        .job-action-btn:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: 1px;
+        }
+
+        .job-action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .job-action-btn.use {
+            background: var(--brick);
+            color: var(--white);
+            border: none;
+        }
+
+        .job-action-btn.use:hover {
+            background: var(--brick-dark);
+        }
+
+        .job-action-btn.share {
+            background: var(--white);
+            color: var(--charcoal);
+            border: 1px solid var(--border);
+        }
+
+        .job-action-btn.share:hover {
+            background: var(--cream);
+        }
+
+        .job-action-btn.delete {
+            background: none;
+            color: var(--error);
+            border: none;
+            flex: 0;
+            padding: 8px;
+        }
+
+        .job-action-btn.delete:hover {
+            background: rgba(180,60,60,0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        /* Compare Tab */
+        .compare-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .compare-slots {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .compare-slot {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .compare-slot-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .compare-slot-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--cream);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .compare-slot-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .compare-slot-image svg {
+            width: 32px;
+            height: 32px;
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .compare-slot-btn {
+            width: 100%;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--cream);
+            color: var(--charcoal);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 150ms;
+        }
+
+        .compare-slot-btn:hover {
+            background: var(--white);
+            border-style: solid;
+        }
+
+        .compare-slot-btn:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: 1px;
+        }
+
+        .compare-result {
+            display: none;
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .compare-result.visible {
+            display: block;
+        }
+
+        .compare-result h3 {
+            font-size: 16px;
+            color: var(--charcoal);
+            margin-bottom: 12px;
+        }
+
+        .compare-bar {
+            height: 8px;
+            background: var(--cream);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .compare-bar-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 500ms ease-out;
+        }
+
+        .compare-percentage {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .compare-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Pro Locked State */
+        .pro-locked-content {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .pro-locked-content svg {
+            width: 64px;
+            height: 64px;
+            color: var(--orange);
+            margin-bottom: 16px;
+        }
+
+        .pro-locked-content h3 {
+            font-size: 20px;
+            color: var(--charcoal);
+            margin-bottom: 8px;
+        }
+
+        .pro-locked-content p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pro-features {
+            text-align: left;
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .pro-features h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .pro-feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .pro-feature-item:last-child {
+            border-bottom: none;
+        }
+
+        .pro-feature-item svg {
+            width: 18px;
+            height: 18px;
+            color: var(--success);
+        }
+
+        .pro-upgrade-btn {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--orange), var(--brick));
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .pro-upgrade-btn:hover {
+            transform: scale(1.03) translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .pro-upgrade-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(255, 107, 53, 0.3);
+        }
+
+        .pro-upgrade-btn:focus-visible {
+            outline: 3px solid var(--charcoal);
+            outline-offset: 3px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--charcoal);
+            color: var(--white);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+            opacity: 0;
+            transition: transform 300ms, opacity 300ms;
+        }
+
+        .toast.visible {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 200;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 200ms, visibility 200ms;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            transform: scale(0.95);
+            transition: transform 200ms;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal h3 {
+            font-size: 18px;
+            color: var(--charcoal);
+            margin-bottom: 16px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--brick);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 150ms;
+        }
+
+        .modal-btn:focus-visible {
+            outline: 2px solid var(--orange);
+            outline-offset: 2px;
+        }
+
+        .modal-btn.primary {
+            background: var(--brick);
+            color: var(--white);
+            border: none;
+        }
+
+        .modal-btn.primary:hover {
+            background: var(--brick-dark);
+        }
+
+        .modal-btn.secondary {
+            background: var(--white);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .modal-btn.secondary:hover {
+            background: var(--cream);
+        }
+
+        /* Legal */
+        .legal-footer {
+            padding: 16px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .legal-footer a {
+            color: var(--brick);
+            text-decoration: none;
+        }
+
+        .legal-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Anti-scrape protection */
+        .camera-view, .job-card, .auth-card, .modal {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .camera-view img, .compare-slot-image img {
+            pointer-events: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .tab-content {
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 24px;
+            }
+
+            .camera-view {
+                max-height: 50vh;
+            }
+
+            .recipe-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .jobs-list {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            
+            .app.active .header,
+            .app.active .nav-tabs,
+            .app.active .tab-content.active,
+            .job-card {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+
+        /* Focus visible for accessibility */
+        *:focus-visible {
+            outline: 3px solid var(--orange);
+            outline-offset: 2px;
+        }
+
+        /* Reduce motion */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+        }
+
+        /* Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--brick);
+            color: white;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            z-index: 1000;
+            border-radius: 0 0 8px 0;
+            transition: top 0.2s;
+        }
+
+        .skip-link:focus {
+            top: 0;
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <!-- Auth Screen -->
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="6" width="20" height="4" rx="1"/>
+                    <rect x="2" y="14" width="20" height="4" rx="1"/>
+                    <line x1="6" y1="10" x2="6" y2="14"/>
+                    <line x1="12" y1="10" x2="12" y2="14"/>
+                    <line x1="18" y1="10" x2="18" y2="14"/>
+                </svg>
+            </div>
+            <h1 class="auth-title">MortarMatch Pro</h1>
+            <p class="auth-subtitle">Made for M L Webb Masonry</p>
+            <form id="authForm">
+                <input type="text" class="auth-input" id="accessKey" placeholder="Enter access key" autocomplete="off" aria-label="Access key">
+                <p class="auth-error" id="authError" aria-live="assertive">Wrong key. Check the email we sent.</p>
+                <button type="submit" class="auth-btn">Open Tool</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-brand">
+                <div class="header-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="6" width="20" height="4" rx="1"/>
+                        <rect x="2" y="14" width="20" height="4" rx="1"/>
+                        <line x1="6" y1="10" x2="6" y2="14"/>
+                        <line x1="12" y1="10" x2="12" y2="14"/>
+                        <line x1="18" y1="10" x2="18" y2="14"/>
+                    </svg>
+                </div>
+                <h1 class="header-title">MortarMatch</h1>
+            </div>
+            <span class="header-jobs" id="jobsCount">3 of 5 saved</span>
+        </header>
+
+        <!-- Nav Tabs -->
+        <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
+            <button class="nav-tab active" role="tab" aria-selected="true" aria-controls="tab-scan" id="btn-scan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Scan</span>
+            </button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="tab-jobs" id="btn-jobs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+                <span>Jobs</span>
+            </button>
+            <button class="nav-tab" role="tab" aria-selected="false" aria-controls="tab-compare" id="btn-compare">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="9"/>
+                    <rect x="14" y="3" width="7" height="9"/>
+                    <line x1="10" y1="7" x2="14" y2="7"/>
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                </svg>
+                <span>Compare</span>
+            </button>
+            <button class="nav-tab pro-locked" role="tab" aria-selected="false" aria-controls="tab-reports" id="btn-reports">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                <span>Reports<span class="pro-badge">PRO</span></span>
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main" id="main-content">
+            <!-- Scan Tab -->
+            <section class="tab-content active" id="tab-scan" role="tabpanel" aria-labelledby="btn-scan">
+                <div class="camera-view" id="cameraView">
+                    <video class="camera-video" id="cameraVideo" autoplay playsinline muted></video>
+                    <canvas class="camera-canvas" id="cameraCanvas"></canvas>
+                    <div class="camera-target" id="cameraTarget"></div>
+                    <div class="camera-placeholder" id="cameraPlaceholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <p>Aim at the mortar joint</p>
+                    </div>
+                </div>
+
+                <button class="camera-btn" id="captureBtn" aria-label="Capture mortar photo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <circle cx="12" cy="12" r="6"/>
+                    </svg>
+                    Scan Mortar
+                </button>
+
+                <div class="camera-actions" id="cameraActions">
+                    <button class="camera-btn secondary" id="retakeBtn" aria-label="Take another photo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                        </svg>
+                        Retake
+                    </button>
+                    <button class="camera-btn" id="analyzeBtn" aria-label="Analyze mortar color">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                        Get Recipe
+                    </button>
+                </div>
+
+                <div class="analysis-result" id="analysisResult" aria-live="polite">
+                    <div class="analysis-header">
+                        <div class="color-swatch" id="colorSwatch"></div>
+                        <div class="analysis-info">
+                            <h3 id="mortarType">Type N Mortar</h3>
+                            <p class="match-confidence" id="matchConfidence">94% color match</p>
+                        </div>
+                    </div>
+
+                    <div class="recipe-section">
+                        <h4>Your Mix</h4>
+                        <div class="recipe-grid">
+                            <div class="recipe-item">
+                                <p class="recipe-item-label">Portland Cement</p>
+                                <p class="recipe-item-value mono" id="recipeCite">1 part</p>
+                            </div>
+                            <div class="recipe-item">
+                                <p class="recipe-item-label">Lime</p>
+                                <p class="recipe-item-value mono" id="recipeLime">½ part</p>
+                            </div>
+                            <div class="recipe-item">
+                                <p class="recipe-item-label">Sand</p>
+                                <p class="recipe-item-value mono" id="recipeSand">3 parts</p>
+                            </div>
+                            <div class="recipe-item">
+                                <p class="recipe-item-label">Pigment</p>
+                                <p class="recipe-item-value mono" id="recipePigment">2% brown</p>
+                            </div>
+                        </div>
+                        <div class="recipe-notes" id="recipeNotes">
+                            Use local washed sand for best color match. Mix should be workable but not soupy.
+                        </div>
+                    </div>
+
+                    <div class="analysis-actions">
+                        <button class="btn-save" id="saveRecipeBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                            </svg>
+                            Save
+                        </button>
+                        <button class="btn-copy" id="copyRecipeBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                            </svg>
+                            Copy
+                        </button>
+                        <button class="btn-share" id="shareRecipeBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"/>
+                                <circle cx="6" cy="12" r="3"/>
+                                <circle cx="18" cy="19" r="3"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                            </svg>
+                            Share
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Jobs Tab -->
+            <section class="tab-content" id="tab-jobs" role="tabpanel" aria-labelledby="btn-jobs" hidden>
+                <div class="jobs-header">
+                    <h2>Saved Recipes</h2>
+                    <span class="jobs-count" id="jobsCountDisplay">3 of 5</span>
+                </div>
+                <div class="jobs-list" id="jobsList" aria-label="Saved mortar recipes">
+                    <!-- Jobs populated by JS -->
+                </div>
+            </section>
+
+            <!-- Compare Tab -->
+            <section class="tab-content" id="tab-compare" role="tabpanel" aria-labelledby="btn-compare" hidden>
+                <h2 style="font-size: 20px; margin-bottom: 16px; color: var(--charcoal);">Before & After</h2>
+                <div class="compare-container">
+                    <div class="compare-slots">
+                        <div class="compare-slot">
+                            <p class="compare-slot-label">Before (Old Mortar)</p>
+                            <div class="compare-slot-image" id="compareBefore">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <button class="compare-slot-btn" id="selectBeforeBtn">Select Photo</button>
+                        </div>
+                        <div class="compare-slot">
+                            <p class="compare-slot-label">After (New Mortar)</p>
+                            <div class="compare-slot-image" id="compareAfter">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <polyline points="21 15 16 10 5 21"/>
+                                </svg>
+                            </div>
+                            <button class="compare-slot-btn" id="selectAfterBtn">Select Photo</button>
+                        </div>
+                    </div>
+
+                    <div class="compare-result" id="compareResult">
+                        <h3>Color Match Analysis</h3>
+                        <div class="compare-bar">
+                            <div class="compare-bar-fill" id="compareBarFill" style="width: 0%"></div>
+                        </div>
+                        <p class="compare-percentage" id="comparePercentage">0%</p>
+                        <p class="compare-text" id="compareText">Analyzing color similarity...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Tab (Pro Locked) -->
+            <section class="tab-content" id="tab-reports" role="tabpanel" aria-labelledby="btn-reports" hidden>
+                <div class="pro-locked-content">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    <h3>Job Reports</h3>
+                    <p>Print-ready reports with your company info, before/after photos, and material lists. Hand to customers or keep for your files.</p>
+
+                    <div class="pro-features">
+                        <h4>Full Version Gets You</h4>
+                        <div class="pro-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Unlimited saved mixes (no 5-job limit)</span>
+                        </div>
+                        <div class="pro-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>PDF reports with your logo</span>
+                        </div>
+                        <div class="pro-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Material cost calculator</span>
+                        </div>
+                        <div class="pro-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Custom pigment database</span>
+                        </div>
+                        <div class="pro-feature-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>Cloud backup and crew sharing</span>
+                        </div>
+                    </div>
+
+                    <button class="pro-upgrade-btn" id="upgradeBtn">Get the Full Version - $200</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Legal Footer -->
+        <footer class="legal-footer">
+            Built for M L Webb Masonry of Madison, TN.<br>
+            This tool is for guidance only. Your actual mix depends on local sand, weather, and how you're laying it. Always run a test batch before the real job. <a href="mailto:mlwebbmasonry@gmail.com">Contact Morris</a>
+        </footer>
+
+        <!-- Demo Notice (Compact) -->
+        <div id="bct-demo" style="position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;color:#999;padding:8px 12px;font-size:11px;z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <span>Demo by BennyCuTools — not affiliated with M L Webb Masonry</span>
+          <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20ML%20Webb%20Masonry" style="color:#fff;text-decoration:none;white-space:nowrap;">Remove →</a>
+        </div>
+    </div>
+
+    <!-- Save Job Modal -->
+    <div class="modal-overlay" id="saveModal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
+        <div class="modal">
+            <h3 id="saveModalTitle">Save This Recipe</h3>
+            <input type="text" class="modal-input" id="jobNameInput" placeholder="Job name (e.g., Smith Chimney)" aria-label="Job name">
+            <div class="modal-actions">
+                <button class="modal-btn secondary" id="cancelSaveBtn">Cancel</button>
+                <button class="modal-btn primary" id="confirmSaveBtn">Save Recipe</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="beforeFileInput" accept="image/*" capture="environment" hidden>
+    <input type="file" id="afterFileInput" accept="image/*" capture="environment" hidden>
+
+    <script>
+        // App State
+        const state = {
+            authenticated: false,
+            currentTab: 'scan',
+            cameraActive: false,
+            capturedImage: null,
+            currentAnalysis: null,
+            jobs: [],
+            beforeImage: null,
+            afterImage: null,
+            maxFreeJobs: 5
+        };
+
+        // Demo Data - Nashville area jobs
+        const demoJobs = [
+            {
+                id: 'demo-1',
+                name: 'Germantown Brownstone',
+                date: '2026-02-06',
+                color: 'rgb(205, 185, 145)',
+                mortarType: 'Type O (High Lime)',
+                confidence: 96,
+                recipe: {
+                    cement: '1 part',
+                    lime: '2 parts',
+                    sand: '8 parts',
+                    pigment: '1% buff'
+                },
+                notes: 'Historic Germantown. Lots of lime for flexibility on old brick. Let it cure slow.'
+            },
+            {
+                id: 'demo-2',
+                name: 'East Nashville Chimney',
+                date: '2026-02-03',
+                color: 'rgb(140, 140, 140)',
+                mortarType: 'Type S (Standard)',
+                confidence: 91,
+                recipe: {
+                    cement: '1 part',
+                    lime: '½ part',
+                    sand: '3 parts',
+                    pigment: 'None'
+                },
+                notes: 'Standard gray for 1960s brick. Strong mix for chimneys. Watch for white bloom.'
+            },
+            {
+                id: 'demo-3',
+                name: 'Madison Retaining Wall',
+                date: '2026-01-28',
+                color: 'rgb(195, 170, 140)',
+                mortarType: 'Type N (General)',
+                confidence: 89,
+                recipe: {
+                    cement: '1 part',
+                    lime: '1 part',
+                    sand: '5 parts',
+                    pigment: '2% tan'
+                },
+                notes: 'Backyard retaining wall. Tan blend matches local stone. Customer OKd the sample.'
+            }
+        ];
+
+        // DOM Elements
+        const authScreen = document.getElementById('authScreen');
+        const authForm = document.getElementById('authForm');
+        const accessKeyInput = document.getElementById('accessKey');
+        const authError = document.getElementById('authError');
+        const app = document.getElementById('app');
+
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        const cameraVideo = document.getElementById('cameraVideo');
+        const cameraCanvas = document.getElementById('cameraCanvas');
+        const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        const cameraTarget = document.getElementById('cameraTarget');
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraActions = document.getElementById('cameraActions');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const analysisResult = document.getElementById('analysisResult');
+
+        const colorSwatch = document.getElementById('colorSwatch');
+        const mortarType = document.getElementById('mortarType');
+        const matchConfidence = document.getElementById('matchConfidence');
+        const recipeCement = document.getElementById('recipeCite');
+        const recipeLime = document.getElementById('recipeLime');
+        const recipeSand = document.getElementById('recipeSand');
+        const recipePigment = document.getElementById('recipePigment');
+        const recipeNotes = document.getElementById('recipeNotes');
+
+        const saveRecipeBtn = document.getElementById('saveRecipeBtn');
+        const copyRecipeBtn = document.getElementById('copyRecipeBtn');
+        const shareRecipeBtn = document.getElementById('shareRecipeBtn');
+
+        const saveModal = document.getElementById('saveModal');
+        const jobNameInput = document.getElementById('jobNameInput');
+        const cancelSaveBtn = document.getElementById('cancelSaveBtn');
+        const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+
+        const jobsList = document.getElementById('jobsList');
+        const jobsCount = document.getElementById('jobsCount');
+        const jobsCountDisplay = document.getElementById('jobsCountDisplay');
+
+        const compareBefore = document.getElementById('compareBefore');
+        const compareAfter = document.getElementById('compareAfter');
+        const selectBeforeBtn = document.getElementById('selectBeforeBtn');
+        const selectAfterBtn = document.getElementById('selectAfterBtn');
+        const beforeFileInput = document.getElementById('beforeFileInput');
+        const afterFileInput = document.getElementById('afterFileInput');
+        const compareResult = document.getElementById('compareResult');
+        const compareBarFill = document.getElementById('compareBarFill');
+        const comparePercentage = document.getElementById('comparePercentage');
+        const compareText = document.getElementById('compareText');
+
+        const upgradeBtn = document.getElementById('upgradeBtn');
+        const toast = document.getElementById('toast');
+
+        // Auth hash check
+        function hashCode(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return hash;
+        }
+
+        // Check URL auth
+        function checkUrlAuth() {
+            const params = new URLSearchParams(window.location.search);
+            const key = params.get('key');
+            if (key && hashCode(key) === -946487057) {
+                authenticate();
+                return true;
+            }
+            return false;
+        }
+
+        function authenticate() {
+            state.authenticated = true;
+            authScreen.style.display = 'none';
+            app.classList.add('active');
+            loadJobs();
+            initCamera();
+        }
+
+        // Auth form handler
+        authForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const key = accessKeyInput.value.trim();
+            if (hashCode(key) === -946487057) {
+                authenticate();
+            } else {
+                accessKeyInput.classList.add('error');
+                authError.classList.add('visible');
+                setTimeout(() => {
+                    accessKeyInput.classList.remove('error');
+                }, 400);
+            }
+        });
+
+        accessKeyInput.addEventListener('input', () => {
+            authError.classList.remove('visible');
+        });
+
+        // Tab navigation
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (tab.classList.contains('pro-locked')) {
+                    // Still switch to show the locked content
+                }
+                const tabId = tab.id.replace('btn-', '');
+                switchTab(tabId);
+            });
+        });
+
+        function switchTab(tabId) {
+            state.currentTab = tabId;
+            
+            navTabs.forEach(t => {
+                const isActive = t.id === `btn-${tabId}`;
+                t.classList.toggle('active', isActive);
+                t.setAttribute('aria-selected', isActive);
+            });
+
+            tabContents.forEach(content => {
+                const isActive = content.id === `tab-${tabId}`;
+                content.classList.toggle('active', isActive);
+                content.hidden = !isActive;
+            });
+        }
+
+        // Camera handling
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 960 }
+                    }
+                });
+                cameraVideo.srcObject = stream;
+                state.cameraActive = true;
+                cameraPlaceholder.style.display = 'none';
+                cameraTarget.style.display = 'block';
+            } catch (err) {
+                console.error('Camera access denied:', err);
+                cameraPlaceholder.innerHTML = `
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                        <path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"/>
+                    </svg>
+                    <p>Camera access needed. Check browser settings.</p>
+                `;
+            }
+        }
+
+        captureBtn.addEventListener('click', () => {
+            if (!state.cameraActive) {
+                initCamera();
+                return;
+            }
+            capturePhoto();
+        });
+
+        function capturePhoto() {
+            const ctx = cameraCanvas.getContext('2d');
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
+            ctx.drawImage(cameraVideo, 0, 0);
+            state.capturedImage = cameraCanvas.toDataURL('image/jpeg', 0.9);
+            
+            cameraCanvas.classList.add('visible');
+            cameraTarget.style.display = 'none';
+            captureBtn.style.display = 'none';
+            cameraActions.classList.add('visible');
+        }
+
+        retakeBtn.addEventListener('click', () => {
+            state.capturedImage = null;
+            cameraCanvas.classList.remove('visible');
+            cameraTarget.style.display = 'block';
+            captureBtn.style.display = 'flex';
+            cameraActions.classList.remove('visible');
+            analysisResult.classList.remove('visible');
+        });
+
+        analyzeBtn.addEventListener('click', () => {
+            analyzeColor();
+        });
+
+        function analyzeColor() {
+            const ctx = cameraCanvas.getContext('2d');
+            const centerX = cameraCanvas.width / 2;
+            const centerY = cameraCanvas.height / 2;
+            const sampleSize = 60;
+
+            // Sample pixels from center area
+            const imageData = ctx.getImageData(
+                centerX - sampleSize/2,
+                centerY - sampleSize/2,
+                sampleSize,
+                sampleSize
+            );
+
+            let r = 0, g = 0, b = 0, count = 0;
+            for (let i = 0; i < imageData.data.length; i += 4) {
+                r += imageData.data[i];
+                g += imageData.data[i + 1];
+                b += imageData.data[i + 2];
+                count++;
+            }
+
+            r = Math.round(r / count);
+            g = Math.round(g / count);
+            b = Math.round(b / count);
+
+            const analysis = determineRecipe(r, g, b);
+            state.currentAnalysis = analysis;
+            displayAnalysis(analysis);
+        }
+
+        function determineRecipe(r, g, b) {
+            // Calculate color characteristics
+            const brightness = (r + g + b) / 3;
+            const warmth = r - b;
+            const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+
+            let mortarType, recipe, notes, confidence;
+
+            // Determine mortar type based on color analysis
+            if (brightness > 180 && saturation < 30) {
+                // Light gray - Type S or N
+                mortarType = 'Type S (Standard)';
+                recipe = {
+                    cement: '1 part',
+                    lime: '½ part',
+                    sand: '3 parts',
+                    pigment: 'None'
+                };
+                notes = 'Standard gray. Good for most new work. Keep your water ratio steady.';
+                confidence = 85 + Math.floor(Math.random() * 10);
+            } else if (warmth > 30 && brightness > 150) {
+                // Warm/tan tones - Type N with pigment
+                mortarType = 'Type N (Tan Blend)';
+                const pigmentPercent = Math.min(4, Math.max(1, Math.round((warmth / 30) * 2)));
+                recipe = {
+                    cement: '1 part',
+                    lime: '1 part',
+                    sand: '5 parts',
+                    pigment: `${pigmentPercent}% tan`
+                };
+                notes = 'Warm tan common around Nashville. Use iron oxide tan. Try it on scrap brick first.';
+                confidence = 88 + Math.floor(Math.random() * 8);
+            } else if (brightness > 160 && warmth > 40) {
+                // Buff/cream - Type O high lime
+                mortarType = 'Type O (High Lime)';
+                recipe = {
+                    cement: '1 part',
+                    lime: '2 parts',
+                    sand: '8 parts',
+                    pigment: '1% buff'
+                };
+                notes = 'Old-style mortar. Extra lime makes it flexible. Keep it dry for 3 days while curing.';
+                confidence = 90 + Math.floor(Math.random() * 7);
+            } else if (brightness < 140) {
+                // Dark gray - Type S with charcoal
+                mortarType = 'Type S (Dark Gray)';
+                recipe = {
+                    cement: '1 part',
+                    lime: '¼ part',
+                    sand: '3 parts',
+                    pigment: '3% charcoal'
+                };
+                notes = 'Dark mortar for accent work. Carbon black pigment. Lightens up some as it dries.';
+                confidence = 82 + Math.floor(Math.random() * 12);
+            } else if (warmth > 20) {
+                // Brown/red tones
+                mortarType = 'Type N (Brown)';
+                recipe = {
+                    cement: '1 part',
+                    lime: '1 part',
+                    sand: '4 parts',
+                    pigment: '2% brown oxide'
+                };
+                notes = 'Brown mortar for red brick. Iron oxide brown. Blends with weathered mortar.';
+                confidence = 86 + Math.floor(Math.random() * 9);
+            } else {
+                // Default medium gray
+                mortarType = 'Type N (General)';
+                recipe = {
+                    cement: '1 part',
+                    lime: '1 part',
+                    sand: '5 parts',
+                    pigment: 'None'
+                };
+                notes = 'All-purpose mix. Good for most house work. Add or cut sand to get the right stiffness.';
+                confidence = 80 + Math.floor(Math.random() * 10);
+            }
+
+            return {
+                color: `rgb(${r}, ${g}, ${b})`,
+                mortarType,
+                recipe,
+                notes,
+                confidence
+            };
+        }
+
+        function displayAnalysis(analysis) {
+            colorSwatch.style.backgroundColor = analysis.color;
+            mortarType.textContent = analysis.mortarType;
+            matchConfidence.textContent = `${analysis.confidence}% color match`;
+            recipeCement.textContent = analysis.recipe.cement;
+            recipeLime.textContent = analysis.recipe.lime;
+            recipeSand.textContent = analysis.recipe.sand;
+            recipePigment.textContent = analysis.recipe.pigment;
+            recipeNotes.textContent = analysis.notes;
+            
+            analysisResult.classList.add('visible');
+        }
+
+        // Save recipe
+        saveRecipeBtn.addEventListener('click', () => {
+            if (state.jobs.length >= state.maxFreeJobs) {
+                showToast('Get the full version for unlimited mixes');
+                return;
+            }
+            saveModal.classList.add('visible');
+            jobNameInput.focus();
+        });
+
+        cancelSaveBtn.addEventListener('click', () => {
+            saveModal.classList.remove('visible');
+            jobNameInput.value = '';
+        });
+
+        confirmSaveBtn.addEventListener('click', () => {
+            const name = jobNameInput.value.trim();
+            if (!name) {
+                jobNameInput.focus();
+                return;
+            }
+
+            const job = {
+                id: Date.now().toString(),
+                name,
+                date: new Date().toISOString().split('T')[0],
+                color: state.currentAnalysis.color,
+                mortarType: state.currentAnalysis.mortarType,
+                confidence: state.currentAnalysis.confidence,
+                recipe: state.currentAnalysis.recipe,
+                notes: state.currentAnalysis.notes,
+                image: state.capturedImage
+            };
+
+            state.jobs.unshift(job);
+            saveJobsToStorage();
+            updateJobsCount();
+            renderJobs();
+
+            saveModal.classList.remove('visible');
+            jobNameInput.value = '';
+            showToast('Recipe saved');
+        });
+
+        // Close modal on overlay click
+        saveModal.addEventListener('click', (e) => {
+            if (e.target === saveModal) {
+                saveModal.classList.remove('visible');
+            }
+        });
+
+        // Escape key closes modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && saveModal.classList.contains('visible')) {
+                saveModal.classList.remove('visible');
+            }
+        });
+
+        // Copy recipe
+        copyRecipeBtn.addEventListener('click', async () => {
+            if (!state.currentAnalysis) return;
+            
+            const text = formatRecipeText(state.currentAnalysis);
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('Recipe copied');
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showToast('Copy failed');
+            }
+        });
+
+        function formatRecipeText(analysis) {
+            return `${analysis.mortarType}
+Portland Cement: ${analysis.recipe.cement}
+Lime: ${analysis.recipe.lime}
+Sand: ${analysis.recipe.sand}
+Pigment: ${analysis.recipe.pigment}
+
+Notes: ${analysis.notes}
+
+Match Confidence: ${analysis.confidence}%`;
+        }
+
+        // Share recipe
+        shareRecipeBtn.addEventListener('click', async () => {
+            if (!state.currentAnalysis) return;
+            
+            const text = formatRecipeText(state.currentAnalysis);
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Mortar Mix Recipe',
+                        text: text
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Share failed:', err);
+                    }
+                }
+            } else {
+                // Fallback to copy
+                await navigator.clipboard.writeText(text);
+                showToast('Recipe copied (share not supported)');
+            }
+        });
+
+        // Jobs management
+        function loadJobs() {
+            try {
+                const stored = localStorage.getItem('mortarmatch_jobs');
+                if (stored) {
+                    state.jobs = JSON.parse(stored);
+                } else {
+                    // Load demo data on first visit
+                    state.jobs = [...demoJobs];
+                    saveJobsToStorage();
+                }
+            } catch (err) {
+                state.jobs = [...demoJobs];
+            }
+            updateJobsCount();
+            renderJobs();
+        }
+
+        function saveJobsToStorage() {
+            try {
+                localStorage.setItem('mortarmatch_jobs', JSON.stringify(state.jobs));
+            } catch (err) {
+                console.error('Storage error:', err);
+            }
+        }
+
+        function updateJobsCount() {
+            const count = state.jobs.length;
+            const text = `${count} of ${state.maxFreeJobs}`;
+            jobsCount.textContent = `${count} of ${state.maxFreeJobs} saved`;
+            jobsCountDisplay.textContent = text;
+            
+            if (count >= state.maxFreeJobs) {
+                jobsCountDisplay.classList.add('at-limit');
+            } else {
+                jobsCountDisplay.classList.remove('at-limit');
+            }
+        }
+
+        function renderJobs() {
+            if (state.jobs.length === 0) {
+                jobsList.innerHTML = `
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <h3>No Saved Mixes Yet</h3>
+                        <p>Scan some mortar and save your mixes here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            jobsList.innerHTML = state.jobs.map(job => `
+                <article class="job-card" tabindex="0" data-id="${job.id}">
+                    <div class="job-card-header">
+                        <div class="job-color" style="background-color: ${job.color}"></div>
+                        <div class="job-info">
+                            <p class="job-name">${escapeHtml(job.name)}</p>
+                            <p class="job-date">${formatDate(job.date)} - ${job.mortarType}</p>
+                        </div>
+                    </div>
+                    <div class="job-recipe">
+                        ${job.recipe.cement} cement | ${job.recipe.lime} lime | ${job.recipe.sand} sand | ${job.recipe.pigment}
+                    </div>
+                    <div class="job-actions">
+                        <button class="job-action-btn use" data-action="use" data-id="${job.id}" aria-label="Use this recipe">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                            </svg>
+                            Use Today
+                        </button>
+                        <button class="job-action-btn share" data-action="share" data-id="${job.id}" aria-label="Share this recipe">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"/>
+                                <circle cx="6" cy="12" r="3"/>
+                                <circle cx="18" cy="19" r="3"/>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                            </svg>
+                            Share
+                        </button>
+                        <button class="job-action-btn delete" data-action="delete" data-id="${job.id}" aria-label="Delete this recipe">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"/>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </article>
+            `).join('');
+
+            // Add event listeners
+            jobsList.querySelectorAll('.job-action-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.dataset.action;
+                    const id = btn.dataset.id;
+                    handleJobAction(action, id);
+                });
+            });
+        }
+
+        function handleJobAction(action, id) {
+            const job = state.jobs.find(j => j.id === id);
+            if (!job) return;
+
+            switch (action) {
+                case 'use':
+                    state.currentAnalysis = {
+                        color: job.color,
+                        mortarType: job.mortarType,
+                        recipe: job.recipe,
+                        notes: job.notes,
+                        confidence: job.confidence
+                    };
+                    displayAnalysis(state.currentAnalysis);
+                    switchTab('scan');
+                    showToast(`Loaded: ${job.name}`);
+                    break;
+
+                case 'share':
+                    const text = `${job.name}\n${formatRecipeText({
+                        mortarType: job.mortarType,
+                        recipe: job.recipe,
+                        notes: job.notes,
+                        confidence: job.confidence
+                    })}`;
+                    
+                    if (navigator.share) {
+                        navigator.share({ title: job.name, text });
+                    } else {
+                        navigator.clipboard.writeText(text);
+                        showToast('Recipe copied');
+                    }
+                    break;
+
+                case 'delete':
+                    if (confirm(`Delete "${job.name}"?`)) {
+                        state.jobs = state.jobs.filter(j => j.id !== id);
+                        saveJobsToStorage();
+                        updateJobsCount();
+                        renderJobs();
+                        showToast('Recipe deleted');
+                    }
+                    break;
+            }
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Compare tab
+        selectBeforeBtn.addEventListener('click', () => beforeFileInput.click());
+        selectAfterBtn.addEventListener('click', () => afterFileInput.click());
+
+        beforeFileInput.addEventListener('change', (e) => {
+            handleCompareImage(e.target.files[0], 'before');
+        });
+
+        afterFileInput.addEventListener('change', (e) => {
+            handleCompareImage(e.target.files[0], 'after');
+        });
+
+        function handleCompareImage(file, slot) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = `${slot} photo`;
+
+                const container = slot === 'before' ? compareBefore : compareAfter;
+                container.innerHTML = '';
+                container.appendChild(img);
+
+                if (slot === 'before') {
+                    state.beforeImage = e.target.result;
+                } else {
+                    state.afterImage = e.target.result;
+                }
+
+                if (state.beforeImage && state.afterImage) {
+                    runComparison();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function runComparison() {
+            compareResult.classList.add('visible');
+            compareBarFill.style.width = '0%';
+            comparePercentage.textContent = '0%';
+            compareText.textContent = 'Checking how close the colors are...';
+
+            // Analyze both images
+            const beforeColors = analyzeImageColors(state.beforeImage);
+            const afterColors = analyzeImageColors(state.afterImage);
+
+            setTimeout(() => {
+                if (beforeColors && afterColors) {
+                    const similarity = calculateColorSimilarity(beforeColors, afterColors);
+                    animateComparison(similarity);
+                }
+            }, 500);
+        }
+
+        function analyzeImageColors(dataUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 100;
+                    canvas.height = 100;
+                    ctx.drawImage(img, 0, 0, 100, 100);
+                    
+                    const imageData = ctx.getImageData(0, 0, 100, 100);
+                    let r = 0, g = 0, b = 0, count = 0;
+                    
+                    for (let i = 0; i < imageData.data.length; i += 4) {
+                        r += imageData.data[i];
+                        g += imageData.data[i + 1];
+                        b += imageData.data[i + 2];
+                        count++;
+                    }
+                    
+                    resolve({
+                        r: r / count,
+                        g: g / count,
+                        b: b / count
+                    });
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        function calculateColorSimilarity(c1, c2) {
+            // Calculate color distance (lower is more similar)
+            const distance = Math.sqrt(
+                Math.pow(c1.r - c2.r, 2) +
+                Math.pow(c1.g - c2.g, 2) +
+                Math.pow(c1.b - c2.b, 2)
+            );
+            
+            // Max possible distance is ~441 (black to white)
+            // Convert to percentage (100% = identical)
+            const similarity = Math.max(0, 100 - (distance / 441) * 100);
+            return Math.round(similarity);
+        }
+
+        async function animateComparison(finalValue) {
+            const beforeColors = await analyzeImageColors(state.beforeImage);
+            const afterColors = await analyzeImageColors(state.afterImage);
+            const similarity = calculateColorSimilarity(beforeColors, afterColors);
+
+            let current = 0;
+            const interval = setInterval(() => {
+                current += 2;
+                if (current >= similarity) {
+                    current = similarity;
+                    clearInterval(interval);
+                }
+                
+                compareBarFill.style.width = `${current}%`;
+                comparePercentage.textContent = `${current}%`;
+                
+                if (current >= similarity) {
+                    if (similarity >= 90) {
+                        compareText.textContent = 'Dead-on match. Can barely tell them apart.';
+                    } else if (similarity >= 75) {
+                        compareText.textContent = 'Pretty close. Small difference if you look hard.';
+                    } else if (similarity >= 60) {
+                        compareText.textContent = 'Getting there. Try tweaking the pigment amount.';
+                    } else {
+                        compareText.textContent = 'Keep working. Adjust your mix and try again.';
+                    }
+                }
+            }, 20);
+        }
+
+        // Upgrade button
+        upgradeBtn.addEventListener('click', () => {
+            showToast('Call Morris about the full version');
+        });
+
+        // Toast notification
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('visible');
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 2500);
+        }
+
+        // Anti-scrape protection
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.camera-view, .job-card, .auth-card')) {
+                e.preventDefault();
+            }
+        });
+
+        // Initialize
+        if (!checkUrlAuth()) {
+            // Show auth screen
+        }
+    </script>
+</body>
+</html>

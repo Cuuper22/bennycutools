@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HearthRoute — Service Scheduler for Charles Family Hearth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --primary: oklch(0.42 0.14 25);
+      --primary-light: oklch(0.52 0.12 25);
+      --primary-dark: oklch(0.32 0.16 25);
+      --accent: oklch(0.65 0.22 55);
+      --accent-hover: oklch(0.58 0.24 50);
+      --accent-glow: oklch(0.65 0.22 55 / 0.4);
+      --ember: oklch(0.55 0.25 45);
+      --ember-soft: oklch(0.75 0.18 60);
+      --success: oklch(0.62 0.17 145);
+      --success-bg: oklch(0.95 0.04 145);
+      --warning: oklch(0.75 0.18 85);
+      --warning-bg: oklch(0.96 0.05 85);
+      --error: oklch(0.55 0.22 25);
+      --error-bg: oklch(0.95 0.05 25);
+      
+      --bg: oklch(0.97 0.01 55);
+      --bg-card: oklch(1 0 0);
+      --bg-muted: oklch(0.94 0.02 60);
+      --bg-warm: oklch(0.96 0.03 65);
+      --text: oklch(0.18 0.02 30);
+      --text-muted: oklch(0.42 0.03 45);
+      --border: oklch(0.85 0.02 60);
+      --border-focus: oklch(0.55 0.18 45);
+      
+      --shadow-sm: 0 1px 2px oklch(0.25 0.05 30 / 0.08);
+      --shadow-md: 0 4px 12px oklch(0.25 0.05 30 / 0.12), 0 2px 4px oklch(0.25 0.05 30 / 0.06);
+      --shadow-lg: 0 12px 32px oklch(0.25 0.05 30 / 0.15), 0 4px 12px oklch(0.25 0.05 30 / 0.08);
+      --shadow-warm: 0 4px 20px oklch(0.65 0.15 55 / 0.25);
+      --shadow-card: 0 2px 8px oklch(0.25 0.03 30 / 0.08), 0 8px 24px oklch(0.25 0.03 30 / 0.06), inset 0 1px 0 oklch(1 0 0 / 0.8);
+      
+      --radius-sm: 6px;
+      --radius: 10px;
+      --radius-lg: 14px;
+      
+      --font-display: 'Roboto Slab', serif;
+      --font-body: 'Roboto', sans-serif;
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes flameFlicker {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.98); }
+    }
+    
+    @keyframes emberPulse {
+      0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+      50% { box-shadow: 0 0 20px 4px var(--accent-glow); }
+    }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    html { font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      background-image: 
+        radial-gradient(ellipse at 0% 0%, oklch(0.75 0.06 55 / 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 100% 100%, oklch(0.7 0.05 45 / 0.1) 0%, transparent 50%);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+    
+    /* Access Gate */
+    .gate {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 30% 20%, oklch(0.5 0.2 45 / 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, oklch(0.4 0.15 25 / 0.4) 0%, transparent 50%),
+        linear-gradient(160deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    .gate.hidden { display: none; }
+    .gate-box {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: var(--shadow-lg), 0 0 0 1px oklch(0.9 0.02 60);
+      text-align: center;
+      animation: fadeInUp 0.5s ease-out;
+    }
+    .gate-logo {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--ember) 100%);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px;
+      box-shadow: 0 4px 16px var(--accent-glow), inset 0 1px 0 oklch(1 0 0 / 0.3);
+      animation: emberPulse 3s ease-in-out infinite;
+    }
+    .gate-logo svg {
+      width: 36px;
+      height: 36px;
+      fill: white;
+      filter: drop-shadow(0 2px 4px oklch(0 0 0 / 0.3));
+    }
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .gate-sub {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      text-align: center;
+      letter-spacing: 0.1em;
+      transition: border-color 0.15s;
+    }
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+    .gate-input.error {
+      border-color: var(--error);
+      animation: shake 0.4s ease;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--ember) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 2px 8px oklch(0.55 0.15 45 / 0.35);
+    }
+    .gate-btn:hover { 
+      background: linear-gradient(135deg, var(--accent-hover) 0%, oklch(0.5 0.22 45) 100%);
+      box-shadow: 0 4px 12px oklch(0.55 0.15 45 / 0.45);
+      transform: translateY(-1px);
+    }
+    .gate-btn:active { transform: scale(0.98) translateY(0); }
+    .gate-btn:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: var(--warning-bg);
+      border-bottom: 1px solid var(--warning);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.875rem;
+    }
+    .demo-banner.hidden { display: none; }
+    .demo-banner-text {
+      color: oklch(0.35 0.1 85);
+    }
+    .demo-banner-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: oklch(0.35 0.1 85);
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+    .demo-banner-close:focus-visible {
+      outline: 2px solid var(--border-focus);
+      border-radius: 4px;
+    }
+    
+    /* Header */
+    .header {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--ember) 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    .header-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+    }
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+    .header-date {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-muted);
+      padding: 4px;
+      border-radius: var(--radius);
+      box-shadow: inset 0 1px 2px oklch(0 0 0 / 0.05);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 6px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+    .tab:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: -2px;
+    }
+    .tab.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm), 0 1px 0 oklch(1 0 0 / 0.8);
+    }
+    .tab:hover:not(.active) {
+      color: var(--text);
+      background: oklch(0.96 0.01 60);
+    }
+    .tab svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Main Content */
+    .main {
+      padding: 16px;
+    }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    
+    /* Job Cards */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .job-count {
+      font-size: 0.75rem;
+      background: var(--primary);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+    
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .job-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-card);
+      transition: all 0.2s ease;
+      cursor: pointer;
+      animation: fadeInUp 0.4s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+    .job-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--ember) 100%);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .job-card:hover {
+      box-shadow: var(--shadow-md), var(--shadow-warm);
+      transform: translateY(-2px);
+    }
+    .job-card:hover::before {
+      opacity: 1;
+    }
+    .job-card:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .job-card:nth-child(1) { animation-delay: 0ms; }
+    .job-card:nth-child(2) { animation-delay: 80ms; }
+    .job-card:nth-child(3) { animation-delay: 160ms; }
+    .job-card:nth-child(4) { animation-delay: 240ms; }
+    .job-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .job-time {
+      font-weight: 600;
+      font-size: 0.9375rem;
+    }
+    .job-badge {
+      font-size: 0.6875rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .job-badge.install {
+      background: var(--primary);
+      color: white;
+    }
+    .job-badge.service {
+      background: var(--success-bg);
+      color: oklch(0.35 0.12 145);
+    }
+    .job-badge.delivery {
+      background: var(--warning-bg);
+      color: oklch(0.35 0.12 75);
+    }
+    .job-customer {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .job-address {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .job-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.75rem;
+    }
+    .job-detail {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+    }
+    .job-detail svg {
+      width: 14px;
+      height: 14px;
+    }
+    .job-tech {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    
+    /* Route View */
+    .route-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .route-stats {
+      display: flex;
+      gap: 16px;
+    }
+    .route-stat {
+      text-align: center;
+    }
+    .route-stat-value {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .route-stat-label {
+      font-size: 0.6875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .route-map {
+      background: var(--bg-muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .route-map-visual {
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(90deg, transparent 49%, var(--border) 49%, var(--border) 51%, transparent 51%),
+        linear-gradient(0deg, transparent 49%, var(--border) 49%, var(--border) 51%, transparent 51%);
+      background-size: 40px 40px;
+      opacity: 0.5;
+    }
+    .route-map-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .route-map-content svg {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 4px;
+      color: var(--primary);
+    }
+    
+    .route-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .route-stop {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      padding: 12px 0;
+      animation: fadeInUp 0.4s ease-out;
+    }
+    .route-stop:nth-child(1) { animation-delay: 0ms; }
+    .route-stop:nth-child(2) { animation-delay: 80ms; }
+    .route-stop:nth-child(3) { animation-delay: 160ms; }
+    .route-stop:nth-child(4) { animation-delay: 240ms; }
+    .route-stop:not(:last-child) {
+      border-bottom: 1px dashed var(--border);
+    }
+    .route-stop-number {
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      flex-shrink: 0;
+    }
+    .route-stop-info {
+      flex: 1;
+    }
+    .route-stop-customer {
+      font-weight: 500;
+      font-size: 0.9375rem;
+    }
+    .route-stop-address {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .route-stop-time {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .route-stop-drive {
+      font-size: 0.6875rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    
+    /* Customer Panel */
+    .search-box {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 16px 12px 44px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.9375rem;
+      font-family: var(--font-body);
+      background: var(--bg-card);
+      transition: border-color 0.15s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+    
+    .customer-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .customer-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      animation: slideIn 0.3s ease-out;
+      box-shadow: var(--shadow-sm);
+    }
+    .customer-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateX(4px);
+    }
+    .customer-card:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .customer-card:nth-child(1) { animation-delay: 0ms; }
+    .customer-card:nth-child(2) { animation-delay: 60ms; }
+    .customer-card:nth-child(3) { animation-delay: 120ms; }
+    .customer-card:nth-child(4) { animation-delay: 180ms; }
+    .customer-card:nth-child(5) { animation-delay: 240ms; }
+    .customer-avatar {
+      width: 44px;
+      height: 44px;
+      background: var(--bg-muted);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+    .customer-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .customer-name {
+      font-weight: 500;
+    }
+    .customer-meta {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .customer-product {
+      font-size: 0.75rem;
+      background: var(--bg-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    
+    /* New Job Form / Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+    }
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+    }
+    .modal-title {
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg-muted);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .modal-close:hover { background: var(--border); }
+    .modal-close:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .modal-close svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9375rem;
+      font-family: var(--font-body);
+      background: var(--bg-card);
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .photo-section {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      background: var(--bg-muted);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .photo-section:hover {
+      border-color: var(--primary);
+      background: oklch(0.97 0.02 245);
+    }
+    .photo-section:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    .photo-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      color: white;
+    }
+    .photo-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+    .photo-text {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .photo-hint {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .photo-preview {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .photo-preview.has-photos {
+      display: flex;
+    }
+    .photo-thumb {
+      width: 72px;
+      height: 72px;
+      border-radius: var(--radius-sm);
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+    
+    .btn-primary {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px oklch(0.25 0.05 30 / 0.25), inset 0 1px 0 oklch(1 0 0 / 0.2);
+    }
+    .btn-primary:hover { 
+      background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+      box-shadow: 0 4px 12px oklch(0.25 0.05 30 / 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: scale(0.98) translateY(0); }
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    
+    /* FAB (Floating Action Button) */
+    .fab {
+      position: fixed;
+      bottom: 90px;
+      right: 16px;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--ember) 100%);
+      border: none;
+      border-radius: 50%;
+      box-shadow: var(--shadow-lg), 0 0 0 1px oklch(0.5 0.1 45 / 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 50;
+      animation: emberPulse 3s ease-in-out infinite;
+    }
+    .fab:hover {
+      background: linear-gradient(135deg, var(--accent-hover) 0%, oklch(0.5 0.22 45) 100%);
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: var(--shadow-lg), var(--shadow-warm);
+    }
+    .fab:active { transform: scale(0.95) translateY(0); }
+    .fab:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+    .fab svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+    
+    /* Upsell Banner */
+    .upsell-card {
+      background: linear-gradient(135deg, var(--bg-warm) 0%, oklch(0.94 0.03 60) 100%);
+      border: 1px solid oklch(0.85 0.04 55);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 24px;
+      box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.6);
+      animation: fadeInUp 0.5s ease-out 0.3s;
+    }
+    .upsell-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .upsell-lock {
+      width: 20px;
+      height: 20px;
+      color: var(--text-muted);
+    }
+    .upsell-title {
+      font-weight: 600;
+      font-size: 0.9375rem;
+    }
+    .upsell-badge {
+      font-size: 0.625rem;
+      background: var(--primary);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .upsell-features {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .upsell-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+    .upsell-feature svg {
+      width: 16px;
+      height: 16px;
+      color: var(--success);
+    }
+    .upsell-btn {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .upsell-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+    .upsell-btn:focus-visible {
+      outline: 2px solid var(--border-focus);
+      outline-offset: 2px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      z-index: 300;
+    }
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    /* Legal Disclaimer Footer */
+    .legal-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: oklch(0.15 0 0);
+      color: oklch(0.7 0 0);
+      padding: 10px 16px;
+      font-size: 0.6875rem;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .legal-text {
+      flex: 1;
+      min-width: 200px;
+    }
+    .legal-delete-btn {
+      background: transparent;
+      border: 1px solid oklch(0.5 0 0);
+      color: oklch(0.7 0 0);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+    .legal-delete-btn:hover {
+      border-color: oklch(0.7 0 0);
+      color: white;
+    }
+    .legal-delete-btn:focus-visible {
+      outline: 2px solid oklch(0.6 0 0);
+      outline-offset: 2px;
+    }
+    
+    /* Camera Modal */
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 400;
+      display: none;
+      flex-direction: column;
+    }
+    .camera-modal.active {
+      display: flex;
+    }
+    .camera-video {
+      flex: 1;
+      object-fit: cover;
+      width: 100%;
+    }
+    .camera-controls {
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 32px;
+      background: oklch(0.1 0 0);
+    }
+    .camera-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 4px solid white;
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .camera-btn:hover {
+      background: oklch(1 0 0 / 0.2);
+    }
+    .camera-btn:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+    .camera-btn.capture {
+      background: white;
+    }
+    .camera-cancel {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 0.875rem;
+      cursor: pointer;
+      padding: 8px 16px;
+    }
+    .camera-cancel:focus-visible {
+      outline: 2px solid white;
+      border-radius: 4px;
+    }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .main { max-width: 600px; margin: 0 auto; }
+      .modal { border-radius: var(--radius-lg); margin-bottom: 10vh; }
+      .fab { bottom: 100px; right: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media print {
+      #bct-demo-disclaimer, nav, .bottom-nav, .tab-bar, .demo-banner, button:not(.print-keep) { display: none !important; }
+      body { padding: 0 !important; background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100000;" onfocus="this.style.position='fixed';this.style.left='16px';this.style.top='16px';this.style.width='auto';this.style.height='auto';this.style.overflow='visible';this.style.background='#fff';this.style.padding='8px 16px';this.style.borderRadius='4px';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';this.style.fontSize='14px';this.style.color='#333';this.style.textDecoration='none';" onblur="this.style.position='absolute';this.style.left='-9999px';this.style.width='1px';this.style.height='1px';this.style.overflow='hidden';">Skip to main content</a>
+  <!-- Access Gate -->
+  <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+    <div class="gate-box">
+      <div class="gate-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c0 0-2 3-2 5.5 0 1.5.8 2.5 2 2.5s2-1 2-2.5C14 5 12 2 12 2zm-3.5 6c0 0-1.5 2.5-1.5 4.5 0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5c0-2-1.5-4.5-1.5-4.5s-1 2-1.5 2c-.5 0-1.5-2-1.5-2s-1 2-1.5 2c-.5 0-1.5-2-1.5-2zM8 16c-1 1.5-1.5 3-1.5 4.5 0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5c0-1.5-.5-3-1.5-4.5-.5 1-1.5 2-2 2s-1.5-2-2-2-1.5 2-2 2-1.5-1-2-2z"/></svg>
+      </div>
+      <h1 class="gate-title" id="gateTitle">HearthRoute</h1>
+      <p class="gate-sub">Service scheduler built for Charles Family Hearth. Type your key to open.</p>
+      <label for="accessKey" class="sr-only">Access Key</label>
+      <input type="text" id="accessKey" class="gate-input" placeholder="Your key here" autocomplete="off" autofocus>
+      <button type="button" class="gate-btn" id="gateBtn">Unlock</button>
+    </div>
+  </div>
+  
+  <!-- Demo Banner -->
+  <div class="demo-banner" id="demoBanner" role="status">
+    <span class="demo-banner-text">Sample data loaded. Tap x to clear it out.</span>
+    <button class="demo-banner-close" id="clearDemo" aria-label="Clear demo data">x</button>
+  </div>
+  
+  <!-- Header -->
+  <header class="header">
+    <div class="header-top">
+      <div class="header-brand">
+        <div class="header-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c0 0-2 3-2 5.5 0 1.5.8 2.5 2 2.5s2-1 2-2.5C14 5 12 2 12 2zm-3.5 6c0 0-1.5 2.5-1.5 4.5 0 3 2.5 5.5 5.5 5.5s5.5-2.5 5.5-5.5c0-2-1.5-4.5-1.5-4.5s-1 2-1.5 2c-.5 0-1.5-2-1.5-2s-1 2-1.5 2c-.5 0-1.5-2-1.5-2z"/></svg>
+        </div>
+        <div>
+          <div class="header-title">HearthRoute</div>
+          <div class="header-date" id="currentDate"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist" aria-label="Main navigation">
+      <button class="tab active" role="tab" aria-selected="true" aria-controls="panelToday" id="tabToday">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Today
+      </button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panelRoute" id="tabRoute">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+        Route
+      </button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="panelCustomers" id="tabCustomers" aria-label="Client directory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Clients
+      </button>
+    </nav>
+  </header>
+  
+  <!-- Main Content -->
+  <main class="main" id="main-content">
+    <!-- Today Panel -->
+    <section class="panel active" id="panelToday" role="tabpanel" aria-labelledby="tabToday">
+      <div class="section-header">
+        <h2 class="section-title">Today's Jobs</h2>
+        <span class="job-count" id="jobCount">0 jobs</span>
+      </div>
+      <div class="job-list" id="jobList" role="list" aria-label="Today's scheduled jobs">
+        <!-- Jobs rendered by JS -->
+      </div>
+      
+      <div class="upsell-card">
+        <div class="upsell-header">
+          <svg class="upsell-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="upsell-title">Customer Auto-Notifications</span>
+          <span class="upsell-badge">Pro</span>
+        </div>
+        <div class="upsell-features">
+          <div class="upsell-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Auto text "On my way" to customers
+          </div>
+          <div class="upsell-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Appointment reminders (24h before)
+          </div>
+          <div class="upsell-feature">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Customer confirmation portal
+          </div>
+        </div>
+        <button class="upsell-btn" aria-label="Learn about upgrading to Pro features">Get Full Version - $200</button>
+      </div>
+    </section>
+    
+    <!-- Route Panel -->
+    <section class="panel" id="panelRoute" role="tabpanel" aria-labelledby="tabRoute" hidden>
+      <div class="route-header">
+        <h2 class="section-title">Route Map</h2>
+        <div class="route-stats">
+          <div class="route-stat">
+            <div class="route-stat-value" id="routeMiles">0</div>
+            <div class="route-stat-label">Miles</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-value" id="routeTime">0h</div>
+            <div class="route-stat-label">Drive Time</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="route-map" role="img" aria-label="Route map showing job locations in Preble County">
+        <div class="route-map-visual" aria-hidden="true"></div>
+        <div class="route-map-content">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"/></svg>
+          <div>Preble County Route</div>
+        </div>
+      </div>
+      
+      <div class="route-list" id="routeList" role="list" aria-label="Route stops in order">
+        <!-- Route stops rendered by JS -->
+      </div>
+    </section>
+    
+    <!-- Customers Panel -->
+    <section class="panel" id="panelCustomers" role="tabpanel" aria-labelledby="tabCustomers" hidden>
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <label for="customerSearch" class="sr-only">Search customers</label>
+        <input type="text" id="customerSearch" class="search-input" placeholder="Search customers...">
+      </div>
+      
+      <div class="customer-list" id="customerList" role="list" aria-label="Customer directory">
+        <!-- Customers rendered by JS -->
+      </div>
+    </section>
+  </main>
+  
+  <!-- FAB -->
+  <button class="fab" id="fabAdd" aria-label="Add new job">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  
+  <!-- New Job Modal -->
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">New Service Call</h2>
+        <button class="modal-close" id="modalClose" aria-label="Close dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="jobForm">
+          <div class="form-group">
+            <label for="jobCustomer" class="form-label">Customer Name</label>
+            <input type="text" id="jobCustomer" class="form-input" placeholder="e.g., Smith, Johnson" required>
+          </div>
+          <div class="form-group">
+            <label for="jobAddress" class="form-label">Address</label>
+            <input type="text" id="jobAddress" class="form-input" placeholder="e.g., 123 Main St, Eaton" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="jobType" class="form-label">Job Type</label>
+              <select id="jobType" class="form-select" required>
+                <option value="service">Service Call</option>
+                <option value="install">Installation</option>
+                <option value="delivery">Delivery</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="jobTech" class="form-label">Technician</label>
+              <select id="jobTech" class="form-select" required>
+                <option value="colt">Colt</option>
+                <option value="rayce">Rayce</option>
+                <option value="todd">Todd</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="jobDate" class="form-label">Date</label>
+              <input type="date" id="jobDate" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label for="jobTime" class="form-label">Time</label>
+              <input type="time" id="jobTime" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="jobProduct" class="form-label">Hearth Product</label>
+            <select id="jobProduct" class="form-select">
+              <option value="">Select product type...</option>
+              <option value="pellet-stove">Pellet Stove</option>
+              <option value="gas-fireplace">Gas Fireplace</option>
+              <option value="wood-stove">Wood Stove</option>
+              <option value="fireplace-insert">Fireplace Insert</option>
+              <option value="hot-tub">Hot Tub</option>
+              <option value="safe">Safe</option>
+              <option value="chimney">Chimney/Flue</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="jobNotes" class="form-label">Notes (issue, specs, venting)</label>
+            <textarea id="jobNotes" class="form-textarea" placeholder="e.g., Grinding noise, check auger. Venting to exterior wall."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Site Photos</label>
+            <div class="photo-section" id="photoSection" role="button" tabindex="0" aria-label="Tap to add photos of the job site">
+              <div class="photo-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </div>
+              <div class="photo-text">Add Photos</div>
+              <div class="photo-hint">Clearances, venting, hearth pad</div>
+            </div>
+            <div class="photo-preview" id="photoPreview" aria-live="polite"></div>
+          </div>
+          <button type="submit" class="btn-primary">Schedule Job</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Camera Modal -->
+  <div class="camera-modal" id="cameraModal" aria-hidden="true">
+    <video class="camera-video" id="cameraVideo" autoplay playsinline></video>
+    <div class="camera-controls">
+      <button class="camera-cancel" id="cameraCancel">Cancel</button>
+      <button class="camera-btn capture" id="cameraCapture" aria-label="Take photo"></button>
+    </div>
+  </div>
+  <canvas id="photoCanvas" style="display:none;"></canvas>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+  
+  <!-- DEMO DISCLAIMER -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo information" style="position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to right,#f8f9fa,#fff);border-top:1px solid #e9ecef;padding:8px 16px;font-size:11px;line-height:1.4;color:#6c757d;z-index:99999;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;">
+    <p style="margin:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><strong style="color:#495057;font-weight:600;">Demo:</strong> Created by BennyCuTools for demonstration. Not affiliated with Charles Family Hearth.</p>
+    <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <a href="https://bennycutools.com" target="_blank" rel="noopener" style="color:#6c757d;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;">Learn more</a>
+      <a href="mailto:cuuper225@gmail.com?subject=Remove%20Demo%3A%20Charles%20Family%20Hearth&body=I%20am%20the%20owner%20and%20request%20removal%20of%20this%20demo." style="color:#adb5bd;text-decoration:underline;text-underline-offset:2px;white-space:nowrap;font-size:10px;">Remove</a>
+    </div>
+  </div>
+  
+  <style>.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }</style>
+  
+  <script>
+    // Access key validation
+    function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+    const _V = 1184647497;
+    
+    // Check URL param for auto-auth
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const keyParam = urlParams.get('key');
+      if (keyParam && _h(keyParam) === _V) {
+        document.getElementById('gate').classList.add('hidden');
+        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+      }
+    });
+    
+    // Gate form handling
+    document.getElementById('gateBtn').addEventListener('click', validateKey);
+    document.getElementById('accessKey').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') validateKey();
+    });
+    
+    function validateKey() {
+      const input = document.getElementById('accessKey');
+      const key = input.value.trim();
+      if (_h(key) === _V) {
+        document.getElementById('gate').classList.add('hidden');
+        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+      } else {
+        input.classList.add('error');
+        setTimeout(() => input.classList.remove('error'), 400);
+        input.value = '';
+        input.focus();
+      }
+    }
+    
+    // Demo data for Eaton/Preble County
+    const DEMO_JOBS = [
+      {
+        id: 1,
+        customer: 'Henderson Family',
+        address: '445 N Barron St, Eaton, OH 45320',
+        type: 'install',
+        tech: 'colt',
+        date: new Date().toISOString().split('T')[0],
+        time: '09:00',
+        product: 'pellet-stove',
+        notes: 'Harman P43 install. Rear venting to exterior. Check clearances from wall (3" required). Customer has existing hearth pad.'
+      },
+      {
+        id: 2,
+        customer: 'Miller, Robert',
+        address: '821 Camden Rd, Eaton, OH 45320',
+        type: 'service',
+        tech: 'rayce',
+        date: new Date().toISOString().split('T')[0],
+        time: '11:30',
+        product: 'gas-fireplace',
+        notes: 'Annual inspection. Customer reports pilot light going out occasionally. Check thermocouple.'
+      },
+      {
+        id: 3,
+        customer: 'Preble County Bank',
+        address: '119 W Main St, Eaton, OH 45320',
+        type: 'delivery',
+        tech: 'colt',
+        date: new Date().toISOString().split('T')[0],
+        time: '14:00',
+        product: 'safe',
+        notes: 'Liberty Colonial 50 safe. Loading dock in back. Manager will meet at 1:45.'
+      },
+      {
+        id: 4,
+        customer: 'Thompson, Janet',
+        address: '5544 US-127, West Alexandria, OH 45381',
+        type: 'service',
+        tech: 'rayce',
+        date: new Date().toISOString().split('T')[0],
+        time: '16:00',
+        product: 'wood-stove',
+        notes: 'Chimney sweep and inspection. Creosote buildup from last season. Customer since 2019.'
+      }
+    ];
+    
+    const DEMO_CUSTOMERS = [
+      { id: 1, name: 'Henderson Family', address: '445 N Barron St, Eaton', product: 'Harman P43 Pellet Stove', since: '2024' },
+      { id: 2, name: 'Miller, Robert', address: '821 Camden Rd, Eaton', product: 'Napoleon GX42 Gas Fireplace', since: '2021' },
+      { id: 3, name: 'Thompson, Janet', address: '5544 US-127, W. Alexandria', product: 'Regency F2500 Wood Stove', since: '2019' },
+      { id: 4, name: 'Davis, Mark & Sue', address: '1200 Lexington Rd, Eaton', product: 'Caldera Utopia Cantabria Hot Tub', since: '2022' },
+      { id: 5, name: 'Preble County Bank', address: '119 W Main St, Eaton', product: 'Liberty Colonial 50 Safe', since: '2026' }
+    ];
+    
+    let jobs = [];
+    let customers = [];
+    let photos = [];
+    let cameraStream = null;
+    
+    function initApp() {
+      // Set current date
+      const today = new Date();
+      document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', { 
+        weekday: 'long', month: 'short', day: 'numeric' 
+      });
+      document.getElementById('jobDate').value = today.toISOString().split('T')[0];
+      
+      // Update demo data dates to today
+      DEMO_JOBS.forEach(job => job.date = today.toISOString().split('T')[0]);
+      
+      // Load data from localStorage or use demo
+      let stored = null;
+      let isFirstVisit = true;
+      try {
+        stored = localStorage.getItem('hearthroute_jobs');
+        isFirstVisit = !localStorage.getItem('hearthroute_visited');
+      } catch(e) {
+        // localStorage unavailable (headless, private mode)
+      }
+      
+      if (isFirstVisit || !stored || stored === '[]') {
+        jobs = [...DEMO_JOBS];
+        customers = [...DEMO_CUSTOMERS];
+        try {
+          localStorage.setItem('hearthroute_visited', 'true');
+          localStorage.setItem('hearthroute_jobs', JSON.stringify(jobs));
+          localStorage.setItem('hearthroute_customers', JSON.stringify(customers));
+        } catch(e) {}
+        document.getElementById('demoBanner').classList.remove('hidden');
+      } else {
+        jobs = JSON.parse(stored);
+        // Ensure demo jobs have today's date if loaded from storage
+        const storedCustomers = localStorage.getItem('hearthroute_customers');
+        customers = storedCustomers ? JSON.parse(storedCustomers) : [...DEMO_CUSTOMERS];
+        document.getElementById('demoBanner').classList.add('hidden');
+      }
+      
+      renderJobs();
+      renderRoute();
+      renderCustomers();
+      setupEventListeners();
+    }
+    
+    function setupEventListeners() {
+      // Tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => switchTab(tab));
+        tab.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            const tabs = [...document.querySelectorAll('.tab')];
+            const idx = tabs.indexOf(tab);
+            const next = e.key === 'ArrowRight' ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
+            tabs[next].click();
+            tabs[next].focus();
+          }
+        });
+      });
+      
+      // FAB
+      document.getElementById('fabAdd').addEventListener('click', openModal);
+      
+      // Modal
+      document.getElementById('modalClose').addEventListener('click', closeModal);
+      document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('active')) {
+          closeModal();
+        }
+      });
+      
+      // Form
+      document.getElementById('jobForm').addEventListener('submit', handleSubmit);
+      
+      // Clear demo
+      document.getElementById('clearDemo').addEventListener('click', () => {
+        jobs = [];
+        customers = [];
+        localStorage.setItem('hearthroute_jobs', '[]');
+        localStorage.setItem('hearthroute_customers', '[]');
+        renderJobs();
+        renderRoute();
+        renderCustomers();
+        document.getElementById('demoBanner').classList.add('hidden');
+        showToast('Demo data cleared');
+      });
+      
+      // Customer search
+      document.getElementById('customerSearch').addEventListener('input', (e) => {
+        renderCustomers(e.target.value);
+      });
+      
+      // Photo section
+      document.getElementById('photoSection').addEventListener('click', openCamera);
+      document.getElementById('photoSection').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') openCamera();
+      });
+      
+      // Camera controls
+      document.getElementById('cameraCancel').addEventListener('click', closeCamera);
+      document.getElementById('cameraCapture').addEventListener('click', capturePhoto);
+    }
+    
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.panel').forEach(p => {
+        p.classList.remove('active');
+        p.hidden = true;
+      });
+      
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      const panelId = tab.getAttribute('aria-controls');
+      const panel = document.getElementById(panelId);
+      panel.classList.add('active');
+      panel.hidden = false;
+    }
+    
+    function renderJobs() {
+      const list = document.getElementById('jobList');
+      const today = new Date().toISOString().split('T')[0];
+      const todayJobs = jobs.filter(j => j.date === today).sort((a,b) => a.time.localeCompare(b.time));
+      
+      document.getElementById('jobCount').textContent = `${todayJobs.length} job${todayJobs.length !== 1 ? 's' : ''}`;
+      
+      if (todayJobs.length === 0) {
+        list.innerHTML = `
+          <div style="text-align:center; padding:40px 20px; color:var(--text-muted); animation: fadeInUp 0.4s ease-out;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:48px;height:48px;margin:0 auto 12px;opacity:0.5;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <div style="font-weight:500;margin-bottom:4px;">Nothing on the schedule</div>
+            <div style="font-size:0.875rem;">Hit the + button to book a job</div>
+          </div>
+        `;
+        return;
+      }
+      
+      list.innerHTML = todayJobs.map(job => {
+        const typeLabel = { install: 'Install', service: 'Service', delivery: 'Delivery' }[job.type];
+        const productLabel = {
+          'pellet-stove': 'Pellet Stove',
+          'gas-fireplace': 'Gas Fireplace',
+          'wood-stove': 'Wood Stove',
+          'fireplace-insert': 'Insert',
+          'hot-tub': 'Hot Tub',
+          'safe': 'Safe',
+          'chimney': 'Chimney'
+        }[job.product] || job.product || 'General';
+        
+        return `
+          <article class="job-card" role="listitem" tabindex="0">
+            <div class="job-header">
+              <span class="job-time">${formatTime(job.time)}</span>
+              <span class="job-badge ${job.type}">${typeLabel}</span>
+            </div>
+            <div class="job-customer">${escapeHtml(job.customer)}</div>
+            <div class="job-address">${escapeHtml(job.address)}</div>
+            <div class="job-details">
+              <span class="job-detail">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                ${productLabel}
+              </span>
+              <span class="job-tech">${capitalize(job.tech)}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+    
+    function renderRoute() {
+      const today = new Date().toISOString().split('T')[0];
+      const todayJobs = jobs.filter(j => j.date === today).sort((a,b) => a.time.localeCompare(b.time));
+      
+      // Estimate distances (simulated for demo)
+      const distances = [0, 3.2, 5.1, 2.8, 12.4];
+      const totalMiles = todayJobs.length > 0 ? distances.slice(0, todayJobs.length + 1).reduce((a,b) => a+b, 0) : 0;
+      const driveMinutes = Math.round(totalMiles * 2.5);
+      
+      document.getElementById('routeMiles').textContent = totalMiles.toFixed(1);
+      document.getElementById('routeTime').textContent = driveMinutes >= 60 ? `${Math.floor(driveMinutes/60)}h ${driveMinutes%60}m` : `${driveMinutes}m`;
+      
+      const list = document.getElementById('routeList');
+      
+      if (todayJobs.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.875rem;">No route planned for today</div>';
+        return;
+      }
+      
+      list.innerHTML = todayJobs.map((job, i) => `
+        <div class="route-stop" role="listitem">
+          <div class="route-stop-number">${i + 1}</div>
+          <div class="route-stop-info">
+            <div class="route-stop-customer">${escapeHtml(job.customer)}</div>
+            <div class="route-stop-address">${escapeHtml(job.address)}</div>
+            <div class="route-stop-time">${formatTime(job.time)} - ${capitalize(job.type)}</div>
+            ${i < todayJobs.length - 1 ? `<div class="route-stop-drive">${distances[i+1]} mi to next stop</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function renderCustomers(filter = '') {
+      const list = document.getElementById('customerList');
+      const filtered = filter 
+        ? customers.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+        : customers;
+      
+      if (filtered.length === 0) {
+        list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No customers found</div>`;
+        return;
+      }
+      
+      list.innerHTML = filtered.map(c => `
+        <article class="customer-card" role="listitem" tabindex="0">
+          <div class="customer-avatar">${c.name.charAt(0)}</div>
+          <div class="customer-info">
+            <div class="customer-name">${escapeHtml(c.name)}</div>
+            <div class="customer-meta">${escapeHtml(c.address)}</div>
+          </div>
+          <span class="customer-product">${escapeHtml(c.product.split(' ').slice(-2).join(' '))}</span>
+        </article>
+      `).join('');
+    }
+    
+    function openModal() {
+      document.getElementById('modalOverlay').classList.add('active');
+      document.getElementById('modalOverlay').setAttribute('aria-hidden', 'false');
+      document.getElementById('jobCustomer').focus();
+      photos = [];
+      document.getElementById('photoPreview').innerHTML = '';
+      document.getElementById('photoPreview').classList.remove('has-photos');
+    }
+    
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+      document.getElementById('modalOverlay').setAttribute('aria-hidden', 'true');
+      document.getElementById('jobForm').reset();
+      document.getElementById('jobDate').value = new Date().toISOString().split('T')[0];
+      photos = [];
+    }
+    
+    function handleSubmit(e) {
+      e.preventDefault();
+      const job = {
+        id: Date.now(),
+        customer: document.getElementById('jobCustomer').value.trim(),
+        address: document.getElementById('jobAddress').value.trim(),
+        type: document.getElementById('jobType').value,
+        tech: document.getElementById('jobTech').value,
+        date: document.getElementById('jobDate').value,
+        time: document.getElementById('jobTime').value,
+        product: document.getElementById('jobProduct').value,
+        notes: document.getElementById('jobNotes').value.trim(),
+        photos: [...photos]
+      };
+      
+      jobs.push(job);
+      localStorage.setItem('hearthroute_jobs', JSON.stringify(jobs));
+      
+      // Add to customers if new
+      if (!customers.find(c => c.name.toLowerCase() === job.customer.toLowerCase())) {
+        const productLabel = {
+          'pellet-stove': 'Pellet Stove',
+          'gas-fireplace': 'Gas Fireplace',
+          'wood-stove': 'Wood Stove',
+          'fireplace-insert': 'Fireplace Insert',
+          'hot-tub': 'Hot Tub',
+          'safe': 'Safe',
+          'chimney': 'Chimney Service'
+        }[job.product] || 'Hearth Product';
+        
+        customers.push({
+          id: Date.now(),
+          name: job.customer,
+          address: job.address.split(',')[0],
+          product: productLabel,
+          since: new Date().getFullYear().toString()
+        });
+        localStorage.setItem('hearthroute_customers', JSON.stringify(customers));
+      }
+      
+      closeModal();
+      renderJobs();
+      renderRoute();
+      renderCustomers();
+      showToast('Job booked for ' + job.customer);
+    }
+    
+    async function openCamera() {
+      const modal = document.getElementById('cameraModal');
+      const video = document.getElementById('cameraVideo');
+      
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false 
+        });
+        video.srcObject = cameraStream;
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+      } catch (err) {
+        // Fallback to file input if camera not available
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment';
+        input.onchange = (e) => {
+          if (e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+              addPhoto(ev.target.result);
+            };
+            reader.readAsDataURL(e.target.files[0]);
+          }
+        };
+        input.click();
+      }
+    }
+    
+    function closeCamera() {
+      const modal = document.getElementById('cameraModal');
+      const video = document.getElementById('cameraVideo');
+      
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      video.srcObject = null;
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    
+    function capturePhoto() {
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.getElementById('photoCanvas');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+      addPhoto(dataUrl);
+      closeCamera();
+    }
+    
+    function addPhoto(dataUrl) {
+      photos.push(dataUrl);
+      const preview = document.getElementById('photoPreview');
+      preview.classList.add('has-photos');
+      
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.className = 'photo-thumb';
+      img.alt = `Site photo ${photos.length}`;
+      preview.appendChild(img);
+    }
+    
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    function formatTime(t) {
+      const [h, m] = t.split(':');
+      const hour = parseInt(h);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const h12 = hour % 12 || 12;
+      return `${h12}:${m} ${ampm}`;
+    }
+    
+    function capitalize(s) {
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    
+    function escapeHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+    
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', function(e) {
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

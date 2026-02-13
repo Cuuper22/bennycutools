@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Lampliter LeadSync</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --primary: #1A365D;
+      --primary-dark: #142952;
+      --secondary: #D4A03D;
+      --secondary-light: #E5B958;
+      --bg: #F7FAFC;
+      --bg-card: #FFFFFF;
+      --success: #38A169;
+      --success-light: #9AE6B4;
+      --warning: #DD6B20;
+      --danger: #E53E3E;
+      --text: #2D3748;
+      --text-muted: #718096;
+      --border: #E2E8F0;
+      --shadow-sm: 0 1px 2px rgba(26, 54, 93, 0.06);
+      --shadow-md: 0 4px 6px rgba(26, 54, 93, 0.08), 0 2px 4px rgba(26, 54, 93, 0.05);
+      --shadow-lg: 0 10px 15px rgba(26, 54, 93, 0.1), 0 4px 6px rgba(26, 54, 93, 0.05);
+      --shadow-xl: 0 20px 25px rgba(26, 54, 93, 0.12), 0 10px 10px rgba(26, 54, 93, 0.04);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-heading: 'Poppins', var(--font-sans);
+      --transition-fast: 100ms ease-out;
+      --transition-normal: 150ms ease-out;
+      --transition-slow: 200ms ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    /* Auth Gate */
+    .auth-gate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 1000;
+    }
+
+    .auth-gate.hidden {
+      display: none;
+    }
+
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-xl);
+    }
+
+    .auth-logo svg {
+      width: 44px;
+      height: 44px;
+      color: var(--primary);
+    }
+
+    .auth-title {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .auth-subtitle {
+      font-size: 15px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .auth-form {
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.1);
+      color: white;
+      text-align: center;
+      letter-spacing: 2px;
+      transition: border-color var(--transition-normal);
+    }
+
+    .auth-input::placeholder {
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--secondary);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .auth-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--secondary);
+      color: var(--primary);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform var(--transition-fast), background var(--transition-normal);
+    }
+
+    .auth-btn:hover {
+      background: var(--secondary-light);
+    }
+
+    .auth-btn:active {
+      transform: scale(0.98);
+    }
+
+    .auth-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
+    .auth-error {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(229, 62, 62, 0.2);
+      border: 1px solid rgba(229, 62, 62, 0.4);
+      border-radius: var(--radius-sm);
+      color: #FED7D7;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    .auth-error.show {
+      display: block;
+    }
+
+    /* Main App */
+    .app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .app.active {
+      display: flex;
+    }
+
+    /* Header */
+    .header {
+      background: var(--primary);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--secondary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-logo svg {
+      width: 20px;
+      height: 20px;
+      color: var(--primary);
+    }
+
+    .header-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-date {
+      font-size: 13px;
+      color: rgba(255,255,255,0.7);
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-card);
+      padding: 8px;
+      margin: 16px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 12px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: all var(--transition-normal);
+    }
+
+    .nav-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-btn.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .nav-btn:not(.active):hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .nav-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Sections */
+    .section {
+      display: none;
+      padding: 0 16px 24px;
+      max-width: 632px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+
+    /* Voice Capture */
+    .voice-capture {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: var(--radius-xl);
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .voice-capture::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(212, 160, 61, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .voice-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .voice-subtitle {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 24px;
+    }
+
+    .voice-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: none;
+      background: var(--secondary);
+      color: var(--primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      transition: transform var(--transition-fast), box-shadow var(--transition-normal);
+      box-shadow: 0 4px 20px rgba(212, 160, 61, 0.4);
+      position: relative;
+    }
+
+    .voice-btn svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .voice-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 28px rgba(212, 160, 61, 0.5);
+    }
+
+    .voice-btn:active {
+      transform: scale(0.95);
+    }
+
+    .voice-btn:focus-visible {
+      outline: 3px solid white;
+      outline-offset: 4px;
+    }
+
+    .voice-btn.recording {
+      background: #E53E3E;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .voice-btn.recording svg {
+      color: white;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(229, 62, 62, 0.4); }
+      50% { box-shadow: 0 4px 40px rgba(229, 62, 62, 0.6); }
+    }
+
+    .voice-status {
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+      min-height: 20px;
+    }
+
+    .voice-status.error {
+      color: #FEB2B2;
+    }
+
+    .voice-transcript {
+      background: rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-top: 16px;
+      text-align: left;
+      display: none;
+    }
+
+    .voice-transcript.show {
+      display: block;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .voice-transcript-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+    }
+
+    .voice-transcript-text {
+      font-size: 15px;
+      color: white;
+      line-height: 1.6;
+    }
+
+    .voice-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .voice-action-btn {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .voice-action-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
+    .voice-action-btn.primary {
+      background: var(--secondary);
+      color: var(--primary);
+    }
+
+    .voice-action-btn.primary:hover {
+      background: var(--secondary-light);
+    }
+
+    .voice-action-btn.secondary {
+      background: rgba(255,255,255,0.15);
+      color: white;
+    }
+
+    .voice-action-btn.secondary:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-name {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .card-time {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .card-badge {
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      border-radius: 100px;
+    }
+
+    .badge-lead {
+      background: rgba(212, 160, 61, 0.15);
+      color: #9C7522;
+    }
+
+    .badge-quote {
+      background: rgba(56, 161, 105, 0.15);
+      color: #276749;
+    }
+
+    .badge-scheduled {
+      background: rgba(26, 54, 93, 0.1);
+      color: var(--primary);
+    }
+
+    .badge-complete {
+      background: var(--success);
+      color: white;
+    }
+
+    .card-details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-detail {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .card-detail svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .card-notes {
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition-normal);
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #2F855A;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      padding: 10px;
+      flex: 0;
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* Photo Gallery */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .photo-thumb {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Dashboard Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+      transition: transform var(--transition-normal);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+
+    .stat-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .stat-icon.leads {
+      background: rgba(212, 160, 61, 0.15);
+      color: #9C7522;
+    }
+
+    .stat-icon.quotes {
+      background: rgba(56, 161, 105, 0.15);
+      color: #276749;
+    }
+
+    .stat-icon.scheduled {
+      background: rgba(26, 54, 93, 0.1);
+      color: var(--primary);
+    }
+
+    .stat-icon.complete {
+      background: var(--success);
+      color: white;
+    }
+
+    .stat-number {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Week View */
+    .week-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .week-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .week-nav-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-normal);
+    }
+
+    .week-nav-btn:hover {
+      background: var(--bg);
+    }
+
+    .week-nav-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .week-nav-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .day-row {
+      display: flex;
+      gap: 12px;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .day-row:last-child {
+      border-bottom: none;
+    }
+
+    .day-label {
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .day-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .day-date {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .day-label.today .day-name {
+      color: var(--primary);
+    }
+
+    .day-events {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .day-event {
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .day-event-time {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .day-event-title {
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .day-empty {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 500;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease-out;
+    }
+
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease-out;
+    }
+
+    .modal-overlay.show .modal {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-normal);
+    }
+
+    .modal-close:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .modal-close:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    .modal-close svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      color: var(--text);
+      transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.1);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Photo Capture */
+    .photo-capture {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .photo-capture:hover {
+      border-color: var(--primary);
+      background: rgba(26, 54, 93, 0.02);
+    }
+
+    .photo-capture-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+      color: var(--text-muted);
+    }
+
+    .photo-capture-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .photo-capture-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Upsell */
+    .upsell-card {
+      background: linear-gradient(135deg, rgba(26, 54, 93, 0.05) 0%, rgba(212, 160, 61, 0.08) 100%);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      opacity: 0.7;
+      position: relative;
+    }
+
+    .upsell-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--primary);
+      color: white;
+      border-radius: 100px;
+    }
+
+    .upsell-title {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .upsell-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+    }
+
+    .upsell-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon svg {
+      width: 32px;
+      height: 32px;
+    }
+
+    .empty-title {
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: white;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-xl);
+      z-index: 600;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease-out;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast svg {
+      width: 20px;
+      height: 20px;
+      color: var(--success-light);
+    }
+
+    /* Staggered animation */
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+    .stagger-5 { animation-delay: 0.25s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: slideUp 0.4s ease-out both;
+    }
+
+    /* Desktop */
+    @media (min-width: 768px) {
+      .nav {
+        max-width: 400px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .modal {
+        border-radius: var(--radius-xl);
+        margin: auto;
+        max-width: 480px;
+      }
+
+      .modal-overlay {
+        align-items: center;
+        padding: 24px;
+      }
+    }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: white;
+      padding: 8px 16px;
+      z-index: 9999;
+      transition: top 0.2s;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 0 0 var(--radius-md) 0;
+    }
+
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid white;
+      outline-offset: -2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Auth Gate -->
+  <div class="auth-gate" id="authGate">
+    <div class="auth-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 18h6"/>
+        <path d="M10 22h4"/>
+        <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+      </svg>
+    </div>
+    <h1 class="auth-title">Lampliter LeadSync</h1>
+    <p class="auth-subtitle">Enter your access key to continue</p>
+    <form class="auth-form" id="authForm">
+      <label for="authKey" class="sr-only">Access Key</label>
+      <input type="text" id="authKey" class="auth-input" placeholder="Access Key" autocomplete="off" aria-describedby="authError">
+      <button type="submit" class="auth-btn">Open Tool</button>
+      <div class="auth-error" id="authError" role="alert" aria-live="polite">
+        That key didn't work. Check your email for the right one.
+      </div>
+    </form>
+  </div>
+
+  <!-- Main App -->
+  <div class="app" id="main-content">
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="header-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18h6"/>
+              <path d="M10 22h4"/>
+              <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="header-title">LeadSync</h1>
+            <div class="header-date" id="headerDate" aria-live="polite"></div>
+          </div>
+        </div>
+        <button class="btn-ghost" id="shareBtn" aria-label="Share this tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+            <circle cx="18" cy="5" r="3"/>
+            <circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <nav class="nav" role="tablist" aria-label="Main navigation">
+      <button class="nav-btn active" role="tab" aria-selected="true" aria-controls="section-capture" id="tab-capture" data-section="capture">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+        </svg>
+        Capture
+      </button>
+      <button class="nav-btn" role="tab" aria-selected="false" aria-controls="section-leads" id="tab-leads" data-section="leads">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Leads
+      </button>
+      <button class="nav-btn" role="tab" aria-selected="false" aria-controls="section-schedule" id="tab-schedule" data-section="schedule">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Schedule
+      </button>
+      <button class="nav-btn" role="tab" aria-selected="false" aria-controls="section-dashboard" id="tab-dashboard" data-section="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 3v18h18"/>
+          <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+        </svg>
+        Overview
+      </button>
+    </nav>
+
+    <!-- Capture Section -->
+    <section class="section active" id="section-capture" role="tabpanel" aria-labelledby="tab-capture">
+      <div class="voice-capture animate-in">
+        <h2 class="voice-title">Quick Lead Capture</h2>
+        <p class="voice-subtitle">Tap and speak. We'll write it down for you.</p>
+        <button class="voice-btn" id="voiceBtn" aria-label="Start voice recording">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" id="voiceIcon">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+        </button>
+        <div class="voice-status" id="voiceStatus" aria-live="polite">Tap to record</div>
+        <div class="voice-transcript" id="voiceTranscript">
+          <div class="voice-transcript-label">What you said:</div>
+          <div class="voice-transcript-text" id="transcriptText"></div>
+          <div class="voice-actions">
+            <button class="voice-action-btn secondary" id="cancelTranscript">Clear</button>
+            <button class="voice-action-btn primary" id="saveTranscript">Save as Lead</button>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title animate-in stagger-1">Or type it in</h2>
+      <button class="btn btn-secondary animate-in stagger-2" id="manualLeadBtn" style="width: 100%;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/>
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Add Lead Manually
+      </button>
+
+      <div class="upsell-card animate-in stagger-3" style="margin-top: 24px;">
+        <span class="upsell-badge">Full Version</span>
+        <div class="upsell-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          Send confirmation text to customer
+        </div>
+        <p class="upsell-desc">Automatically text customers when you book their appointment. They show up prepared, you look organized.</p>
+      </div>
+    </section>
+
+    <!-- Leads Section -->
+    <section class="section" id="section-leads" role="tabpanel" aria-labelledby="tab-leads" hidden>
+      <h2 class="section-title">Your Leads</h2>
+      <div id="leadsContainer"></div>
+    </section>
+
+    <!-- Schedule Section -->
+    <section class="section" id="section-schedule" role="tabpanel" aria-labelledby="tab-schedule" hidden>
+      <div class="week-header">
+        <h2 class="section-title" style="margin-bottom: 0;">This Week</h2>
+        <div class="week-nav">
+          <button class="week-nav-btn" id="prevWeek" aria-label="Previous week">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <button class="week-nav-btn" id="nextWeek" aria-label="Next week">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div id="weekView"></div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="section" id="section-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" hidden>
+      <h2 class="section-title">Weekly Overview</h2>
+      <div class="stats-grid" id="statsGrid"></div>
+      <h3 class="section-title" style="font-size: 16px; margin-top: 24px;">Needs Follow-Up</h3>
+      <div id="followUpList"></div>
+
+      <div class="upsell-card" style="margin-top: 24px;">
+        <span class="upsell-badge">Full Version</span>
+        <div class="upsell-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          Email branded proposals
+        </div>
+        <p class="upsell-desc">Generate polished PDF proposals with your logo and photos from the site visit. Send with one tap.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- Lead Modal -->
+  <div class="modal-overlay" id="leadModal" aria-modal="true" role="dialog" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">New Lead</h2>
+        <button class="modal-close" id="closeModal" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <form id="leadForm">
+        <input type="hidden" id="leadId">
+        <div class="form-group">
+          <label class="form-label" for="leadName">Customer Name</label>
+          <input type="text" id="leadName" class="form-input" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="leadPhone">Phone</label>
+            <input type="tel" id="leadPhone" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="leadAddress">Neighborhood</label>
+            <input type="text" id="leadAddress" class="form-input" placeholder="e.g. Clay Terrace">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="leadService">What they need</label>
+          <select id="leadService" class="form-select">
+            <option value="">Select...</option>
+            <option value="path-lights">Path Lights</option>
+            <option value="uplighting">Tree/Facade Uplighting</option>
+            <option value="lamp-post">Lamp Post Repair</option>
+            <option value="lamp-post-install">Lamp Post Install</option>
+            <option value="landscape-full">Full Landscape Package</option>
+            <option value="holiday">Holiday Lighting</option>
+            <option value="ceiling-fan">Ceiling Fan Install</option>
+            <option value="ring-security">Ring Security Setup</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="leadNotes">Notes</label>
+          <textarea id="leadNotes" class="form-textarea" placeholder="Any extra details..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Site Photos</label>
+          <div class="photo-capture" id="photoCapture" role="button" tabindex="0" aria-label="Tap to take a site photo">
+            <input type="file" id="photoInput" accept="image/*" capture="environment" hidden multiple>
+            <div class="photo-capture-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </div>
+            <div class="photo-capture-text">Tap to take site photos</div>
+          </div>
+          <div class="photo-grid" id="photoPreview"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="leadStatus">Status</label>
+            <select id="leadStatus" class="form-select">
+              <option value="new">New Lead</option>
+              <option value="quoted">Quote Sent</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="complete">Complete</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="leadDate">Appointment Date</label>
+            <input type="date" id="leadDate" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="leadTime">Appointment Time</label>
+          <input type="time" id="leadTime" class="form-input">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          Save Lead
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+    <span id="toastText">Lead saved!</span>
+  </div>
+
+  <!-- Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 100px);"><strong style="color:#333;">DEMO:</strong> Not affiliated with The Lampliter</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20The%20Lampliter" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;">Delete Demo</a>
+  </div>
+
+  <script>
+    // Screen reader only class
+    const srOnlyStyle = document.createElement('style');
+    srOnlyStyle.textContent = `.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}`;
+    document.head.appendChild(srOnlyStyle);
+
+    // IndexedDB Setup
+    const DB_NAME = 'LampliterLeadSync';
+    const DB_VERSION = 1;
+    let db;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('leads')) {
+            const store = database.createObjectStore('leads', { keyPath: 'id', autoIncrement: true });
+            store.createIndex('status', 'status', { unique: false });
+            store.createIndex('createdAt', 'createdAt', { unique: false });
+          }
+        };
+      });
+    }
+
+    function addLead(lead) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('leads', 'readwrite');
+        const store = tx.objectStore('leads');
+        lead.createdAt = Date.now();
+        lead.updatedAt = Date.now();
+        const request = store.add(lead);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function updateLead(lead) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('leads', 'readwrite');
+        const store = tx.objectStore('leads');
+        lead.updatedAt = Date.now();
+        const request = store.put(lead);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function deleteLead(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('leads', 'readwrite');
+        const store = tx.objectStore('leads');
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function getAllLeads() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('leads', 'readonly');
+        const store = tx.objectStore('leads');
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function getLead(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('leads', 'readonly');
+        const store = tx.objectStore('leads');
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // Demo Data
+    const demoLeads = [
+      {
+        name: 'Sarah Mitchell',
+        phone: '(317) 555-2847',
+        address: 'Brookshire',
+        service: 'path-lights',
+        notes: 'Wants path lights along the driveway and front walkway. About 150 feet total. Asked about smart timer options.',
+        status: 'new',
+        date: '',
+        time: '',
+        photos: []
+      },
+      {
+        name: 'Mike & Linda Patterson',
+        phone: '(317) 555-9123',
+        address: 'Saddle Creek',
+        service: 'landscape-full',
+        notes: 'Full backyard redesign. Already have some outdated fixtures. Want uplighting on 4 oaks plus patio string lights for entertaining.',
+        status: 'quoted',
+        date: '',
+        time: '',
+        photos: []
+      },
+      {
+        name: 'The Hendersons',
+        phone: '(317) 555-6044',
+        address: 'Clay Terrace',
+        service: 'lamp-post',
+        notes: 'HOA requires matching lamp posts. Their old one is tilting and the light flickers. Need to replace the whole unit.',
+        status: 'scheduled',
+        date: getFutureDate(2),
+        time: '14:00',
+        photos: []
+      },
+      {
+        name: 'Dr. Kevin Patel',
+        phone: '(317) 555-3321',
+        address: 'Meridian Hills',
+        service: 'ring-security',
+        notes: 'Wants Ring doorbell plus two floodlight cameras. Wife said they were broken into last year in their old neighborhood.',
+        status: 'scheduled',
+        date: getFutureDate(4),
+        time: '10:00',
+        photos: []
+      },
+      {
+        name: 'Grace Thompson',
+        phone: '(317) 555-7782',
+        address: 'Hazel Dell',
+        service: 'ceiling-fan',
+        notes: 'Two ceiling fans. One in master, one in living room. Has 12 foot ceilings in living room. Already bought the fans from Lowes.',
+        status: 'complete',
+        date: getPastDate(3),
+        time: '09:00',
+        photos: []
+      }
+    ];
+
+    function getFutureDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    }
+
+    function getPastDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() - days);
+      return d.toISOString().split('T')[0];
+    }
+
+    async function loadDemoData() {
+      const existing = await getAllLeads();
+      if (existing.length === 0) {
+        for (const lead of demoLeads) {
+          await addLead(lead);
+        }
+      }
+    }
+
+    // Auth
+    const AUTH_KEY = 'lamp2026';
+    const AUTH_HASH = -1635951910;
+
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const urlKey = params.get('key');
+      const storedAuth = localStorage.getItem('lampliter_auth');
+      
+      if (urlKey && urlKey.toLowerCase() === AUTH_KEY) {
+        localStorage.setItem('lampliter_auth', 'true');
+        return true;
+      }
+      if (storedAuth === 'true') {
+        return true;
+      }
+      return false;
+    }
+
+    // UI Functions
+    const authGate = document.getElementById('authGate');
+    const app = document.getElementById('app');
+    const authForm = document.getElementById('authForm');
+    const authKeyInput = document.getElementById('authKey');
+    const authError = document.getElementById('authError');
+
+    authForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = authKeyInput.value.trim().toLowerCase();
+      if (key === AUTH_KEY) {
+        localStorage.setItem('lampliter_auth', 'true');
+        showApp();
+      } else {
+        authError.classList.add('show');
+        authKeyInput.focus();
+      }
+    });
+
+    function showApp() {
+      authGate.classList.add('hidden');
+      app.classList.add('active');
+      updateHeaderDate();
+      renderLeads();
+      renderSchedule();
+      renderDashboard();
+    }
+
+    function updateHeaderDate() {
+      const now = new Date();
+      const options = { weekday: 'long', month: 'short', day: 'numeric' };
+      document.getElementById('headerDate').textContent = now.toLocaleDateString('en-US', options);
+    }
+
+    // Navigation
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.section');
+
+    navBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sectionId = btn.dataset.section;
+        navBtns.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        
+        sections.forEach(s => {
+          s.classList.remove('active');
+          s.hidden = true;
+        });
+        const targetSection = document.getElementById(`section-${sectionId}`);
+        targetSection.classList.add('active');
+        targetSection.hidden = false;
+      });
+    });
+
+    // Voice Capture
+    const voiceBtn = document.getElementById('voiceBtn');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const voiceTranscript = document.getElementById('voiceTranscript');
+    const transcriptText = document.getElementById('transcriptText');
+    let recognition;
+    let isRecording = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        isRecording = true;
+        voiceBtn.classList.add('recording');
+        voiceStatus.textContent = 'Listening...';
+        voiceStatus.classList.remove('error');
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        transcriptText.textContent = transcript;
+        voiceTranscript.classList.add('show');
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        voiceBtn.classList.remove('recording');
+        if (transcriptText.textContent) {
+          voiceStatus.textContent = 'Got it! Review below.';
+        } else {
+          voiceStatus.textContent = 'Tap to record';
+        }
+      };
+
+      recognition.onerror = (event) => {
+        isRecording = false;
+        voiceBtn.classList.remove('recording');
+        voiceStatus.textContent = 'Mic access blocked. Try again or type it in.';
+        voiceStatus.classList.add('error');
+      };
+
+      voiceBtn.addEventListener('click', () => {
+        if (isRecording) {
+          recognition.stop();
+        } else {
+          voiceTranscript.classList.remove('show');
+          transcriptText.textContent = '';
+          recognition.start();
+        }
+      });
+    } else {
+      voiceBtn.disabled = true;
+      voiceStatus.textContent = 'Voice not supported on this device. Type it in below.';
+      voiceStatus.classList.add('error');
+    }
+
+    // Transcript Actions
+    document.getElementById('cancelTranscript').addEventListener('click', () => {
+      voiceTranscript.classList.remove('show');
+      transcriptText.textContent = '';
+      voiceStatus.textContent = 'Tap to record';
+    });
+
+    document.getElementById('saveTranscript').addEventListener('click', () => {
+      const text = transcriptText.textContent;
+      if (text) {
+        openLeadModal(null, text);
+        voiceTranscript.classList.remove('show');
+        transcriptText.textContent = '';
+        voiceStatus.textContent = 'Tap to record';
+      }
+    });
+
+    // Lead Modal
+    const leadModal = document.getElementById('leadModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const leadForm = document.getElementById('leadForm');
+    const manualLeadBtn = document.getElementById('manualLeadBtn');
+    let editingLeadId = null;
+    let capturedPhotos = [];
+
+    function openLeadModal(lead = null, transcriptNote = '') {
+      editingLeadId = lead ? lead.id : null;
+      capturedPhotos = lead ? (lead.photos || []) : [];
+      
+      document.getElementById('modalTitle').textContent = lead ? 'Edit Lead' : 'New Lead';
+      document.getElementById('leadId').value = lead ? lead.id : '';
+      document.getElementById('leadName').value = lead ? lead.name : '';
+      document.getElementById('leadPhone').value = lead ? lead.phone : '';
+      document.getElementById('leadAddress').value = lead ? lead.address : '';
+      document.getElementById('leadService').value = lead ? lead.service : '';
+      document.getElementById('leadNotes').value = transcriptNote || (lead ? lead.notes : '');
+      document.getElementById('leadStatus').value = lead ? lead.status : 'new';
+      document.getElementById('leadDate').value = lead ? lead.date : '';
+      document.getElementById('leadTime').value = lead ? lead.time : '';
+      
+      renderPhotoPreview();
+      leadModal.classList.add('show');
+      document.getElementById('leadName').focus();
+    }
+
+    function closeLeadModal() {
+      leadModal.classList.remove('show');
+      leadForm.reset();
+      capturedPhotos = [];
+      renderPhotoPreview();
+    }
+
+    closeModalBtn.addEventListener('click', closeLeadModal);
+    leadModal.addEventListener('click', (e) => {
+      if (e.target === leadModal) closeLeadModal();
+    });
+
+    manualLeadBtn.addEventListener('click', () => openLeadModal());
+
+    leadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const lead = {
+        name: document.getElementById('leadName').value.trim(),
+        phone: document.getElementById('leadPhone').value.trim(),
+        address: document.getElementById('leadAddress').value.trim(),
+        service: document.getElementById('leadService').value,
+        notes: document.getElementById('leadNotes').value.trim(),
+        status: document.getElementById('leadStatus').value,
+        date: document.getElementById('leadDate').value,
+        time: document.getElementById('leadTime').value,
+        photos: capturedPhotos
+      };
+
+      if (editingLeadId) {
+        lead.id = editingLeadId;
+        const existing = await getLead(editingLeadId);
+        lead.createdAt = existing.createdAt;
+        await updateLead(lead);
+        showToast('Lead updated!');
+      } else {
+        await addLead(lead);
+        showToast('Lead saved!');
+      }
+
+      closeLeadModal();
+      renderLeads();
+      renderSchedule();
+      renderDashboard();
+    });
+
+    // Photo Capture
+    const photoCapture = document.getElementById('photoCapture');
+    const photoInput = document.getElementById('photoInput');
+    const photoPreview = document.getElementById('photoPreview');
+
+    photoCapture.addEventListener('click', () => photoInput.click());
+    photoCapture.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        photoInput.click();
+      }
+    });
+
+    photoInput.addEventListener('change', async (e) => {
+      for (const file of e.target.files) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          capturedPhotos.push(ev.target.result);
+          renderPhotoPreview();
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    function renderPhotoPreview() {
+      photoPreview.innerHTML = capturedPhotos.map((src, i) => `
+        <div class="photo-thumb">
+          <img src="${src}" alt="Site photo ${i + 1}">
+        </div>
+      `).join('');
+    }
+
+    // Render Leads
+    async function renderLeads() {
+      const leads = await getAllLeads();
+      const container = document.getElementById('leadsContainer');
+      
+      if (leads.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+              </svg>
+            </div>
+            <div class="empty-title">No leads yet</div>
+            <div class="empty-text">Tap the mic button to capture your first lead</div>
+          </div>
+        `;
+        return;
+      }
+
+      const sorted = leads.sort((a, b) => b.createdAt - a.createdAt);
+      container.innerHTML = sorted.map((lead, i) => {
+        const serviceLabels = {
+          'path-lights': 'Path Lights',
+          'uplighting': 'Uplighting',
+          'lamp-post': 'Lamp Post Repair',
+          'lamp-post-install': 'Lamp Post Install',
+          'landscape-full': 'Full Landscape',
+          'holiday': 'Holiday Lighting',
+          'ceiling-fan': 'Ceiling Fan',
+          'ring-security': 'Ring Security',
+          'other': 'Other'
+        };
+        const statusBadges = {
+          'new': '<span class="card-badge badge-lead">New Lead</span>',
+          'quoted': '<span class="card-badge badge-quote">Quote Sent</span>',
+          'scheduled': '<span class="card-badge badge-scheduled">Scheduled</span>',
+          'complete': '<span class="card-badge badge-complete">Complete</span>'
+        };
+
+        let dateStr = '';
+        if (lead.date) {
+          const d = new Date(lead.date + 'T12:00:00');
+          dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          if (lead.time) {
+            const [h, m] = lead.time.split(':');
+            const hour = parseInt(h);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const hour12 = hour % 12 || 12;
+            dateStr += ` at ${hour12}:${m} ${ampm}`;
+          }
+        }
+
+        const timeAgo = getTimeAgo(lead.createdAt);
+
+        return `
+          <article class="card animate-in stagger-${Math.min(i + 1, 5)}" data-lead-id="${lead.id}">
+            <div class="card-header">
+              <div>
+                <div class="card-name">${escapeHtml(lead.name)}</div>
+                <div class="card-time">Added ${timeAgo}</div>
+              </div>
+              ${statusBadges[lead.status] || ''}
+            </div>
+            <div class="card-details">
+              ${lead.phone ? `
+                <div class="card-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <a href="tel:${lead.phone}">${escapeHtml(lead.phone)}</a>
+                </div>
+              ` : ''}
+              ${lead.address ? `
+                <div class="card-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  ${escapeHtml(lead.address)}
+                </div>
+              ` : ''}
+              ${lead.service ? `
+                <div class="card-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M9 18h6"/>
+                    <path d="M10 22h4"/>
+                    <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0018 8 6 6 0 006 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 018.91 14"/>
+                  </svg>
+                  ${serviceLabels[lead.service] || lead.service}
+                </div>
+              ` : ''}
+              ${dateStr ? `
+                <div class="card-detail">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  ${dateStr}
+                </div>
+              ` : ''}
+            </div>
+            ${lead.notes ? `<div class="card-notes">${escapeHtml(lead.notes)}</div>` : ''}
+            ${lead.photos && lead.photos.length ? `
+              <div class="photo-grid">
+                ${lead.photos.slice(0, 3).map((src, pi) => `
+                  <div class="photo-thumb">
+                    <img src="${src}" alt="Site photo ${pi + 1}">
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+            <div class="card-actions">
+              <button class="btn btn-secondary edit-lead-btn" data-id="${lead.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                Edit
+              </button>
+              ${lead.status !== 'complete' ? `
+                <button class="btn btn-success complete-lead-btn" data-id="${lead.id}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Done
+                </button>
+              ` : `
+                <button class="btn btn-ghost delete-lead-btn" data-id="${lead.id}" aria-label="Delete lead">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
+              `}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      // Event listeners
+      container.querySelectorAll('.edit-lead-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const lead = await getLead(parseInt(btn.dataset.id));
+          openLeadModal(lead);
+        });
+      });
+
+      container.querySelectorAll('.complete-lead-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const lead = await getLead(parseInt(btn.dataset.id));
+          lead.status = 'complete';
+          await updateLead(lead);
+          showToast('Job marked complete!');
+          renderLeads();
+          renderDashboard();
+        });
+      });
+
+      container.querySelectorAll('.delete-lead-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Delete this lead?')) {
+            await deleteLead(parseInt(btn.dataset.id));
+            showToast('Lead deleted');
+            renderLeads();
+            renderDashboard();
+          }
+        });
+      });
+    }
+
+    // Render Schedule
+    let currentWeekOffset = 0;
+
+    function getWeekDays(offset = 0) {
+      const days = [];
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay() + (offset * 7));
+      
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        days.push(d);
+      }
+      return days;
+    }
+
+    async function renderSchedule() {
+      const leads = await getAllLeads();
+      const container = document.getElementById('weekView');
+      const days = getWeekDays(currentWeekOffset);
+      const today = new Date().toDateString();
+
+      const scheduledLeads = leads.filter(l => l.date && (l.status === 'scheduled' || l.status === 'quoted'));
+
+      container.innerHTML = days.map(day => {
+        const dateStr = day.toISOString().split('T')[0];
+        const dayLeads = scheduledLeads.filter(l => l.date === dateStr);
+        const isToday = day.toDateString() === today;
+
+        return `
+          <div class="day-row">
+            <div class="day-label ${isToday ? 'today' : ''}">
+              <div class="day-name">${day.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+              <div class="day-date">${day.getDate()}</div>
+            </div>
+            <div class="day-events">
+              ${dayLeads.length ? dayLeads.map(lead => {
+                let timeStr = '';
+                if (lead.time) {
+                  const [h, m] = lead.time.split(':');
+                  const hour = parseInt(h);
+                  const ampm = hour >= 12 ? 'PM' : 'AM';
+                  const hour12 = hour % 12 || 12;
+                  timeStr = `${hour12}:${m} ${ampm}`;
+                }
+                return `
+                  <div class="day-event">
+                    <div class="day-event-time">${timeStr || 'Time TBD'}</div>
+                    <div class="day-event-title">${escapeHtml(lead.name)} - ${escapeHtml(lead.address || 'No address')}</div>
+                  </div>
+                `;
+              }).join('') : `<div class="day-empty">Open</div>`}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('prevWeek').addEventListener('click', () => {
+      currentWeekOffset--;
+      renderSchedule();
+    });
+
+    document.getElementById('nextWeek').addEventListener('click', () => {
+      currentWeekOffset++;
+      renderSchedule();
+    });
+
+    // Render Dashboard
+    async function renderDashboard() {
+      const leads = await getAllLeads();
+      
+      const newLeads = leads.filter(l => l.status === 'new').length;
+      const quoted = leads.filter(l => l.status === 'quoted').length;
+      const scheduled = leads.filter(l => l.status === 'scheduled').length;
+      const complete = leads.filter(l => l.status === 'complete').length;
+
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card animate-in stagger-1">
+          <div class="stat-icon leads">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="stat-number">${newLeads}</div>
+          <div class="stat-label">New Leads</div>
+        </div>
+        <div class="stat-card animate-in stagger-2">
+          <div class="stat-icon quotes">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-number">${quoted}</div>
+          <div class="stat-label">Quotes Out</div>
+        </div>
+        <div class="stat-card animate-in stagger-3">
+          <div class="stat-icon scheduled">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="stat-number">${scheduled}</div>
+          <div class="stat-label">Scheduled</div>
+        </div>
+        <div class="stat-card animate-in stagger-4">
+          <div class="stat-icon complete">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div class="stat-number">${complete}</div>
+          <div class="stat-label">Done</div>
+        </div>
+      `;
+
+      // Follow-up list
+      const followUps = leads.filter(l => l.status === 'new' || l.status === 'quoted');
+      const followUpContainer = document.getElementById('followUpList');
+
+      if (followUps.length === 0) {
+        followUpContainer.innerHTML = `
+          <div class="empty-state" style="padding: 32px;">
+            <div class="empty-title">All caught up</div>
+            <div class="empty-text">No pending follow-ups right now</div>
+          </div>
+        `;
+      } else {
+        followUpContainer.innerHTML = followUps.slice(0, 5).map((lead, i) => `
+          <article class="card animate-in stagger-${i + 1}" style="padding: 16px;">
+            <div class="card-header" style="margin-bottom: 8px;">
+              <div>
+                <div class="card-name">${escapeHtml(lead.name)}</div>
+                <div class="card-time">${escapeHtml(lead.address || 'No neighborhood')}</div>
+              </div>
+              ${lead.status === 'new' ? '<span class="card-badge badge-lead">Call Back</span>' : '<span class="card-badge badge-quote">Follow Up</span>'}
+            </div>
+            ${lead.phone ? `
+              <a href="tel:${lead.phone}" class="btn btn-primary" style="margin-top: 8px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                Call Now
+              </a>
+            ` : ''}
+          </article>
+        `).join('');
+      }
+    }
+
+    // Share
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Lampliter LeadSync',
+            text: 'Check out this tool for capturing leads on the go',
+            url: window.location.href
+          });
+        } catch (e) {
+          // User cancelled
+        }
+      } else {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied!');
+      }
+    });
+
+    // Toast
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+      toastText.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Helpers
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getTimeAgo(timestamp) {
+      const now = Date.now();
+      const diff = now - timestamp;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+
+      if (minutes < 1) return 'just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days === 1) return 'yesterday';
+      return `${days} days ago`;
+    }
+
+    // Initialize
+    async function init() {
+      await openDB();
+      await loadDemoData();
+      
+      if (checkAuth()) {
+        showApp();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

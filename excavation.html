@@ -1,0 +1,3428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SiteSnap - Master Excavation Field Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --master-red: #C10000;
+      --master-red-hover: #a00000;
+      --master-red-pressed: #850000;
+      --excavation-black: #0a0a0a;
+      --steel-gray: #5F616F;
+      --concrete-gray: #E8E8E8;
+      --card-bg: #FAFAFA;
+      --safety-white: #FFFFFF;
+      --alert-orange: #FB8E28;
+      --success-green: #10b981;
+      --error-red: #ef4444;
+      
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'Roboto Mono', monospace;
+      
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+      --shadow-xl: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04);
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+    
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    html {
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--concrete-gray);
+      color: var(--excavation-black);
+      min-height: 100vh;
+      padding-bottom: 200px !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      width: 100%;
+    }
+    
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--master-red);
+      color: white;
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      z-index: 10000;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 16px;
+    }
+    
+    /* Focus Styles */
+    *:focus-visible {
+      outline: 2px solid var(--master-red);
+      outline-offset: 2px;
+    }
+    
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--master-red);
+      outline-offset: 2px;
+    }
+    
+    /* Access Gate */
+    #access-gate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--excavation-black) 0%, #1a1a1a 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 24px;
+    }
+    
+    .gate-card {
+      background: var(--safety-white);
+      border-radius: var(--radius-xl);
+      padding: 48px 40px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: var(--shadow-xl);
+      animation: gateSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    @keyframes gateSlideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .gate-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: var(--master-red);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(193, 0, 0, 0.3);
+    }
+    
+    .gate-logo svg {
+      width: 48px;
+      height: 48px;
+      color: white;
+    }
+    
+    .gate-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      color: var(--excavation-black);
+    }
+    
+    .gate-subtitle {
+      color: var(--steel-gray);
+      margin-bottom: 32px;
+      font-size: 15px;
+    }
+    
+    .gate-input-group {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .gate-input-group label {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--steel-gray);
+      pointer-events: none;
+      transition: all 0.2s ease;
+      font-size: 15px;
+    }
+    
+    .gate-input-group input:focus + label,
+    .gate-input-group input:not(:placeholder-shown) + label {
+      top: 8px;
+      transform: translateY(0);
+      font-size: 11px;
+      color: var(--master-red);
+    }
+    
+    .gate-input {
+      width: 100%;
+      padding: 24px 16px 12px;
+      border: 2px solid var(--concrete-gray);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: var(--font-mono);
+      letter-spacing: 2px;
+      text-align: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .gate-input:focus {
+      border-color: var(--master-red);
+      box-shadow: 0 0 0 4px rgba(193, 0, 0, 0.1);
+    }
+    
+    .gate-error {
+      color: var(--error-red);
+      font-size: 13px;
+      margin-top: -12px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    
+    .gate-error.show {
+      display: block;
+      animation: shake 0.4s ease;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+    
+    .gate-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--master-red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .gate-btn:hover {
+      background: var(--master-red-hover);
+      box-shadow: 0 6px 20px rgba(193, 0, 0, 0.3);
+    }
+    
+    .gate-btn:active {
+      transform: scale(0.97);
+      background: var(--master-red-pressed);
+    }
+    
+    /* Main App */
+    #app {
+      display: none;
+      min-height: 100vh;
+    }
+    
+    #app.show {
+      display: block;
+    }
+    
+    /* Header */
+    .header {
+      background: var(--excavation-black);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--master-red);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .header-logo svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+    
+    .header-text {
+      flex: 1;
+    }
+    
+    .header-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 0.5px;
+    }
+    
+    .header-subtitle {
+      font-size: 11px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .header-btn {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    
+    .header-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .header-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .header-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: linear-gradient(90deg, var(--alert-orange) 0%, #f97316 100%);
+      color: white;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      animation: bannerSlide 0.4s ease forwards;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .demo-banner-text {
+      flex: 1;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      min-width: 0;
+    }
+    
+    @keyframes bannerSlide {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .demo-banner-text {
+      flex: 1;
+    }
+    
+    .demo-banner-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s ease;
+    }
+    
+    .demo-banner-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    .demo-banner-close svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* Main Content */
+    main {
+      padding: 20px 16px;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    /* View Tabs */
+    .view-tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--safety-white);
+      padding: 6px;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    
+    .view-tabs::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .view-tab {
+      flex: 1 0 auto;
+      min-width: 90px;
+      padding: 12px 10px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--steel-gray);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    
+    .view-tab svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .view-tab.active {
+      background: var(--master-red);
+      color: white;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .view-tab:not(.active):hover {
+      background: var(--concrete-gray);
+    }
+    
+    .view-tab.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      position: relative;
+    }
+    
+    .view-tab.disabled::after {
+      content: 'Full Version';
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--steel-gray);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+    
+    /* Views */
+    .view {
+      display: none;
+    }
+    
+    .view.active {
+      display: block;
+      animation: viewFade 0.3s ease;
+    }
+    
+    @keyframes viewFade {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Capture View */
+    .capture-hero {
+      background: linear-gradient(135deg, var(--excavation-black) 0%, #1a1a1a 100%);
+      border-radius: var(--radius-xl);
+      padding: 24px 16px;
+      text-align: center;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .capture-hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+    }
+    
+    .capture-hero-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--master-red);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 40px rgba(193, 0, 0, 0.4);
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(193, 0, 0, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(193, 0, 0, 0.6); }
+    }
+    
+    .capture-hero-icon svg {
+      width: 36px;
+      height: 36px;
+      color: white;
+    }
+    
+    .capture-hero h2 {
+      font-family: var(--font-display);
+      font-size: clamp(20px, 5vw, 28px);
+      color: white;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.2;
+    }
+    
+    .capture-hero p {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      margin-bottom: 20px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      line-height: 1.4;
+      max-width: 100%;
+      padding: 0 4px;
+    }
+    
+    .capture-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 36px;
+      background: var(--master-red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      box-shadow: 0 8px 30px rgba(193, 0, 0, 0.4);
+    }
+    
+    .capture-btn:hover {
+      background: var(--master-red-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(193, 0, 0, 0.5);
+    }
+    
+    .capture-btn:active {
+      transform: scale(0.97);
+    }
+    
+    .capture-btn svg {
+      width: 24px;
+      height: 24px;
+    }
+    
+    /* Camera Modal */
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--excavation-black);
+      z-index: 1000;
+      display: none;
+    }
+    
+    .camera-modal.show {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .camera-header {
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+      z-index: 10;
+    }
+    
+    .camera-header h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      letter-spacing: 0.5px;
+    }
+    
+    .camera-close {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .camera-close:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .camera-close svg {
+      width: 24px;
+      height: 24px;
+    }
+    
+    .camera-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .camera-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .camera-crosshair {
+      width: 200px;
+      height: 200px;
+      border: 2px solid rgba(255,255,255,0.5);
+      border-radius: var(--radius-lg);
+    }
+    
+    .camera-gps {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--success-green);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .camera-gps svg {
+      width: 14px;
+      height: 14px;
+    }
+    
+    .camera-controls {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    
+    .camera-shutter {
+      width: 72px;
+      height: 72px;
+      background: white;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s ease, background 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .camera-shutter:hover {
+      transform: scale(1.05);
+    }
+    
+    .camera-shutter:active {
+      transform: scale(0.95);
+      background: var(--concrete-gray);
+    }
+    
+    .camera-shutter-inner {
+      width: 56px;
+      height: 56px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* Annotation Canvas */
+    .annotation-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--excavation-black);
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .annotation-modal.show {
+      display: flex;
+    }
+    
+    .annotation-header {
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+      gap: 12px;
+    }
+    
+    .annotation-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+    }
+    
+    .annotation-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .annotation-btn {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s ease;
+    }
+    
+    .annotation-btn:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    
+    .annotation-btn.primary {
+      background: var(--master-red);
+    }
+    
+    .annotation-btn.primary:hover {
+      background: var(--master-red-hover);
+    }
+    
+    .annotation-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .annotation-canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+    
+    .annotation-canvas-wrapper {
+      position: relative;
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+    
+    #annotation-canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xl);
+    }
+    
+    .annotation-toolbar {
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .tool-btn {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .tool-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .tool-btn.active {
+      border-color: var(--master-red);
+      background: rgba(193, 0, 0, 0.3);
+    }
+    
+    .tool-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+    
+    .tool-divider {
+      width: 1px;
+      height: 32px;
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .color-btn {
+      width: 36px;
+      height: 36px;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    
+    .color-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .color-btn.active {
+      border-color: white;
+    }
+    
+    /* Job Cards */
+    .jobs-section h2 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .jobs-section h2 .count {
+      background: var(--master-red);
+      color: white;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .job-card {
+      background: var(--safety-white);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .job-card.animate {
+      animation: cardSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .job-card:nth-child(1) { animation-delay: 0.05s; }
+    .job-card:nth-child(2) { animation-delay: 0.1s; }
+    .job-card:nth-child(3) { animation-delay: 0.15s; }
+    .job-card:nth-child(4) { animation-delay: 0.2s; }
+    .job-card:nth-child(5) { animation-delay: 0.25s; }
+    
+    @keyframes cardSlideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .job-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .job-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .job-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--excavation-black);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+    }
+    
+    .job-type-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+    
+    .job-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .job-status.in-progress {
+      background: rgba(251, 142, 40, 0.15);
+      color: var(--alert-orange);
+    }
+    
+    .job-status.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success-green);
+    }
+    
+    .job-status svg {
+      width: 12px;
+      height: 12px;
+    }
+    
+    .job-card-title {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+    
+    .job-card-address {
+      color: var(--steel-gray);
+      font-size: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .job-card-address svg {
+      width: 14px;
+      height: 14px;
+      color: var(--master-red);
+      flex-shrink: 0;
+    }
+    
+    .job-photos {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    
+    .job-photo-thumb {
+      width: 64px;
+      height: 64px;
+      background: var(--concrete-gray);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--steel-gray);
+      font-size: 12px;
+      font-weight: 500;
+      overflow: hidden;
+    }
+    
+    .job-photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .job-card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 12px;
+      border-top: 1px solid var(--concrete-gray);
+      font-size: 13px;
+      color: var(--steel-gray);
+    }
+    
+    .job-card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .job-card-meta-item svg {
+      width: 14px;
+      height: 14px;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      background: var(--safety-white);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .empty-state-illustration {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 24px;
+      position: relative;
+    }
+    
+    .empty-state-illustration svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .empty-state h3 {
+      font-family: var(--font-display);
+      font-size: 26px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+    
+    .empty-state p {
+      color: var(--steel-gray);
+      font-size: 15px;
+      max-width: 300px;
+      margin: 0 auto 24px;
+    }
+    
+    .empty-state-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 28px;
+      background: var(--master-red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .empty-state-btn:hover {
+      background: var(--master-red-hover);
+      box-shadow: 0 6px 20px rgba(193, 0, 0, 0.3);
+    }
+    
+    .empty-state-btn:active {
+      transform: scale(0.97);
+    }
+    
+    .empty-state-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Job Detail Modal */
+    .job-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    
+    .job-modal.show {
+      display: flex;
+      animation: modalBgFade 0.3s ease;
+    }
+    
+    @keyframes modalBgFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .job-modal-content {
+      background: var(--safety-white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes modalSlideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    
+    .job-modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--concrete-gray);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--safety-white);
+      z-index: 10;
+    }
+    
+    .job-modal-header h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+    }
+    
+    .job-modal-close {
+      width: 36px;
+      height: 36px;
+      background: var(--concrete-gray);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .job-modal-close:hover {
+      background: #d0d0d0;
+    }
+    
+    .job-modal-close svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .job-modal-body {
+      padding: 20px;
+    }
+    
+    .job-detail-section {
+      margin-bottom: 24px;
+    }
+    
+    .job-detail-section h4 {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--steel-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .job-detail-photos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+    
+    .job-detail-photo {
+      aspect-ratio: 1;
+      background: var(--concrete-gray);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    
+    .job-detail-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .job-detail-text {
+      font-size: 15px;
+      color: var(--excavation-black);
+      line-height: 1.5;
+    }
+    
+    .job-detail-address {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 15px;
+    }
+    
+    .job-detail-address svg {
+      width: 18px;
+      height: 18px;
+      color: var(--master-red);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .job-modal-actions {
+      padding: 20px;
+      border-top: 1px solid var(--concrete-gray);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .job-modal-btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .job-modal-btn.primary {
+      background: var(--master-red);
+      color: white;
+    }
+    
+    .job-modal-btn.primary:hover {
+      background: var(--master-red-hover);
+    }
+    
+    .job-modal-btn.secondary {
+      background: var(--concrete-gray);
+      color: var(--excavation-black);
+    }
+    
+    .job-modal-btn.secondary:hover {
+      background: #d0d0d0;
+    }
+    
+    .job-modal-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* New Job Form */
+    .new-job-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    
+    .new-job-modal.show {
+      display: flex;
+    }
+    
+    .new-job-content {
+      background: var(--safety-white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .new-job-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--concrete-gray);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      background: var(--safety-white);
+      z-index: 10;
+    }
+    
+    .new-job-header h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+    }
+    
+    .new-job-close {
+      width: 36px;
+      height: 36px;
+      background: var(--concrete-gray);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .new-job-close svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .new-job-body {
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--steel-gray);
+      margin-bottom: 6px;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--concrete-gray);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 16px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      background: var(--safety-white);
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--master-red);
+      box-shadow: 0 0 0 4px rgba(193, 0, 0, 0.1);
+    }
+    
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .job-type-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    
+    .job-type-option {
+      padding: 14px 16px;
+      background: var(--card-bg);
+      border: 2px solid var(--concrete-gray);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .job-type-option:hover {
+      border-color: var(--master-red);
+      background: rgba(193, 0, 0, 0.03);
+    }
+    
+    .job-type-option.selected {
+      border-color: var(--master-red);
+      background: rgba(193, 0, 0, 0.08);
+    }
+    
+    .job-type-option svg {
+      width: 20px;
+      height: 20px;
+      color: var(--master-red);
+    }
+    
+    .job-type-option span {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .new-job-actions {
+      padding: 20px;
+      border-top: 1px solid var(--concrete-gray);
+    }
+    
+    .new-job-submit {
+      width: 100%;
+      padding: 16px 24px;
+      background: var(--master-red);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-display);
+      font-size: 18px;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    
+    .new-job-submit:hover {
+      background: var(--master-red-hover);
+    }
+    
+    .new-job-submit:active {
+      transform: scale(0.98);
+    }
+    
+    .new-job-submit svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Settings Panel */
+    .settings-panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    
+    .settings-panel.show {
+      display: flex;
+    }
+    
+    .settings-content {
+      background: var(--safety-white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: modalSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .settings-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--concrete-gray);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .settings-header h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+    }
+    
+    .settings-close {
+      width: 36px;
+      height: 36px;
+      background: var(--concrete-gray);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    
+    .settings-close svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .settings-body {
+      padding: 20px;
+    }
+    
+    .settings-section {
+      margin-bottom: 24px;
+    }
+    
+    .settings-section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--steel-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    .settings-item {
+      padding: 16px;
+      background: var(--card-bg);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .settings-item:hover {
+      background: var(--concrete-gray);
+    }
+    
+    .settings-item-info {
+      flex: 1;
+    }
+    
+    .settings-item-title {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+    
+    .settings-item-desc {
+      font-size: 13px;
+      color: var(--steel-gray);
+    }
+    
+    .settings-item-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(193, 0, 0, 0.1);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--master-red);
+    }
+    
+    .settings-item-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .settings-item-arrow svg {
+      width: 20px;
+      height: 20px;
+      color: var(--steel-gray);
+    }
+    
+    .settings-danger {
+      padding: 16px;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+    }
+    
+    .settings-danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    
+    .settings-danger-text {
+      font-weight: 600;
+      color: var(--error-red);
+    }
+    
+    .settings-danger-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--error-red);
+    }
+    
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 360px;
+      padding: 0 16px;
+    }
+    
+    .toast {
+      padding: 14px 20px;
+      background: var(--excavation-black);
+      color: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    @keyframes toastSlideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .toast.success {
+      background: var(--success-green);
+    }
+    
+    .toast.error {
+      background: var(--error-red);
+    }
+    
+    .toast svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+    
+    .toast-message {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .toast-undo {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    
+    .toast-undo:hover {
+      background: rgba(255,255,255,0.3);
+    }
+    
+    /* Prefers Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+    
+    /* Print Styles */
+    @media print {
+      body { padding-bottom: 0 !important; background: white; }
+      #access-gate, .header, .demo-banner, .view-tabs, 
+      .capture-hero, #bct-demo-disclaimer, .settings-panel,
+      .new-job-modal, .camera-modal, .annotation-modal, .job-modal,
+      .header-actions, .capture-btn, .empty-state-btn,
+      .toast-container { display: none !important; }
+      #app { display: block !important; }
+      main { padding: 0; max-width: 100%; }
+      .job-card { 
+        break-inside: avoid; 
+        box-shadow: none; 
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+      }
+      .jobs-section { display: block !important; }
+      #jobs-view { display: block !important; }
+      .view { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Access Gate -->
+  <div id="access-gate" role="dialog" aria-labelledby="gate-title" aria-modal="true">
+    <div class="gate-card">
+      <div class="gate-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-8h6v8"/>
+        </svg>
+      </div>
+      <h1 id="gate-title" class="gate-title">SITESNAP</h1>
+      <p class="gate-subtitle">Field documentation for Master Excavation</p>
+      <div class="gate-input-group">
+        <input type="text" id="access-key-input" class="gate-input" placeholder=" " autocomplete="off" aria-describedby="gate-error">
+        <label for="access-key-input">Access Key</label>
+      </div>
+      <p id="gate-error" class="gate-error" role="alert">Invalid key. Check your email for access.</p>
+      <button type="button" id="gate-submit" class="gate-btn">OPEN SITESNAP</button>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app" aria-hidden="true">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-8h6v8"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <div class="header-title">SITESNAP</div>
+        <div class="header-subtitle">Master Excavation</div>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="settings-btn" class="header-btn" aria-label="Open settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div id="demo-banner" class="demo-banner" role="status" style="display: flex;">
+      <span class="demo-banner-text">Sample data for Meridian, ID. Tap to clear and add your own.</span>
+      <button type="button" id="clear-demo-btn" class="demo-banner-close" aria-label="Clear demo data">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Main Content -->
+    <main id="main-content" tabindex="-1">
+      <!-- View Tabs -->
+      <nav class="view-tabs" role="tablist" aria-label="Main navigation">
+        <button type="button" role="tab" class="view-tab active" data-view="capture" aria-selected="true" aria-controls="capture-view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+          Capture
+        </button>
+        <button type="button" role="tab" class="view-tab" data-view="jobs" aria-selected="false" aria-controls="jobs-view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+            <line x1="12" y1="22.08" x2="12" y2="12"/>
+          </svg>
+          Jobs
+        </button>
+        <button type="button" role="tab" class="view-tab disabled" data-view="reports" aria-selected="false" aria-disabled="true" title="Available in full version">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10 9 9 9 8 9"/>
+          </svg>
+          Reports
+        </button>
+      </nav>
+      
+      <!-- Capture View -->
+      <section id="capture-view" class="view active" role="tabpanel" aria-labelledby="capture-tab">
+        <div class="capture-hero">
+          <div class="capture-hero-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </div>
+          <h2>DOCUMENT YOUR JOB SITE</h2>
+          <p>Take photos. Mark measurements. Send a professional report in under 90 seconds.</p>
+          <button type="button" id="start-capture-btn" class="capture-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            START CAPTURE
+          </button>
+        </div>
+        
+        <div class="jobs-section" id="recent-captures">
+          <h2>RECENT CAPTURES <span class="count" id="capture-count">4</span></h2>
+          <div id="capture-list" class="job-list">
+            <article class="job-card" data-job-id="demo-1" tabindex="0" role="button" aria-label="View job for Robert Chen">
+              <div class="job-card-header">
+                <span class="job-type-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                  Water Line
+                </span>
+                <span class="job-status in-progress">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active
+                </span>
+              </div>
+              <div class="job-card-title">Robert Chen</div>
+              <div class="job-card-address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                3450 E Pine Ave, Meridian, ID 83642
+              </div>
+              <div class="job-photos">
+                <div class="job-photo-thumb">1</div>
+                <div class="job-photo-thumb">2</div>
+                <div class="job-photo-thumb">3</div>
+              </div>
+              <div class="job-card-meta">
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  2h ago
+                </span>
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  3 photos
+                </span>
+              </div>
+            </article>
+            <article class="job-card" data-job-id="demo-2" tabindex="0" role="button" aria-label="View job for Sarah Martinez">
+              <div class="job-card-header">
+                <span class="job-type-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="11" y1="12" x2="13" y2="12"/></svg>
+                  Sewer Line
+                </span>
+                <span class="job-status completed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done
+                </span>
+              </div>
+              <div class="job-card-title">Sarah Martinez</div>
+              <div class="job-card-address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                890 N Locust Grove Rd, Meridian, ID 83646
+              </div>
+              <div class="job-photos">
+                <div class="job-photo-thumb">1</div>
+                <div class="job-photo-thumb">2</div>
+                <div class="job-photo-thumb">3</div>
+                <div class="job-photo-thumb">4</div>
+              </div>
+              <div class="job-card-meta">
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  1d ago
+                </span>
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  5 photos
+                </span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Jobs View -->
+      <section id="jobs-view" class="view" role="tabpanel" aria-labelledby="jobs-tab">
+        <div class="jobs-section">
+          <h2>ALL JOBS <span class="count" id="jobs-count">4</span></h2>
+          <div id="jobs-list" class="job-list">
+            <article class="job-card" data-job-id="demo-1" tabindex="0" role="button" aria-label="View job for Robert Chen">
+              <div class="job-card-header">
+                <span class="job-type-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
+                  Water Line
+                </span>
+                <span class="job-status in-progress">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active
+                </span>
+              </div>
+              <div class="job-card-title">Robert Chen</div>
+              <div class="job-card-address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                3450 E Pine Ave, Meridian, ID 83642
+              </div>
+              <div class="job-photos">
+                <div class="job-photo-thumb">1</div>
+                <div class="job-photo-thumb">2</div>
+                <div class="job-photo-thumb">3</div>
+              </div>
+              <div class="job-card-meta">
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  2h ago
+                </span>
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  3 photos
+                </span>
+              </div>
+            </article>
+            <article class="job-card" data-job-id="demo-2" tabindex="0" role="button" aria-label="View job for Sarah Martinez">
+              <div class="job-card-header">
+                <span class="job-type-badge">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="11" y1="12" x2="13" y2="12"/></svg>
+                  Sewer Line
+                </span>
+                <span class="job-status completed">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done
+                </span>
+              </div>
+              <div class="job-card-title">Sarah Martinez</div>
+              <div class="job-card-address">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                890 N Locust Grove Rd, Meridian, ID 83646
+              </div>
+              <div class="job-photos">
+                <div class="job-photo-thumb">1</div>
+                <div class="job-photo-thumb">2</div>
+                <div class="job-photo-thumb">3</div>
+                <div class="job-photo-thumb">4</div>
+              </div>
+              <div class="job-card-meta">
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  1d ago
+                </span>
+                <span class="job-card-meta-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  5 photos
+                </span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="camera-modal" role="dialog" aria-modal="true" aria-label="Camera capture">
+      <div class="camera-header">
+        <h3>Capture Photo</h3>
+        <button type="button" id="camera-close" class="camera-close" aria-label="Close camera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="camera-preview">
+        <video id="camera-video" autoplay playsinline></video>
+        <div class="camera-overlay">
+          <div class="camera-crosshair"></div>
+        </div>
+        <div id="camera-gps" class="camera-gps" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span id="gps-coords">Locating...</span>
+        </div>
+      </div>
+      <div class="camera-controls">
+        <button type="button" id="camera-shutter" class="camera-shutter" aria-label="Take photo">
+          <div class="camera-shutter-inner"></div>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Annotation Modal -->
+    <div id="annotation-modal" class="annotation-modal" role="dialog" aria-modal="true" aria-label="Photo annotation">
+      <div class="annotation-header">
+        <span class="annotation-title">Mark Measurements</span>
+        <div class="annotation-actions">
+          <button type="button" id="annotation-undo" class="annotation-btn" aria-label="Undo last stroke">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7v6h6"/>
+              <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6.69 3L3 13"/>
+            </svg>
+            Undo
+          </button>
+          <button type="button" id="annotation-save" class="annotation-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Save
+          </button>
+        </div>
+      </div>
+      <div class="annotation-canvas-container">
+        <div class="annotation-canvas-wrapper">
+          <canvas id="annotation-canvas"></canvas>
+        </div>
+      </div>
+      <div class="annotation-toolbar">
+        <button type="button" class="tool-btn active" data-tool="pen" aria-label="Pen tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+        </button>
+        <button type="button" class="tool-btn" data-tool="line" aria-label="Line tool for measurements">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="19" x2="19" y2="5"/>
+            <circle cx="5" cy="19" r="2"/>
+            <circle cx="19" cy="5" r="2"/>
+          </svg>
+        </button>
+        <button type="button" class="tool-btn" data-tool="arrow" aria-label="Arrow tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="19" x2="19" y2="5"/>
+            <polyline points="12 5 19 5 19 12"/>
+          </svg>
+        </button>
+        <button type="button" class="tool-btn" data-tool="text" aria-label="Text tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+          </svg>
+        </button>
+        <div class="tool-divider"></div>
+        <button type="button" class="color-btn active" data-color="#C10000" style="background: #C10000;" aria-label="Red color"></button>
+        <button type="button" class="color-btn" data-color="#FFFFFF" style="background: #FFFFFF;" aria-label="White color"></button>
+        <button type="button" class="color-btn" data-color="#FFFF00" style="background: #FFFF00;" aria-label="Yellow color"></button>
+        <button type="button" class="color-btn" data-color="#00FF00" style="background: #00FF00;" aria-label="Green color"></button>
+      </div>
+    </div>
+    
+    <!-- New Job Modal -->
+    <div id="new-job-modal" class="new-job-modal" role="dialog" aria-modal="true" aria-labelledby="new-job-title">
+      <div class="new-job-content">
+        <div class="new-job-header">
+          <h3 id="new-job-title">New Job</h3>
+          <button type="button" id="new-job-close" class="new-job-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <form id="new-job-form" class="new-job-body">
+          <div class="form-group">
+            <label class="form-label" for="job-customer">Customer Name</label>
+            <input type="text" id="job-customer" class="form-input" required placeholder="e.g. John Smith">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="job-address">Job Site Address</label>
+            <input type="text" id="job-address" class="form-input" required placeholder="e.g. 1234 N Linder Rd, Meridian, ID">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Job Type</label>
+            <div class="job-type-grid" role="radiogroup" aria-label="Select job type">
+              <div class="job-type-option" data-type="water-line" tabindex="0" role="radio" aria-checked="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/>
+                </svg>
+                <span>Water Line</span>
+              </div>
+              <div class="job-type-option" data-type="sewer-line" tabindex="0" role="radio" aria-checked="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 17h1m16 0h1M5.5 17a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM18.5 17a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11z"/>
+                  <line x1="10.5" y1="11" x2="13.5" y2="11"/>
+                </svg>
+                <span>Sewer Line</span>
+              </div>
+              <div class="job-type-option" data-type="septic" tabindex="0" role="radio" aria-checked="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="10" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                <span>Septic System</span>
+              </div>
+              <div class="job-type-option" data-type="drain-field" tabindex="0" role="radio" aria-checked="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="7" width="20" height="15" rx="2"/>
+                  <path d="M16 7V5a4 4 0 00-8 0v2"/>
+                </svg>
+                <span>Drain Field</span>
+              </div>
+            </div>
+            <input type="hidden" id="job-type" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="job-notes">Initial Notes</label>
+            <textarea id="job-notes" class="form-textarea" placeholder="Brief description of the job..."></textarea>
+          </div>
+        </form>
+        <div class="new-job-actions">
+          <button type="submit" form="new-job-form" class="new-job-submit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+            CREATE & START CAPTURE
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Job Detail Modal -->
+    <div id="job-modal" class="job-modal" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
+      <div class="job-modal-content">
+        <div class="job-modal-header">
+          <h3 id="job-modal-title">Job Details</h3>
+          <button type="button" id="job-modal-close" class="job-modal-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div id="job-modal-body" class="job-modal-body"></div>
+        <div class="job-modal-actions">
+          <button type="button" id="job-share-btn" class="job-modal-btn primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/>
+              <circle cx="6" cy="12" r="3"/>
+              <circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            Share Report
+          </button>
+          <button type="button" id="job-pdf-btn" class="job-modal-btn secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+            PDF
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="settings-content">
+        <div class="settings-header">
+          <h3 id="settings-title">Settings</h3>
+          <button type="button" id="settings-close" class="settings-close" aria-label="Close settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="settings-body">
+          <div class="settings-section">
+            <div class="settings-section-title">Data Management</div>
+            <button type="button" id="export-json-btn" class="settings-item">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+              </div>
+              <div class="settings-item-info">
+                <div class="settings-item-title">Export All Data</div>
+                <div class="settings-item-desc">Download as JSON backup file</div>
+              </div>
+              <div class="settings-item-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </button>
+            <label class="settings-item" for="import-json-input">
+              <div class="settings-item-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <div class="settings-item-info">
+                <div class="settings-item-title">Import Data</div>
+                <div class="settings-item-desc">Restore from JSON backup</div>
+              </div>
+              <div class="settings-item-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+              <input type="file" id="import-json-input" accept=".json" style="display:none">
+            </label>
+          </div>
+          <div class="settings-section">
+            <div class="settings-section-title">Danger Zone</div>
+            <button type="button" id="clear-all-btn" class="settings-danger">
+              <span class="settings-danger-text">Clear All Data</span>
+              <div class="settings-danger-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+  </div>
+  
+  <!-- DEMO DISCLAIMER - Legal Notice -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:8px 10px;font-size:11px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;text-align:center;box-sizing:border-box;width:100%;max-width:100vw;">
+    <p style="margin:0;width:100%;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;"><strong style="color:#333;">DEMO:</strong> Built for Master Excavation. Not affiliated with Master Excavation.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Master%20Excavation&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;flex-shrink:0;margin-top:4px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Deletion
+    </a>
+  </div>
+  
+  <script>
+    // === Constants ===
+    const ACCESS_KEY_HASH = 2001242728;
+    const DB_NAME = 'sitesnap-master-excavation';
+    const DB_VERSION = 1;
+    const STORE_JOBS = 'jobs';
+    const STORE_PHOTOS = 'photos';
+    
+    // === State ===
+    let db = null;
+    let currentJob = null;
+    let currentJobId = null;
+    let cameraStream = null;
+    let currentGPS = null;
+    let annotationHistory = [];
+    let annotationTool = 'pen';
+    let annotationColor = '#C10000';
+    let isDrawing = false;
+    let lastX = 0, lastY = 0;
+    let capturedImage = null;
+    
+    // === Hash Function ===
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    // === IndexedDB ===
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          
+          if (!database.objectStoreNames.contains(STORE_JOBS)) {
+            const jobStore = database.createObjectStore(STORE_JOBS, { keyPath: 'id' });
+            jobStore.createIndex('createdAt', 'createdAt', { unique: false });
+            jobStore.createIndex('isDemo', 'isDemo', { unique: false });
+          }
+          
+          if (!database.objectStoreNames.contains(STORE_PHOTOS)) {
+            const photoStore = database.createObjectStore(STORE_PHOTOS, { keyPath: 'id' });
+            photoStore.createIndex('jobId', 'jobId', { unique: false });
+          }
+        };
+      });
+    }
+    
+    async function getAllJobs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_JOBS, 'readonly');
+        const store = tx.objectStore(STORE_JOBS);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function getJob(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_JOBS, 'readonly');
+        const store = tx.objectStore(STORE_JOBS);
+        const request = store.get(id);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function saveJob(job) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_JOBS, 'readwrite');
+        const store = tx.objectStore(STORE_JOBS);
+        const request = store.put(job);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function deleteJob(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_JOBS, STORE_PHOTOS], 'readwrite');
+        const jobStore = tx.objectStore(STORE_JOBS);
+        const photoStore = tx.objectStore(STORE_PHOTOS);
+        
+        // Delete job
+        jobStore.delete(id);
+        
+        // Delete associated photos
+        const photoIndex = photoStore.index('jobId');
+        const photoRequest = photoIndex.openCursor(IDBKeyRange.only(id));
+        photoRequest.onsuccess = (e) => {
+          const cursor = e.target.result;
+          if (cursor) {
+            photoStore.delete(cursor.primaryKey);
+            cursor.continue();
+          }
+        };
+        
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    
+    async function getPhotosForJob(jobId) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_PHOTOS, 'readonly');
+        const store = tx.objectStore(STORE_PHOTOS);
+        const index = store.index('jobId');
+        const request = index.getAll(jobId);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function savePhoto(photo) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_PHOTOS, 'readwrite');
+        const store = tx.objectStore(STORE_PHOTOS);
+        const request = store.put(photo);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function clearDemoData() {
+      const jobs = await getAllJobs();
+      for (const job of jobs) {
+        if (job.isDemo) {
+          await deleteJob(job.id);
+        }
+      }
+    }
+    
+    async function clearAllData() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction([STORE_JOBS, STORE_PHOTOS], 'readwrite');
+        tx.objectStore(STORE_JOBS).clear();
+        tx.objectStore(STORE_PHOTOS).clear();
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+    
+    // === Demo Data ===
+    const DEMO_JOBS = [
+      {
+        id: 'demo-1',
+        customer: 'Robert Chen',
+        address: '3450 E Pine Ave, Meridian, ID 83642',
+        type: 'water-line',
+        typeName: 'Water Line',
+        notes: 'Main water line break near the street. Customer reported low pressure for 2 days before complete failure. Ground is saturated near the meter box.',
+        status: 'in-progress',
+        gps: { lat: 43.6121, lng: -116.3915 },
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+        isDemo: true,
+        photoCount: 3
+      },
+      {
+        id: 'demo-2',
+        customer: 'Sarah Martinez',
+        address: '890 N Locust Grove Rd, Meridian, ID 83646',
+        type: 'sewer-line',
+        typeName: 'Sewer Line',
+        notes: 'Sewer backup in basement. Camera inspection showed root intrusion at 45ft from cleanout. Recommending pipe bursting for replacement.',
+        status: 'completed',
+        gps: { lat: 43.6187, lng: -116.4012 },
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+        isDemo: true,
+        photoCount: 5
+      },
+      {
+        id: 'demo-3',
+        customer: 'Valley View HOA',
+        address: '2100 W Cherry Ln, Boise, ID 83705',
+        type: 'drain-field',
+        typeName: 'Drain Field',
+        notes: 'Drain field failure on 15-year-old system. Soil saturation visible on surface. Testing absorption rate before recommending new field size.',
+        status: 'in-progress',
+        gps: { lat: 43.5998, lng: -116.2201 },
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
+        isDemo: true,
+        photoCount: 4
+      },
+      {
+        id: 'demo-4',
+        customer: 'Jim Harrison',
+        address: '567 S Eagle Rd, Eagle, ID 83616',
+        type: 'septic',
+        typeName: 'Septic System',
+        notes: 'New construction septic install. Perc test passed. Installing 1500 gallon tank with standard drain field. Permit approved.',
+        status: 'completed',
+        gps: { lat: 43.6962, lng: -116.3538 },
+        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+        isDemo: true,
+        photoCount: 6
+      }
+    ];
+    
+    async function loadDemoData() {
+      for (const job of DEMO_JOBS) {
+        await saveJob(job);
+      }
+      localStorage.setItem('sitesnap-has-data', 'true');
+      // Small delay to ensure DB writes complete
+      await new Promise(r => setTimeout(r, 100));
+    }
+    
+    // === Toast ===
+    function showToast(message, type = 'info', undoCallback = null) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = '';
+      if (type === 'success') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      } else {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+      }
+      
+      toast.innerHTML = `
+        ${icon}
+        <span class="toast-message">${message}</span>
+        ${undoCallback ? '<button class="toast-undo" type="button">Undo</button>' : ''}
+      `;
+      
+      container.appendChild(toast);
+      
+      if (undoCallback) {
+        toast.querySelector('.toast-undo').addEventListener('click', () => {
+          undoCallback();
+          toast.remove();
+        });
+      }
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+    
+    // === UI Rendering ===
+    function renderJobCard(job) {
+      const timeAgo = getTimeAgo(job.createdAt);
+      const typeIcons = {
+        'water-line': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>',
+        'sewer-line': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="11" y1="12" x2="13" y2="12"/></svg>',
+        'septic': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',
+        'drain-field': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a4 4 0 00-8 0v2"/></svg>'
+      };
+      
+      return `
+        <article class="job-card" data-job-id="${job.id}" tabindex="0" role="button" aria-label="View job for ${job.customer}">
+          <div class="job-card-header">
+            <span class="job-type-badge">
+              ${typeIcons[job.type] || ''}
+              ${job.typeName}
+            </span>
+            <span class="job-status ${job.status}">
+              ${job.status === 'completed' 
+                ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done' 
+                : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active'}
+            </span>
+          </div>
+          <div class="job-card-title">${job.customer}</div>
+          <div class="job-card-address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${job.address}
+          </div>
+          <div class="job-photos">
+            ${job.photoCount ? Array(Math.min(job.photoCount, 4)).fill(0).map((_, i) => `
+              <div class="job-photo-thumb">${i + 1}</div>
+            `).join('') : '<div class="job-photo-thumb">No photos</div>'}
+          </div>
+          <div class="job-card-meta">
+            <span class="job-card-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              ${timeAgo}
+            </span>
+            <span class="job-card-meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              ${job.photoCount || 0} photos
+            </span>
+          </div>
+        </article>
+      `;
+    }
+    
+    function getTimeAgo(dateStr) {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = now - date;
+      
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (minutes < 60) return `${minutes}m ago`;
+      if (hours < 24) return `${hours}h ago`;
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+    
+    async function renderJobsList() {
+      let jobs = await getAllJobs();
+      const captureList = document.getElementById('capture-list');
+      const jobsList = document.getElementById('jobs-list');
+      const captureCount = document.getElementById('capture-count');
+      const jobsCount = document.getElementById('jobs-count');
+      
+      // Use demo data if no jobs in database
+      let isDemoMode = false;
+      if (jobs.length === 0) {
+        jobs = DEMO_JOBS;
+        isDemoMode = true;
+      }
+      
+      captureCount.textContent = jobs.length;
+      jobsCount.textContent = jobs.length;
+      
+      const jobsHTML = jobs.map(renderJobCard).join('');
+      captureList.innerHTML = jobsHTML;
+      jobsList.innerHTML = jobsHTML;
+      
+      // Add click handlers to job cards (including static demo cards)
+      document.querySelectorAll('.job-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const jobId = card.dataset.jobId;
+          if (jobId && jobId.startsWith('demo-')) {
+            showDemoJobDetail(jobId);
+          } else {
+            openJobDetail(jobId);
+          }
+        });
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const jobId = card.dataset.jobId;
+            if (jobId && jobId.startsWith('demo-')) {
+              showDemoJobDetail(jobId);
+            } else {
+              openJobDetail(jobId);
+            }
+          }
+        });
+      });
+      
+      // Show demo banner when using demo data
+      document.getElementById('demo-banner').style.display = isDemoMode ? 'flex' : 'none';
+    }
+    
+    // === View Management ===
+    function switchView(viewName) {
+      document.querySelectorAll('.view-tab').forEach(tab => {
+        const isActive = tab.dataset.view === viewName;
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive);
+      });
+      
+      document.querySelectorAll('.view').forEach(view => {
+        view.classList.remove('active');
+      });
+      
+      const targetView = document.getElementById(`${viewName}-view`);
+      if (targetView) {
+        targetView.classList.add('active');
+      }
+    }
+    
+    // === Camera ===
+    async function startCamera() {
+      try {
+        const modal = document.getElementById('camera-modal');
+        const video = document.getElementById('camera-video');
+        
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+        
+        video.srcObject = cameraStream;
+        modal.classList.add('show');
+        
+        // Get GPS
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              currentGPS = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+              const gpsEl = document.getElementById('camera-gps');
+              gpsEl.style.display = 'flex';
+              document.getElementById('gps-coords').textContent = 
+                `${currentGPS.lat.toFixed(5)}, ${currentGPS.lng.toFixed(5)}`;
+            },
+            () => {
+              document.getElementById('camera-gps').style.display = 'none';
+            }
+          );
+        }
+      } catch (err) {
+        showToast('Camera access denied. Please allow camera permissions.', 'error');
+      }
+    }
+    
+    function stopCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+      }
+      document.getElementById('camera-modal').classList.remove('show');
+    }
+    
+    function capturePhoto() {
+      const video = document.getElementById('camera-video');
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      capturedImage = canvas.toDataURL('image/jpeg', 0.9);
+      
+      stopCamera();
+      openAnnotation();
+    }
+    
+    // === Annotation ===
+    function openAnnotation() {
+      const modal = document.getElementById('annotation-modal');
+      const canvas = document.getElementById('annotation-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const img = new Image();
+      img.onload = () => {
+        // Scale to fit screen
+        const maxW = window.innerWidth - 32;
+        const maxH = window.innerHeight - 200;
+        let w = img.width;
+        let h = img.height;
+        
+        if (w > maxW) {
+          h = (maxW / w) * h;
+          w = maxW;
+        }
+        if (h > maxH) {
+          w = (maxH / h) * w;
+          h = maxH;
+        }
+        
+        canvas.width = w;
+        canvas.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+        
+        // Save initial state
+        annotationHistory = [canvas.toDataURL()];
+      };
+      img.src = capturedImage;
+      
+      modal.classList.add('show');
+    }
+    
+    function closeAnnotation() {
+      document.getElementById('annotation-modal').classList.remove('show');
+      annotationHistory = [];
+      capturedImage = null;
+    }
+    
+    function saveAnnotation() {
+      const canvas = document.getElementById('annotation-canvas');
+      const annotatedImage = canvas.toDataURL('image/jpeg', 0.9);
+      
+      // Save to current job
+      if (currentJobId) {
+        const photo = {
+          id: `photo-${Date.now()}`,
+          jobId: currentJobId,
+          image: annotatedImage,
+          gps: currentGPS,
+          createdAt: new Date().toISOString()
+        };
+        
+        savePhoto(photo).then(async () => {
+          // Update job photo count
+          const job = await getJob(currentJobId);
+          if (job) {
+            job.photoCount = (job.photoCount || 0) + 1;
+            await saveJob(job);
+          }
+          showToast('Photo saved to job', 'success');
+          renderJobsList();
+        });
+      }
+      
+      closeAnnotation();
+    }
+    
+    function undoAnnotation() {
+      if (annotationHistory.length > 1) {
+        annotationHistory.pop();
+        const canvas = document.getElementById('annotation-canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = annotationHistory[annotationHistory.length - 1];
+      }
+    }
+    
+    function initAnnotationCanvas() {
+      const canvas = document.getElementById('annotation-canvas');
+      const ctx = canvas.getContext('2d');
+      
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        
+        if (e.touches && e.touches[0]) {
+          return {
+            x: (e.touches[0].clientX - rect.left) * scaleX,
+            y: (e.touches[0].clientY - rect.top) * scaleY
+          };
+        }
+        return {
+          x: (e.clientX - rect.left) * scaleX,
+          y: (e.clientY - rect.top) * scaleY
+        };
+      }
+      
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        
+        const pos = getPos(e);
+        ctx.strokeStyle = annotationColor;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        if (annotationTool === 'pen') {
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        }
+        
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      function endDraw(e) {
+        if (!isDrawing) return;
+        isDrawing = false;
+        
+        const pos = getPos(e);
+        
+        if (annotationTool === 'line') {
+          ctx.strokeStyle = annotationColor;
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          
+          // Draw measurement label
+          const dist = Math.sqrt(Math.pow(pos.x - lastX, 2) + Math.pow(pos.y - lastY, 2));
+          const midX = (lastX + pos.x) / 2;
+          const midY = (lastY + pos.y) / 2;
+          ctx.font = 'bold 16px Inter';
+          ctx.fillStyle = annotationColor;
+          ctx.textAlign = 'center';
+          ctx.fillText(`${Math.round(dist)}px`, midX, midY - 8);
+        }
+        
+        if (annotationTool === 'arrow') {
+          ctx.strokeStyle = annotationColor;
+          ctx.fillStyle = annotationColor;
+          ctx.lineWidth = 4;
+          
+          // Draw line
+          ctx.beginPath();
+          ctx.moveTo(lastX, lastY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+          
+          // Draw arrowhead
+          const angle = Math.atan2(pos.y - lastY, pos.x - lastX);
+          const headLen = 15;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(pos.x - headLen * Math.cos(angle - Math.PI / 6), pos.y - headLen * Math.sin(angle - Math.PI / 6));
+          ctx.lineTo(pos.x - headLen * Math.cos(angle + Math.PI / 6), pos.y - headLen * Math.sin(angle + Math.PI / 6));
+          ctx.closePath();
+          ctx.fill();
+        }
+        
+        if (annotationTool === 'text') {
+          const text = prompt('Enter measurement or note:');
+          if (text) {
+            ctx.font = 'bold 18px Inter';
+            ctx.fillStyle = annotationColor;
+            ctx.fillText(text, pos.x, pos.y);
+          }
+        }
+        
+        // Save state for undo
+        annotationHistory.push(canvas.toDataURL());
+      }
+      
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+      
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', endDraw, { passive: false });
+    }
+    
+    // === Job Management ===
+    function openNewJobModal() {
+      document.getElementById('new-job-modal').classList.add('show');
+      document.getElementById('job-customer').focus();
+    }
+    
+    function closeNewJobModal() {
+      document.getElementById('new-job-modal').classList.remove('show');
+      document.getElementById('new-job-form').reset();
+      document.querySelectorAll('.job-type-option').forEach(opt => {
+        opt.classList.remove('selected');
+        opt.setAttribute('aria-checked', 'false');
+      });
+      document.getElementById('job-type').value = '';
+    }
+    
+    async function createJob(e) {
+      e.preventDefault();
+      
+      const customer = document.getElementById('job-customer').value.trim();
+      const address = document.getElementById('job-address').value.trim();
+      const type = document.getElementById('job-type').value;
+      const notes = document.getElementById('job-notes').value.trim();
+      
+      if (!type) {
+        showToast('Please select a job type', 'error');
+        return;
+      }
+      
+      const typeNames = {
+        'water-line': 'Water Line',
+        'sewer-line': 'Sewer Line',
+        'septic': 'Septic System',
+        'drain-field': 'Drain Field'
+      };
+      
+      const job = {
+        id: `job-${Date.now()}`,
+        customer,
+        address,
+        type,
+        typeName: typeNames[type],
+        notes,
+        status: 'in-progress',
+        gps: null,
+        createdAt: new Date().toISOString(),
+        isDemo: false,
+        photoCount: 0
+      };
+      
+      await saveJob(job);
+      currentJobId = job.id;
+      
+      closeNewJobModal();
+      showToast('Job created. Starting camera...', 'success');
+      renderJobsList();
+      
+      // Start camera
+      setTimeout(() => startCamera(), 300);
+    }
+    
+    function showDemoJobDetail(jobId) {
+      const demoJob = DEMO_JOBS.find(j => j.id === jobId);
+      if (!demoJob) return;
+      
+      currentJob = demoJob;
+      currentJobId = demoJob.id;
+      
+      const modal = document.getElementById('job-modal');
+      const body = document.getElementById('job-modal-body');
+      document.getElementById('job-modal-title').textContent = demoJob.customer;
+      
+      body.innerHTML = `
+        <div class="job-detail-section">
+          <h4>Job Type</h4>
+          <p class="job-detail-text">${demoJob.typeName}</p>
+        </div>
+        <div class="job-detail-section">
+          <h4>Location</h4>
+          <div class="job-detail-address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>${demoJob.address}</span>
+          </div>
+        </div>
+        ${demoJob.notes ? `
+        <div class="job-detail-section">
+          <h4>Notes</h4>
+          <p class="job-detail-text">${demoJob.notes}</p>
+        </div>
+        ` : ''}
+        <div class="job-detail-section">
+          <h4>Photos (${demoJob.photoCount})</h4>
+          <div class="job-detail-photos">
+            ${Array(demoJob.photoCount).fill(0).map((_, i) => `
+              <div class="job-detail-photo" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;color:#666;font-size:12px;">Photo ${i+1}</div>
+            `).join('')}
+          </div>
+        </div>
+        <div class="job-detail-section">
+          <h4>Captured</h4>
+          <p class="job-detail-text">${new Date(demoJob.createdAt).toLocaleString()}</p>
+        </div>
+      `;
+      
+      modal.classList.add('show');
+    }
+    
+    async function openJobDetail(jobId) {
+      const job = await getJob(jobId);
+      if (!job) return;
+      
+      currentJob = job;
+      currentJobId = job.id;
+      
+      const photos = await getPhotosForJob(jobId);
+      
+      const modal = document.getElementById('job-modal');
+      const body = document.getElementById('job-modal-body');
+      document.getElementById('job-modal-title').textContent = job.customer;
+      
+      body.innerHTML = `
+        <div class="job-detail-section">
+          <h4>Job Type</h4>
+          <p class="job-detail-text">${job.typeName}</p>
+        </div>
+        <div class="job-detail-section">
+          <h4>Location</h4>
+          <div class="job-detail-address">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>${job.address}</span>
+          </div>
+        </div>
+        ${job.notes ? `
+        <div class="job-detail-section">
+          <h4>Notes</h4>
+          <p class="job-detail-text">${job.notes}</p>
+        </div>
+        ` : ''}
+        <div class="job-detail-section">
+          <h4>Photos (${photos.length})</h4>
+          <div class="job-detail-photos">
+            ${photos.length ? photos.map(p => `
+              <div class="job-detail-photo">
+                <img src="${p.image}" alt="Job photo" loading="lazy">
+              </div>
+            `).join('') : '<p class="job-detail-text">No photos yet</p>'}
+          </div>
+        </div>
+        <div class="job-detail-section">
+          <h4>Captured</h4>
+          <p class="job-detail-text">${new Date(job.createdAt).toLocaleString()}</p>
+        </div>
+      `;
+      
+      modal.classList.add('show');
+    }
+    
+    function closeJobModal() {
+      document.getElementById('job-modal').classList.remove('show');
+      currentJob = null;
+    }
+    
+    async function shareReport() {
+      if (!currentJob) return;
+      
+      const photos = await getPhotosForJob(currentJob.id);
+      
+      const shareData = {
+        title: `Job Report: ${currentJob.customer}`,
+        text: `Master Excavation Field Report\n\nCustomer: ${currentJob.customer}\nAddress: ${currentJob.address}\nType: ${currentJob.typeName}\nPhotos: ${photos.length}\n\nNotes: ${currentJob.notes || 'None'}`,
+      };
+      
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showToast('Report shared', 'success');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            showToast('Sharing failed', 'error');
+          }
+        }
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareData.text);
+        showToast('Report copied to clipboard', 'success');
+      }
+    }
+    
+    async function generatePDF() {
+      if (!currentJob) return;
+      
+      showToast('Generating PDF...', 'info');
+      
+      const photos = await getPhotosForJob(currentJob.id);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFillColor(193, 0, 0);
+      doc.rect(0, 0, 220, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text('MASTER EXCAVATION', 14, 20);
+      doc.setFontSize(10);
+      doc.text('Field Documentation Report', 14, 26);
+      
+      // Job info
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(16);
+      doc.text(currentJob.customer, 14, 45);
+      
+      doc.setFontSize(11);
+      doc.setTextColor(95, 97, 111);
+      doc.text(`Address: ${currentJob.address}`, 14, 54);
+      doc.text(`Job Type: ${currentJob.typeName}`, 14, 62);
+      doc.text(`Date: ${new Date(currentJob.createdAt).toLocaleString()}`, 14, 70);
+      
+      if (currentJob.notes) {
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text('Notes:', 14, 85);
+        doc.setFontSize(10);
+        doc.setTextColor(95, 97, 111);
+        const splitNotes = doc.splitTextToSize(currentJob.notes, 180);
+        doc.text(splitNotes, 14, 92);
+      }
+      
+      // Photos
+      let yPos = currentJob.notes ? 110 : 85;
+      if (photos.length) {
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        doc.text(`Photos (${photos.length}):`, 14, yPos);
+        yPos += 10;
+        
+        for (let i = 0; i < Math.min(photos.length, 4); i++) {
+          try {
+            const imgData = photos[i].image;
+            const x = 14 + (i % 2) * 95;
+            const y = yPos + Math.floor(i / 2) * 75;
+            doc.addImage(imgData, 'JPEG', x, y, 90, 70);
+          } catch (e) {
+            console.error('Error adding image to PDF:', e);
+          }
+        }
+      }
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated by SiteSnap - Master Excavation Field Documentation', 14, 285);
+      
+      doc.save(`${currentJob.customer.replace(/\s+/g, '_')}_report.pdf`);
+      showToast('PDF downloaded', 'success');
+    }
+    
+    // === Settings ===
+    function openSettings() {
+      document.getElementById('settings-panel').classList.add('show');
+    }
+    
+    function closeSettings() {
+      document.getElementById('settings-panel').classList.remove('show');
+    }
+    
+    async function exportData() {
+      const jobs = await getAllJobs();
+      const allPhotos = [];
+      
+      for (const job of jobs) {
+        const photos = await getPhotosForJob(job.id);
+        allPhotos.push(...photos);
+      }
+      
+      const data = { jobs, photos: allPhotos, exportDate: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sitesnap-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      
+      URL.revokeObjectURL(url);
+      showToast('Data exported', 'success');
+      closeSettings();
+    }
+    
+    async function importData(file) {
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        
+        if (data.jobs) {
+          for (const job of data.jobs) {
+            await saveJob(job);
+          }
+        }
+        
+        if (data.photos) {
+          for (const photo of data.photos) {
+            await savePhoto(photo);
+          }
+        }
+        
+        showToast(`Imported ${data.jobs?.length || 0} jobs`, 'success');
+        renderJobsList();
+        closeSettings();
+      } catch (err) {
+        showToast('Import failed. Check file format.', 'error');
+      }
+    }
+    
+    async function clearAll() {
+      if (confirm('Delete ALL data? This cannot be undone.')) {
+        await clearAllData();
+        localStorage.removeItem('sitesnap-has-data');
+        showToast('All data cleared', 'success');
+        renderJobsList();
+        closeSettings();
+      }
+    }
+    
+    // === Authentication ===
+    async function checkAuth() {
+      // Check URL parameter first
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && hashKey(urlKey) === ACCESS_KEY_HASH) {
+        localStorage.setItem('sitesnap-auth', 'true');
+        showApp();
+        await initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+        return;
+      }
+      
+      // Check localStorage
+      if (localStorage.getItem('sitesnap-auth') === 'true') {
+        showApp();
+        await initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+        return;
+      }
+      
+      // Show gate
+      document.getElementById('access-gate').style.display = 'flex';
+    }
+    
+    function showApp() {
+      document.getElementById('access-gate').style.display = 'none';
+      const app = document.getElementById('app');
+      app.classList.add('show');
+      app.setAttribute('aria-hidden', 'false');
+    }
+    
+    function attemptAccess() {
+      const input = document.getElementById('access-key-input');
+      const error = document.getElementById('gate-error');
+      const key = input.value.trim();
+      
+      if (hashKey(key) === ACCESS_KEY_HASH) {
+        localStorage.setItem('sitesnap-auth', 'true');
+        showApp();
+        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+      } else {
+        error.classList.add('show');
+        input.value = '';
+        input.focus();
+        setTimeout(() => error.classList.remove('show'), 3000);
+      }
+    }
+    
+    // === Event Listeners ===
+    function initEventListeners() {
+      // Gate
+      document.getElementById('gate-submit').addEventListener('click', attemptAccess);
+      document.getElementById('access-key-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') attemptAccess();
+      });
+      
+      // View tabs
+      document.querySelectorAll('.view-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          if (!tab.classList.contains('disabled')) {
+            switchView(tab.dataset.view);
+          }
+        });
+      });
+      
+      // Capture
+      document.getElementById('start-capture-btn').addEventListener('click', openNewJobModal);
+      
+      // Camera
+      document.getElementById('camera-close').addEventListener('click', stopCamera);
+      document.getElementById('camera-shutter').addEventListener('click', capturePhoto);
+      
+      // Annotation
+      document.getElementById('annotation-save').addEventListener('click', saveAnnotation);
+      document.getElementById('annotation-undo').addEventListener('click', undoAnnotation);
+      
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          annotationTool = btn.dataset.tool;
+        });
+      });
+      
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          annotationColor = btn.dataset.color;
+        });
+      });
+      
+      // New Job
+      document.getElementById('new-job-close').addEventListener('click', closeNewJobModal);
+      document.getElementById('new-job-form').addEventListener('submit', createJob);
+      
+      document.querySelectorAll('.job-type-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+          document.querySelectorAll('.job-type-option').forEach(o => {
+            o.classList.remove('selected');
+            o.setAttribute('aria-checked', 'false');
+          });
+          opt.classList.add('selected');
+          opt.setAttribute('aria-checked', 'true');
+          document.getElementById('job-type').value = opt.dataset.type;
+        });
+        
+        opt.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            opt.click();
+          }
+        });
+      });
+      
+      // Job Modal
+      document.getElementById('job-modal-close').addEventListener('click', closeJobModal);
+      document.getElementById('job-share-btn').addEventListener('click', shareReport);
+      document.getElementById('job-pdf-btn').addEventListener('click', generatePDF);
+      
+      // Settings
+      document.getElementById('settings-btn').addEventListener('click', openSettings);
+      document.getElementById('settings-close').addEventListener('click', closeSettings);
+      document.getElementById('export-json-btn').addEventListener('click', exportData);
+      document.getElementById('import-json-input').addEventListener('change', (e) => {
+        if (e.target.files[0]) importData(e.target.files[0]);
+      });
+      document.getElementById('clear-all-btn').addEventListener('click', clearAll);
+      
+      // Demo Banner
+      document.getElementById('clear-demo-btn').addEventListener('click', async () => {
+        await clearDemoData();
+        showToast('Demo data cleared', 'success');
+        renderJobsList();
+      });
+      
+      // Modal close on backdrop click
+      document.getElementById('job-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'job-modal') closeJobModal();
+      });
+      document.getElementById('new-job-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'new-job-modal') closeNewJobModal();
+      });
+      document.getElementById('settings-panel').addEventListener('click', (e) => {
+        if (e.target.id === 'settings-panel') closeSettings();
+      });
+      
+      // Escape key closes modals
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (document.getElementById('camera-modal').classList.contains('show')) stopCamera();
+          if (document.getElementById('annotation-modal').classList.contains('show')) closeAnnotation();
+          if (document.getElementById('job-modal').classList.contains('show')) closeJobModal();
+          if (document.getElementById('new-job-modal').classList.contains('show')) closeNewJobModal();
+          if (document.getElementById('settings-panel').classList.contains('show')) closeSettings();
+        }
+      });
+    }
+    
+    // === Init ===
+    async function initApp() {
+      await initDB();
+      
+      // Check if data exists - load demo if empty
+      const jobs = await getAllJobs();
+      if (jobs.length === 0) {
+        await loadDemoData();
+      }
+      
+      initAnnotationCanvas();
+      await renderJobsList();
+    }
+    
+    // === Start ===
+    document.addEventListener('DOMContentLoaded', async () => {
+      initEventListeners();
+      // Attach listeners to static demo cards immediately
+      document.querySelectorAll('.job-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const jobId = card.dataset.jobId;
+          if (jobId && jobId.startsWith('demo-')) {
+            showDemoJobDetail(jobId);
+          }
+        });
+      });
+      await checkAuth();
+    });
+    // === Security Measures ===
+    // Disable right-click context menu
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    // Block common dev tools shortcuts (but allow normal usage)
+    document.addEventListener('keydown', (e) => {
+      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+          (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+      }
+    });
+  </script>
+  <div id="bct-demo-disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:oklch(0.25 0 0 / 0.95);border-top:1px solid oklch(0.35 0 0);padding:8px 12px;font-size:11px;line-height:1.3;color:oklch(0.7 0 0);z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <span>Demo for <strong style="color:oklch(0.9 0 0);">Master Excavation</strong> • Not affiliated</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Master%20Excavation" style="color:oklch(0.7 0.15 220);text-decoration:none;white-space:nowrap;font-weight:500;">Delete</a>
+  </div>
+</body>
+</html>

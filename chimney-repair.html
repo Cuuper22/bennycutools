@@ -1,0 +1,2647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ChimneyLog — Century Chimney Inc.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --brick: #8B4513;
+      --brick-dark: #5C2E0C;
+      --brick-light: #A65D28;
+      --slate: #4A5568;
+      --slate-light: #718096;
+      --mortar: #F7F5F3;
+      --surface: #FFFFFF;
+      --success: #2F855A;
+      --success-bg: #F0FFF4;
+      --warning: #C05621;
+      --warning-bg: #FFFAF0;
+      --error: #C53030;
+      --error-bg: #FFF5F5;
+      --text: #1A1A1A;
+      --text-muted: #666666;
+      --border: #E2E0DD;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+    
+    html, body {
+      font-family: var(--font);
+      background: var(--mortar);
+      color: var(--text);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+    
+    body { padding-bottom: 140px !important; }
+    
+    /* Focus styles */
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible {
+      outline: 2px solid var(--brick);
+      outline-offset: 2px;
+    }
+    
+    /* Access Gate */
+    #access-gate {
+      position: fixed;
+      inset: 0;
+      background: var(--mortar);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 10000;
+    }
+    
+    .gate-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: 32px 24px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .gate-logo {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: var(--brick);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .gate-logo svg { color: white; }
+    
+    .gate-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--brick-dark);
+      margin-bottom: 4px;
+    }
+    
+    .gate-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    .gate-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      opacity: 0.8;
+    }
+    
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: var(--font);
+      text-align: center;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: border-color 0.15s;
+    }
+    
+    .gate-input:focus {
+      border-color: var(--brick);
+      outline: none;
+    }
+    
+    .gate-input.error {
+      border-color: var(--error);
+      animation: shake 0.4s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-8px); }
+      75% { transform: translateX(8px); }
+    }
+    
+    .gate-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--brick);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font);
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    
+    .gate-btn:hover { background: var(--brick-dark); }
+    .gate-btn:active { transform: scale(0.98); }
+    
+    .gate-error {
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .gate-error.show { display: block; }
+    
+    /* App Container */
+    #app { display: none; }
+    #app.visible { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--brick);
+      color: white;
+      padding: 16px 16px 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    
+    .header-tagline {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+    
+    .header-weather {
+      font-size: 12px;
+      background: rgba(255,255,255,0.15);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: var(--warning-bg);
+      border-bottom: 1px solid #FFE0B2;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .demo-banner.hidden { display: none; }
+    
+    .demo-text {
+      font-size: 13px;
+      color: var(--warning);
+    }
+    
+    .demo-dismiss {
+      background: transparent;
+      border: 1px solid var(--warning);
+      color: var(--warning);
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: var(--font);
+    }
+    
+    /* Main Content */
+    .main { padding: 16px; }
+    
+    /* Tab Content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Jobs List */
+    .jobs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .jobs-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--brick-dark);
+    }
+    
+    .jobs-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: var(--surface);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    
+    .job-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.1s;
+    }
+    
+    .job-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+    
+    .job-card:active { transform: scale(0.995); }
+    
+    .job-photos {
+      display: flex;
+      height: 100px;
+      background: var(--mortar);
+      overflow: hidden;
+    }
+    
+    .job-photo {
+      flex: 1;
+      object-fit: cover;
+      border-right: 2px solid var(--surface);
+    }
+    
+    .job-photo:last-child { border-right: none; }
+    
+    .job-photo-placeholder {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--slate-light);
+      font-size: 12px;
+      background: var(--mortar);
+      border-right: 2px solid var(--surface);
+    }
+    
+    .job-info { padding: 12px 14px; }
+    
+    .job-address {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    
+    .job-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .job-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .status-scheduled { background: #EBF8FF; color: #2B6CB0; }
+    .status-progress { background: var(--warning-bg); color: var(--warning); }
+    .status-completed { background: var(--success-bg); color: var(--success); }
+    
+    /* Add Job Button */
+    .add-job-btn {
+      position: fixed;
+      bottom: 140px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      background: var(--brick);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      box-shadow: var(--shadow-lg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+      z-index: 50;
+    }
+    
+    .add-job-btn:hover { background: var(--brick-dark); transform: scale(1.05); }
+    .add-job-btn:active { transform: scale(0.95); }
+    
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      z-index: 100;
+    }
+    
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      background: none;
+      border: none;
+      color: var(--slate-light);
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+      font-family: var(--font);
+    }
+    
+    .nav-item.active { color: var(--brick); }
+    .nav-item:hover { color: var(--brick-light); }
+    
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Job Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+    
+    .modal-overlay.active { opacity: 1; visibility: visible; }
+    
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: var(--mortar);
+      z-index: 201;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+    
+    .modal.active { transform: translateY(0); }
+    
+    .modal-header {
+      background: var(--brick);
+      color: white;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .modal-back {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-title {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .modal-body { padding: 16px; padding-bottom: 100px; }
+    
+    /* Photo Grid */
+    .photo-section { margin-bottom: 24px; }
+    
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    .photo-item {
+      aspect-ratio: 1;
+      background: var(--surface);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+    
+    .photo-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .photo-add {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border: 2px dashed var(--border);
+      color: var(--slate-light);
+      font-size: 10px;
+      background: transparent;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    
+    .photo-add:hover { border-color: var(--brick); color: var(--brick); }
+    
+    .photo-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    /* Detail Cards */
+    .detail-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .detail-row:last-child { border-bottom: none; }
+    
+    .detail-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    .detail-value {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      text-align: right;
+    }
+    
+    /* Action Buttons */
+    .action-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s, transform 0.1s;
+      font-family: var(--font);
+    }
+    
+    .action-btn:active { transform: scale(0.97); }
+    
+    .action-primary {
+      background: var(--brick);
+      color: white;
+    }
+    
+    .action-primary:hover { background: var(--brick-dark); }
+    
+    .action-secondary {
+      background: var(--surface);
+      color: var(--slate);
+      border: 1px solid var(--border);
+    }
+    
+    .action-secondary:hover { background: var(--mortar); }
+    
+    .action-full { grid-column: 1 / -1; }
+    
+    /* Upsell Button */
+    .action-upsell {
+      background: var(--mortar);
+      color: var(--slate-light);
+      border: 2px dashed var(--border);
+      position: relative;
+      cursor: not-allowed;
+    }
+    
+    .upsell-badge {
+      position: absolute;
+      top: -8px;
+      right: 12px;
+      background: var(--slate);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    /* Camera Modal */
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 300;
+      display: none;
+    }
+    
+    .camera-modal.active { display: flex; flex-direction: column; }
+    
+    #camera-video {
+      flex: 1;
+      object-fit: cover;
+      width: 100%;
+    }
+    
+    .camera-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 24px;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+    
+    .camera-cancel {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .camera-capture {
+      width: 72px;
+      height: 72px;
+      background: white;
+      border: 4px solid rgba(255,255,255,0.5);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    
+    .camera-capture:active { transform: scale(0.9); }
+    
+    .camera-flip {
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* Annotation Canvas Modal */
+    .annotate-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--mortar);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .annotate-modal.active { display: flex; }
+    
+    .annotate-header {
+      background: var(--brick);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .annotate-title { font-weight: 600; }
+    
+    .annotate-actions { display: flex; gap: 8px; }
+    
+    .annotate-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: var(--font);
+    }
+    
+    .annotate-cancel {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    
+    .annotate-save {
+      background: white;
+      color: var(--brick);
+    }
+    
+    .annotate-canvas-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow: hidden;
+    }
+    
+    #annotate-canvas {
+      max-width: 100%;
+      max-height: 100%;
+      background: white;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      touch-action: none;
+    }
+    
+    .annotate-tools {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .tool-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface);
+      color: var(--slate);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      font-family: var(--font);
+    }
+    
+    .tool-btn.active {
+      border-color: var(--brick);
+      background: var(--brick);
+      color: white;
+    }
+    
+    .tool-color {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 0 2px var(--border);
+      cursor: pointer;
+    }
+    
+    .tool-color.active { box-shadow: 0 0 0 2px var(--brick); }
+    
+    /* PDF Preview */
+    .pdf-preview-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--mortar);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .pdf-preview-modal.active { display: flex; }
+    
+    .pdf-header {
+      background: var(--brick);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .pdf-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    
+    .pdf-preview-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .pdf-logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--brick);
+    }
+    
+    .pdf-logo {
+      width: 48px;
+      height: 48px;
+      background: var(--brick);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    
+    .pdf-company {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--brick-dark);
+    }
+    
+    .pdf-report-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    
+    .pdf-section { margin-bottom: 16px; }
+    
+    .pdf-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--brick);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    
+    .pdf-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    
+    .pdf-label { color: var(--text-muted); }
+    .pdf-value { font-weight: 500; }
+    
+    .pdf-photos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .pdf-photo {
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    
+    .pdf-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+      display: flex;
+      gap: 10px;
+    }
+    
+    .pdf-footer .action-btn { flex: 1; }
+    
+    /* Form Styles */
+    .form-group { margin-bottom: 16px; }
+    
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: var(--font);
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--brick);
+      outline: none;
+    }
+    
+    .form-textarea { min-height: 80px; resize: vertical; }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--brick);
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    
+    /* Follow-ups Section */
+    .followup-card {
+      background: var(--warning-bg);
+      border: 1px solid #FFE0B2;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .followup-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--warning);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .followup-content { flex: 1; }
+    
+    .followup-address {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+    
+    .followup-detail {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .followup-action {
+      padding: 6px 12px;
+      background: var(--warning);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    
+    /* Settings */
+    .settings-section {
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    
+    .settings-title {
+      padding: 14px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: var(--mortar);
+    }
+    
+    .settings-row {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .settings-row:last-child { border-bottom: none; }
+    
+    .settings-label { font-size: 14px; color: var(--text); }
+    
+    .settings-value {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--slate);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--error); }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      background: var(--mortar);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--slate-light);
+    }
+    
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    
+    .empty-text {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
+    /* Hidden class */
+    .hidden { display: none !important; }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--brick);
+      color: white;
+      padding: 8px 16px;
+      z-index: 10000;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 0 0 4px 0;
+    }
+
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid white;
+      outline-offset: -2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- Access Gate -->
+  <div id="access-gate">
+    <div class="gate-card">
+      <div class="gate-logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 21h18"/>
+          <path d="M9 8h1"/>
+          <path d="M9 12h1"/>
+          <path d="M9 16h1"/>
+          <path d="M14 8h1"/>
+          <path d="M14 12h1"/>
+          <path d="M14 16h1"/>
+          <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+        </svg>
+      </div>
+      <h1 class="gate-title">ChimneyLog</h1>
+      <p class="gate-subtitle">Built for Century Chimney Inc.</p>
+      <p class="gate-hint">Try access key: cent2026</p>
+      <form id="access-form">
+        <label for="access-key" class="hidden">Access Key</label>
+        <input type="text" id="access-key" class="gate-input" placeholder="Enter access key" autocomplete="off" aria-label="Access key">
+        <button type="submit" class="gate-btn">Unlock Tool</button>
+      </form>
+      <p id="access-error" class="gate-error" role="alert">Invalid access key. Try again.</p>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-top">
+        <div class="header-brand">
+          <div class="header-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"/>
+              <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+            </svg>
+          </div>
+          <div>
+            <div class="header-title">ChimneyLog</div>
+            <div class="header-tagline">Century Chimney Inc.</div>
+          </div>
+        </div>
+        <div class="header-weather" id="weather-display" aria-label="Current weather">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>
+          </svg>
+          <span id="weather-temp">36°F</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demo-banner">
+      <span class="demo-text">Showing demo data from Cleveland area jobs</span>
+      <button class="demo-dismiss" id="demo-dismiss" aria-label="Dismiss demo banner and clear demo data">Clear demo</button>
+    </div>
+    
+    <!-- Main Content -->
+    <main id="main-content" class="main">
+      <!-- Jobs Tab -->
+      <div class="tab-content active" id="tab-jobs">
+        <div class="jobs-header">
+          <h2 class="jobs-title">Active Jobs</h2>
+          <span class="jobs-count" id="jobs-count">0 jobs</span>
+        </div>
+        <div id="jobs-list"></div>
+      </div>
+      
+      <!-- Dashboard Tab -->
+      <div class="tab-content" id="tab-dashboard">
+        <h2 class="jobs-title" style="margin-bottom:16px">This Week</h2>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-completed">0</div>
+            <div class="stat-label">Jobs Completed</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-photos">0</div>
+            <div class="stat-label">Photos Taken</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-pending">0</div>
+            <div class="stat-label">Pending Quotes</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-scheduled">0</div>
+            <div class="stat-label">Scheduled</div>
+          </div>
+        </div>
+        
+        <h3 class="section-label">Needs Follow-Up</h3>
+        <div id="followup-list"></div>
+      </div>
+      
+      <!-- Settings Tab -->
+      <div class="tab-content" id="tab-settings">
+        <h2 class="jobs-title" style="margin-bottom:16px">Settings</h2>
+        
+        <div class="settings-section">
+          <div class="settings-title">Company</div>
+          <div class="settings-row">
+            <span class="settings-label">Business Name</span>
+            <span class="settings-value">Century Chimney Inc.</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Phone</span>
+            <span class="settings-value">(440) 871-7707</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Since</span>
+            <span class="settings-value">1989 (36 years)</span>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <div class="settings-title">Crew</div>
+          <div class="settings-row">
+            <span class="settings-label">Gary</span>
+            <span class="settings-value">Owner</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Zach</span>
+            <span class="settings-value">Lead Tech</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">John</span>
+            <span class="settings-value">Technician</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Tyler</span>
+            <span class="settings-value">Technician</span>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <div class="settings-title">Data</div>
+          <div class="settings-row">
+            <span class="settings-label">Jobs stored</span>
+            <span class="settings-value" id="setting-job-count">0</span>
+          </div>
+          <div class="settings-row">
+            <span class="settings-label">Photos stored</span>
+            <span class="settings-value" id="setting-photo-count">0</span>
+          </div>
+        </div>
+        
+        <button class="action-btn action-secondary action-full" id="clear-data-btn" style="margin-top:16px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"/>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+          </svg>
+          Clear All Data
+        </button>
+      </div>
+    </main>
+    
+    <!-- Add Job FAB -->
+    <button class="add-job-btn" id="add-job-btn" aria-label="Add new job">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+    </button>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+      <button class="nav-item active" data-tab="jobs" aria-label="Jobs" aria-current="page">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+            <line x1="16" x2="16" y1="2" y2="6"/>
+            <line x1="8" x2="8" y1="2" y2="6"/>
+            <line x1="3" x2="21" y1="10" y2="10"/>
+          </svg>
+        </span>
+        <span>Jobs</span>
+      </button>
+      <button class="nav-item" data-tab="dashboard" aria-label="Dashboard">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/>
+            <path d="M18 17V9"/>
+            <path d="M13 17V5"/>
+            <path d="M8 17v-3"/>
+          </svg>
+        </span>
+        <span>Stats</span>
+      </button>
+      <button class="nav-item" data-tab="settings" aria-label="Settings">
+        <span class="nav-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </span>
+        <span>Settings</span>
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Job Detail Modal -->
+  <div class="modal-overlay" id="job-modal-overlay"></div>
+  <div class="modal" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
+    <div class="modal-header">
+      <button class="modal-back" id="job-modal-back" aria-label="Close job details">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/>
+          <path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <h2 class="modal-title" id="job-modal-title">Job Details</h2>
+    </div>
+    <div class="modal-body" id="job-modal-body"></div>
+  </div>
+  
+  <!-- New Job Modal -->
+  <div class="modal" id="new-job-modal" role="dialog" aria-modal="true" aria-labelledby="new-job-title">
+    <div class="modal-header">
+      <button class="modal-back" id="new-job-back" aria-label="Cancel new job">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/>
+          <path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <h2 class="modal-title" id="new-job-title">New Job</h2>
+    </div>
+    <div class="modal-body">
+      <form id="new-job-form">
+        <div class="form-group">
+          <label class="form-label" for="job-address">Address</label>
+          <input type="text" id="job-address" class="form-input" placeholder="123 Main St, Cleveland" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="job-customer">Customer Name</label>
+          <input type="text" id="job-customer" class="form-input" placeholder="John Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="job-type">Job Type</label>
+          <select id="job-type" class="form-select">
+            <option value="inspection">Inspection</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="relining">Relining</option>
+            <option value="rebuild">Chimney Rebuild</option>
+            <option value="cap">Cap Installation</option>
+            <option value="crown">Crown Repair</option>
+            <option value="tuckpointing">Tuckpointing</option>
+            <option value="flashing">Flashing Repair</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="job-crew">Assigned Crew</label>
+          <select id="job-crew" class="form-select">
+            <option value="Zach">Zach</option>
+            <option value="John">John</option>
+            <option value="Tyler">Tyler</option>
+            <option value="Zach & John">Zach & John</option>
+            <option value="Tyler & John">Tyler & John</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="job-notes">Notes</label>
+          <textarea id="job-notes" class="form-textarea" placeholder="Customer mentioned leak near flashing..."></textarea>
+        </div>
+        <button type="submit" class="action-btn action-primary action-full" style="margin-top:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+            <path d="M12 5v14"/>
+          </svg>
+          Create Job
+        </button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Camera Modal -->
+  <div class="camera-modal" id="camera-modal" role="dialog" aria-modal="true" aria-label="Camera capture">
+    <video id="camera-video" autoplay playsinline></video>
+    <div class="camera-controls">
+      <button class="camera-cancel" id="camera-cancel" aria-label="Cancel photo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </button>
+      <button class="camera-capture" id="camera-capture" aria-label="Take photo"></button>
+      <button class="camera-flip" id="camera-flip" aria-label="Switch camera">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 19H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>
+          <path d="M13 5h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-5"/>
+          <path d="m21 15-3 3-3-3"/>
+          <path d="m3 9 3-3 3 3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Annotation Modal -->
+  <div class="annotate-modal" id="annotate-modal" role="dialog" aria-modal="true" aria-label="Annotate photo">
+    <div class="annotate-header">
+      <span class="annotate-title">Mark the damage</span>
+      <div class="annotate-actions">
+        <button class="annotate-btn annotate-cancel" id="annotate-cancel">Cancel</button>
+        <button class="annotate-btn annotate-save" id="annotate-save">Save</button>
+      </div>
+    </div>
+    <div class="annotate-canvas-wrap">
+      <canvas id="annotate-canvas"></canvas>
+    </div>
+    <div class="annotate-tools">
+      <button class="tool-btn active" data-tool="draw" aria-label="Draw tool" aria-pressed="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 19 7-7 3 3-7 7-3-3z"/>
+          <path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+          <path d="m2 2 7.586 7.586"/>
+          <circle cx="11" cy="11" r="2"/>
+        </svg>
+      </button>
+      <button class="tool-btn" data-tool="circle" aria-label="Circle tool" aria-pressed="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+        </svg>
+      </button>
+      <button class="tool-btn" data-tool="arrow" aria-label="Arrow tool" aria-pressed="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14"/>
+          <path d="m12 5 7 7-7 7"/>
+        </svg>
+      </button>
+      <div style="width:1px;height:28px;background:var(--border);margin:0 4px"></div>
+      <button class="tool-color active" style="background:#C53030" data-color="#C53030" aria-label="Red color" aria-pressed="true"></button>
+      <button class="tool-color" style="background:#C05621" data-color="#C05621" aria-label="Orange color" aria-pressed="false"></button>
+      <button class="tool-color" style="background:#2F855A" data-color="#2F855A" aria-label="Green color" aria-pressed="false"></button>
+    </div>
+  </div>
+  
+  <!-- PDF Preview Modal -->
+  <div class="pdf-preview-modal" id="pdf-modal" role="dialog" aria-modal="true" aria-label="Inspection report preview">
+    <div class="pdf-header">
+      <button class="modal-back" id="pdf-back" aria-label="Close report preview">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5"/>
+          <path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="annotate-title">Inspection Report</span>
+      <div></div>
+    </div>
+    <div class="pdf-body" id="pdf-body"></div>
+    <div class="pdf-footer">
+      <button class="action-btn action-secondary" id="pdf-share" aria-label="Share report">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" x2="12" y1="2" y2="15"/>
+        </svg>
+        Share
+      </button>
+      <button class="action-btn action-primary" id="pdf-download">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" x2="12" y1="15" y2="3"/>
+        </svg>
+        Download PDF
+      </button>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">Demo:</strong> Free demo. Not affiliated with this business.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Century%20Chimney" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+
+<script>
+// IndexedDB Setup
+const DB_NAME = 'ChimneyLogDB';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => { db = request.result; resolve(db); };
+    request.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('jobs')) {
+        database.createObjectStore('jobs', { keyPath: 'id' });
+      }
+      if (!database.objectStoreNames.contains('photos')) {
+        database.createObjectStore('photos', { keyPath: 'id' });
+      }
+      if (!database.objectStoreNames.contains('settings')) {
+        database.createObjectStore('settings', { keyPath: 'key' });
+      }
+    };
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGet(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbPut(store, data) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).put(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbDelete(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbClear(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    const req = tx.objectStore(store).clear();
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Demo Data
+const DEMO_JOBS = [
+  {
+    id: 'demo-1',
+    address: '2847 Edgehill Rd, Cleveland Heights',
+    customer: 'Margaret Thompson',
+    type: 'rebuild',
+    status: 'completed',
+    crew: 'Zach & John',
+    notes: 'Full chimney rebuild. Original was from 1928, freeze-thaw damage had cracked through the crown and top 8 courses of brick. Customer wants to match original mortar color.',
+    createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now() - 2 * 24 * 60 * 60 * 1000
+  },
+  {
+    id: 'demo-2',
+    address: '1456 Lakeshore Blvd, Lakewood',
+    customer: 'Robert Chen',
+    type: 'relining',
+    status: 'in-progress',
+    crew: 'Tyler',
+    notes: 'Stainless steel liner install. Clay tile cracked in three spots. Gas fireplace conversion. Customer asked for Level 2 video first.',
+    createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now() - 1 * 24 * 60 * 60 * 1000
+  },
+  {
+    id: 'demo-3',
+    address: '8921 Shaker Blvd, Shaker Heights',
+    customer: 'Patricia Williams',
+    type: 'inspection',
+    status: 'scheduled',
+    crew: 'Tyler',
+    notes: 'Annual inspection. First-time customer, bought the house last spring. Mentioned possible water stains on ceiling near chimney.',
+    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now() - 1 * 24 * 60 * 60 * 1000
+  },
+  {
+    id: 'demo-4',
+    address: '3372 W 130th St, Parma',
+    customer: 'Michael Kowalski',
+    type: 'crown',
+    status: 'scheduled',
+    crew: 'John',
+    notes: 'Crown repair and cap install. Customer sent photos showing cracks and missing mortar. Quote sent $1,850.',
+    createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now() - 4 * 24 * 60 * 60 * 1000
+  },
+  {
+    id: 'demo-5',
+    address: '24601 Detroit Rd, Westlake',
+    customer: 'Susan Martinez',
+    type: 'tuckpointing',
+    status: 'completed',
+    crew: 'Zach',
+    notes: 'Tuckpointing on east face. About 40 sq ft of failing mortar. Matching original color was tricky but Zach got it close.',
+    createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now() - 6 * 24 * 60 * 60 * 1000
+  }
+];
+
+const DEMO_PHOTOS = [
+  { id: 'photo-1', jobId: 'demo-1', type: 'before', data: null, timestamp: Date.now() - 7 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-2', jobId: 'demo-1', type: 'during', data: null, timestamp: Date.now() - 5 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-3', jobId: 'demo-1', type: 'after', data: null, timestamp: Date.now() - 2 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-4', jobId: 'demo-2', type: 'before', data: null, timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-5', jobId: 'demo-2', type: 'during', data: null, timestamp: Date.now() - 1 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-6', jobId: 'demo-5', type: 'before', data: null, timestamp: Date.now() - 10 * 24 * 60 * 60 * 1000 },
+  { id: 'photo-7', jobId: 'demo-5', type: 'after', data: null, timestamp: Date.now() - 6 * 24 * 60 * 60 * 1000 }
+];
+
+// Generate placeholder image
+function generatePlaceholderImage(text, bgColor = '#A65D28') {
+  const canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, 400, 300);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)';
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 6; j++) {
+      if ((i + j) % 2 === 0) {
+        ctx.fillRect(i * 50, j * 50, 48, 48);
+      }
+    }
+  }
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 18px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 200, 150);
+  return canvas.toDataURL('image/jpeg', 0.8);
+}
+
+// Auth
+const ACCESS_KEY = 'cent2026';
+const KEY_HASH = -854005078;
+
+function hashString(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
+}
+
+function checkAuth() {
+  const params = new URLSearchParams(window.location.search);
+  const urlKey = params.get('key');
+  if (urlKey && hashString(urlKey.toLowerCase()) === KEY_HASH) {
+    localStorage.setItem('chimneylog_auth', 'true');
+    return true;
+  }
+  return localStorage.getItem('chimneylog_auth') === 'true';
+}
+
+// State
+let currentJobId = null;
+let currentPhotoType = 'before';
+let cameraStream = null;
+let facingMode = 'environment';
+let annotateCtx = null;
+let annotateImage = null;
+let currentTool = 'draw';
+let currentColor = '#C53030';
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+// DOM Elements
+const accessGate = document.getElementById('access-gate');
+const accessForm = document.getElementById('access-form');
+const accessInput = document.getElementById('access-key');
+const accessError = document.getElementById('access-error');
+const app = document.getElementById('app');
+const demoBanner = document.getElementById('demo-banner');
+const demoDismiss = document.getElementById('demo-dismiss');
+const jobsList = document.getElementById('jobs-list');
+const jobsCount = document.getElementById('jobs-count');
+const addJobBtn = document.getElementById('add-job-btn');
+const jobModal = document.getElementById('job-modal');
+const jobModalOverlay = document.getElementById('job-modal-overlay');
+const jobModalBack = document.getElementById('job-modal-back');
+const jobModalBody = document.getElementById('job-modal-body');
+const newJobModal = document.getElementById('new-job-modal');
+const newJobBack = document.getElementById('new-job-back');
+const newJobForm = document.getElementById('new-job-form');
+const cameraModal = document.getElementById('camera-modal');
+const cameraVideo = document.getElementById('camera-video');
+const cameraCapture = document.getElementById('camera-capture');
+const cameraCancel = document.getElementById('camera-cancel');
+const cameraFlip = document.getElementById('camera-flip');
+const annotateModal = document.getElementById('annotate-modal');
+const annotateCanvas = document.getElementById('annotate-canvas');
+const annotateCancel = document.getElementById('annotate-cancel');
+const annotateSave = document.getElementById('annotate-save');
+const pdfModal = document.getElementById('pdf-modal');
+const pdfBack = document.getElementById('pdf-back');
+const pdfBody = document.getElementById('pdf-body');
+const pdfShare = document.getElementById('pdf-share');
+const pdfDownload = document.getElementById('pdf-download');
+const toast = document.getElementById('toast');
+const navItems = document.querySelectorAll('.nav-item');
+const tabContents = document.querySelectorAll('.tab-content');
+
+// Toast
+function showToast(message, type = '') {
+  toast.textContent = message;
+  toast.className = 'toast show ' + type;
+  setTimeout(() => { toast.className = 'toast'; }, 2500);
+}
+
+// Initialize
+async function init() {
+  await openDB();
+  
+  if (checkAuth()) {
+    accessGate.style.display = 'none';
+    app.classList.add('visible');
+    await checkDemoData();
+    await renderJobs();
+    await updateStats();
+  }
+  
+  setupEventListeners();
+}
+
+async function checkDemoData() {
+  const setting = await dbGet('settings', 'demoLoaded');
+  const dismissed = await dbGet('settings', 'demoDismissed');
+  
+  if (!setting) {
+    // First visit - load demo data
+    for (const job of DEMO_JOBS) {
+      await dbPut('jobs', job);
+    }
+    for (const photo of DEMO_PHOTOS) {
+      const colors = ['#8B4513', '#5C2E0C', '#A65D28', '#4A5568'];
+      const labels = { before: 'Before', during: 'In Progress', after: 'After' };
+      photo.data = generatePlaceholderImage(labels[photo.type] || 'Photo', colors[Math.floor(Math.random() * colors.length)]);
+      await dbPut('photos', photo);
+    }
+    await dbPut('settings', { key: 'demoLoaded', value: true });
+  }
+  
+  if (dismissed) {
+    demoBanner.classList.add('hidden');
+  }
+}
+
+// Event Listeners
+function setupEventListeners() {
+  // Auth form
+  accessForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = accessInput.value.trim().toLowerCase();
+    if (hashString(key) === KEY_HASH) {
+      localStorage.setItem('chimneylog_auth', 'true');
+      accessGate.style.display = 'none';
+      app.classList.add('visible');
+      await checkDemoData();
+      await renderJobs();
+      await updateStats();
+    } else {
+      accessInput.classList.add('error');
+      accessError.classList.add('show');
+      setTimeout(() => {
+        accessInput.classList.remove('error');
+        accessError.classList.remove('show');
+      }, 2000);
+    }
+  });
+  
+  // Demo dismiss
+  demoDismiss.addEventListener('click', async () => {
+    await dbClear('jobs');
+    await dbClear('photos');
+    await dbPut('settings', { key: 'demoDismissed', value: true });
+    demoBanner.classList.add('hidden');
+    await renderJobs();
+    await updateStats();
+    showToast('Demo data cleared');
+  });
+  
+  // Navigation
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const tab = item.dataset.tab;
+      navItems.forEach(n => { n.classList.remove('active'); n.removeAttribute('aria-current'); });
+      tabContents.forEach(t => t.classList.remove('active'));
+      item.classList.add('active');
+      item.setAttribute('aria-current', 'page');
+      document.getElementById('tab-' + tab).classList.add('active');
+      if (tab === 'dashboard') updateStats();
+      if (tab === 'settings') updateSettingsCounts();
+    });
+  });
+  
+  // Add job button
+  addJobBtn.addEventListener('click', () => {
+    newJobModal.classList.add('active');
+  });
+  
+  // New job form
+  newJobBack.addEventListener('click', () => {
+    newJobModal.classList.remove('active');
+    newJobForm.reset();
+  });
+  
+  newJobForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const job = {
+      id: 'job-' + Date.now(),
+      address: document.getElementById('job-address').value,
+      customer: document.getElementById('job-customer').value || 'Unknown',
+      type: document.getElementById('job-type').value,
+      status: 'scheduled',
+      crew: document.getElementById('job-crew').value,
+      notes: document.getElementById('job-notes').value,
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    };
+    await dbPut('jobs', job);
+    newJobModal.classList.remove('active');
+    newJobForm.reset();
+    await renderJobs();
+    showToast('Job created', 'success');
+  });
+  
+  // Job modal close
+  jobModalBack.addEventListener('click', closeJobModal);
+  jobModalOverlay.addEventListener('click', closeJobModal);
+  
+  // Camera
+  cameraCancel.addEventListener('click', closeCamera);
+  cameraCapture.addEventListener('click', capturePhoto);
+  cameraFlip.addEventListener('click', flipCamera);
+  
+  // Annotation
+  annotateCancel.addEventListener('click', () => {
+    annotateModal.classList.remove('active');
+  });
+  
+  annotateSave.addEventListener('click', saveAnnotation);
+  
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      currentTool = btn.dataset.tool;
+    });
+  });
+  
+  document.querySelectorAll('.tool-color').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tool-color').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-pressed', 'false'); });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+      currentColor = btn.dataset.color;
+    });
+  });
+  
+  // Canvas drawing
+  annotateCanvas.addEventListener('mousedown', startDraw);
+  annotateCanvas.addEventListener('mousemove', draw);
+  annotateCanvas.addEventListener('mouseup', endDraw);
+  annotateCanvas.addEventListener('mouseleave', endDraw);
+  annotateCanvas.addEventListener('touchstart', handleTouch);
+  annotateCanvas.addEventListener('touchmove', handleTouch);
+  annotateCanvas.addEventListener('touchend', endDraw);
+  
+  // PDF
+  pdfBack.addEventListener('click', () => { pdfModal.classList.remove('active'); });
+  pdfShare.addEventListener('click', sharePDF);
+  pdfDownload.addEventListener('click', downloadPDF);
+  
+  // Clear data
+  document.getElementById('clear-data-btn').addEventListener('click', async () => {
+    if (confirm('Clear all jobs and photos? This cannot be undone.')) {
+      await dbClear('jobs');
+      await dbClear('photos');
+      await renderJobs();
+      await updateStats();
+      await updateSettingsCounts();
+      showToast('All data cleared');
+    }
+  });
+}
+
+// Render jobs
+async function renderJobs() {
+  const jobs = await dbGetAll('jobs');
+  jobs.sort((a, b) => b.updatedAt - a.updatedAt);
+  
+  jobsCount.textContent = jobs.length + ' job' + (jobs.length !== 1 ? 's' : '');
+  
+  if (jobs.length === 0) {
+    jobsList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+            <line x1="16" x2="16" y1="2" y2="6"/>
+            <line x1="8" x2="8" y1="2" y2="6"/>
+            <line x1="3" x2="21" y1="10" y2="10"/>
+          </svg>
+        </div>
+        <h3 class="empty-title">No jobs yet</h3>
+        <p class="empty-text">Tap the + button to add your first job</p>
+      </div>
+    `;
+    return;
+  }
+  
+  let html = '';
+  for (const job of jobs) {
+    const photos = await dbGetAll('photos');
+    const jobPhotos = photos.filter(p => p.jobId === job.id).slice(0, 3);
+    
+    const statusClass = job.status === 'completed' ? 'status-completed' : 
+                        job.status === 'in-progress' ? 'status-progress' : 'status-scheduled';
+    const statusLabel = job.status === 'in-progress' ? 'In Progress' : 
+                        job.status.charAt(0).toUpperCase() + job.status.slice(1);
+    
+    const typeLabels = {
+      inspection: 'Inspection',
+      cleaning: 'Cleaning',
+      relining: 'Relining',
+      rebuild: 'Rebuild',
+      cap: 'Cap Install',
+      crown: 'Crown Repair',
+      tuckpointing: 'Tuckpointing',
+      flashing: 'Flashing'
+    };
+    
+    html += `
+      <article class="job-card" data-job-id="${job.id}" tabindex="0" role="button" aria-label="${job.address}, ${statusLabel}">
+        <div class="job-photos">
+          ${jobPhotos.length > 0 ? jobPhotos.map(p => `<img src="${p.data}" class="job-photo" alt="Job photo">`).join('') : 
+            '<div class="job-photo-placeholder">No photos</div>'}
+        </div>
+        <div class="job-info">
+          <div class="job-address">${job.address}</div>
+          <div class="job-meta">
+            <span class="job-status ${statusClass}">${statusLabel}</span>
+            <span>${typeLabels[job.type] || job.type}</span>
+            <span>${job.crew}</span>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+  
+  jobsList.innerHTML = html;
+  
+  // Add click handlers
+  document.querySelectorAll('.job-card').forEach(card => {
+    card.addEventListener('click', () => openJobModal(card.dataset.jobId));
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openJobModal(card.dataset.jobId);
+      }
+    });
+  });
+}
+
+// Open job modal
+async function openJobModal(jobId) {
+  currentJobId = jobId;
+  const job = await dbGet('jobs', jobId);
+  if (!job) return;
+  
+  const photos = await dbGetAll('photos');
+  const jobPhotos = photos.filter(p => p.jobId === jobId);
+  const beforePhotos = jobPhotos.filter(p => p.type === 'before');
+  const duringPhotos = jobPhotos.filter(p => p.type === 'during');
+  const afterPhotos = jobPhotos.filter(p => p.type === 'after');
+  
+  const typeLabels = {
+    inspection: 'Inspection',
+    cleaning: 'Cleaning',
+    relining: 'Relining',
+    rebuild: 'Chimney Rebuild',
+    cap: 'Cap Installation',
+    crown: 'Crown Repair',
+    tuckpointing: 'Tuckpointing',
+    flashing: 'Flashing Repair'
+  };
+  
+  const statusOptions = ['scheduled', 'in-progress', 'completed'];
+  
+  document.getElementById('job-modal-title').textContent = job.address.split(',')[0];
+  
+  jobModalBody.innerHTML = `
+    <div class="photo-section">
+      <div class="section-label">Before</div>
+      <div class="photo-grid">
+        ${beforePhotos.map(p => `<div class="photo-item" data-photo-id="${p.id}"><img src="${p.data}" alt="Before photo"><span class="photo-badge">Before</span></div>`).join('')}
+        <button class="photo-item photo-add" data-type="before" aria-label="Take before photo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          Add
+        </button>
+      </div>
+    </div>
+    
+    <div class="photo-section">
+      <div class="section-label">During</div>
+      <div class="photo-grid">
+        ${duringPhotos.map(p => `<div class="photo-item" data-photo-id="${p.id}"><img src="${p.data}" alt="During photo"><span class="photo-badge">During</span></div>`).join('')}
+        <button class="photo-item photo-add" data-type="during" aria-label="Take during photo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          Add
+        </button>
+      </div>
+    </div>
+    
+    <div class="photo-section">
+      <div class="section-label">After</div>
+      <div class="photo-grid">
+        ${afterPhotos.map(p => `<div class="photo-item" data-photo-id="${p.id}"><img src="${p.data}" alt="After photo"><span class="photo-badge">After</span></div>`).join('')}
+        <button class="photo-item photo-add" data-type="after" aria-label="Take after photo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+            <circle cx="12" cy="13" r="3"/>
+          </svg>
+          Add
+        </button>
+      </div>
+    </div>
+    
+    <div class="detail-card">
+      <div class="detail-row">
+        <span class="detail-label">Customer</span>
+        <span class="detail-value">${job.customer}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Job Type</span>
+        <span class="detail-value">${typeLabels[job.type] || job.type}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Crew</span>
+        <span class="detail-value">${job.crew}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Status</span>
+        <span class="detail-value">
+          <select id="status-select" class="form-select" style="padding:6px 10px;font-size:13px;width:auto" aria-label="Job status">
+            ${statusOptions.map(s => `<option value="${s}" ${job.status === s ? 'selected' : ''}>${s === 'in-progress' ? 'In Progress' : s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}
+          </select>
+        </span>
+      </div>
+    </div>
+    
+    ${job.notes ? `<div class="detail-card"><div class="section-label" style="margin-bottom:8px">Notes</div><p style="font-size:14px;color:var(--text)">${job.notes}</p></div>` : ''}
+    
+    <div class="action-btns">
+      <button class="action-btn action-primary" id="generate-report-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Make Report
+      </button>
+      <button class="action-btn action-upsell" disabled aria-disabled="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        Email to Customer
+        <span class="upsell-badge">Full Version</span>
+      </button>
+      <button class="action-btn action-secondary action-full" id="delete-job-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+        </svg>
+        Delete Job
+      </button>
+    </div>
+  `;
+  
+  // Status change
+  document.getElementById('status-select').addEventListener('change', async (e) => {
+    job.status = e.target.value;
+    job.updatedAt = Date.now();
+    await dbPut('jobs', job);
+    await renderJobs();
+    showToast('Status updated');
+  });
+  
+  // Photo add buttons
+  document.querySelectorAll('.photo-add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPhotoType = btn.dataset.type;
+      openCamera();
+    });
+  });
+  
+  // Generate report
+  document.getElementById('generate-report-btn').addEventListener('click', () => generateReport(job, jobPhotos));
+  
+  // Delete job
+  document.getElementById('delete-job-btn').addEventListener('click', async () => {
+    if (confirm('Delete this job and all its photos?')) {
+      await dbDelete('jobs', jobId);
+      for (const p of jobPhotos) {
+        await dbDelete('photos', p.id);
+      }
+      closeJobModal();
+      await renderJobs();
+      showToast('Job deleted');
+    }
+  });
+  
+  jobModal.classList.add('active');
+  jobModalOverlay.classList.add('active');
+}
+
+function closeJobModal() {
+  jobModal.classList.remove('active');
+  jobModalOverlay.classList.remove('active');
+  currentJobId = null;
+}
+
+// Camera
+async function openCamera() {
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    cameraVideo.srcObject = cameraStream;
+    cameraModal.classList.add('active');
+  } catch (err) {
+    // Fallback to file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          openAnnotation(ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+    input.click();
+  }
+}
+
+function closeCamera() {
+  if (cameraStream) {
+    cameraStream.getTracks().forEach(t => t.stop());
+    cameraStream = null;
+  }
+  cameraModal.classList.remove('active');
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  closeCamera();
+  await openCamera();
+}
+
+function capturePhoto() {
+  const canvas = document.createElement('canvas');
+  canvas.width = cameraVideo.videoWidth;
+  canvas.height = cameraVideo.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(cameraVideo, 0, 0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+  closeCamera();
+  openAnnotation(dataUrl);
+}
+
+// Annotation
+function openAnnotation(imageData) {
+  annotateImage = new Image();
+  annotateImage.onload = () => {
+    const maxW = window.innerWidth - 32;
+    const maxH = window.innerHeight - 200;
+    let w = annotateImage.width;
+    let h = annotateImage.height;
+    const ratio = Math.min(maxW / w, maxH / h, 1);
+    w *= ratio;
+    h *= ratio;
+    
+    annotateCanvas.width = w;
+    annotateCanvas.height = h;
+    annotateCtx = annotateCanvas.getContext('2d');
+    annotateCtx.drawImage(annotateImage, 0, 0, w, h);
+    annotateModal.classList.add('active');
+  };
+  annotateImage.src = imageData;
+}
+
+function getCanvasCoords(e) {
+  const rect = annotateCanvas.getBoundingClientRect();
+  const x = (e.clientX || e.touches[0].clientX) - rect.left;
+  const y = (e.clientY || e.touches[0].clientY) - rect.top;
+  return { x, y };
+}
+
+function startDraw(e) {
+  e.preventDefault();
+  isDrawing = true;
+  const coords = getCanvasCoords(e);
+  lastX = coords.x;
+  lastY = coords.y;
+  
+  if (currentTool === 'circle') {
+    // Circle drawn on mouseup
+  }
+}
+
+function draw(e) {
+  if (!isDrawing) return;
+  e.preventDefault();
+  const coords = getCanvasCoords(e);
+  
+  if (currentTool === 'draw') {
+    annotateCtx.strokeStyle = currentColor;
+    annotateCtx.lineWidth = 4;
+    annotateCtx.lineCap = 'round';
+    annotateCtx.beginPath();
+    annotateCtx.moveTo(lastX, lastY);
+    annotateCtx.lineTo(coords.x, coords.y);
+    annotateCtx.stroke();
+  }
+  
+  lastX = coords.x;
+  lastY = coords.y;
+}
+
+function endDraw(e) {
+  if (!isDrawing) return;
+  isDrawing = false;
+  
+  const coords = e.changedTouches ? getCanvasCoords(e.changedTouches[0]) : getCanvasCoords(e);
+  
+  if (currentTool === 'circle') {
+    const radius = Math.sqrt(Math.pow(coords.x - lastX, 2) + Math.pow(coords.y - lastY, 2));
+    annotateCtx.strokeStyle = currentColor;
+    annotateCtx.lineWidth = 3;
+    annotateCtx.beginPath();
+    annotateCtx.arc(lastX, lastY, Math.max(radius, 20), 0, 2 * Math.PI);
+    annotateCtx.stroke();
+  } else if (currentTool === 'arrow') {
+    const dx = coords.x - lastX;
+    const dy = coords.y - lastY;
+    const angle = Math.atan2(dy, dx);
+    const headLen = 15;
+    
+    annotateCtx.strokeStyle = currentColor;
+    annotateCtx.lineWidth = 3;
+    annotateCtx.beginPath();
+    annotateCtx.moveTo(lastX, lastY);
+    annotateCtx.lineTo(coords.x, coords.y);
+    annotateCtx.lineTo(coords.x - headLen * Math.cos(angle - Math.PI / 6), coords.y - headLen * Math.sin(angle - Math.PI / 6));
+    annotateCtx.moveTo(coords.x, coords.y);
+    annotateCtx.lineTo(coords.x - headLen * Math.cos(angle + Math.PI / 6), coords.y - headLen * Math.sin(angle + Math.PI / 6));
+    annotateCtx.stroke();
+  }
+}
+
+function handleTouch(e) {
+  e.preventDefault();
+  if (e.type === 'touchstart') startDraw(e);
+  else if (e.type === 'touchmove') draw(e);
+}
+
+async function saveAnnotation() {
+  const dataUrl = annotateCanvas.toDataURL('image/jpeg', 0.85);
+  const photo = {
+    id: 'photo-' + Date.now(),
+    jobId: currentJobId,
+    type: currentPhotoType,
+    data: dataUrl,
+    timestamp: Date.now()
+  };
+  await dbPut('photos', photo);
+  annotateModal.classList.remove('active');
+  await openJobModal(currentJobId);
+  showToast('Photo saved', 'success');
+}
+
+// Report Generation
+let currentReportJob = null;
+let currentReportPhotos = null;
+
+async function generateReport(job, photos) {
+  currentReportJob = job;
+  currentReportPhotos = photos;
+  
+  const typeLabels = {
+    inspection: 'Inspection',
+    cleaning: 'Cleaning',
+    relining: 'Relining',
+    rebuild: 'Chimney Rebuild',
+    cap: 'Cap Installation',
+    crown: 'Crown Repair',
+    tuckpointing: 'Tuckpointing',
+    flashing: 'Flashing Repair'
+  };
+  
+  const beforePhotos = photos.filter(p => p.type === 'before').slice(0, 2);
+  const afterPhotos = photos.filter(p => p.type === 'after').slice(0, 2);
+  const allPhotos = [...beforePhotos, ...afterPhotos];
+  
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  
+  pdfBody.innerHTML = `
+    <div class="pdf-preview-card">
+      <div class="pdf-logo-row">
+        <div class="pdf-logo">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>
+          </svg>
+        </div>
+        <div>
+          <div class="pdf-company">Century Chimney Inc.</div>
+          <div style="font-size:12px;color:var(--text-muted)">(440) 871-7707 | Since 1989</div>
+        </div>
+      </div>
+      
+      <div class="pdf-report-title">${typeLabels[job.type] || job.type} Report</div>
+      
+      <div class="pdf-section">
+        <div class="pdf-section-title">Property Information</div>
+        <div class="pdf-row">
+          <span class="pdf-label">Address</span>
+          <span class="pdf-value">${job.address}</span>
+        </div>
+        <div class="pdf-row">
+          <span class="pdf-label">Customer</span>
+          <span class="pdf-value">${job.customer}</span>
+        </div>
+        <div class="pdf-row">
+          <span class="pdf-label">Date</span>
+          <span class="pdf-value">${date}</span>
+        </div>
+        <div class="pdf-row">
+          <span class="pdf-label">Technician</span>
+          <span class="pdf-value">${job.crew}</span>
+        </div>
+      </div>
+      
+      ${allPhotos.length > 0 ? `
+        <div class="pdf-section">
+          <div class="pdf-section-title">Job Photos</div>
+          <div class="pdf-photos-grid">
+            ${allPhotos.map(p => `<img src="${p.data}" class="pdf-photo" alt="${p.type} photo">`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${job.notes ? `
+        <div class="pdf-section">
+          <div class="pdf-section-title">What We Found</div>
+          <p style="font-size:13px;color:var(--text)">${job.notes}</p>
+        </div>
+      ` : ''}
+      
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted);text-align:center">
+        Century Chimney Inc. | 4770 Briar Rd, Cleveland, OH 44135 | centurychimney.com
+      </div>
+    </div>
+  `;
+  
+  pdfModal.classList.add('active');
+}
+
+async function downloadPDF() {
+  if (!currentReportJob) return;
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const job = currentReportJob;
+  const photos = currentReportPhotos;
+  
+  const typeLabels = {
+    inspection: 'Inspection',
+    cleaning: 'Cleaning',
+    relining: 'Relining',
+    rebuild: 'Chimney Rebuild',
+    cap: 'Cap Installation',
+    crown: 'Crown Repair',
+    tuckpointing: 'Tuckpointing',
+    flashing: 'Flashing Repair'
+  };
+  
+  // Header
+  doc.setFillColor(139, 69, 19);
+  doc.rect(0, 0, 210, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Century Chimney Inc.', 15, 15);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text('(440) 871-7707 | Serving Cleveland Since 1989', 15, 23);
+  
+  // Report title
+  doc.setTextColor(92, 46, 12);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text((typeLabels[job.type] || job.type) + ' Report', 15, 45);
+  
+  // Property info
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  let y = 55;
+  doc.text('Address:', 15, y);
+  doc.setTextColor(0, 0, 0);
+  doc.text(job.address, 50, y);
+  y += 7;
+  doc.setTextColor(100, 100, 100);
+  doc.text('Customer:', 15, y);
+  doc.setTextColor(0, 0, 0);
+  doc.text(job.customer, 50, y);
+  y += 7;
+  doc.setTextColor(100, 100, 100);
+  doc.text('Date:', 15, y);
+  doc.setTextColor(0, 0, 0);
+  doc.text(new Date().toLocaleDateString(), 50, y);
+  y += 7;
+  doc.setTextColor(100, 100, 100);
+  doc.text('Technician:', 15, y);
+  doc.setTextColor(0, 0, 0);
+  doc.text(job.crew, 50, y);
+  
+  // Photos
+  const beforePhotos = photos.filter(p => p.type === 'before').slice(0, 2);
+  const afterPhotos = photos.filter(p => p.type === 'after').slice(0, 2);
+  
+  y += 15;
+  if (beforePhotos.length > 0 || afterPhotos.length > 0) {
+    doc.setTextColor(139, 69, 19);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Job Photos', 15, y);
+    y += 8;
+    
+    let x = 15;
+    for (const photo of [...beforePhotos, ...afterPhotos]) {
+      try {
+        doc.addImage(photo.data, 'JPEG', x, y, 45, 35);
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        doc.text(photo.type.charAt(0).toUpperCase() + photo.type.slice(1), x, y + 39);
+        x += 50;
+        if (x > 150) { x = 15; y += 45; }
+      } catch (e) { /* skip bad images */ }
+    }
+    y += 50;
+  }
+  
+  // Notes
+  if (job.notes) {
+    doc.setTextColor(139, 69, 19);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('What We Found', 15, y);
+    y += 7;
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(job.notes, 180);
+    doc.text(lines, 15, y);
+  }
+  
+  // Footer
+  doc.setFontSize(8);
+  doc.setTextColor(150, 150, 150);
+  doc.text('Century Chimney Inc. | 4770 Briar Rd, Cleveland, OH 44135 | centurychimney.com', 105, 285, { align: 'center' });
+  
+  doc.save('CenturyChimney-Report-' + Date.now() + '.pdf');
+  showToast('PDF downloaded', 'success');
+}
+
+async function sharePDF() {
+  if (!navigator.share) {
+    showToast('Sharing not available on this device', 'error');
+    return;
+  }
+  
+  try {
+    await navigator.share({
+      title: 'Chimney Inspection Report',
+      text: 'Inspection report from Century Chimney Inc.',
+      url: window.location.href
+    });
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      showToast('Could not share', 'error');
+    }
+  }
+}
+
+// Stats
+async function updateStats() {
+  const jobs = await dbGetAll('jobs');
+  const photos = await dbGetAll('photos');
+  
+  const completed = jobs.filter(j => j.status === 'completed').length;
+  const pending = jobs.filter(j => j.status === 'scheduled').length;
+  const inProgress = jobs.filter(j => j.status === 'in-progress').length;
+  
+  document.getElementById('stat-completed').textContent = completed;
+  document.getElementById('stat-photos').textContent = photos.length;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-scheduled').textContent = inProgress;
+  
+  // Follow-ups (scheduled jobs older than 3 days)
+  const followups = jobs.filter(j => j.status === 'scheduled' && (Date.now() - j.createdAt) > 3 * 24 * 60 * 60 * 1000);
+  const followupList = document.getElementById('followup-list');
+  
+  if (followups.length === 0) {
+    followupList.innerHTML = '<p style="font-size:14px;color:var(--text-muted);text-align:center;padding:20px">All caught up. No overdue follow-ups.</p>';
+  } else {
+    followupList.innerHTML = followups.map(job => {
+      const days = Math.floor((Date.now() - job.createdAt) / (24 * 60 * 60 * 1000));
+      return `
+        <div class="followup-card">
+          <div class="followup-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div class="followup-content">
+            <div class="followup-address">${job.address.split(',')[0]}</div>
+            <div class="followup-detail">Quote sent ${days} days ago</div>
+          </div>
+          <button class="followup-action" data-job-id="${job.id}" aria-label="View job ${job.address}">View</button>
+        </div>
+      `;
+    }).join('');
+    
+    followupList.querySelectorAll('.followup-action').forEach(btn => {
+      btn.addEventListener('click', () => openJobModal(btn.dataset.jobId));
+    });
+  }
+}
+
+async function updateSettingsCounts() {
+  const jobs = await dbGetAll('jobs');
+  const photos = await dbGetAll('photos');
+  document.getElementById('setting-job-count').textContent = jobs.length;
+  document.getElementById('setting-photo-count').textContent = photos.length;
+}
+
+// Initialize app
+init();
+</script>
+</body>
+</html>

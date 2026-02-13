@@ -10,202 +10,451 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
---bg:#f3f4f6;--card:#ffffff;--text:#18181b;--text-muted:#6b7280;
---teal:#0d9488;--teal-soft:rgba(13,148,136,.08);--red:#dc2626;--red-soft:rgba(220,38,38,.08);
---amber:#d97706;--amber-soft:rgba(217,119,6,.1);--slate:#334155;--slate-soft:rgba(51,65,85,.06);
---border:#e2e5ea;--radius:10px;
+--bg:#f8fafc;--card:#ffffff;--text:#0f172a;--text-muted:#64748b;
+--teal:#0d9488;--teal-soft:rgba(13,148,136,.08);--teal-dark:#0f766d;
+--red:#dc2626;--red-soft:rgba(220,38,38,.08);--red-dark:#b91c1c;
+--amber:#d97706;--amber-soft:rgba(217,119,6,.1);--amber-dark:#b45309;
+--slate:#334155;--slate-soft:rgba(51,65,85,.06);
+--border:#e2e8f0;--radius:12px;
 --shadow:0 1px 3px rgba(0,0,0,.05),0 2px 8px rgba(0,0,0,.03);
---shadow-lg:0 4px 16px rgba(0,0,0,.08);
+--shadow-lg:0 4px 20px rgba(0,0,0,.08);
+--shadow-xl:0 8px 30px rgba(0,0,0,.12);
 --font-head:'Space Grotesk',system-ui,sans-serif;--font-body:'Inter',system-ui,sans-serif;
+--focus-ring:0 0 0 3px rgba(13,148,136,.25);
 }
 html{font-size:16px}body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;padding-bottom:140px!important;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:var(--font-head);font-weight:700;line-height:1.2}
-*:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+*:focus-visible{outline:2px solid var(--teal);outline-offset:2px;box-shadow:var(--focus-ring)}
 button,input,select,textarea{font-family:var(--font-body);font-size:1rem;border:none;outline:none;background:none}
+button{cursor:pointer;touch-action:manipulation}
 
-.app-header{background:linear-gradient(135deg,var(--slate) 0%,#1e293b 100%);color:#fff;padding:14px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
-.app-header h1{color:#fff;font-size:1.3rem}
-.app-header .subtitle{color:var(--teal);font-size:.72rem;font-weight:600;letter-spacing:.06em;margin-top:1px}
+/* Loading Overlay */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.95);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.loading-overlay .spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.demo-banner{background:var(--teal-soft);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.demo-banner p{font-size:.8rem;color:var(--text-muted)}
-.demo-banner button{background:var(--teal);color:#fff;font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:6px;cursor:pointer;transition:transform .15s}
+/* Skip Link */
+.skip-link{position:absolute;top:-50px;left:0;background:var(--teal);color:#fff;padding:12px 20px;z-index:9999;font-weight:600;border-radius:0 0 8px 0;transition:top .2s}
+.skip-link:focus{top:0}
+
+/* Header */
+.app-header{background:linear-gradient(135deg,var(--slate) 0%,#1e293b 100%);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.app-header h1{color:#fff;font-size:1.4rem;letter-spacing:-0.02em}
+.app-header .subtitle{color:var(--teal);font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+
+/* Demo Banner */
+.demo-banner{background:linear-gradient(90deg,var(--teal-soft),rgba(13,148,136,.04));border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.demo-banner p{font-size:.85rem;color:var(--text-muted);line-height:1.4}
+.demo-banner button{background:var(--teal);color:#fff;font-size:.75rem;font-weight:600;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.demo-banner button:hover{background:var(--teal-dark);transform:translateY(-1px)}
 .demo-banner button:active{transform:scale(.96)}
 
+/* Views */
 .view{display:none;padding:16px;animation:fadeUp .3s ease-out}.view.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.skip-link{position:absolute;top:-40px;left:0;background:var(--teal);color:#fff;padding:8px 16px;z-index:9999;font-weight:600}.skip-link:focus{top:0}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-.insp-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
-.insp-card:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
-.insp-card:active{transform:scale(.985)}
-.insp-card-inner{padding:14px 16px;display:flex;gap:14px}
-.insp-bar{width:4px;border-radius:2px;flex-shrink:0}
+/* Page Header */
+.page-header{margin-bottom:20px}
+.page-header h2{font-size:1.5rem;color:var(--text);margin-bottom:4px}
+.page-header p{color:var(--text-muted);font-size:.9rem}
+
+/* Empty States */
+.empty-state{text-align:center;padding:56px 24px;color:var(--text-muted)}
+.empty-state-icon{width:64px;height:64px;margin:0 auto 16px;background:var(--slate-soft);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.empty-state-icon svg{width:32px;height:32px;color:var(--text-muted);opacity:.6}
+.empty-state h3{font-size:1.1rem;color:var(--text);margin-bottom:8px;font-weight:600}
+.empty-state p{font-size:.9rem;line-height:1.5;max-width:280px;margin:0 auto 20px}
+.empty-state .btn--primary{display:inline-flex;margin-top:4px}
+
+/* Inspection Cards */
+.insp-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;cursor:pointer;transition:all .2s;border:1px solid transparent}
+.insp-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:var(--border)}
+.insp-card:active{transform:scale(.992)}
+.insp-card:focus-visible{border-color:var(--teal)}
+.insp-card-inner{padding:16px;display:flex;gap:14px}
+.insp-bar{width:4px;border-radius:2px;flex-shrink:0;min-height:48px}
 .insp-bar.teal{background:var(--teal)}.insp-bar.red{background:var(--red)}.insp-bar.amber{background:var(--amber)}.insp-bar.slate{background:var(--slate)}
-.insp-info{flex:1}
-.insp-info .ic-address{font-family:var(--font-head);font-weight:600;font-size:.95rem;margin-bottom:2px}
-.insp-info .ic-meta{font-size:.82rem;color:var(--text-muted);margin-bottom:4px}
-.insp-info .ic-rooms{font-size:.78rem;color:var(--text-muted)}
-.badge{font-size:.68rem;font-weight:600;padding:3px 8px;border-radius:20px;letter-spacing:.03em;white-space:nowrap}
-.badge--pending{background:var(--amber-soft);color:var(--amber)}
-.badge--positive{background:var(--red-soft);color:var(--red)}
-.badge--negative{background:var(--teal-soft);color:var(--teal)}
+.insp-info{flex:1;min-width:0}
+.insp-info .ic-address{font-family:var(--font-head);font-weight:600;font-size:1rem;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.insp-info .ic-meta{font-size:.85rem;color:var(--text-muted);margin-bottom:6px}
+.insp-info .ic-rooms{font-size:.8rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.badge{font-size:.7rem;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.02em;white-space:nowrap}
+.badge--pending{background:var(--amber-soft);color:var(--amber-dark)}
+.badge--positive{background:var(--red-soft);color:var(--red-dark)}
+.badge--negative{background:var(--teal-soft);color:var(--teal-dark)}
 .badge--remediated{background:var(--slate-soft);color:var(--slate)}
 
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:.8rem;font-weight:600;color:var(--text-muted);margin-bottom:5px}
-.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.95rem;transition:border-color .2s,box-shadow .2s}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--teal);box-shadow:0 0 0 3px var(--teal-soft)}
-.form-group textarea{resize:vertical;min-height:60px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* Forms */
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:6px}
+.form-group label .optional{color:var(--text-muted);font-weight:400;font-size:.8rem;margin-left:4px}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;font-size:.95rem;transition:border-color .2s,box-shadow .2s;color:var(--text)}
+.form-group input:hover,.form-group textarea:hover,.form-group select:hover{border-color:#cbd5e1}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--teal);box-shadow:var(--focus-ring)}
+.form-group input:invalid:not(:placeholder-shown),.form-group textarea:invalid:not(:placeholder-shown){border-color:var(--red)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-error{color:var(--red);font-size:.8rem;margin-top:6px;display:none;align-items:center;gap:4px}
+.form-error.visible{display:flex}
+.form-error svg{width:14px;height:14px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;transition:transform .15s}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:10px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .15s;border:1.5px solid transparent;min-height:44px}
+.btn:hover{transform:translateY(-1px)}
 .btn:active{transform:scale(.97)}
 .btn--primary{background:var(--teal);color:#fff;box-shadow:0 2px 8px rgba(13,148,136,.25)}
-.btn--secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.btn--primary:hover{background:var(--teal-dark);box-shadow:0 4px 12px rgba(13,148,136,.35)}
+.btn--secondary{background:var(--card);color:var(--text);border-color:var(--border)}
+.btn--secondary:hover{border-color:var(--teal);color:var(--teal)}
 .btn--danger{background:var(--red);color:#fff}
+.btn--danger:hover{background:var(--red-dark)}
+.btn--ghost{background:transparent;color:var(--text-muted)}
+.btn--ghost:hover{color:var(--text);background:var(--slate-soft)}
 .btn--full{width:100%}
-.btn--disabled{opacity:.45;cursor:not-allowed;position:relative}
-.btn--disabled::after{content:'Full version';position:absolute;top:-8px;right:-8px;background:var(--text);color:#fff;font-size:.55rem;padding:2px 6px;border-radius:4px}
+.btn--disabled{opacity:.5;cursor:not-allowed;position:relative}
+.btn--disabled:hover{transform:none}
+.btn--disabled::after{content:'Pro Feature';position:absolute;top:-6px;right:-6px;background:var(--text);color:#fff;font-size:.6rem;padding:3px 8px;border-radius:4px;font-weight:600}
+.btn svg{flex-shrink:0}
 
-.room-card{background:var(--bg);border-radius:8px;padding:14px;margin-bottom:8px;border:1px solid var(--border);position:relative;animation:fadeUp .2s ease-out}
-.room-card .rc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.room-card .rc-name{font-family:var(--font-head);font-weight:600;font-size:.95rem}
+/* Room Cards */
+.room-card{background:var(--bg);border-radius:12px;padding:16px;margin-bottom:12px;border:1.5px solid var(--border);position:relative;animation:fadeUp .25s ease-out}
+.room-card .rc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.room-card .rc-name{font-family:var(--font-head);font-weight:600;font-size:1rem;flex:1;min-width:0}
 .room-card .rc-actions{display:flex;gap:6px}
-.room-card .rc-actions button{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.room-card .rc-actions button{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;border:1.5px solid transparent}
 .room-card .rc-remove{background:var(--red-soft);color:var(--red)}
-.room-card .rc-remove:hover{background:rgba(220,38,38,.15)}
-.room-card .rc-photos{display:flex;gap:4px;flex-wrap:wrap}
-.room-card .rc-photos img{width:48px;height:48px;border-radius:4px;object-fit:cover;border:1px solid var(--border)}
+.room-card .rc-remove:hover{background:var(--red);color:#fff}
+.room-card .rc-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.room-card .rc-photos img{width:56px;height:56px;border-radius:6px;object-fit:cover;border:1.5px solid var(--border);cursor:pointer;transition:transform .15s}
+.room-card .rc-photos img:hover{transform:scale(1.05)}
+.room-card .rc-photos img:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
-.stat-card{background:var(--card);border-radius:8px;padding:14px;text-align:center;box-shadow:var(--shadow)}
-.stat-card .stat-num{font-family:var(--font-head);font-size:1.5rem;color:var(--slate);line-height:1}
-.stat-card .stat-label{font-size:.7rem;color:var(--text-muted);margin-top:4px;font-weight:500}
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border-radius:12px;padding:18px 14px;text-align:center;box-shadow:var(--shadow);border:1.5px solid var(--border)}
+.stat-card .stat-num{font-family:var(--font-head);font-size:1.75rem;font-weight:700;line-height:1}
+.stat-card .stat-label{font-size:.75rem;color:var(--text-muted);margin-top:6px;font-weight:500;letter-spacing:.02em}
 
-.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.06);padding:4px 0}
-.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;background:none;cursor:pointer;color:var(--text-muted);transition:color .15s;border:none}
-.bottom-nav button.active{color:var(--teal)}
-.bottom-nav button svg{width:22px;height:22px}
-.bottom-nav button span{font-size:.66rem;font-weight:600;letter-spacing:.03em}
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--card);border-top:1.5px solid var(--border);display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.06);padding:6px 0}
+.bottom-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;background:none;cursor:pointer;color:var(--text-muted);transition:all .15s;border:none;border-radius:8px;margin:0 4px;min-height:56px}
+.bottom-nav button:hover{color:var(--teal);background:var(--teal-soft)}
+.bottom-nav button.active{color:var(--teal);background:var(--teal-soft)}
+.bottom-nav button svg{width:24px;height:24px}
+.bottom-nav button span{font-size:.7rem;font-weight:600;letter-spacing:.02em}
 
-.fab{position:fixed;bottom:128px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(13,148,136,.35);cursor:pointer;z-index:99;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
-.fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.92)}
+/* FAB */
+.fab{position:fixed;bottom:132px;right:20px;width:60px;height:60px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(13,148,136,.4);cursor:pointer;z-index:99;transition:all .2s cubic-bezier(.34,1.56,.64,1);border:3px solid #fff}
+.fab:hover{transform:scale(1.08);box-shadow:0 6px 24px rgba(13,148,136,.5)}
+.fab:active{transform:scale(.92)}
+.fab:focus-visible{outline:3px solid var(--teal);outline-offset:4px}
 
-.toast-container{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none}
-.toast{background:var(--text);color:#fff;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:500;box-shadow:var(--shadow-lg);animation:toastIn .3s ease-out;pointer-events:auto}
-@keyframes toastIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+/* Toast Container */
+.toast-container{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;display:flex;flex-direction:column;gap:8px;max-width:90vw}
+.toast{display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:10px;font-size:.9rem;font-weight:500;box-shadow:var(--shadow-xl);animation:toastIn .3s ease-out;pointer-events:auto;min-width:280px;max-width:400px}
+.toast.success{background:#059669;color:#fff}
+.toast.error{background:var(--red);color:#fff}
+.toast.info{background:var(--slate);color:#fff}
+.toast svg{flex-shrink:0;width:18px;height:18px}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-.back-btn{width:36px;height:36px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:1px solid var(--border)}
-.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+/* Back Button & Detail Header */
+.back-btn{width:40px;height:40px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;border:1.5px solid var(--border);transition:all .15s}
+.back-btn:hover{background:var(--border);border-color:#cbd5e1}
+.back-btn:active{transform:scale(.95)}
+.detail-header{display:flex;align-items:center;gap:14px;margin-bottom:20px}
 
-.camera-area{width:100%;max-width:400px;margin:0 auto 8px;border-radius:8px;overflow:hidden;background:#111}
+/* Camera */
+.camera-area{width:100%;max-width:400px;margin:12px auto;border-radius:12px;overflow:hidden;background:#0f172a;box-shadow:var(--shadow-lg)}
 .camera-area video{width:100%;display:block}.camera-area canvas{display:none}
+.camera-placeholder{padding:40px 20px;text-align:center;color:#94a3b8}
+.camera-placeholder svg{width:48px;height:48px;margin:0 auto 12px;opacity:.5}
 
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);display:none;align-items:center;justify-content:center;z-index:500;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:24px;max-width:360px;width:100%;box-shadow:var(--shadow-xl);animation:modalIn .2s ease-out}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal h3{font-size:1.2rem;margin-bottom:8px}
+.modal p{color:var(--text-muted);font-size:.9rem;margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;gap:10px}
+.modal-actions button{flex:1}
+
+/* Detail View */
+.detail-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;border:1.5px solid var(--border)}
+.detail-card .detail-header-row{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px;gap:12px}
+.detail-card h3{font-size:1.1rem;margin-bottom:2px}
+.detail-card .detail-meta{color:var(--text-muted);font-size:.85rem}
+.detail-grid{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;margin:12px 0;padding:12px 0;border-top:1.5px solid var(--border);border-bottom:1.5px solid var(--border)}
+.detail-grid span{display:flex;align-items:center;gap:4px}
+.detail-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* Settings */
+.settings-section{margin-bottom:24px}
+.settings-section h3{font-size:1rem;margin-bottom:12px;color:var(--text)}
+.settings-desc{color:var(--text-muted);font-size:.85rem;margin-bottom:16px;line-height:1.5}
+
+/* Responsive */
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer{display:none!important}body{background:#fff;padding:0}.view{display:block!important}}
-@media(min-width:768px){.view{max-width:600px;margin:0 auto;padding:24px}.bottom-nav{max-width:600px;left:50%;transform:translateX(-50%);border-radius:12px 12px 0 0}}
+@media print{.bottom-nav,.fab,.demo-banner,.app-header,#bct-demo-disclaimer,.loading-overlay{display:none!important}body{background:#fff;padding:0}.view{display:block!important}}
+@media(min-width:768px){.view{max-width:640px;margin:0 auto;padding:24px}.bottom-nav{max-width:640px;left:50%;transform:translateX(-50%);border-radius:16px 16px 0 0;margin-bottom:0}.fab{right:calc(50% - 280px)}}
+
+/* Room Detail Card Colors */
+.room-detail-card{border-left:4px solid var(--slate)}
+.room-detail-card.positive{border-left-color:var(--red)}
+.room-detail-card.pending{border-left-color:var(--amber)}
+.room-detail-card.negative{border-left-color:var(--teal)}
+
+/* Loading States */
+.btn.loading{position:relative;color:transparent;pointer-events:none}
+.btn.loading::after{content:'';position:absolute;width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+.btn--secondary.loading::after{border-color:var(--border);border-top-color:var(--teal)}
+
+/* Section Divider */
+.section-divider{height:1.5px;background:var(--border);margin:24px 0}
 </style>
 </head>
 <body>
 <a href="#main-content" class="skip-link">Skip to main content</a>
-<header class="app-header" role="banner"><h1>MoldDoc</h1><div class="subtitle">Doctor Mold Pro</div></header>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" role="status" aria-live="polite">
+<div class="spinner" aria-label="Loading"></div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal">
+<h3 id="modalTitle">Confirm Action</h3>
+<p id="modalMessage">Are you sure?</p>
+<div class="modal-actions">
+<button class="btn btn--secondary" onclick="closeModal()">Cancel</button>
+<button class="btn btn--danger" id="modalConfirm">Delete</button>
+</div>
+</div>
+</div>
+
+<header class="app-header" role="banner">
+<h1>MoldDoc</h1>
+<div class="subtitle">Doctor Mold Pro</div>
+</header>
+
 <div class="demo-banner" id="demoBanner" style="display:none" role="status" aria-label="Demo data notice">
-<p>Sample Tampa inspections loaded. Tap to clear and start fresh.</p>
+<p>Sample Tampa inspections loaded. Tap Clear to start fresh.</p>
 <button onclick="clearDemoData()" aria-label="Clear demo data">Clear</button>
 </div>
-<div aria-live="polite" class="toast-container" id="toastContainer"></div>
+
+<div aria-live="polite" aria-atomic="true" class="toast-container" id="toastContainer"></div>
 
 <main id="main-content">
-<section class="view active" id="viewInspections" role="region" aria-label="Inspections"><div id="inspList"></div></section>
+<!-- Inspections List View -->
+<section class="view active" id="viewInspections" role="region" aria-label="Your Inspections">
+<div class="page-header">
+<h2>Your Inspections</h2>
+<p>Track and manage all your mold assessments</p>
+</div>
+<div id="inspList"></div>
+</section>
 
-<section class="view" id="viewNewInsp" role="region" aria-label="New inspection">
+<!-- New/Edit Inspection View -->
+<section class="view" id="viewNewInsp" role="region" aria-label="New inspection form">
 <div class="detail-header">
-<button class="back-btn" onclick="showView('viewInspections')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+<button class="back-btn" onclick="showView('viewInspections')" aria-label="Go back to inspections">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
 <h2 id="newInspTitle">New Inspection</h2>
 </div>
-<form id="inspForm" onsubmit="saveInspection(event)">
-<div class="form-group"><label for="if-address">Property Address</label><input type="text" id="if-address" required placeholder="Full address"></div>
-<div class="form-group"><label for="if-client">Client Name</label><input type="text" id="if-client" placeholder="Homeowner or agent"></div>
-<div class="form-group"><label for="if-phone">Phone</label><input type="tel" id="if-phone"></div>
-<div class="form-row">
-<div class="form-group"><label for="if-date">Inspection Date</label><input type="date" id="if-date"></div>
-<div class="form-group"><label for="if-sqft">Approx. Sq Ft</label><input type="number" id="if-sqft" min="0" placeholder="e.g., 1800"></div>
-</div>
-<div class="form-group"><label for="if-type">Property Type</label>
-<select id="if-type"><option value="single-family">Single Family Home</option><option value="condo">Condo / Apartment</option><option value="townhouse">Townhouse</option><option value="commercial">Commercial</option><option value="multi-family">Multi-Family</option></select>
-</div>
-<div class="form-group"><label for="if-reason">Reason for Inspection</label>
-<select id="if-reason"><option value="visible-mold">Visible Mold / Discoloration</option><option value="musty-smell">Musty Smell</option><option value="water-damage">Water Damage</option><option value="real-estate">Real Estate Transaction</option><option value="health-concern">Health Concern</option><option value="post-hurricane">Post-Hurricane / Storm</option><option value="routine">Routine Check</option></select>
-</div>
-<div class="form-group"><label for="if-notes">General Notes</label><textarea id="if-notes" placeholder="Overall observations, access notes, humidity levels..."></textarea></div>
-<div class="form-group"><label for="if-status">Status</label>
-<select id="if-status"><option value="pending">Pending Results</option><option value="positive">Mold Found</option><option value="negative">Clear - No Mold</option><option value="remediated">Remediation Complete</option></select>
+
+<form id="inspForm" onsubmit="saveInspection(event)" novalidate>
+<div class="form-group">
+<label for="if-address">Property Address <span class="optional">*</span></label>
+<input type="text" id="if-address" required placeholder="e.g., 4217 W Swann Ave, Tampa, FL" aria-required="true" aria-describedby="address-error">
+<span class="form-error" id="address-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Address is required</span>
 </div>
 
-<h3 style="margin:20px 0 12px">Rooms Inspected</h3>
+<div class="form-row">
+<div class="form-group">
+<label for="if-client">Client Name <span class="optional">optional</span></label>
+<input type="text" id="if-client" placeholder="Homeowner or agent name">
+</div>
+<div class="form-group">
+<label for="if-phone">Phone <span class="optional">optional</span></label>
+<input type="tel" id="if-phone" placeholder="(813) 555-0123" pattern="[0-9\-\(\)\s.+]+">
+</div>
+</div>
+
+<div class="form-row">
+<div class="form-group">
+<label for="if-date">Inspection Date <span class="optional">*</span></label>
+<input type="date" id="if-date" required aria-required="true">
+</div>
+<div class="form-group">
+<label for="if-sqft">Square Footage <span class="optional">optional</span></label>
+<input type="number" id="if-sqft" min="0" placeholder="e.g., 1800">
+</div>
+</div>
+
+<div class="form-group">
+<label for="if-type">Property Type</label>
+<select id="if-type">
+<option value="single-family">Single Family Home</option>
+<option value="condo">Condo / Apartment</option>
+<option value="townhouse">Townhouse</option>
+<option value="commercial">Commercial</option>
+<option value="multi-family">Multi-Family</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="if-reason">Reason for Inspection</label>
+<select id="if-reason">
+<option value="visible-mold">Visible Mold or Discoloration</option>
+<option value="musty-smell">Musty Smell</option>
+<option value="water-damage">Water Damage</option>
+<option value="real-estate">Real Estate Transaction</option>
+<option value="health-concern">Health Concern</option>
+<option value="post-hurricane">Post-Hurricane or Storm</option>
+<option value="routine">Routine Check</option>
+</select>
+</div>
+
+<div class="form-group">
+<label for="if-notes">General Notes <span class="optional">optional</span></label>
+<textarea id="if-notes" placeholder="Overall observations, access issues, humidity readings, equipment used..."></textarea>
+</div>
+
+<div class="form-group">
+<label for="if-status">Current Status</label>
+<select id="if-status">
+<option value="pending">Pending Results</option>
+<option value="positive">Mold Found</option>
+<option value="negative">Clear — No Mold</option>
+<option value="remediated">Remediation Complete</option>
+</select>
+</div>
+
+<div class="section-divider"></div>
+
+<h3 style="margin-bottom:16px;font-size:1.1rem">Rooms Inspected</h3>
 <div id="roomsList"></div>
-<button type="button" class="btn btn--secondary btn--full" onclick="addRoom()" style="margin-bottom:16px">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-Add Room
+
+<button type="button" class="btn btn--secondary btn--full" onclick="addRoom()" style="margin-bottom:20px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+Add a Room
 </button>
 
 <input type="hidden" id="if-id">
-<button type="submit" class="btn btn--primary btn--full" style="margin-top:8px">Save Inspection</button>
+<button type="submit" class="btn btn--primary btn--full" id="saveBtn" style="margin-top:8px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+Save Inspection
+</button>
 </form>
 </section>
 
-<section class="view" id="viewInspDetail" role="region" aria-label="Inspection detail">
+<!-- Inspection Detail View -->
+<section class="view" id="viewInspDetail" role="region" aria-label="Inspection details">
 <div class="detail-header">
-<button class="back-btn" onclick="showView('viewInspections')" aria-label="Go back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
-<h2 id="inspDetailTitle">Inspection</h2>
+<button class="back-btn" onclick="showView('viewInspections')" aria-label="Go back to inspections">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+</button>
+<h2 id="inspDetailTitle">Inspection Details</h2>
 </div>
 <div id="inspDetailContent"></div>
 </section>
 
-<section class="view" id="viewOverview" role="region" aria-label="Overview">
-<h2 style="margin-bottom:16px">Overview</h2>
+<!-- Overview View -->
+<section class="view" id="viewOverview" role="region" aria-label="Overview dashboard">
+<div class="page-header">
+<h2>Overview</h2>
+<p>Quick stats and follow-ups at a glance</p>
+</div>
 <div class="stats-row" id="statsRow"></div>
-<h3 style="margin-bottom:12px">Needs Follow-Up</h3>
+<div class="settings-section">
+<h3>Needs Follow-Up</h3>
 <div id="followUpList"></div>
+</div>
 </section>
 
+<!-- Settings View -->
 <section class="view" id="viewSettings" role="region" aria-label="Settings">
-<h2 style="margin-bottom:16px">Settings</h2>
+<div class="page-header">
+<h2>Settings</h2>
+<p>Manage your data and account</p>
+</div>
+
+<div class="settings-section">
+<h3>Data Management</h3>
+<p class="settings-desc">Export your inspection data for backup, or import previously saved data.</p>
 <div style="display:flex;flex-direction:column;gap:10px">
-<button class="btn btn--secondary btn--full" onclick="exportData()">Export Data (JSON)</button>
-<button class="btn btn--secondary btn--full" onclick="document.getElementById('importFile').click()">Import Data (JSON)</button>
+<button class="btn btn--secondary btn--full" onclick="exportData()">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Export Data (JSON)
+</button>
+<button class="btn btn--secondary btn--full" onclick="document.getElementById('importFile').click()">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+Import Data (JSON)
+</button>
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
-<button class="btn btn--disabled btn--full" disabled aria-label="Branded inspection reports available in full version">Generate Branded Reports</button>
-<button class="btn btn--disabled btn--full" disabled aria-label="Lab integration available in full version">Lab Results Integration</button>
+</div>
+</div>
+
+<div class="section-divider"></div>
+
+<div class="settings-section">
+<h3>Pro Features</h3>
+<p class="settings-desc">Upgrade to unlock these features for your business.</p>
+<div style="display:flex;flex-direction:column;gap:10px">
+<button class="btn btn--disabled btn--full" disabled aria-label="Branded inspection reports available in full version">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+Branded PDF Reports
+</button>
+<button class="btn btn--disabled btn--full" disabled aria-label="Lab integration available in full version">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31"/><path d="M14 2v7.31"/><rect x="6" y="9" width="12" height="12" rx="2"/><path d="M12 14v3"/></svg>
+Lab Results Integration
+</button>
+</div>
 </div>
 </section>
 </main>
 
-<button class="fab" onclick="showNewInsp()" aria-label="New inspection"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+<button class="fab" onclick="showNewInsp()" aria-label="Create new inspection">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+</button>
 
 <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
-<button onclick="showView('viewInspections')" id="navInsp" class="active" aria-label="Inspections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span>Inspections</span></button>
-<button onclick="showView('viewOverview')" id="navOver" aria-label="Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg><span>Overview</span></button>
-<button onclick="showView('viewSettings')" id="navSet" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg><span>Settings</span></button>
+<button onclick="showView('viewInspections')" id="navInsp" class="active" aria-label="Inspections list">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+<span>Inspections</span>
+</button>
+<button onclick="showView('viewOverview')" id="navOver" aria-label="Overview dashboard">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+<span>Overview</span>
+</button>
+<button onclick="showView('viewSettings')" id="navSet" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+<span>Settings</span>
+</button>
 </nav>
 
 <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
-<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Doctor Mold Pro. All brand references are used solely for demonstration purposes.</p>
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO:</strong> Not affiliated with Doctor Mold Pro. Created by BennyCuTools.</p>
 <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Doctor%20Mold%20Pro&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
 </div>
 
 <script>
+// Auth check
 function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
 const _V=-240134981;
 const _k=new URLSearchParams(window.location.search).get('key');
 if(_k&&_h(_k)===_V){sessionStorage.setItem('md_auth','1')}
 if(!sessionStorage.getItem('md_auth')){
-document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Space Grotesk,sans-serif;background:linear-gradient(135deg,#334155,#1e293b);color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:1.8rem;margin-bottom:.5rem">MoldDoc</h1><p style="color:#aaa;margin-bottom:1.5rem;font-family:Inter,sans-serif">Access key required</p><input id="keyIn" type="text" placeholder="Enter key" style="padding:12px 16px;border-radius:8px;border:1px solid #555;background:rgba(255,255,255,.1);color:#fff;font-size:1rem;width:200px;text-align:center"><br><button onclick="var k=document.getElementById(\'keyIn\').value;if(_h(k)===_V){sessionStorage.setItem(\'md_auth\',\'1\');location.reload();}else{document.getElementById(\'keyErr\').style.display=\'block\'}" style="margin-top:12px;padding:10px 24px;background:#0d9488;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Enter</button><p id="keyErr" style="color:#e74c3c;margin-top:8px;display:none;font-size:.85rem;font-family:Inter">Invalid key</p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center;"><p style="margin:0;"><strong style="color:#333;">DEMO NOTICE:</strong> Not affiliated with Doctor Mold Pro.</p></div>';
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Space Grotesk,sans-serif;background:linear-gradient(135deg,#334155,#1e293b);color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:.5rem">MoldDoc</h1><p style="color:#94a3b8;margin-bottom:1.5rem;font-family:Inter,sans-serif">Doctor Mold Pro — Inspection Tool</p><div style="background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;padding:24px"><p style="font-size:.85rem;color:#94a3b8;margin-bottom:12px">Enter access key to continue</p><input id="keyIn" type="text" placeholder="Your key" style="padding:14px 16px;border-radius:10px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:1rem;width:220px;text-align:center;margin-bottom:12px" autocomplete="off"><br><button onclick="var k=document.getElementById(\'keyIn\').value;if(_h(k)===_V){sessionStorage.setItem(\'md_auth\',\'1\');location.reload();}else{document.getElementById(\'keyErr\').style.display=\'block\';document.getElementById(\'keyIn\').classList.add(\'shake\')}" style="padding:12px 32px;background:#0d9488;color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:.95rem;transition:all .15s">Enter</button><p id="keyErr" style="color:#f87171;margin-top:12px;display:none;font-size:.85rem;font-family:Inter">Invalid key — please try again</p></div></div></div><style>.shake{animation:shake .4s}@keyframes shake{0%,100%{transform:translateX(0)}25%,75%{transform:translateX(-5px)}50%{transform:translateX(5px)}}</style><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center;"><p style="margin:0;"><strong style="color:#333;">DEMO:</strong> Not affiliated with Doctor Mold Pro.</p></div>';
 throw new Error('Auth required');
 }
 document.addEventListener('contextmenu',e=>e.preventDefault());
 
+// Database setup
 const DB_NAME='MoldDocDB';const DB_VER=1;let db;
 function openDB(){return new Promise((r,j)=>{const q=indexedDB.open(DB_NAME,DB_VER);q.onupgradeneeded=e=>{e.target.result.createObjectStore('inspections',{keyPath:'id'})};q.onsuccess=e=>{db=e.target.result;r(db)};q.onerror=e=>j(e)})}
 function dbPut(d){return new Promise((r,j)=>{const t=db.transaction('inspections','readwrite');t.objectStore('inspections').put(d);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
@@ -213,8 +462,10 @@ function dbGetAll(){return new Promise((r,j)=>{const t=db.transaction('inspectio
 function dbGet(id){return new Promise((r,j)=>{const t=db.transaction('inspections','readonly');const q=t.objectStore('inspections').get(id);q.onsuccess=()=>r(q.result);q.onerror=e=>j(e)})}
 function dbDelete(id){return new Promise((r,j)=>{const t=db.transaction('inspections','readwrite');t.objectStore('inspections').delete(id);t.oncomplete=()=>r();t.onerror=e=>j(e)})}
 
-let allInspections=[];let roomCounter=0;let activeRoomCamera=null;let cameraStream=null;
+// State
+let allInspections=[];let roomCounter=0;let activeRoomCamera=null;let cameraStream=null;let deleteCallback=null;
 
+// Demo data
 const DEMO=[
 {id:'demo-1',address:'4217 W Swann Ave, Tampa, FL',client:'Henderson Family',phone:'813-555-0142',date:'2026-02-05',sqft:2200,type:'single-family',reason:'water-damage',status:'positive',notes:'Water intrusion from roof leak in northwest corner. Visible Stachybotrys (black mold) on drywall behind master closet. Elevated moisture readings throughout second floor. Recommended full remediation of affected areas.',rooms:[
 {name:'Master Bedroom Closet',finding:'visible-growth',severity:'heavy',sample:'Yes - Air & Surface',photos:[],notes:'Black mold on drywall, spreading along baseboard. Moisture reading 68%. Drywall saturated.'},
@@ -232,6 +483,23 @@ const DEMO=[
 ],created:Date.now()-86400000*63,isDemo:true}
 ];
 
+// Loading state
+function showLoading(){document.getElementById('loadingOverlay').classList.add('active')}
+function hideLoading(){document.getElementById('loadingOverlay').classList.remove('active')}
+
+// Modal
+function showModal(title,message,confirmText,onConfirm){
+document.getElementById('modalTitle').textContent=title;
+document.getElementById('modalMessage').textContent=message;
+document.getElementById('modalConfirm').textContent=confirmText;
+deleteCallback=onConfirm;
+document.getElementById('confirmModal').classList.add('active');
+document.getElementById('modalConfirm').focus();
+}
+function closeModal(){document.getElementById('confirmModal').classList.remove('active');deleteCallback=null}
+document.getElementById('modalConfirm').onclick=()=>{if(deleteCallback){deleteCallback();closeModal()}};
+
+// Demo data
 async function loadDemoData(){
 if(localStorage.getItem('md_demoCleared')) return;
 const all=await dbGetAll();if(all.length>0) return;
@@ -239,125 +507,203 @@ for(const d of DEMO) await dbPut(d);
 localStorage.setItem('md_hasDemo','1');
 }
 async function clearDemoData(){
-const all=await dbGetAll();for(const i of all){if(i.isDemo) await dbDelete(i.id)}
+showLoading();
+try{
+const all=await dbGetAll();
+for(const i of all){if(i.isDemo) await dbDelete(i.id)}
 localStorage.removeItem('md_hasDemo');localStorage.setItem('md_demoCleared','1');
 document.getElementById('demoBanner').style.display='none';
-await refreshData();showToast('Demo data cleared');
+await refreshData();
+showToast('Demo data cleared','success');
+}catch(e){showToast('Could not clear demo data','error')}
+hideLoading();
 }
 
+// Status helpers
 function getStatusInfo(s){
-const map={'pending':{label:'Pending Results',cls:'badge--pending',bar:'amber'},'positive':{label:'Mold Found',cls:'badge--positive',bar:'red'},'negative':{label:'Clear',cls:'badge--negative',bar:'teal'},'remediated':{label:'Remediated',cls:'badge--remediated',bar:'slate'}};
+const map={
+'pending':{label:'Pending Results',cls:'badge--pending',bar:'amber'},
+'positive':{label:'Mold Found',cls:'badge--positive',bar:'red'},
+'negative':{label:'Clear',cls:'badge--negative',bar:'teal'},
+'remediated':{label:'Remediated',cls:'badge--remediated',bar:'slate'}
+};
 return map[s]||{label:s,cls:'',bar:'slate'};
 }
 
+// Render inspection list
 function renderInspList(){
 const list=document.getElementById('inspList');
 const sorted=[...allInspections].sort((a,b)=>{
 const order={positive:0,pending:1,remediated:2,negative:3};
 return(order[a.status]??5)-(order[b.status]??5)||(b.created-a.created);
 });
+
 if(sorted.length===0){
-list.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--text-muted)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" style="margin-bottom:12px;opacity:.4"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><p style="font-size:.95rem;font-weight:600">No inspections yet</p><p style="font-size:.85rem">Tap + to start documenting a job.</p></div>`;return;
+list.innerHTML=`<div class="empty-state">
+<div class="empty-state-icon">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+</div>
+<h3>No inspections yet</h3>
+<p>Start documenting your mold assessments. All data stays on your device.</p>
+<button class="btn btn--primary" onclick="showNewInsp()">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+Add Your First Inspection
+</button>
+</div>`;
+return;
 }
+
 list.innerHTML=sorted.map(i=>{
 const si=getStatusInfo(i.status);
 const roomCount=(i.rooms||[]).length;
 const date=i.date?new Date(i.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}):'';
-return`<article class="insp-card" onclick="showInspDetail('${i.id}')" role="button" tabindex="0" aria-label="${i.address} - ${si.label}">
+const reasonText=i.reason?i.reason.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase()):'';
+return`<article class="insp-card" onclick="showInspDetail('${i.id}')" role="button" tabindex="0" aria-label="${i.address}, ${si.label}, ${roomCount} rooms" onkeydown="if(event.key==='Enter'||event.key===' ')showInspDetail('${i.id}')">
 <div class="insp-card-inner"><div class="insp-bar ${si.bar}"></div><div class="insp-info">
 <div class="ic-address">${i.address.split(',')[0]}</div>
-<div class="ic-meta">${i.client||''} | ${date} | ${i.reason?i.reason.replace(/-/g,' '):''}</div>
-<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span class="badge ${si.cls}">${si.label}</span><span class="ic-rooms">${roomCount} room${roomCount!==1?'s':''}</span></div>
-</div></div></article>`;}).join('');
+<div class="ic-meta">${i.client||'No client name'} · ${date||'No date'} · ${reasonText}</div>
+<div style="display:flex;gap:8px;align-items:center;margin-top:8px"><span class="badge ${si.cls}">${si.label}</span><span class="ic-rooms"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>${roomCount} room${roomCount!==1?'s':''}</span></div>
+</div></div></article>`;
+}).join('');
 }
 
+// Room management
 function addRoom(name='',finding='',severity='',sample='',notes=''){
-roomCounter++;const div=document.createElement('div');div.className='room-card';div.dataset.roomIdx=roomCounter;
-div.innerHTML=`<div class="rc-header"><input type="text" class="rc-name" placeholder="Room name (e.g., Master Bathroom)" value="${name}" style="font-family:var(--font-head);font-weight:600;font-size:.95rem;border:none;background:none;flex:1;padding:0" aria-label="Room name">
-<div class="rc-actions"><button type="button" class="rc-remove" onclick="this.closest('.room-card').remove()" aria-label="Remove room"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
-<div class="form-row" style="margin-bottom:8px">
-<select class="rc-finding" aria-label="Finding" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--card)">
+roomCounter++;
+const div=document.createElement('div');
+div.className='room-card';
+div.dataset.roomIdx=roomCounter;
+div.innerHTML=`<div class="rc-header">
+<input type="text" class="rc-name" placeholder="Room name (e.g., Master Bathroom)" value="${name}" style="font-family:var(--font-head);font-weight:600;font-size:1rem;border:none;background:none;flex:1;padding:0;min-width:0" aria-label="Room name">
+<div class="rc-actions">
+<button type="button" class="rc-remove" onclick="removeRoom(${roomCounter})" aria-label="Remove ${name||'this room'}">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+</div>
+</div>
+<div class="form-row" style="margin-bottom:10px">
+<div class="form-group" style="margin-bottom:0">
+<label style="font-size:.75rem;margin-bottom:4px">Finding</label>
+<select class="rc-finding" aria-label="Finding type" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--card);width:100%">
 <option value="none" ${finding==='none'?'selected':''}>No Issues</option>
 <option value="visible-growth" ${finding==='visible-growth'?'selected':''}>Visible Growth</option>
 <option value="moisture-only" ${finding==='moisture-only'?'selected':''}>Moisture Only</option>
 <option value="musty-odor" ${finding==='musty-odor'?'selected':''}>Musty Odor</option>
 <option value="staining" ${finding==='staining'?'selected':''}>Staining</option>
 </select>
-<select class="rc-severity" aria-label="Severity" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--card)">
+</div>
+<div class="form-group" style="margin-bottom:0">
+<label style="font-size:.75rem;margin-bottom:4px">Severity</label>
+<select class="rc-severity" aria-label="Severity level" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--card);width:100%">
 <option value="none" ${severity==='none'?'selected':''}>None</option>
 <option value="light" ${severity==='light'?'selected':''}>Light</option>
 <option value="moderate" ${severity==='moderate'?'selected':''}>Moderate</option>
 <option value="heavy" ${severity==='heavy'?'selected':''}>Heavy</option>
 </select>
 </div>
-<div class="form-row" style="margin-bottom:8px">
-<select class="rc-sample" aria-label="Sample taken" style="padding:8px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;background:var(--card)">
+</div>
+<div class="form-group" style="margin-bottom:10px">
+<label style="font-size:.75rem;margin-bottom:4px">Sample Taken</label>
+<select class="rc-sample" aria-label="Sample type" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;background:var(--card);width:100%">
 <option value="No" ${sample!=='Yes - Air'&&sample!=='Yes - Surface'&&sample!=='Yes - Air & Surface'?'selected':''}>No Sample</option>
 <option value="Yes - Air" ${sample==='Yes - Air'?'selected':''}>Air Sample</option>
 <option value="Yes - Surface" ${sample==='Yes - Surface'?'selected':''}>Surface Sample</option>
 <option value="Yes - Air & Surface" ${sample==='Yes - Air & Surface'?'selected':''}>Air + Surface</option>
 </select>
-<div></div>
 </div>
-<textarea class="rc-notes" placeholder="Room notes..." style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;min-height:40px;resize:vertical;margin-bottom:8px" aria-label="Room notes">${notes}</textarea>
+<div class="form-group" style="margin-bottom:10px">
+<label style="font-size:.75rem;margin-bottom:4px">Notes</label>
+<textarea class="rc-notes" placeholder="Specific observations for this room..." style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;min-height:60px;resize:vertical" aria-label="Room notes">${notes}</textarea>
+</div>
 <div class="rc-photos" data-room="${roomCounter}"></div>
-<button type="button" class="btn btn--secondary" style="font-size:.78rem;padding:6px 12px;margin-top:4px" onclick="openRoomCamera(${roomCounter})" aria-label="Take photo for this room">
-<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-Photo
+<button type="button" class="btn btn--ghost" style="font-size:.85rem;padding:8px 12px;margin-top:8px" onclick="openRoomCamera(${roomCounter})">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+Take Photo
 </button>
-<div class="camera-area" id="camArea-${roomCounter}" style="display:none"><video autoplay playsinline></video><canvas></canvas></div>
-<div id="camBtns-${roomCounter}" style="display:none;text-align:center;margin-top:4px">
-<button type="button" class="btn btn--primary" style="font-size:.78rem;padding:6px 12px" onclick="captureRoomPhoto(${roomCounter})">Snap</button>
-<button type="button" class="btn btn--secondary" style="font-size:.78rem;padding:6px 12px" onclick="closeRoomCamera(${roomCounter})">Done</button>
+<div class="camera-area" id="camArea-${roomCounter}" style="display:none;margin-top:10px">
+<video autoplay playsinline style="width:100%;display:block"></video>
+<canvas></canvas>
+<div style="display:flex;gap:10px;justify-content:center;padding:12px;background:#0f172a">
+<button type="button" class="btn btn--primary" style="font-size:.85rem;padding:8px 16px" onclick="captureRoomPhoto(${roomCounter})">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+Capture
+</button>
+<button type="button" class="btn btn--ghost" style="font-size:.85rem;padding:8px 16px;color:#94a3b8" onclick="closeRoomCamera(${roomCounter})">Done</button>
+</div>
 </div>`;
 document.getElementById('roomsList').appendChild(div);
+}
+
+function removeRoom(idx){
+showModal('Remove Room','Are you sure you want to remove this room? Any photos taken will be lost.','Remove',()=>{
+const card=document.querySelector(`.room-card[data-room-idx="${idx}"]`);
+if(card){card.remove();delete roomPhotos[idx];}
+});
 }
 
 let roomPhotos={};
 async function openRoomCamera(idx){
 if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
 try{
+showLoading();
 cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+hideLoading();
 const area=document.getElementById('camArea-'+idx);
 area.style.display='block';
-area.querySelector('video').srcObject=cameraStream;
-document.getElementById('camBtns-'+idx).style.display='block';
+const video=area.querySelector('video');
+video.srcObject=cameraStream;
 activeRoomCamera=idx;
-}catch(e){showToast('Camera not available')}
+// Scroll to camera
+area.scrollIntoView({behavior:'smooth',block:'nearest'});
+}catch(e){
+hideLoading();
+showToast('Camera access denied or not available. Check permissions.','error');
+}
 }
 function closeRoomCamera(idx){
 if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
 const area=document.getElementById('camArea-'+idx);
 if(area){area.style.display='none'}
-const btns=document.getElementById('camBtns-'+idx);
-if(btns){btns.style.display='none'}
 activeRoomCamera=null;
 }
 function captureRoomPhoto(idx){
 const area=document.getElementById('camArea-'+idx);
-const v=area.querySelector('video');const c=area.querySelector('canvas');
-c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+const v=area.querySelector('video');
+const c=area.querySelector('canvas');
+if(!v.videoWidth){showToast('Camera not ready yet','error');return;}
+c.width=v.videoWidth;c.height=v.videoHeight;
+c.getContext('2d').drawImage(v,0,0);
 const data=c.toDataURL('image/jpeg',0.7);
 if(!roomPhotos[idx]) roomPhotos[idx]=[];
 roomPhotos[idx].push(data);
 renderRoomPhotos(idx);
-showToast('Photo captured');
+showToast('Photo saved','success');
 }
 function renderRoomPhotos(idx){
 const container=document.querySelector(`.rc-photos[data-room="${idx}"]`);
 if(!container||!roomPhotos[idx]) return;
-container.innerHTML=roomPhotos[idx].map((p,i)=>`<img src="${p}" alt="Room photo ${i+1}">`).join('');
+container.innerHTML=roomPhotos[idx].map((p,i)=>`<img src="${p}" alt="Room photo ${i+1}" tabindex="0" onclick="viewPhoto('${p}')">`).join('');
 }
 
+// Form handling
 function showNewInsp(){
-document.getElementById('inspForm').reset();document.getElementById('if-id').value='';
-document.getElementById('roomsList').innerHTML='';roomCounter=0;roomPhotos={};
+document.getElementById('inspForm').reset();
+document.getElementById('if-id').value='';
+document.getElementById('roomsList').innerHTML='';
+document.getElementById('if-date').value=new Date().toISOString().split('T')[0];
+roomCounter=0;roomPhotos={};
 document.getElementById('newInspTitle').textContent='New Inspection';
-addRoom();showView('viewNewInsp');
+// Clear any previous errors
+document.querySelectorAll('.form-error').forEach(e=>e.classList.remove('visible'));
+addRoom();
+showView('viewNewInsp');
 }
 
 async function editInsp(id){
-const insp=await dbGet(id);if(!insp) return;
+showLoading();
+try{
+const insp=await dbGet(id);
+if(!insp){hideLoading();showToast('Inspection not found','error');return;}
 document.getElementById('if-id').value=insp.id;
 document.getElementById('if-address').value=insp.address||'';
 document.getElementById('if-client').value=insp.client||'';
@@ -374,12 +720,31 @@ addRoom(rm.name,rm.finding,rm.severity,rm.sample,rm.notes);
 roomPhotos[i+1]=rm.photos||[];renderRoomPhotos(i+1);
 });
 document.getElementById('newInspTitle').textContent='Edit Inspection';
+hideLoading();
 showView('viewNewInsp');
+}catch(e){
+hideLoading();
+showToast('Could not load inspection','error');
+}
 }
 
 async function saveInspection(e){
 e.preventDefault();
+const saveBtn=document.getElementById('saveBtn');
+
+// Validation
+const addressInput=document.getElementById('if-address');
+if(!addressInput.value.trim()){
+document.getElementById('address-error').classList.add('visible');
+addressInput.focus();
+showToast('Please enter the property address','error');
+return;
+}
+document.getElementById('address-error').classList.remove('visible');
+
+saveBtn.classList.add('loading');
 if(cameraStream){cameraStream.getTracks().forEach(t=>t.stop());cameraStream=null}
+
 const rooms=[];
 document.querySelectorAll('.room-card').forEach(card=>{
 const idx=parseInt(card.dataset.roomIdx);
@@ -392,97 +757,306 @@ notes:card.querySelector('.rc-notes').value,
 photos:(roomPhotos[idx]||[]).slice(0,4)
 });
 });
+
 const id=document.getElementById('if-id').value||'insp-'+Date.now();
-const insp={id,address:document.getElementById('if-address').value,client:document.getElementById('if-client').value,
-phone:document.getElementById('if-phone').value,date:document.getElementById('if-date').value,
-sqft:parseInt(document.getElementById('if-sqft').value)||null,type:document.getElementById('if-type').value,
-reason:document.getElementById('if-reason').value,notes:document.getElementById('if-notes').value,
-status:document.getElementById('if-status').value,rooms,created:Date.now()};
-await dbPut(insp);await refreshData();showToast('Inspection saved');showView('viewInspections');
+const insp={
+id,
+address:document.getElementById('if-address').value.trim(),
+client:document.getElementById('if-client').value.trim(),
+phone:document.getElementById('if-phone').value.trim(),
+date:document.getElementById('if-date').value,
+sqft:parseInt(document.getElementById('if-sqft').value)||null,
+type:document.getElementById('if-type').value,
+reason:document.getElementById('if-reason').value,
+notes:document.getElementById('if-notes').value.trim(),
+status:document.getElementById('if-status').value,
+rooms,
+updated:Date.now()
+};
+
+try{
+await dbPut(insp);
+await refreshData();
+showToast('Inspection saved successfully','success');
+showView('viewInspections');
+}catch(e){
+showToast('Could not save inspection. Try again.','error');
+}
+saveBtn.classList.remove('loading');
 }
 
+// Detail view
 async function showInspDetail(id){
-const insp=await dbGet(id);if(!insp) return;
+showLoading();
+try{
+const insp=await dbGet(id);
+if(!insp){hideLoading();showToast('Inspection not found','error');return;}
 const si=getStatusInfo(insp.status);
 document.getElementById('inspDetailTitle').textContent=insp.address.split(',')[0];
-const date=insp.date?new Date(insp.date+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'';
-let html=`<div style="background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px">
-<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-<div><h3 style="margin-bottom:2px">${insp.address}</h3>
-<p style="font-size:.85rem;color:var(--text-muted)">${insp.client||''} ${insp.phone?'| '+insp.phone:''}</p></div>
-<span class="badge ${si.cls}">${si.label}</span></div>
-<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;margin-bottom:8px">
-${date?`<span>${date}</span>`:''} ${insp.sqft?`<span>${insp.sqft.toLocaleString()} sq ft</span>`:''}
-${insp.type?`<span>${insp.type.replace(/-/g,' ')}</span>`:''}
-${insp.reason?`<span>Reason: ${insp.reason.replace(/-/g,' ')}</span>`:''}</div>
-${insp.notes?`<p style="font-size:.85rem;color:var(--text-muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${insp.notes}</p>`:''}
-<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-<button class="btn btn--primary" onclick="shareInsp('${id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share</button>
-<button class="btn btn--secondary" onclick="editInsp('${id}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>
-</div></div>`;
+const date=insp.date?new Date(insp.date+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}):'Not scheduled';
+const typeLabel={
+'single-family':'Single Family Home','condo':'Condo / Apartment',
+'townhouse':'Townhouse','commercial':'Commercial','multi-family':'Multi-Family'
+}[insp.type]||insp.type;
+const reasonLabel=insp.reason?insp.reason.replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase()):'';
 
-(insp.rooms||[]).forEach(rm=>{
-const findColor={['visible-growth']:'var(--red)',['moisture-only']:'var(--amber)',['musty-odor']:'var(--amber)',['staining']:'var(--amber)',['none']:'var(--teal)'}[rm.finding]||'var(--slate)';
-html+=`<div class="room-card" style="border-left:3px solid ${findColor}">
-<div class="rc-header"><span style="font-family:var(--font-head);font-weight:600">${rm.name}</span>
-<span class="badge" style="background:${findColor}11;color:${findColor}">${(rm.finding||'none').replace(/-/g,' ')}</span></div>
-${rm.severity&&rm.severity!=='none'?`<p style="font-size:.82rem;margin-bottom:4px"><strong>Severity:</strong> ${rm.severity}</p>`:''}
-${rm.sample&&rm.sample!=='No'?`<p style="font-size:.82rem;margin-bottom:4px"><strong>Sample:</strong> ${rm.sample}</p>`:''}
-${rm.notes?`<p style="font-size:.82rem;color:var(--text-muted)">${rm.notes}</p>`:''}
-${rm.photos&&rm.photos.length?`<div class="rc-photos" style="margin-top:8px">${rm.photos.map((p,i)=>`<img src="${p}" alt="${rm.name} photo ${i+1}">`).join('')}</div>`:''}
+let html=`<div class="detail-card ${insp.status}">
+<div class="detail-header-row">
+<div>
+<h3>${insp.address}</h3>
+<p class="detail-meta">${insp.client||'No client listed'}</p>
+</div>
+<span class="badge ${si.cls}">${si.label}</span>
+</div>
+<div class="detail-grid">
+${insp.date?`<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${date}</span>`:''}
+${insp.sqft?`<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>${insp.sqft.toLocaleString()} sq ft</span>`:''}
+${typeLabel?`<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>${typeLabel}</span>`:''}
+${reasonLabel?`<span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>${reasonLabel}</span>`:''}
+</div>
+${insp.phone?`<p style="font-size:.9rem;margin-bottom:12px"><strong>Phone:</strong> ${insp.phone}</p>`:''}
+${insp.notes?`<p style="font-size:.9rem;color:var(--text-muted);line-height:1.5;padding-top:12px;border-top:1.5px solid var(--border)">${insp.notes}</p>`:''}
+<div class="detail-actions">
+<button class="btn btn--primary" onclick="shareInsp('${id}')">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+Share
+</button>
+<button class="btn btn--secondary" onclick="editInsp('${id}')">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+Edit
+</button>
+<button class="btn btn--ghost" onclick="confirmDeleteInsp('${id}')">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+Delete
+</button>
+</div>
+</div>`;
+
+if(insp.rooms&&insp.rooms.length>0){
+html+=`<h3 style="margin:24px 0 16px;font-size:1.1rem">${insp.rooms.length} Room${insp.rooms.length!==1?'s':''} Inspected</h3>`;
+insp.rooms.forEach((rm,i)=>{
+const findColor={
+'visible-growth':'var(--red)',
+'moisture-only':'var(--amber)',
+'musty-odor':'var(--amber)',
+'staining':'var(--amber)',
+'none':'var(--teal)'
+}[rm.finding]||'var(--slate)';
+const findingText=(rm.finding||'none').replace(/-/g,' ').replace(/\b\w/g,l=>l.toUpperCase());
+html+=`<div class="room-card room-detail-card" style="border-left-color:${findColor}">
+<div class="rc-header">
+<span style="font-family:var(--font-head);font-weight:600;font-size:1rem">${rm.name||'Unnamed Room'}</span>
+<span class="badge" style="background:${findColor}15;color:${findColor};font-size:.75rem">${findingText}</span>
+</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--text-muted);margin-bottom:8px">
+${rm.severity&&rm.severity!=='none'?`<span>Severity: <strong style="color:${findColor}">${rm.severity.charAt(0).toUpperCase()+rm.severity.slice(1)}</strong></span>`:''}
+${rm.sample&&rm.sample!=='No'?`<span>Sample: ${rm.sample}</span>`:''}
+</div>
+${rm.notes?`<p style="font-size:.9rem;color:var(--text-muted);line-height:1.5;margin-bottom:10px">${rm.notes}</p>`:''}
+${rm.photos&&rm.photos.length?`<div class="rc-photos">${rm.photos.map((p,i)=>`<img src="${p}" alt="${rm.name} photo ${i+1}">`).join('')}</div>`:''}
 </div>`;
 });
+}
+
 document.getElementById('inspDetailContent').innerHTML=html;
+hideLoading();
 showView('viewInspDetail');
+}catch(e){
+hideLoading();
+showToast('Could not load inspection details','error');
+}
 }
 
-async function shareInsp(id){
-const insp=await dbGet(id);if(!insp) return;
-let text=`Mold Inspection Summary\n${insp.address}\nClient: ${insp.client||'N/A'}\nDate: ${insp.date||'N/A'}\n\n`;
-(insp.rooms||[]).forEach(rm=>{
-text+=`${rm.name}: ${(rm.finding||'none').replace(/-/g,' ')}`;
-if(rm.severity&&rm.severity!=='none') text+=` (${rm.severity})`;
-text+='\n';if(rm.notes) text+=`  ${rm.notes}\n`;
+function confirmDeleteInsp(id){
+showModal('Delete Inspection','This will permanently delete this inspection and all its photos. This cannot be undone.','Delete',async()=>{
+showLoading();
+try{
+await dbDelete(id);
+await refreshData();
+showToast('Inspection deleted','success');
+showView('viewInspections');
+}catch(e){
+hideLoading();
+showToast('Could not delete inspection','error');
+}
 });
-text+=`\nStatus: ${getStatusInfo(insp.status).label}\nDoctor Mold Pro | Tampa, FL`;
-if(navigator.share){try{await navigator.share({title:'Inspection - '+insp.address,text});showToast('Shared')}catch(e){if(e.name!=='AbortError') fallbackCopy(text)}}else{fallbackCopy(text)}
 }
-function fallbackCopy(t){navigator.clipboard.writeText(t).then(()=>showToast('Copied')).catch(()=>showToast('Could not share'))}
 
+// Share
+async function shareInsp(id){
+showLoading();
+try{
+const insp=await dbGet(id);
+if(!insp){hideLoading();showToast('Inspection not found','error');return;}
+let text=`MOLD INSPECTION SUMMARY\n${'='.repeat(30)}\n\n`;
+text+=`${insp.address}\n`;
+if(insp.client) text+=`Client: ${insp.client}\n`;
+text+=`Date: ${insp.date||'N/A'}\n`;
+if(insp.phone) text+=`Phone: ${insp.phone}\n`;
+text+=`\nROOMS INSPECTED:\n${'-'.repeat(20)}\n`;
+(insp.rooms||[]).forEach(rm=>{
+text+=`\n${rm.name}: ${(rm.finding||'none').replace(/-/g,' ').toUpperCase()}`;
+if(rm.severity&&rm.severity!=='none') text+=` (${rm.severity})`;
+if(rm.sample&&rm.sample!=='No') text+=` — ${rm.sample}`;
+if(rm.notes) text+=`\n  ${rm.notes}`;
+});
+text+=`\n\n${'='.repeat(30)}\nStatus: ${getStatusInfo(insp.status).label}\nDoctor Mold Pro — Tampa, FL`;
+
+hideLoading();
+if(navigator.share){
+try{
+await navigator.share({title:'Mold Inspection — '+insp.address.split(',')[0],text});
+showToast('Shared successfully','success');
+}catch(e){
+if(e.name!=='AbortError') fallbackCopy(text);
+}
+}else{
+fallbackCopy(text);
+}
+}catch(e){
+hideLoading();
+showToast('Could not share inspection','error');
+}
+}
+function fallbackCopy(t){
+navigator.clipboard.writeText(t).then(()=>showToast('Copied to clipboard','success')).catch(()=>showToast('Could not copy to clipboard','error'));
+}
+
+// Overview
 async function renderOverview(){
 const total=allInspections.length;
 const pos=allInspections.filter(i=>i.status==='positive').length;
 const pend=allInspections.filter(i=>i.status==='pending').length;
+const clear=allInspections.filter(i=>i.status==='negative').length;
+
 document.getElementById('statsRow').innerHTML=`
-<div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total</div></div>
+<div class="stat-card"><div class="stat-num">${total}</div><div class="stat-label">Total Inspections</div></div>
 <div class="stat-card"><div class="stat-num" style="color:var(--red)">${pos}</div><div class="stat-label">Mold Found</div></div>
-<div class="stat-card"><div class="stat-num" style="color:var(--amber)">${pend}</div><div class="stat-label">Pending</div></div>`;
+<div class="stat-card"><div class="stat-num" style="color:var(--amber)">${pend}</div><div class="stat-label">Pending Results</div></div>`;
+
 const follow=allInspections.filter(i=>['positive','pending'].includes(i.status));
 const fl=document.getElementById('followUpList');
-if(follow.length===0){fl.innerHTML='<p style="text-align:center;color:var(--text-muted);padding:20px">All inspections resolved.</p>'}
-else{fl.innerHTML=follow.map(i=>{const si=getStatusInfo(i.status);return`<div class="insp-card" onclick="showInspDetail('${i.id}')" role="button" tabindex="0"><div class="insp-card-inner"><div class="insp-bar ${si.bar}"></div><div class="insp-info"><div class="ic-address">${i.address.split(',')[0]}</div><span class="badge ${si.cls}" style="margin-top:4px">${si.label}</span></div></div></div>`}).join('')}
+if(follow.length===0){
+fl.innerHTML='<div class="empty-state" style="padding:32px 20px"><div class="empty-state-icon" style="width:48px;height:48px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><p style="color:var(--text-muted);font-size:.9rem">All caught up! No inspections need follow-up.</p></div>';
+}else{
+fl.innerHTML=follow.map(i=>{
+const si=getStatusInfo(i.status);
+return`<div class="insp-card" onclick="showInspDetail('${i.id}')" role="button" tabindex="0"><div class="insp-card-inner"><div class="insp-bar ${si.bar}"></div><div class="insp-info"><div class="ic-address">${i.address.split(',')[0]}</div><span class="badge ${si.cls}" style="margin-top:6px">${si.label}</span></div></div></div>`;
+}).join('');
+}
 }
 
-async function refreshData(){allInspections=await dbGetAll();renderInspList();if(localStorage.getItem('md_hasDemo')&&!localStorage.getItem('md_demoCleared')){document.getElementById('demoBanner').style.display='flex'}}
+// Data refresh
+async function refreshData(){
+allInspections=await dbGetAll();
+renderInspList();
+if(localStorage.getItem('md_hasDemo')&&!localStorage.getItem('md_demoCleared')){
+document.getElementById('demoBanner').style.display='flex';
+}
+}
 
+// Navigation
 function showView(id){
 document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
 document.getElementById(id).classList.add('active');
 document.querySelectorAll('.bottom-nav button').forEach(b=>b.classList.remove('active'));
 const fab=document.querySelector('.fab');
-if(id==='viewInspections'){document.getElementById('navInsp').classList.add('active');fab.style.display='flex'}
-else if(id==='viewOverview'){document.getElementById('navOver').classList.add('active');fab.style.display='none';renderOverview()}
-else if(id==='viewSettings'){document.getElementById('navSet').classList.add('active');fab.style.display='none'}
-else{fab.style.display='none'}
-window.scrollTo(0,0);
+
+if(id==='viewInspections'){
+document.getElementById('navInsp').classList.add('active');
+fab.style.display='flex';
+renderInspList();
+}else if(id==='viewOverview'){
+document.getElementById('navOver').classList.add('active');
+fab.style.display='none';
+renderOverview();
+}else if(id==='viewSettings'){
+document.getElementById('navSet').classList.add('active');
+fab.style.display='none';
+}else{
+fab.style.display='none';
+}
+window.scrollTo({top:0,behavior:'smooth'});
 }
 
-async function exportData(){const d={inspections:allInspections,exported:new Date().toISOString()};const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='molddoc-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(u);showToast('Exported')}
-async function importData(e){const f=e.target.files[0];if(!f) return;try{const d=JSON.parse(await f.text());if(d.inspections){for(const i of d.inspections) await dbPut(i)}await refreshData();showToast('Imported')}catch(err){showToast('Invalid file')}e.target.value=''}
+// Export/Import
+async function exportData(){
+showLoading();
+try{
+const d={inspections:allInspections,exported:new Date().toISOString(),app:'MoldDoc',version:'1.0'};
+const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+const u=URL.createObjectURL(b);
+const a=document.createElement('a');
+a.href=u;
+a.download='molddoc-backup-'+new Date().toISOString().split('T')[0]+'.json';
+a.click();
+URL.revokeObjectURL(u);
+hideLoading();
+showToast('Backup file downloaded','success');
+}catch(e){
+hideLoading();
+showToast('Could not export data','error');
+}
+}
+async function importData(e){
+const f=e.target.files[0];
+if(!f) return;
+showLoading();
+try{
+const d=JSON.parse(await f.text());
+if(!d.inspections||!Array.isArray(d.inspections)){
+throw new Error('Invalid file format');
+}
+let imported=0;
+for(const i of d.inspections){
+if(i.id){
+await dbPut(i);
+imported++;
+}
+}
+await refreshData();
+hideLoading();
+showToast(`Imported ${imported} inspection${imported!==1?'s':''}`,'success');
+}catch(err){
+hideLoading();
+showToast('Invalid backup file. Could not import.','error');
+}
+e.target.value='';
+}
 
-function showToast(msg){const c=document.getElementById('toastContainer');const t=document.createElement('div');t.className='toast';t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),2500)}
+// Toast notifications
+function showToast(msg,type='info'){
+const c=document.getElementById('toastContainer');
+const t=document.createElement('div');
+t.className=`toast ${type}`;
+const icon=type==='success'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>':
+type==='error'?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>':
+'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+t.innerHTML=`${icon}<span>${msg}</span>`;
+c.appendChild(t);
+setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-12px)';setTimeout(()=>t.remove(),300)},3500);
+}
 
-(async()=>{await openDB();await loadDemoData();await refreshData()})();
+// Close modal on backdrop click
+document.getElementById('confirmModal').addEventListener('click',e=>{
+if(e.target===document.getElementById('confirmModal')) closeModal();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+if(e.key==='Escape'){
+if(document.getElementById('confirmModal').classList.contains('active')){
+closeModal();
+}
+}
+});
+
+// Initialize
+(async()=>{
+await openDB();
+await loadDemoData();
+await refreshData();
+})();
 </script>
 </body>
 </html>

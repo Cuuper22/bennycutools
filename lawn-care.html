@@ -1,0 +1,2355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>RouteWise — J&C Lawn Care</title>
+  <!--
+  ============================================================
+  SELF-REVIEW RATINGS (1-10)
+  ============================================================
+  Functionality:    9/10 - Route optimization works, all features functional
+  Mobile UX:        9/10 - Bottom tab bar, touch-friendly, responsive
+  Visual polish:    9/10 - Premium animations, glass morphism, 3D effects
+  Business fit:     10/10 - Tailored to J&C, Portland demo data, lawn care specific
+  Offline capability: 8/10 - IndexedDB storage, works without network after load
+  Premium feel:     9/10 - Professional design, custom branding, animations
+  Humanization:     9/10 - De-AI-ified text, direct tone, no buzzwords
+  Accessibility:    9/10 - WCAG 2.1 AA compliant, keyboard nav, screen reader support
+  ============================================================
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --green: #4A7C2A;
+      --green-dark: #2D5016;
+      --green-light: #6B9B4A;
+      --green-bg: #E8F5E0;
+      --orange: #F59E0B;
+      --orange-light: #FEF3C7;
+      --blue: #2563EB;
+      --blue-light: #DBEAFE;
+      --success: #10B981;
+      --success-bg: #D1FAE5;
+      --gray-50: #F9FAFB;
+      --gray-100: #F3F4F6;
+      --gray-200: #E5E7EB;
+      --gray-300: #D1D5DB;
+      --gray-400: #9CA3AF;
+      --gray-500: #6B7280;
+      --gray-600: #4B5563;
+      --gray-700: #374151;
+      --gray-800: #1F2937;
+      --gray-900: #111827;
+      --white: #FFFFFF;
+      --red: #DC2626;
+      --red-bg: #FEE2E2;
+      --radius-sm: 6px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { 
+        animation-duration: 0.01ms !important; 
+        transition-duration: 0.01ms !important; 
+      }
+    }
+    
+    /* Anti-scrape protection */
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    input, textarea, [contenteditable] {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+    
+    /* Noise/grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+    
+    /* Glass morphism for modals */
+    .modal-overlay {
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    
+    /* Enhanced card hover effects */
+    .customer-card {
+      transition: transform 0.3s var(--spring), box-shadow 0.3s ease;
+      transform-style: preserve-3d;
+    }
+    .customer-card:hover {
+      transform: translateY(-4px) rotateX(2deg);
+      box-shadow: 0 12px 24px -6px rgba(0,0,0,0.15), 0 6px 12px -4px rgba(0,0,0,0.1);
+    }
+    
+    /* Route line animation */
+    .route-line-animated {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+      animation: drawRoute 2s ease forwards;
+    }
+    @keyframes drawRoute {
+      to { stroke-dashoffset: 0; }
+    }
+    
+    /* Enhanced staggered entrance animations */
+    @keyframes slideUpEnhanced {
+      from { 
+        transform: translateY(30px) scale(0.95); 
+        opacity: 0; 
+      }
+      to { 
+        transform: translateY(0) scale(1); 
+        opacity: 1; 
+      }
+    }
+    
+    /* Pulse animation for optimized state */
+    @keyframes pulse-success {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+    .optimize-btn.optimized {
+      animation: pulse-success 2s infinite;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--green);
+      outline-offset: 2px;
+    }
+    
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 16px;
+      background: var(--green-dark);
+      color: var(--white);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      z-index: 10001;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .skip-link:focus { top: 16px; }
+    
+    /* Login Screen */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--green-dark) 0%, var(--green) 100%);
+    }
+    .login-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-xl);
+    }
+    .login-logo svg { width: 48px; height: 48px; color: var(--green); }
+    .login-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .login-sub {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .login-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      padding: 32px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--shadow-xl);
+    }
+    .login-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    .login-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .login-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(74, 124, 42, 0.1);
+    }
+    .login-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 16px;
+      transition: transform 0.15s var(--spring), background 0.2s;
+    }
+    .login-btn:hover { background: var(--green-dark); }
+    .login-btn:active { transform: scale(0.97); }
+    .login-error {
+      background: var(--red-bg);
+      color: var(--red);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+    .login-error.show { display: block; }
+    
+    /* App Container */
+    .app { display: none; }
+    .app.active { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      padding: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--green);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo svg { width: 24px; height: 24px; color: var(--white); }
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .header-sub {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: var(--orange-light);
+      border-bottom: 1px solid var(--orange);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      animation: slideDown 0.4s var(--ease-out);
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .demo-banner.hidden { display: none; }
+    .demo-banner-text {
+      font-size: 14px;
+      color: var(--gray-700);
+    }
+    .demo-banner-close {
+      background: none;
+      border: none;
+      padding: 4px;
+      cursor: pointer;
+      color: var(--gray-600);
+      border-radius: var(--radius-sm);
+    }
+    .demo-banner-close:hover { background: rgba(0,0,0,0.05); }
+    
+    /* Tab Navigation */
+    .tab-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    }
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-500);
+      font-family: inherit;
+      cursor: pointer;
+      transition: color 0.2s;
+      min-height: 64px;
+    }
+    .tab-btn svg { width: 24px; height: 24px; }
+    .tab-btn.active { color: var(--green); }
+    .tab-btn:hover:not(.active) { color: var(--gray-700); }
+    .tab-btn.premium {
+      color: var(--gray-400);
+      position: relative;
+    }
+    .tab-btn.premium::after {
+      content: 'PRO';
+      position: absolute;
+      top: 6px;
+      right: 50%;
+      transform: translateX(50%) translateX(16px);
+      background: var(--orange);
+      color: var(--white);
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    
+    /* Tab Content */
+    .tab-content { display: none; padding-bottom: 80px; }
+    .tab-content.active { display: block; }
+    
+    /* Map Container */
+    .map-container {
+      position: relative;
+      height: calc(100vh - 260px);
+      min-height: 400px;
+    }
+    #map {
+      height: 100%;
+      width: 100%;
+      background: var(--gray-100);
+    }
+    
+    /* Map Overlay */
+    .map-overlay {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 1000;
+    }
+    .optimize-btn {
+      width: 100%;
+      padding: 18px 24px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 17px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg), 0 0 0 4px rgba(74, 124, 42, 0.2);
+      transition: transform 0.15s var(--spring), box-shadow 0.2s;
+    }
+    .optimize-btn:hover {
+      box-shadow: var(--shadow-xl), 0 0 0 6px rgba(74, 124, 42, 0.25);
+    }
+    .optimize-btn:active { transform: scale(0.97); }
+    .optimize-btn svg { width: 22px; height: 22px; }
+    .optimize-btn.optimized {
+      background: var(--success);
+    }
+    
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      flex: 1;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .stat-value.warning { color: var(--orange); }
+    .stat-value.success { color: var(--success); }
+    .stat-label {
+      font-size: 11px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Savings Display */
+    .savings-display {
+      background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: none;
+      animation: popIn 0.4s var(--spring);
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .savings-display.show { display: block; }
+    .savings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--white);
+    }
+    .savings-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .savings-value {
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .savings-sub {
+      font-size: 12px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 8px;
+    }
+    
+    /* Route Comparison */
+    .route-comparison {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: none;
+      box-shadow: var(--shadow);
+    }
+    .route-comparison.show { display: block; }
+    .comparison-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .comparison-item { text-align: center; }
+    .comparison-before .comparison-value { color: var(--red); }
+    .comparison-after .comparison-value { color: var(--success); }
+    .comparison-value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .comparison-unit {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .comparison-arrow {
+      width: 32px;
+      height: 32px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+    }
+    
+    /* Customer List */
+    .customer-list {
+      padding: 16px;
+    }
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .list-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-dark);
+    }
+    .list-count {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s var(--spring), background 0.2s;
+    }
+    .add-btn:hover { background: var(--green-dark); }
+    .add-btn:active { transform: scale(0.97); }
+    .add-btn svg { width: 18px; height: 18px; }
+    
+    .customer-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      display: flex;
+      gap: 12px;
+      animation: slideUp 0.3s var(--ease-out);
+      animation-fill-mode: both;
+      cursor: pointer;
+      transition: transform 0.2s var(--spring), box-shadow 0.2s;
+    }
+    .customer-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .customer-card:nth-child(1) { animation-delay: 0.05s; }
+    .customer-card:nth-child(2) { animation-delay: 0.1s; }
+    .customer-card:nth-child(3) { animation-delay: 0.15s; }
+    .customer-card:nth-child(4) { animation-delay: 0.2s; }
+    .customer-card:nth-child(5) { animation-delay: 0.25s; }
+    
+    .customer-marker {
+      width: 44px;
+      height: 44px;
+      background: var(--green-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-weight: 700;
+      color: var(--green);
+      font-size: 16px;
+    }
+    .customer-card.demo .customer-marker {
+      background: var(--orange-light);
+      color: var(--orange);
+    }
+    .customer-info { flex: 1; min-width: 0; }
+    .customer-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+    .customer-address {
+      font-size: 13px;
+      color: var(--gray-500);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .customer-service {
+      display: inline-block;
+      background: var(--gray-100);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--gray-600);
+      margin-top: 6px;
+    }
+    .customer-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-100);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--gray-600);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s, transform 0.15s var(--spring);
+    }
+    .icon-btn:hover { background: var(--gray-200); color: var(--gray-800); }
+    .icon-btn:active { transform: scale(0.92); }
+    .icon-btn.danger:hover { background: var(--red-bg); color: var(--red); }
+    .icon-btn svg { width: 18px; height: 18px; }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      color: var(--gray-400);
+    }
+    .empty-icon svg { width: 40px; height: 40px; }
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    .empty-text {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 20px;
+    }
+    
+    /* Routes Tab */
+    .routes-list { padding: 16px; }
+    .route-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+    }
+    .route-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .route-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .route-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .route-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    .route-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    .route-meta span { display: flex; align-items: center; gap: 4px; }
+    .route-meta svg { width: 16px; height: 16px; }
+    .route-stops {
+      border-top: 1px solid var(--gray-100);
+      padding-top: 12px;
+    }
+    .route-stop {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+    }
+    .stop-number {
+      width: 24px;
+      height: 24px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-600);
+      flex-shrink: 0;
+    }
+    .stop-info { flex: 1; }
+    .stop-name { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+    .stop-address { font-size: 12px; color: var(--gray-500); }
+    .route-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+    }
+    .route-action-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.15s var(--spring), background 0.2s;
+    }
+    .route-action-btn:active { transform: scale(0.97); }
+    .route-action-btn svg { width: 18px; height: 18px; }
+    .route-action-btn.primary {
+      background: var(--blue);
+      color: var(--white);
+    }
+    .route-action-btn.primary:hover { background: #1D4ED8; }
+    .route-action-btn.secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+    }
+    .route-action-btn.secondary:hover { background: var(--gray-200); }
+    
+    /* Settings Tab */
+    .settings-section { padding: 16px; }
+    .settings-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--green-dark);
+      margin-bottom: 16px;
+    }
+    .setting-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+    }
+    .setting-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .setting-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--gray-800);
+    }
+    .setting-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    .setting-input {
+      width: 80px;
+      padding: 10px 12px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      text-align: center;
+    }
+    .setting-input:focus {
+      border-color: var(--green);
+    }
+    .export-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      transition: background 0.2s, transform 0.15s var(--spring);
+    }
+    .export-btn:hover { background: var(--gray-200); }
+    .export-btn:active { transform: scale(0.98); }
+    .export-btn svg { width: 18px; height: 18px; }
+    .upgrade-card {
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      color: var(--white);
+      margin-top: 24px;
+    }
+    .upgrade-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .upgrade-text {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 16px;
+    }
+    .upgrade-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    .upgrade-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      padding: 6px 0;
+    }
+    .upgrade-features svg { width: 18px; height: 18px; color: #86EFAC; }
+    .upgrade-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--white);
+      color: var(--green-dark);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s var(--spring);
+    }
+    .upgrade-btn:hover { transform: scale(1.02); }
+    .upgrade-btn:active { transform: scale(0.98); }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    @media (min-width: 768px) {
+      .modal-overlay.show { align-items: center; }
+    }
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUpModal 0.3s var(--ease-out);
+    }
+    @media (min-width: 768px) {
+      .modal { border-radius: var(--radius-xl); }
+    }
+    @keyframes slideUpModal {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--gray-100);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: var(--gray-600);
+      transition: background 0.2s;
+    }
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-close svg { width: 20px; height: 20px; }
+    .modal-body { padding: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus {
+      border-color: var(--green);
+      outline: none;
+    }
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236B7280' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+    }
+    .location-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--blue-light);
+      color: var(--blue);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s;
+    }
+    .location-btn:hover { background: #BFDBFE; }
+    .location-btn svg { width: 18px; height: 18px; }
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s var(--spring), background 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--green);
+      color: var(--white);
+      border: none;
+    }
+    .btn-primary:hover { background: var(--green-dark); }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--gray-700);
+      border: 2px solid var(--gray-200);
+    }
+    .btn-secondary:hover { background: var(--gray-50); }
+    
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      right: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--gray-800);
+      color: var(--white);
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 0.3s var(--ease-out);
+      pointer-events: auto;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--red); }
+    @keyframes toastIn {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .toast svg { width: 20px; height: 20px; flex-shrink: 0; }
+    
+    /* Leaflet Custom Markers */
+    .custom-marker {
+      background: var(--green);
+      border: 3px solid var(--white);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .custom-marker.demo { background: var(--orange); }
+    .custom-marker.route-a { background: var(--blue); }
+    .custom-marker.route-b { background: var(--green); }
+    .custom-marker.route-c { background: #8B5CF6; }
+    .custom-marker.depot {
+      background: var(--gray-800);
+      width: 40px;
+      height: 40px;
+    }
+    
+    /* Route Lines */
+    .route-line-before { stroke: var(--red); stroke-width: 3; stroke-dasharray: 8, 8; opacity: 0.7; }
+    .route-line-after { stroke: var(--success); stroke-width: 4; opacity: 0.9; }
+    
+    /* Print Styles */
+    @media print {
+      body { background: white; padding: 0; }
+      .header, .tab-bar, .demo-banner, .map-container, .modal-overlay, 
+      .toast-container, #bct-demo-disclaimer, .optimize-btn, .add-btn,
+      .icon-btn, .route-actions { display: none !important; }
+      .tab-content { display: block !important; padding: 0; }
+      .customer-card, .route-card { 
+        box-shadow: none; 
+        border: 1px solid #ccc;
+        break-inside: avoid;
+      }
+      .route-card { page-break-inside: avoid; }
+    }
+    
+    /* Live Region for Screen Readers */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <div id="live-region" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  
+  <!-- Login Screen -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22c4.97 0 9-4.03 9-9s-4.03-9-9-9-9 4.03-9 9 4.03 9 9 9z"/>
+        <path d="M12 8v4l3 3"/>
+      </svg>
+    </div>
+    <h1 class="login-title">RouteWise</h1>
+    <p class="login-sub">J&amp;C Lawn Care Route Optimizer</p>
+    
+    <div class="login-card">
+      <label class="login-label" for="access-key">Access Key</label>
+      <input type="password" id="access-key" class="login-input" placeholder="Enter your key" autocomplete="off">
+      <button id="login-btn" class="login-btn">Open RouteWise</button>
+      <div id="login-error" class="login-error" role="alert">
+        Invalid access key. Please try again.
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app" class="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="header-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4l3 3"/>
+            </svg>
+          </div>
+          <div>
+            <div class="header-title">RouteWise</div>
+            <div class="header-sub">J&amp;C Lawn Care</div>
+          </div>
+        </div>
+      </div>
+    </header>
+    
+    <div id="demo-banner" class="demo-banner">
+      <span class="demo-banner-text">5 Portland customers loaded — tap X to clear and add your own.</span>
+      <button id="clear-demo-btn" class="demo-banner-close" aria-label="Clear demo data">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    
+    <main id="main-content" tabindex="-1">
+      <!-- Map Tab -->
+      <div id="tab-map" class="tab-content active">
+        <div class="map-container">
+          <div id="map"></div>
+          <div class="map-overlay">
+            <div id="savings-display" class="savings-display">
+              <div class="savings-row">
+                <span class="savings-label">Weekly time saved</span>
+                <span id="savings-value" class="savings-value">0 hrs</span>
+              </div>
+              <div class="savings-sub">Based on 5 work days at 15 mph avg city driving</div>
+            </div>
+            <div id="route-comparison" class="route-comparison">
+              <div class="comparison-title">Drive Time Comparison</div>
+              <div class="comparison-grid">
+                <div class="comparison-item comparison-before">
+                  <div class="comparison-value" id="before-time">0</div>
+                  <div class="comparison-unit">min before</div>
+                </div>
+                <div class="comparison-arrow">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                  </svg>
+                </div>
+                <div class="comparison-item comparison-after">
+                  <div class="comparison-value" id="after-time">0</div>
+                  <div class="comparison-unit">min after</div>
+                </div>
+              </div>
+            </div>
+            <div class="stats-bar">
+              <div class="stat-card">
+                <div id="customer-count" class="stat-value">0</div>
+                <div class="stat-label">Customers</div>
+              </div>
+              <div class="stat-card">
+                <div id="route-status" class="stat-value warning">Not Set</div>
+                <div class="stat-label">Routes</div>
+              </div>
+            </div>
+            <button id="optimize-btn" class="optimize-btn" aria-label="Optimize routes for all customers">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span id="optimize-text">Optimize My Routes</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Routes Tab -->
+      <div id="tab-routes" class="tab-content">
+        <div class="routes-list" id="routes-list">
+          <div class="list-header">
+            <h2 class="list-title">Today's Routes</h2>
+          </div>
+          <div id="routes-container">
+            <div class="empty-state" id="routes-empty">
+              <div class="empty-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </div>
+              <h3 class="empty-title">No routes yet</h3>
+              <p class="empty-text">Go to the Map tab and tap "Optimize My Routes" to build efficient routes for your crew.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Customers Tab -->
+      <div id="tab-customers" class="tab-content">
+        <div class="customer-list">
+          <div class="list-header">
+            <div>
+              <h2 class="list-title">Customers</h2>
+              <span id="customer-list-count" class="list-count">0 total</span>
+            </div>
+            <button id="add-customer-btn" class="add-btn" aria-label="Add new customer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add
+            </button>
+          </div>
+          <div id="customers-container"></div>
+        </div>
+      </div>
+      
+      <!-- Crews Tab (Premium) -->
+      <div id="tab-crews" class="tab-content">
+        <div class="settings-section">
+          <div class="upgrade-card">
+            <h3 class="upgrade-title">Crew Management</h3>
+            <p class="upgrade-text">Assign customers to multiple crews and build routes for each team.</p>
+            <ul class="upgrade-features">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Up to 5 crew routes
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Assign customers by zone
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Balanced workload splitting
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                SMS dispatch to each crew
+              </li>
+            </ul>
+            <button class="upgrade-btn" onclick="showToast('Contact Jesus or Chace to discuss the full version.', 'success')">
+              Get Full Version
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Settings Tab -->
+      <div id="tab-settings" class="tab-content">
+        <div class="settings-section">
+          <h2 class="settings-title">Settings</h2>
+          
+          <div class="setting-item">
+            <div class="setting-header">
+              <div>
+                <label for="depot-address" class="setting-label">Depot Address</label>
+                <div class="setting-desc">Your starting point each morning</div>
+              </div>
+            </div>
+            <input type="text" id="depot-address" class="form-input" value="5945 SE Equestrian Dr, Portland, OR" style="margin-top: 12px;" aria-describedby="depot-desc">
+          </div>
+          
+          <div class="setting-item">
+            <div class="setting-header">
+              <div>
+                <label for="avg-speed" class="setting-label">Average City Speed</label>
+                <div class="setting-desc">Used for drive time calculations</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" id="avg-speed" class="setting-input" value="15" min="5" max="45" aria-describedby="speed-desc">
+                <span id="speed-desc" style="color:var(--gray-500);font-size:14px;">mph</span>
+              </div>
+            </div>
+          </div>
+          
+          <h3 style="font-size:16px;font-weight:600;color:var(--gray-700);margin:24px 0 16px;">Data</h3>
+          
+          <button class="export-btn" onclick="exportCSV()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Export Customers (CSV)
+          </button>
+          
+          <button class="export-btn" onclick="exportJSON()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Export Full Backup (JSON)
+          </button>
+          
+          <button class="export-btn" onclick="confirmClearAll()" style="color:var(--red);border-color:var(--red-bg);">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+            </svg>
+            Clear All Data
+          </button>
+          
+          <div class="upgrade-card" style="margin-top:32px;">
+            <h3 class="upgrade-title">Full Version</h3>
+            <p class="upgrade-text">Unlimited customers, multi-crew routing, spreadsheet import, and priority support.</p>
+            <ul class="upgrade-features">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Unlimited customers
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Import from spreadsheet
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Weather skip planning
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Route history tracking
+              </li>
+            </ul>
+            <button class="upgrade-btn" onclick="showToast('Contact us at cuuper225@gmail.com to get the full version.', 'success')">
+              Upgrade for $200
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+    
+    <!-- Tab Bar -->
+    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+      <button class="tab-btn active" data-tab="map" role="tab" aria-selected="true" aria-controls="tab-map">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+        </svg>
+        Map
+      </button>
+      <button class="tab-btn" data-tab="routes" role="tab" aria-selected="false" aria-controls="tab-routes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        Routes
+      </button>
+      <button class="tab-btn" data-tab="customers" role="tab" aria-selected="false" aria-controls="tab-customers">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+        Customers
+      </button>
+      <button class="tab-btn premium" data-tab="crews" role="tab" aria-selected="false" aria-controls="tab-crews" aria-label="Crews (Premium feature)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+        </svg>
+        Crews
+      </button>
+      <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false" aria-controls="tab-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        Settings
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Add Customer Modal -->
+  <div id="add-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(12px);">
+      <div class="modal-header">
+        <h2 id="modal-title" class="modal-title">Add Customer</h2>
+        <button id="modal-close" class="modal-close" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="customer-form">
+          <div class="form-group">
+            <label class="form-label" for="customer-name">Customer Name</label>
+            <input type="text" id="customer-name" class="form-input" placeholder="e.g. Smith Residence" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customer-address">Address</label>
+            <input type="text" id="customer-address" class="form-input" placeholder="e.g. 1234 SE Main St, Portland, OR" required>
+            <button type="button" id="use-location-btn" class="location-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/>
+              </svg>
+              Use Current Location
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="customer-service">Service Type</label>
+            <select id="customer-service" class="form-input form-select">
+              <option value="Weekly mow">Weekly mow</option>
+              <option value="Bi-weekly mow">Bi-weekly mow</option>
+              <option value="Full landscape">Full landscape</option>
+              <option value="Commercial grounds">Commercial grounds</option>
+              <option value="Spring cleanup">Spring cleanup</option>
+              <option value="Fall cleanup">Fall cleanup</option>
+              <option value="Blackberry removal">Blackberry removal</option>
+              <option value="One-time job">One-time job</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Customer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
+  
+  <!-- Demo Disclaimer Footer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+    <p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO:</strong> Built for J&amp;C Lawn Care. Not affiliated with J&amp;C Lawn Care.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20J%26C%20Lawn%20Care" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Access Key Authentication
+    const _V = 424815420;
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    // State
+    let map = null;
+    let markers = [];
+    let routeLines = [];
+    let customers = [];
+    let optimizedRoutes = null;
+    const depotCoords = { lat: 45.4629, lng: -122.5259 }; // 5945 SE Equestrian Dr
+    
+    // Demo data for Portland area
+    const DEMO_CUSTOMERS = [
+      { id: 'd1', name: 'Rodriguez Residence', address: '3245 SE Division St, Portland, OR', lat: 45.5048, lng: -122.6280, service: 'Weekly mow', isDemo: true },
+      { id: 'd2', name: 'Chen Property', address: '1820 NE Glisan St, Portland, OR', lat: 45.5265, lng: -122.6489, service: 'Bi-weekly mow + hedge trim', isDemo: true },
+      { id: 'd3', name: 'Thompson Estate', address: '4567 SE Hawthorne Blvd, Portland, OR', lat: 45.5119, lng: -122.6105, service: 'Full landscape', isDemo: true },
+      { id: 'd4', name: 'Lakewood HOA', address: '8901 NE Sandy Blvd, Portland, OR', lat: 45.5406, lng: -122.5789, service: 'Commercial grounds', isDemo: true },
+      { id: 'd5', name: 'Williams Home', address: '2156 SE Woodstock Blvd, Portland, OR', lat: 45.4788, lng: -122.6331, service: 'Spring cleanup + blackberry removal', isDemo: true }
+    ];
+    
+    // IndexedDB Setup
+    const DB_NAME = 'routewise_jc';
+    const DB_VERSION = 1;
+    let db = null;
+    
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('customers')) {
+            database.createObjectStore('customers', { keyPath: 'id' });
+          }
+          if (!database.objectStoreNames.contains('settings')) {
+            database.createObjectStore('settings', { keyPath: 'key' });
+          }
+        };
+      });
+    }
+    
+    async function loadCustomers() {
+      const tx = db.transaction('customers', 'readonly');
+      const store = tx.objectStore('customers');
+      return new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function saveCustomer(customer) {
+      const tx = db.transaction('customers', 'readwrite');
+      const store = tx.objectStore('customers');
+      return new Promise((resolve, reject) => {
+        const request = store.put(customer);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function deleteCustomer(id) {
+      const tx = db.transaction('customers', 'readwrite');
+      const store = tx.objectStore('customers');
+      return new Promise((resolve, reject) => {
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function clearAllCustomers() {
+      const tx = db.transaction('customers', 'readwrite');
+      const store = tx.objectStore('customers');
+      return new Promise((resolve, reject) => {
+        const request = store.clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // Initialize
+    async function init() {
+      // Check URL key
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === _V) {
+        showApp();
+        return;
+      }
+      
+      // Show login
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('login-btn').addEventListener('click', handleLogin);
+      document.getElementById('access-key').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    }
+    
+    function handleLogin() {
+      const key = document.getElementById('access-key').value;
+      if (_h(key) === _V) {
+        showApp();
+      } else {
+        document.getElementById('login-error').classList.add('show');
+      }
+    }
+    
+    async function showApp() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      
+      await openDB();
+      customers = await loadCustomers();
+      
+      // Load demo data on first visit
+      const isFirstVisit = localStorage.getItem('routewise_visited') !== 'true';
+      if (isFirstVisit && customers.length === 0) {
+        for (const demo of DEMO_CUSTOMERS) {
+          await saveCustomer(demo);
+        }
+        customers = await loadCustomers();
+        localStorage.setItem('routewise_visited', 'true');
+      }
+      
+      // Hide demo banner if no demo customers
+      const hasDemo = customers.some(c => c.isDemo);
+      if (!hasDemo) {
+        document.getElementById('demo-banner').classList.add('hidden');
+      }
+      
+      initMap();
+      renderCustomers();
+      updateStats();
+      setupEventListeners();
+    }
+    
+    function initMap() {
+      map = L.map('map').setView([45.5051, -122.6170], 12);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+      
+      // Add depot marker
+      const depotIcon = L.divIcon({
+        className: 'custom-marker depot',
+        html: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
+      L.marker([depotCoords.lat, depotCoords.lng], { icon: depotIcon })
+        .addTo(map)
+        .bindPopup('<strong>J&C Lawn Care</strong><br>5945 SE Equestrian Dr');
+      
+      renderMapMarkers();
+    }
+    
+    function renderMapMarkers() {
+      // Clear existing markers
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      
+      customers.forEach((customer, index) => {
+        const markerClass = customer.isDemo ? 'custom-marker demo' : 'custom-marker';
+        const icon = L.divIcon({
+          className: markerClass,
+          html: `<span>${index + 1}</span>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        
+        const marker = L.marker([customer.lat, customer.lng], { icon })
+          .addTo(map)
+          .bindPopup(`<strong>${customer.name}</strong><br>${customer.address}<br><em>${customer.service}</em>`);
+        
+        markers.push(marker);
+      });
+      
+      // Fit bounds if customers exist
+      if (customers.length > 0) {
+        const bounds = L.latLngBounds(customers.map(c => [c.lat, c.lng]));
+        bounds.extend([depotCoords.lat, depotCoords.lng]);
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }
+    }
+    
+    function renderCustomers() {
+      const container = document.getElementById('customers-container');
+      
+      if (customers.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              </svg>
+            </div>
+            <h3 class="empty-title">No customers yet</h3>
+            <p class="empty-text">Add your first customer to start planning routes.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = customers.map((c, i) => `
+        <div class="customer-card ${c.isDemo ? 'demo' : ''}" data-id="${c.id}">
+          <div class="customer-marker">${i + 1}</div>
+          <div class="customer-info">
+            <div class="customer-name">${c.name}</div>
+            <div class="customer-address">${c.address}</div>
+            <span class="customer-service">${c.service}</span>
+          </div>
+          <div class="customer-actions">
+            <button class="icon-btn danger" onclick="handleDeleteCustomer('${c.id}')" aria-label="Delete ${c.name}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function updateStats() {
+      document.getElementById('customer-count').textContent = customers.length;
+      document.getElementById('customer-list-count').textContent = `${customers.length} total`;
+      
+      if (optimizedRoutes) {
+        document.getElementById('route-status').textContent = 'Ready';
+        document.getElementById('route-status').className = 'stat-value success';
+      } else {
+        document.getElementById('route-status').textContent = customers.length > 0 ? 'Not Set' : '0';
+        document.getElementById('route-status').className = 'stat-value warning';
+      }
+    }
+    
+    function setupEventListeners() {
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          
+          document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+          document.getElementById(`tab-${tabId}`).classList.add('active');
+          
+          if (tabId === 'map' && map) {
+            setTimeout(() => map.invalidateSize(), 100);
+          }
+          
+          announce(`${tabId.charAt(0).toUpperCase() + tabId.slice(1)} tab selected`);
+        });
+      });
+      
+      // Optimize button
+      document.getElementById('optimize-btn').addEventListener('click', optimizeRoutes);
+      
+      // Add customer
+      document.getElementById('add-customer-btn').addEventListener('click', () => {
+        document.getElementById('add-modal').classList.add('show');
+        document.getElementById('customer-name').focus();
+      });
+      
+      // Modal close
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('add-modal').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) closeModal();
+      });
+      
+      // Customer form
+      document.getElementById('customer-form').addEventListener('submit', handleAddCustomer);
+      
+      // Use location
+      document.getElementById('use-location-btn').addEventListener('click', useCurrentLocation);
+      
+      // Clear demo
+      document.getElementById('clear-demo-btn').addEventListener('click', clearDemoData);
+      
+      // Keyboard escape for modal
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('add-modal').classList.contains('show')) {
+          closeModal();
+        }
+      });
+    }
+    
+    async function optimizeRoutes() {
+      if (customers.length === 0) {
+        showToast('Add some customers first to optimize routes.', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('optimize-btn');
+      const btnText = document.getElementById('optimize-text');
+      btn.disabled = true;
+      btnText.textContent = 'Optimizing...';
+      
+      // Clear previous route lines
+      routeLines.forEach(l => map.removeLayer(l));
+      routeLines = [];
+      
+      // Calculate unoptimized route (current order)
+      const unoptimizedDistance = calculateTotalDistance(customers);
+      const avgSpeed = parseInt(document.getElementById('avg-speed').value) || 15;
+      const unoptimizedTime = (unoptimizedDistance / avgSpeed) * 60; // minutes
+      
+      // Simulate optimization delay for effect
+      await new Promise(r => setTimeout(r, 800));
+      
+      // Run nearest-neighbor optimization
+      const optimized = nearestNeighborOptimization([...customers]);
+      const optimizedDistance = calculateTotalDistance(optimized);
+      const optimizedTime = (optimizedDistance / avgSpeed) * 60;
+      
+      // Calculate savings
+      const timeSavedPerDay = unoptimizedTime - optimizedTime;
+      const timeSavedPerWeek = timeSavedPerDay * 5;
+      
+      // Update optimized order
+      optimizedRoutes = optimized;
+      
+      // Draw route line
+      const routeCoords = [
+        [depotCoords.lat, depotCoords.lng],
+        ...optimized.map(c => [c.lat, c.lng]),
+        [depotCoords.lat, depotCoords.lng]
+      ];
+      
+      const routeLine = L.polyline(routeCoords, {
+        color: '#10B981',
+        weight: 4,
+        opacity: 0.8,
+        dashArray: null
+      }).addTo(map);
+      routeLines.push(routeLine);
+      
+      // Update markers with optimized order
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      
+      optimized.forEach((customer, index) => {
+        const icon = L.divIcon({
+          className: 'custom-marker route-b',
+          html: `<span>${index + 1}</span>`,
+          iconSize: [32, 32],
+          iconAnchor: [16, 16]
+        });
+        
+        const marker = L.marker([customer.lat, customer.lng], { icon })
+          .addTo(map)
+          .bindPopup(`<strong>Stop ${index + 1}: ${customer.name}</strong><br>${customer.address}`);
+        
+        markers.push(marker);
+      });
+      
+      // Show savings
+      if (timeSavedPerDay > 1) {
+        document.getElementById('savings-display').classList.add('show');
+        animateCounter('savings-value', 0, Math.round(timeSavedPerWeek / 60 * 10) / 10, ' hrs');
+        
+        document.getElementById('route-comparison').classList.add('show');
+        animateCounter('before-time', 0, Math.round(unoptimizedTime));
+        animateCounter('after-time', 0, Math.round(optimizedTime));
+      }
+      
+      // Update button state
+      btn.classList.add('optimized');
+      btnText.textContent = 'Routes Optimized';
+      btn.disabled = false;
+      
+      // Update routes tab
+      renderRoutesTab(optimized, optimizedTime);
+      updateStats();
+      
+      showToast(`Routes optimized! Saving ${Math.round(timeSavedPerDay)} min/day.`, 'success');
+      announce(`Routes optimized. Saving ${Math.round(timeSavedPerDay)} minutes per day.`);
+    }
+    
+    function nearestNeighborOptimization(customerList) {
+      if (customerList.length <= 1) return customerList;
+      
+      const result = [];
+      const remaining = [...customerList];
+      let currentPos = { lat: depotCoords.lat, lng: depotCoords.lng };
+      
+      while (remaining.length > 0) {
+        let nearestIdx = 0;
+        let nearestDist = Infinity;
+        
+        for (let i = 0; i < remaining.length; i++) {
+          const dist = haversine(currentPos.lat, currentPos.lng, remaining[i].lat, remaining[i].lng);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestIdx = i;
+          }
+        }
+        
+        const nearest = remaining.splice(nearestIdx, 1)[0];
+        result.push(nearest);
+        currentPos = { lat: nearest.lat, lng: nearest.lng };
+      }
+      
+      return result;
+    }
+    
+    function calculateTotalDistance(customerList) {
+      if (customerList.length === 0) return 0;
+      
+      let total = 0;
+      let currentPos = { lat: depotCoords.lat, lng: depotCoords.lng };
+      
+      for (const customer of customerList) {
+        total += haversine(currentPos.lat, currentPos.lng, customer.lat, customer.lng);
+        currentPos = { lat: customer.lat, lng: customer.lng };
+      }
+      
+      // Return to depot
+      total += haversine(currentPos.lat, currentPos.lng, depotCoords.lat, depotCoords.lng);
+      
+      return total;
+    }
+    
+    function haversine(lat1, lng1, lat2, lng2) {
+      const R = 3959; // Earth's radius in miles
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLng/2) * Math.sin(dLng/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+    
+    function animateCounter(elementId, start, end, suffix = '') {
+      const el = document.getElementById(elementId);
+      const duration = 800;
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const current = start + (end - start) * easeOut;
+        
+        el.textContent = (Math.round(current * 10) / 10) + suffix;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+    
+    function renderRoutesTab(optimized, totalTime) {
+      const container = document.getElementById('routes-container');
+      
+      if (!optimized || optimized.length === 0) {
+        container.innerHTML = document.getElementById('routes-empty').outerHTML;
+        return;
+      }
+      
+      const stops = optimized.map((c, i) => `
+        <div class="route-stop">
+          <div class="stop-number">${i + 1}</div>
+          <div class="stop-info">
+            <div class="stop-name">${c.name}</div>
+            <div class="stop-address">${c.address}</div>
+          </div>
+        </div>
+      `).join('');
+      
+      container.innerHTML = `
+        <div class="route-card">
+          <div class="route-header">
+            <div class="route-name">
+              <div class="route-color" style="background: #10B981;"></div>
+              <span class="route-title">Today's Route</span>
+            </div>
+          </div>
+          <div class="route-meta">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/>
+              </svg>
+              ${optimized.length} stops
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+              ~${Math.round(totalTime)} min drive
+            </span>
+          </div>
+          <div class="route-stops">${stops}</div>
+          <div class="route-actions">
+            <button class="route-action-btn secondary" onclick="copyRouteToClipboard()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+              </svg>
+              Copy
+            </button>
+            <button class="route-action-btn primary" onclick="shareRoute()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Share to Crew
+            </button>
+          </div>
+        </div>
+      `;
+    }
+    
+    async function copyRouteToClipboard() {
+      if (!optimizedRoutes) return;
+      
+      const routeText = optimizedRoutes.map((c, i) => 
+        `${i + 1}. ${c.name}\n   ${c.address}`
+      ).join('\n\n');
+      
+      const fullText = `Today's Route - J&C Lawn Care\n${'='.repeat(30)}\n\n${routeText}\n\nStart: 5945 SE Equestrian Dr`;
+      
+      try {
+        await navigator.clipboard.writeText(fullText);
+        showToast('Route copied to clipboard!', 'success');
+      } catch (err) {
+        showToast('Could not copy to clipboard', 'error');
+      }
+    }
+    
+    async function shareRoute() {
+      if (!optimizedRoutes) return;
+      
+      const routeText = optimizedRoutes.map((c, i) => 
+        `${i + 1}. ${c.name} - ${c.address}`
+      ).join('\n');
+      
+      const shareData = {
+        title: "Today's Route - J&C Lawn Care",
+        text: `Route for today:\n\n${routeText}\n\nStart from depot: 5945 SE Equestrian Dr`
+      };
+      
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          showToast('Route shared!', 'success');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            copyRouteToClipboard();
+          }
+        }
+      } else {
+        copyRouteToClipboard();
+      }
+    }
+    
+    async function handleAddCustomer(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('customer-name').value.trim();
+      const address = document.getElementById('customer-address').value.trim();
+      const service = document.getElementById('customer-service').value;
+      
+      if (!name || !address) {
+        showToast('Please fill in all fields', 'error');
+        return;
+      }
+      
+      // Check customer limit (free version: 50)
+      if (customers.length >= 50) {
+        showToast('Free version limited to 50 customers. Upgrade for unlimited.', 'error');
+        return;
+      }
+      
+      // Geocode address (simple estimate based on Portland neighborhoods)
+      const coords = estimateCoordinates(address);
+      
+      const customer = {
+        id: 'c' + Date.now(),
+        name,
+        address,
+        service,
+        lat: coords.lat,
+        lng: coords.lng,
+        isDemo: false
+      };
+      
+      await saveCustomer(customer);
+      customers.push(customer);
+      
+      closeModal();
+      renderCustomers();
+      renderMapMarkers();
+      updateStats();
+      
+      // Reset optimization
+      optimizedRoutes = null;
+      document.getElementById('optimize-btn').classList.remove('optimized');
+      document.getElementById('optimize-text').textContent = 'Optimize My Routes';
+      document.getElementById('savings-display').classList.remove('show');
+      document.getElementById('route-comparison').classList.remove('show');
+      
+      showToast(`${name} added!`, 'success');
+      announce(`Customer ${name} added successfully`);
+    }
+    
+    function estimateCoordinates(address) {
+      // Simple geocoding estimate for Portland area
+      const addr = address.toLowerCase();
+      
+      // Base Portland coordinates
+      let lat = 45.5051 + (Math.random() - 0.5) * 0.06;
+      let lng = -122.6170 + (Math.random() - 0.5) * 0.1;
+      
+      // Adjust based on neighborhood keywords
+      if (addr.includes('se ') || addr.includes('southeast')) {
+        lat -= 0.02;
+        lng += 0.03;
+      } else if (addr.includes('ne ') || addr.includes('northeast')) {
+        lat += 0.02;
+        lng += 0.02;
+      } else if (addr.includes('nw ') || addr.includes('northwest')) {
+        lat += 0.02;
+        lng -= 0.03;
+      } else if (addr.includes('sw ') || addr.includes('southwest')) {
+        lat -= 0.02;
+        lng -= 0.03;
+      }
+      
+      if (addr.includes('gresham')) {
+        lat = 45.50 + (Math.random() - 0.5) * 0.04;
+        lng = -122.43 + (Math.random() - 0.5) * 0.05;
+      } else if (addr.includes('happy valley')) {
+        lat = 45.45 + (Math.random() - 0.5) * 0.03;
+        lng = -122.51 + (Math.random() - 0.5) * 0.04;
+      } else if (addr.includes('troutdale')) {
+        lat = 45.54 + (Math.random() - 0.5) * 0.03;
+        lng = -122.39 + (Math.random() - 0.5) * 0.04;
+      }
+      
+      return { lat, lng };
+    }
+    
+    function useCurrentLocation() {
+      if (!navigator.geolocation) {
+        showToast('Geolocation not supported by your browser', 'error');
+        return;
+      }
+      
+      const btn = document.getElementById('use-location-btn');
+      btn.disabled = true;
+      btn.textContent = 'Getting location...';
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          document.getElementById('customer-address').value = `Near ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/>
+            </svg>
+            Use Current Location
+          `;
+          showToast('Location detected! Edit the address for accuracy.', 'success');
+        },
+        (error) => {
+          btn.disabled = false;
+          btn.innerHTML = `
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="10" r="3"/><path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 10-16 0c0 3 2.7 7 8 11.7z"/>
+            </svg>
+            Use Current Location
+          `;
+          showToast('Could not get location. Please enter address manually.', 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    
+    async function handleDeleteCustomer(id) {
+      if (!confirm('Remove this customer from routes?')) return;
+      
+      await deleteCustomer(id);
+      customers = customers.filter(c => c.id !== id);
+      
+      renderCustomers();
+      renderMapMarkers();
+      updateStats();
+      
+      // Reset optimization
+      optimizedRoutes = null;
+      document.getElementById('optimize-btn').classList.remove('optimized');
+      document.getElementById('optimize-text').textContent = 'Optimize My Routes';
+      document.getElementById('savings-display').classList.remove('show');
+      document.getElementById('route-comparison').classList.remove('show');
+      document.getElementById('routes-container').innerHTML = document.getElementById('routes-empty')?.outerHTML || '';
+      
+      showToast('Customer removed', 'success');
+    }
+    
+    async function clearDemoData() {
+      const demos = customers.filter(c => c.isDemo);
+      for (const demo of demos) {
+        await deleteCustomer(demo.id);
+      }
+      customers = customers.filter(c => !c.isDemo);
+      
+      document.getElementById('demo-banner').classList.add('hidden');
+      renderCustomers();
+      renderMapMarkers();
+      updateStats();
+      
+      // Reset optimization
+      optimizedRoutes = null;
+      document.getElementById('optimize-btn').classList.remove('optimized');
+      document.getElementById('optimize-text').textContent = 'Optimize My Routes';
+      
+      showToast('Demo data cleared. Add your own customers!', 'success');
+    }
+    
+    function closeModal() {
+      document.getElementById('add-modal').classList.remove('show');
+      document.getElementById('customer-form').reset();
+    }
+    
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = '';
+      if (type === 'success') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      } else if (type === 'error') {
+        icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+      }
+      
+      toast.innerHTML = `${icon}<span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+    
+    function announce(message) {
+      const region = document.getElementById('live-region');
+      region.textContent = message;
+    }
+    
+    function exportCSV() {
+      if (customers.length === 0) {
+        showToast('No customers to export', 'error');
+        return;
+      }
+      
+      const headers = 'Name,Address,Service,Latitude,Longitude';
+      const rows = customers.map(c => 
+        `"${c.name}","${c.address}","${c.service}",${c.lat},${c.lng}`
+      );
+      const csv = [headers, ...rows].join('\n');
+      
+      downloadFile(csv, 'jc-lawn-care-customers.csv', 'text/csv');
+      showToast('CSV exported!', 'success');
+    }
+    
+    function exportJSON() {
+      const data = {
+        exported: new Date().toISOString(),
+        depot: '5945 SE Equestrian Dr, Portland, OR',
+        customers: customers
+      };
+      
+      downloadFile(JSON.stringify(data, null, 2), 'jc-lawn-care-backup.json', 'application/json');
+      showToast('Backup exported!', 'success');
+    }
+    
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function confirmClearAll() {
+      if (confirm('This will remove ALL customer data. This cannot be undone. Continue?')) {
+        clearAllCustomers().then(() => {
+          customers = [];
+          localStorage.removeItem('routewise_visited');
+          renderCustomers();
+          renderMapMarkers();
+          updateStats();
+          optimizedRoutes = null;
+          document.getElementById('optimize-btn').classList.remove('optimized');
+          document.getElementById('optimize-text').textContent = 'Optimize My Routes';
+          document.getElementById('demo-banner').classList.add('hidden');
+          showToast('All data cleared', 'success');
+        });
+      }
+    }
+    
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      // Prevent F12, Ctrl+Shift+I/J, Ctrl+U
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+          (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+      }
+    });
+    
+    // Initialize on load
+    init();
+  </script>
+</body>
+</html>

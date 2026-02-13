@@ -1,0 +1,2250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a3a5c">
+  <title>GillTrack — Boat Work Tracking for Gill Marine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --navy: oklch(0.30 0.06 250);
+      --navy-dark: oklch(0.22 0.06 250);
+      --navy-light: oklch(0.40 0.05 250);
+      --seafoam: oklch(0.72 0.12 180);
+      --seafoam-light: oklch(0.92 0.04 180);
+      --white: oklch(0.99 0 0);
+      --gray-50: oklch(0.97 0 0);
+      --gray-100: oklch(0.94 0 0);
+      --gray-200: oklch(0.90 0 0);
+      --gray-300: oklch(0.82 0 0);
+      --gray-400: oklch(0.65 0 0);
+      --gray-500: oklch(0.55 0 0);
+      --gray-600: oklch(0.45 0 0);
+      --gray-700: oklch(0.35 0 0);
+      --gray-800: oklch(0.25 0 0);
+      --success: oklch(0.65 0.18 145);
+      --success-bg: oklch(0.92 0.05 145);
+      --warning: oklch(0.75 0.16 80);
+      --warning-bg: oklch(0.94 0.05 80);
+      --urgent: oklch(0.60 0.22 25);
+      --urgent-bg: oklch(0.94 0.04 25);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px oklch(0.25 0 0 / 0.06);
+      --shadow-md: 0 4px 12px oklch(0.25 0 0 / 0.1);
+      --shadow-lg: 0 8px 24px oklch(0.25 0 0 / 0.12);
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+    
+    html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Auth Screen */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, var(--navy) 0%, var(--navy-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 1000;
+    }
+    
+    #auth-screen.hidden { display: none; }
+    
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--seafoam);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px oklch(0.72 0.12 180 / 0.3);
+    }
+    
+    .auth-logo svg { width: 48px; height: 48px; color: var(--navy-dark); }
+    
+    .auth-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      font-size: 15px;
+      color: oklch(0.75 0 0);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    
+    .auth-form {
+      width: 100%;
+      max-width: 320px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-family: var(--font-mono);
+      background: oklch(0.99 0 0 / 0.1);
+      border: 2px solid oklch(0.99 0 0 / 0.2);
+      border-radius: var(--radius-md);
+      color: var(--white);
+      text-align: center;
+      letter-spacing: 2px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    
+    .auth-input::placeholder { color: oklch(0.7 0 0); letter-spacing: 0; }
+    .auth-input:focus { outline: none; border-color: var(--seafoam); background: oklch(0.99 0 0 / 0.15); }
+    
+    .auth-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--seafoam);
+      color: var(--navy-dark);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    
+    .auth-btn:hover { box-shadow: 0 4px 16px oklch(0.72 0.12 180 / 0.4); }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+    
+    .auth-error {
+      margin-top: 16px;
+      padding: 12px;
+      background: oklch(0.60 0.22 25 / 0.2);
+      border-radius: var(--radius-sm);
+      color: oklch(0.90 0.10 25);
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    
+    .auth-error.show { display: block; }
+    
+    /* Main App */
+    #app { display: none; }
+    #app.visible { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--seafoam);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-logo svg { width: 24px; height: 24px; color: var(--navy-dark); }
+    
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      background: oklch(0.99 0 0 / 0.1);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    
+    .icon-btn:hover { background: oklch(0.99 0 0 / 0.2); }
+    .icon-btn:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    .icon-btn svg { width: 20px; height: 20px; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-top: 12px;
+      padding: 4px;
+      background: oklch(0.99 0 0 / 0.1);
+      border-radius: var(--radius-md);
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: oklch(0.8 0 0);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .tab.active {
+      background: var(--white);
+      color: var(--navy);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .tab:focus-visible { outline: 2px solid var(--seafoam); outline-offset: -2px; }
+    
+    /* Tab Content */
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
+    
+    /* Jobs List */
+    .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+    
+    .job-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: box-shadow 0.15s, transform 0.1s;
+      cursor: pointer;
+    }
+    
+    .job-card:hover { box-shadow: var(--shadow-md); }
+    .job-card:active { transform: scale(0.995); }
+    .job-card:focus-visible { outline: 3px solid var(--seafoam); outline-offset: 2px; }
+    
+    .job-status-bar {
+      height: 4px;
+      background: var(--gray-300);
+    }
+    
+    .job-status-bar.in-progress { background: var(--warning); }
+    .job-status-bar.complete { background: var(--success); }
+    .job-status-bar.waiting { background: var(--urgent); }
+    .job-status-bar.scheduled { background: var(--seafoam); }
+    
+    .job-content { padding: 16px; }
+    
+    .job-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .job-boat {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+    
+    .job-id {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+    }
+    
+    .job-customer {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+    
+    .job-service {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--navy);
+      margin-bottom: 12px;
+    }
+    
+    .job-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    
+    .job-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .job-meta-item svg { width: 14px; height: 14px; }
+    
+    .job-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 20px;
+    }
+    
+    .job-badge.in-progress { background: var(--warning-bg); color: oklch(0.45 0.14 80); }
+    .job-badge.complete { background: var(--success-bg); color: oklch(0.40 0.15 145); }
+    .job-badge.waiting { background: var(--urgent-bg); color: oklch(0.45 0.18 25); }
+    .job-badge.scheduled { background: var(--seafoam-light); color: oklch(0.40 0.12 180); }
+    
+    /* Checklist Progress */
+    .checklist-progress {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+    }
+    
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: var(--gray-200);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--seafoam);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    
+    /* New Job Button */
+    .new-job-btn {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: var(--seafoam);
+      border: none;
+      border-radius: 50%;
+      box-shadow: 0 4px 16px oklch(0.72 0.12 180 / 0.4);
+      color: var(--navy-dark);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, box-shadow 0.15s;
+      z-index: 50;
+    }
+    
+    .new-job-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 24px oklch(0.72 0.12 180 / 0.5);
+    }
+    
+    .new-job-btn:active { transform: scale(0.95); }
+    .new-job-btn:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+    .new-job-btn svg { width: 28px; height: 28px; }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0.15 0 0 / 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    
+    .modal-overlay.open { display: flex; }
+    
+    .modal {
+      background: var(--white);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.25s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      border-bottom: 1px solid var(--gray-100);
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 10;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      background: var(--gray-100);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-close:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    .modal-close svg { width: 18px; height: 18px; color: var(--gray-600); }
+    
+    .modal-body { padding: 20px; }
+    
+    /* Forms */
+    .form-group { margin-bottom: 20px; }
+    
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+    
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: var(--font-sans);
+      background: var(--gray-50);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--seafoam);
+      background: var(--white);
+    }
+    
+    .form-textarea { resize: vertical; min-height: 100px; }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    /* Service Type Cards */
+    .service-types {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    
+    .service-type {
+      padding: 16px;
+      background: var(--gray-50);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    
+    .service-type:hover { border-color: var(--gray-300); }
+    .service-type.selected { border-color: var(--seafoam); background: var(--seafoam-light); }
+    .service-type:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    
+    .service-type-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--white);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 8px;
+    }
+    
+    .service-type.selected .service-type-icon { background: var(--seafoam); }
+    .service-type-icon svg { width: 22px; height: 22px; color: var(--navy); }
+    .service-type.selected .service-type-icon svg { color: var(--navy-dark); }
+    
+    .service-type-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+    
+    /* Photo Capture */
+    .photo-capture {
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .photo-capture:hover { border-color: var(--seafoam); background: var(--seafoam-light); }
+    .photo-capture:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    
+    .photo-capture svg {
+      width: 32px;
+      height: 32px;
+      color: var(--gray-400);
+      margin-bottom: 8px;
+    }
+    
+    .photo-capture:hover svg { color: var(--seafoam); }
+    
+    .photo-capture-text {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+    
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .photo-thumb {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .photo-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .photo-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 24px;
+      height: 24px;
+      background: oklch(0.20 0 0 / 0.7);
+      border: none;
+      border-radius: 50%;
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .photo-remove:focus-visible { outline: 2px solid var(--white); }
+    .photo-remove svg { width: 14px; height: 14px; }
+    
+    /* Primary Button */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--seafoam);
+      color: var(--navy-dark);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+    }
+    
+    .btn-primary:hover { box-shadow: 0 4px 16px oklch(0.72 0.12 180 / 0.4); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:focus-visible { outline: 3px solid var(--navy); outline-offset: 2px; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .btn-secondary {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .btn-secondary:hover { background: var(--gray-200); }
+    .btn-secondary:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    
+    /* Job Detail View */
+    .job-detail { padding: 0; }
+    
+    .job-detail-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 20px;
+    }
+    
+    .job-detail-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: oklch(0.8 0 0);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 16px;
+      padding: 0;
+    }
+    
+    .job-detail-back:hover { color: var(--white); }
+    .job-detail-back:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    .job-detail-back svg { width: 18px; height: 18px; }
+    
+    .job-detail-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    
+    .job-detail-id {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: oklch(0.7 0 0);
+    }
+    
+    .job-detail-body { padding: 20px; }
+    
+    .detail-section {
+      margin-bottom: 24px;
+    }
+    
+    .detail-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    .detail-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    
+    .detail-row:last-child { border-bottom: none; }
+    
+    .detail-label { font-size: 14px; color: var(--gray-500); }
+    .detail-value { font-size: 14px; font-weight: 500; color: var(--gray-800); }
+    
+    /* Checklist */
+    .checklist { display: flex; flex-direction: column; gap: 8px; }
+    
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .checklist-item:hover { background: var(--gray-50); }
+    .checklist-item:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    
+    .checklist-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--gray-300);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    
+    .checklist-item.checked .checklist-checkbox {
+      background: var(--success);
+      border-color: var(--success);
+    }
+    
+    .checklist-checkbox svg {
+      width: 14px;
+      height: 14px;
+      color: var(--white);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    
+    .checklist-item.checked .checklist-checkbox svg { opacity: 1; }
+    
+    .checklist-content { flex: 1; }
+    
+    .checklist-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-800);
+    }
+    
+    .checklist-item.checked .checklist-title {
+      text-decoration: line-through;
+      color: var(--gray-500);
+    }
+    
+    .checklist-photo {
+      width: 32px;
+      height: 32px;
+      background: var(--gray-100);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+    
+    .checklist-photo:hover { background: var(--gray-200); }
+    .checklist-photo:focus-visible { outline: 2px solid var(--seafoam); outline-offset: 2px; }
+    .checklist-photo svg { width: 16px; height: 16px; color: var(--gray-500); }
+    .checklist-photo.has-photo { background: var(--seafoam-light); }
+    .checklist-photo.has-photo svg { color: var(--navy); }
+    
+    /* Action Buttons */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .action-btn svg { width: 20px; height: 20px; }
+    
+    .action-btn.share {
+      background: var(--navy);
+      color: var(--white);
+    }
+    
+    .action-btn.share:hover { background: var(--navy-dark); }
+    
+    .action-btn.complete {
+      background: var(--success);
+      color: var(--white);
+    }
+    
+    .action-btn.complete:hover { background: oklch(0.55 0.18 145); }
+    
+    .action-btn:focus-visible { outline: 3px solid var(--seafoam); outline-offset: 2px; }
+    
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+      color: var(--white);
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      margin: 16px;
+    }
+    
+    .upsell-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .upsell-text {
+      font-size: 14px;
+      color: oklch(0.8 0 0);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    
+    .upsell-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .upsell-feature {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: oklch(0.85 0 0);
+      background: oklch(0.99 0 0 / 0.1);
+      padding: 6px 10px;
+      border-radius: 20px;
+    }
+    
+    .upsell-feature svg { width: 14px; height: 14px; color: var(--seafoam); }
+    
+    .upsell-btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      background: var(--seafoam);
+      color: var(--navy-dark);
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      opacity: 0.7;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--gray-800);
+      color: var(--white);
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      opacity: 0;
+      transition: transform 0.25s, opacity 0.25s;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    
+    .empty-icon svg { width: 32px; height: 32px; color: var(--gray-400); }
+    
+    .empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+    
+    .empty-text {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+    
+    /* Canvas Modal for Photo Markup */
+    .canvas-modal {
+      position: fixed;
+      inset: 0;
+      background: var(--gray-800);
+      z-index: 250;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .canvas-modal.open { display: flex; }
+    
+    .canvas-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: oklch(0.15 0 0);
+    }
+    
+    .canvas-title { color: var(--white); font-weight: 600; }
+    
+    .canvas-tools {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .canvas-tool {
+      width: 36px;
+      height: 36px;
+      background: oklch(0.99 0 0 / 0.1);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--white);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .canvas-tool.active { background: var(--seafoam); color: var(--navy-dark); }
+    .canvas-tool:focus-visible { outline: 2px solid var(--seafoam); }
+    .canvas-tool svg { width: 18px; height: 18px; }
+    
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .canvas-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+      touch-action: none;
+    }
+    
+    .canvas-actions {
+      display: flex;
+      gap: 10px;
+      padding: 16px;
+      background: oklch(0.15 0 0);
+    }
+    
+    .canvas-btn {
+      flex: 1;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    
+    .canvas-btn.cancel { background: var(--gray-600); color: var(--white); }
+    .canvas-btn.save { background: var(--seafoam); color: var(--navy-dark); }
+    .canvas-btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+    
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 4px;
+    }
+    
+    /* Report View */
+    .report-preview {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .report-header {
+      background: var(--navy);
+      color: var(--white);
+      padding: 24px;
+      text-align: center;
+    }
+    
+    .report-logo { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .report-title { font-size: 16px; color: oklch(0.8 0 0); }
+    
+    .report-body { padding: 24px; }
+    
+    .report-section { margin-bottom: 24px; }
+    
+    .report-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--gray-500);
+      border-bottom: 2px solid var(--gray-100);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .report-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    
+    .report-photo {
+      aspect-ratio: 4/3;
+      background: var(--gray-100);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+      font-size: 12px;
+    }
+    
+    /* Hidden file input */
+    .hidden-input { display: none; }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .modal {
+        max-width: 480px;
+        margin: auto;
+        border-radius: var(--radius-lg);
+        max-height: 85vh;
+      }
+
+      .new-job-btn { bottom: 100px; right: 40px; }
+    }
+
+    /* Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+
+      .modal {
+        animation: none;
+      }
+
+      .toast {
+        transition: opacity 0.1s;
+      }
+    }
+
+    /* Entrance Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .job-card {
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    .stat-card {
+      animation: scaleIn 0.25s ease-out;
+    }
+
+    /* Micro-interactions */
+    .checklist-item {
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    .checklist-item:active {
+      transform: scale(0.995);
+    }
+
+    .job-badge {
+      transition: transform 0.1s;
+    }
+
+    /* Anti-scrape protection - subtle text selection styling */
+    ::selection {
+      background: var(--seafoam);
+      color: var(--navy-dark);
+    }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--seafoam);
+      color: var(--navy-dark);
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      z-index: 1001;
+      border-radius: 0 0 8px 0;
+      transition: top 0.2s;
+    }
+
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <div class="auth-logo" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
+    </div>
+    <h1 class="auth-title">GillTrack</h1>
+    <p class="auth-subtitle">Track boat work and stay organized<br>Derek Gill Marine Service, Pensacola</p>
+    <form class="auth-form" id="auth-form">
+      <label for="access-key" class="visually-hidden">Access Key</label>
+      <input type="text" id="access-key" class="auth-input" placeholder="Enter access key" autocomplete="off" required aria-describedby="auth-error">
+      <button type="submit" class="auth-btn">Unlock</button>
+      <div id="auth-error" class="auth-error" role="alert">That key doesn't work. Check your email and try again.</div>
+    </form>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app">
+    <header class="header">
+      <div class="header-top">
+        <div class="header-brand">
+          <div class="header-logo" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/><path d="M12 10v4"/><path d="M12 2v3"/></svg>
+          </div>
+          <h1>GillTrack</h1>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="icon-btn" id="search-btn" aria-label="Search jobs">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </button>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Main navigation">
+        <button type="button" class="tab active" role="tab" aria-selected="true" aria-controls="tab-active" id="tab-btn-active">Active</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" aria-controls="tab-completed" id="tab-btn-completed">Done</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" aria-controls="tab-reports" id="tab-btn-reports">Reports</button>
+      </nav>
+    </header>
+    
+    <main id="main-content">
+      <!-- Active Jobs Tab -->
+      <section id="tab-active" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-active">
+        <div id="active-jobs" class="jobs-list" aria-label="Active jobs list">
+          <!-- Jobs rendered here -->
+        </div>
+      </section>
+      
+      <!-- Completed Jobs Tab -->
+      <section id="tab-completed" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-completed">
+        <div id="completed-jobs" class="jobs-list" aria-label="Completed jobs list">
+          <!-- Completed jobs rendered here -->
+        </div>
+      </section>
+      
+      <!-- Reports Tab -->
+      <section id="tab-reports" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-reports">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-active">4</div>
+            <div class="stat-label">Active Jobs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-completed">12</div>
+            <div class="stat-label">Completed This Month</div>
+          </div>
+        </div>
+        
+        <div class="upsell-banner">
+          <div class="upsell-title">Go Pro — More Features Coming</div>
+          <div class="upsell-text">Build PDF reports with photos so customers can see the work got done right. Auto-text updates so they stop calling asking "is it ready yet?"</div>
+          <div class="upsell-features">
+            <span class="upsell-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>PDF Reports with Photos</span>
+            <span class="upsell-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Auto Text Updates</span>
+            <span class="upsell-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Winterization Reminders</span>
+            <span class="upsell-feature"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>QuickBooks Export</span>
+          </div>
+          <button class="upsell-btn" disabled>Full Version — $200/mo</button>
+        </div>
+      </section>
+      
+      <!-- Job Detail View -->
+      <section id="job-detail" class="tab-content job-detail" aria-label="Job details">
+        <!-- Rendered dynamically -->
+      </section>
+    </main>
+    
+    <!-- New Job Button -->
+    <button type="button" class="new-job-btn" id="new-job-btn" aria-label="Create new job">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+    </button>
+  </div>
+  
+  <!-- New Job Modal -->
+  <div class="modal-overlay" id="new-job-modal" role="dialog" aria-modal="true" aria-labelledby="new-job-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="new-job-title">New Boat — Step <span id="step-number">1</span> of 4</h2>
+        <button type="button" class="modal-close" id="close-modal" aria-label="Close modal">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="new-job-form">
+          <!-- Step 1: Customer -->
+          <div id="step-1" class="form-step">
+            <div class="form-group">
+              <label for="customer-name" class="form-label">Who's the customer?</label>
+              <input type="text" id="customer-name" class="form-input" placeholder="John Smith" required>
+            </div>
+            <div class="form-group">
+              <label for="customer-phone" class="form-label">Phone number</label>
+              <input type="tel" id="customer-phone" class="form-input" placeholder="(850) 555-1234" required>
+            </div>
+            <div class="form-group">
+              <label for="customer-location" class="form-label">Where's the boat?</label>
+              <input type="text" id="customer-location" class="form-input" placeholder="Bayou Chico Marina">
+            </div>
+          </div>
+          
+          <!-- Step 2: Boat Info -->
+          <div id="step-2" class="form-step" style="display:none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="boat-year" class="form-label">Year</label>
+                <input type="number" id="boat-year" class="form-input" placeholder="2019" min="1970" max="2026">
+              </div>
+              <div class="form-group">
+                <label for="boat-make" class="form-label">Boat make</label>
+                <select id="boat-make" class="form-select">
+                  <option value="">Pick one</option>
+                  <option value="Boston Whaler">Boston Whaler</option>
+                  <option value="Grady-White">Grady-White</option>
+                  <option value="Sea Hunt">Sea Hunt</option>
+                  <option value="Yamaha">Yamaha</option>
+                  <option value="Robalo">Robalo</option>
+                  <option value="Sportsman">Sportsman</option>
+                  <option value="Key West">Key West</option>
+                  <option value="Cobia">Cobia</option>
+                  <option value="Bayliner">Bayliner</option>
+                  <option value="Contender">Contender</option>
+                  <option value="Everglades">Everglades</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="boat-model" class="form-label">Model</label>
+              <input type="text" id="boat-model" class="form-input" placeholder="242X, 230 Outrage, etc.">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="engine-make" class="form-label">Engine</label>
+                <select id="engine-make" class="form-select">
+                  <option value="">Pick engine</option>
+                  <option value="Mercury">Mercury</option>
+                  <option value="Suzuki">Suzuki</option>
+                  <option value="Yamaha">Yamaha</option>
+                  <option value="Evinrude">Evinrude</option>
+                  <option value="Honda">Honda</option>
+                  <option value="Volvo">Volvo Penta</option>
+                  <option value="MerCruiser">MerCruiser</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="engine-hp" class="form-label">Horsepower</label>
+                <input type="text" id="engine-hp" class="form-input" placeholder="200">
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="boat-hin" class="form-label">HIN (optional)</label>
+              <input type="text" id="boat-hin" class="form-input" placeholder="Hull ID Number">
+            </div>
+          </div>
+          
+          <!-- Step 3: Service Type -->
+          <div id="step-3" class="form-step" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">What are we doing?</label>
+              <div class="service-types" role="radiogroup" aria-label="Service type selection">
+                <button type="button" class="service-type" data-service="winterization" role="radio" aria-checked="false" tabindex="0">
+                  <div class="service-type-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h10"/><path d="M9 4v16"/><path d="m3 9 3 3-3 3"/><path d="M12 6 9 9 6 6"/><path d="m6 18 3-3 3 3"/><circle cx="18" cy="12" r="3"/></svg>
+                  </div>
+                  <div class="service-type-name">Winterization</div>
+                </button>
+                <button type="button" class="service-type" data-service="commissioning" role="radio" aria-checked="false" tabindex="-1">
+                  <div class="service-type-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+                  </div>
+                  <div class="service-type-name">Spring Commission</div>
+                </button>
+                <button type="button" class="service-type" data-service="repair" role="radio" aria-checked="false" tabindex="-1">
+                  <div class="service-type-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                  </div>
+                  <div class="service-type-name">Repair</div>
+                </button>
+                <button type="button" class="service-type" data-service="maintenance" role="radio" aria-checked="false" tabindex="-1">
+                  <div class="service-type-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2"/><path d="M12 22v-2"/><path d="m17 20.66-1-1.73"/><path d="M11 10.27 7 3.34"/><path d="m20.66 17-1.73-1"/><path d="m3.34 7 1.73 1"/><path d="M14 12h8"/><path d="M2 12h2"/><path d="m20.66 7-1.73 1"/><path d="m3.34 17 1.73-1"/><path d="m17 3.34-1 1.73"/><path d="m11 13.73-4 6.93"/></svg>
+                  </div>
+                  <div class="service-type-name">Maintenance</div>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="service-notes" class="form-label">What's wrong with it?</label>
+              <textarea id="service-notes" class="form-textarea" placeholder="What the customer told you, what you noticed, etc."></textarea>
+            </div>
+          </div>
+          
+          <!-- Step 4: Photos -->
+          <div id="step-4" class="form-step" style="display:none;">
+            <div class="form-group">
+              <label class="form-label">Take pictures of the problem</label>
+              <div class="photo-capture" id="photo-capture" role="button" tabindex="0" aria-label="Tap to take photo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                <div class="photo-capture-text">Tap to snap a photo</div>
+              </div>
+              <div class="photo-grid" id="photo-grid"></div>
+              <input type="file" accept="image/*" capture="environment" class="hidden-input" id="photo-input" multiple>
+            </div>
+          </div>
+          
+          <div class="action-buttons">
+            <button type="button" class="btn-secondary" id="prev-step" style="display:none;">Back</button>
+            <button type="button" class="btn-primary" id="next-step">Next</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Canvas Modal for Photo Markup -->
+  <div class="canvas-modal" id="canvas-modal">
+    <div class="canvas-header">
+      <span class="canvas-title">Mark Problem Areas</span>
+      <div class="canvas-tools">
+        <button type="button" class="canvas-tool active" data-tool="draw" aria-label="Draw tool" aria-pressed="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/></svg>
+        </button>
+        <button type="button" class="canvas-tool" data-tool="circle" aria-label="Circle tool" aria-pressed="false">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>
+        </button>
+        <button type="button" class="canvas-tool" data-tool="arrow" aria-label="Arrow tool" aria-pressed="false">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="canvas-container">
+      <canvas id="markup-canvas"></canvas>
+    </div>
+    <div class="canvas-actions">
+      <button type="button" class="canvas-btn cancel" id="canvas-cancel">Cancel</button>
+      <button type="button" class="canvas-btn save" id="canvas-save">Save Markup</button>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:oklch(0.25 0 0 / 0.95);border-top:1px solid oklch(0.35 0 0);padding:8px 12px;font-size:11px;line-height:1.3;color:oklch(0.7 0 0);z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <span>Demo for <strong style="color:oklch(0.9 0 0);">Derek Gill Marine Service LLC</strong> • Not affiliated</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Gill%20Marine&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="color:oklch(0.7 0.15 220);text-decoration:none;white-space:nowrap;font-weight:500;">Delete</a>
+  </div>
+  
+  <script>
+    // ============================================
+    // GillTrack - Marine Service Job Manager
+    // For Gill Marine (Derek Gill Marine Service LLC)
+    // ============================================
+    
+    (function() {
+      'use strict';
+      
+      // === Auth ===
+      const _urlKey = new URLSearchParams(window.location.search).get('key');
+      function _h(s) { let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h) + s.charCodeAt(i); h |= 0; } return h; }
+      
+      const authScreen = document.getElementById('auth-screen');
+      const authForm = document.getElementById('auth-form');
+      const authInput = document.getElementById('access-key');
+      const authError = document.getElementById('auth-error');
+      const app = document.getElementById('app');
+      
+      // === App State ===
+      let jobs = [];
+      let currentStep = 1;
+      let selectedService = '';
+      let capturedPhotos = [];
+      let currentJobId = null;
+      let canvasContext = null;
+      let canvasTool = 'draw';
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+      
+      // === Seasonal Checklists ===
+      const CHECKLISTS = {
+        winterization: [
+          { id: 1, title: 'Run engine to operating temp', done: false },
+          { id: 2, title: 'Add fuel stabilizer to tank', done: false },
+          { id: 3, title: 'Change engine oil and filter', done: false },
+          { id: 4, title: 'Replace fuel filter/water separator', done: false },
+          { id: 5, title: 'Fog engine with fogging oil', done: false },
+          { id: 6, title: 'Drain water from cooling system', done: false },
+          { id: 7, title: 'Drain lower unit and refill', done: false },
+          { id: 8, title: 'Grease all fittings', done: false },
+          { id: 9, title: 'Disconnect battery and clean terminals', done: false },
+          { id: 10, title: 'Add battery tender connection', done: false },
+          { id: 11, title: 'Drain freshwater system', done: false },
+          { id: 12, title: 'Add antifreeze to livewell/washdown', done: false },
+          { id: 13, title: 'Inspect and clean bilge', done: false },
+          { id: 14, title: 'Cover and secure boat', done: false },
+          { id: 15, title: 'Final walk-around inspection', done: false }
+        ],
+        commissioning: [
+          { id: 1, title: 'Remove cover and inspect hull', done: false },
+          { id: 2, title: 'Check battery voltage and connections', done: false },
+          { id: 3, title: 'Reinstall battery if removed', done: false },
+          { id: 4, title: 'Inspect all hoses and clamps', done: false },
+          { id: 5, title: 'Check lower unit oil level', done: false },
+          { id: 6, title: 'Inspect propeller for damage', done: false },
+          { id: 7, title: 'Prime fuel system', done: false },
+          { id: 8, title: 'Check engine oil level', done: false },
+          { id: 9, title: 'Inspect steering and throttle', done: false },
+          { id: 10, title: 'Test all electrical systems', done: false },
+          { id: 11, title: 'Check bilge pump operation', done: false },
+          { id: 12, title: 'Inspect safety equipment', done: false },
+          { id: 13, title: 'Test engine at dock', done: false },
+          { id: 14, title: 'Sea trial and water test', done: false },
+          { id: 15, title: 'Final systems check', done: false }
+        ]
+      };
+      
+      // === Demo Data ===
+      const DEMO_JOBS = [
+        {
+          id: 'GM-2487',
+          customer: 'Mike Patterson',
+          phone: '(850) 458-2219',
+          location: 'Bayou Chico Marina',
+          boat: { year: 2019, make: 'Yamaha', model: '242X', engine: 'Yamaha', hp: '1.8L HO' },
+          service: 'winterization',
+          notes: 'Customer heading to Colorado for winter. Wants the full winterization. Said the last shop skipped the lower unit — make sure we do it right.',
+          status: 'in-progress',
+          checklist: CHECKLISTS.winterization.map((item, i) => ({ ...item, done: i < 8 })),
+          photos: [],
+          created: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'GM-2486',
+          customer: 'Tom Reeves',
+          phone: '(850) 432-8891',
+          location: 'Palafox Pier',
+          boat: { year: 2015, make: 'Boston Whaler', model: '230 Outrage', engine: 'Mercury', hp: '250' },
+          service: 'repair',
+          notes: 'Full rebuild on the 250 Mercury. Customer approved $4,200. One-year warranty on everything.',
+          status: 'complete',
+          checklist: [],
+          photos: [],
+          created: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'GM-2485',
+          customer: 'Sarah Chen',
+          phone: '(850) 291-4456',
+          location: 'Pensacola Beach Marina',
+          boat: { year: 2022, make: 'Sea Hunt', model: 'BX 25', engine: 'Yamaha', hp: '300' },
+          service: 'repair',
+          notes: 'Lower unit leaking at the prop shaft seal. Parts ordered from Mercury — should be here Thursday.'
+          status: 'waiting',
+          checklist: [],
+          photos: [],
+          created: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'GM-2484',
+          customer: 'Jim Caldwell',
+          phone: '(850) 377-1128',
+          location: 'Big Lagoon',
+          boat: { year: 2018, make: 'Grady-White', model: '257 Fisherman', engine: 'Yamaha', hp: '300' },
+          service: 'commissioning',
+          notes: 'Spring commissioning — full inspection. Customer wants it ready before the weekend fishing trip.'
+          status: 'scheduled',
+          checklist: CHECKLISTS.commissioning.map(item => ({ ...item })),
+          photos: [],
+          created: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+      
+      // === IndexedDB ===
+      const DB_NAME = 'GillTrackDB';
+      const DB_VERSION = 1;
+      let db = null;
+      
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onerror = () => reject(request.error);
+          request.onsuccess = () => {
+            db = request.result;
+            resolve(db);
+          };
+          request.onupgradeneeded = (e) => {
+            const database = e.target.result;
+            if (!database.objectStoreNames.contains('jobs')) {
+              database.createObjectStore('jobs', { keyPath: 'id' });
+            }
+          };
+        });
+      }
+      
+      function saveJobs() {
+        if (!db) return;
+        const tx = db.transaction('jobs', 'readwrite');
+        const store = tx.objectStore('jobs');
+        store.clear();
+        jobs.forEach(job => store.put(job));
+      }
+      
+      async function loadJobs() {
+        // Load demo data immediately for instant display
+        jobs = [...DEMO_JOBS];
+        renderJobs();
+        
+        // Then try to load from IndexedDB for any user-added data
+        try {
+          if (!db) await openDB();
+          const tx = db.transaction('jobs', 'readonly');
+          const store = tx.objectStore('jobs');
+          const request = store.getAll();
+          request.onsuccess = () => {
+            if (request.result.length > 0) {
+              jobs = request.result;
+              renderJobs();
+            } else {
+              saveJobs();
+            }
+          };
+        } catch (err) {
+          // IndexedDB not available, keep demo data
+        }
+      }
+      
+      // === UI Elements ===
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      const activeJobsEl = document.getElementById('active-jobs');
+      const completedJobsEl = document.getElementById('completed-jobs');
+      const jobDetailEl = document.getElementById('job-detail');
+      const newJobBtn = document.getElementById('new-job-btn');
+      const newJobModal = document.getElementById('new-job-modal');
+      const closeModalBtn = document.getElementById('close-modal');
+      const nextStepBtn = document.getElementById('next-step');
+      const prevStepBtn = document.getElementById('prev-step');
+      const photoCapture = document.getElementById('photo-capture');
+      const photoInput = document.getElementById('photo-input');
+      const photoGrid = document.getElementById('photo-grid');
+      const canvasModal = document.getElementById('canvas-modal');
+      const markupCanvas = document.getElementById('markup-canvas');
+      const toast = document.getElementById('toast');
+      
+      // === Tab Navigation ===
+      function switchTab(tabId) {
+        tabs.forEach(tab => {
+          const isActive = tab.id === `tab-btn-${tabId}`;
+          tab.classList.toggle('active', isActive);
+          tab.setAttribute('aria-selected', isActive);
+        });
+        tabContents.forEach(content => {
+          content.classList.toggle('active', content.id === `tab-${tabId}`);
+        });
+        currentJobId = null;
+      }
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabId = tab.id.replace('tab-btn-', '');
+          switchTab(tabId);
+        });
+      });
+      
+      // === Job Card Rendering ===
+      function getStatusLabel(status) {
+        const labels = {
+          'in-progress': 'Working on it',
+          'complete': 'Ready for pickup',
+          'waiting': 'Waiting on parts',
+          'scheduled': 'On the schedule'
+        };
+        return labels[status] || status;
+      }
+      
+      function getServiceLabel(service) {
+        const labels = {
+          'winterization': 'Winterization',
+          'commissioning': 'Spring Commission',
+          'repair': 'Repair',
+          'maintenance': 'Maintenance'
+        };
+        return labels[service] || service;
+      }
+      
+      function renderJobCard(job) {
+        const hasChecklist = job.checklist && job.checklist.length > 0;
+        const completedItems = hasChecklist ? job.checklist.filter(i => i.done).length : 0;
+        const totalItems = hasChecklist ? job.checklist.length : 0;
+        const progress = hasChecklist ? (completedItems / totalItems) * 100 : 0;
+        
+        return `
+          <article class="job-card" tabindex="0" role="button" data-job-id="${job.id}" aria-label="View job ${job.id}">
+            <div class="job-status-bar ${job.status}"></div>
+            <div class="job-content">
+              <div class="job-header">
+                <h3 class="job-boat">${job.boat.year} ${job.boat.make} ${job.boat.model}</h3>
+                <span class="job-id">${job.id}</span>
+              </div>
+              <p class="job-customer">${job.customer} &bull; ${job.location}</p>
+              <p class="job-service">${getServiceLabel(job.service)}</p>
+              <div class="job-meta">
+                <span class="job-badge ${job.status}">${getStatusLabel(job.status)}</span>
+                <span class="job-meta-item">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                  ${job.phone}
+                </span>
+              </div>
+              ${hasChecklist ? `
+                <div class="checklist-progress">
+                  <div class="progress-label">
+                    <span>Checklist</span>
+                    <span>${completedItems}/${totalItems}</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${progress}%"></div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </article>
+        `;
+      }
+      
+      function renderJobs() {
+        const activeJobs = jobs.filter(j => j.status !== 'complete');
+        const completedJobs = jobs.filter(j => j.status === 'complete');
+        
+        activeJobsEl.innerHTML = activeJobs.length > 0
+          ? activeJobs.map(renderJobCard).join('')
+          : `<div class="empty-state">
+               <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1 .6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M19.38 20A11.6 11.6 0 0 0 21 14l-9-4-9 4c0 2.9.94 5.34 2.81 7.76"/><path d="M19 13V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v6"/></svg></div>
+               <h3 class="empty-title">No boats in the shop right now</h3>
+               <p class="empty-text">Tap the + button to add a job</p>
+             </div>`;
+
+        completedJobsEl.innerHTML = completedJobs.length > 0
+          ? completedJobs.map(renderJobCard).join('')
+          : `<div class="empty-state">
+               <div class="empty-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+               <h3 class="empty-title">No finished jobs yet</h3>
+               <p class="empty-text">Done work shows up here</p>
+             </div>`;
+        
+        // Update stats
+        document.getElementById('stat-active').textContent = activeJobs.length;
+        document.getElementById('stat-completed').textContent = completedJobs.length;
+        
+        // Add click handlers
+        document.querySelectorAll('.job-card').forEach(card => {
+          card.addEventListener('click', () => openJobDetail(card.dataset.jobId));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openJobDetail(card.dataset.jobId);
+            }
+          });
+        });
+      }
+      
+      // === Job Detail View ===
+      function openJobDetail(jobId) {
+        const job = jobs.find(j => j.id === jobId);
+        if (!job) return;
+        
+        currentJobId = jobId;
+        
+        const hasChecklist = job.checklist && job.checklist.length > 0;
+        
+        jobDetailEl.innerHTML = `
+          <div class="job-detail-header">
+            <button type="button" class="job-detail-back" id="back-to-list">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Back to Jobs
+            </button>
+            <h2 class="job-detail-title">${job.boat.year} ${job.boat.make} ${job.boat.model}</h2>
+            <span class="job-detail-id">${job.id} &bull; ${getServiceLabel(job.service)}</span>
+          </div>
+          <div class="job-detail-body">
+            <section class="detail-section">
+              <h3 class="detail-section-title">Customer</h3>
+              <div class="detail-card">
+                <div class="detail-row">
+                  <span class="detail-label">Name</span>
+                  <span class="detail-value">${job.customer}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Phone</span>
+                  <span class="detail-value">${job.phone}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Location</span>
+                  <span class="detail-value">${job.location}</span>
+                </div>
+              </div>
+            </section>
+            
+            <section class="detail-section">
+              <h3 class="detail-section-title">Boat Details</h3>
+              <div class="detail-card">
+                <div class="detail-row">
+                  <span class="detail-label">Make/Model</span>
+                  <span class="detail-value">${job.boat.make} ${job.boat.model}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Year</span>
+                  <span class="detail-value">${job.boat.year}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Engine</span>
+                  <span class="detail-value">${job.boat.engine} ${job.boat.hp}</span>
+                </div>
+              </div>
+            </section>
+            
+            ${job.notes ? `
+            <section class="detail-section">
+              <h3 class="detail-section-title">Notes</h3>
+              <div class="detail-card">
+                <p style="font-size:14px;color:var(--gray-700);">${job.notes}</p>
+              </div>
+            </section>
+            ` : ''}
+            
+            ${hasChecklist ? `
+            <section class="detail-section">
+              <h3 class="detail-section-title">${getServiceLabel(job.service)} Steps</h3>
+              <div class="checklist" role="list">
+                ${job.checklist.map((item, idx) => `
+                  <div class="checklist-item ${item.done ? 'checked' : ''}" role="listitem" tabindex="0" data-idx="${idx}">
+                    <div class="checklist-checkbox" aria-hidden="true">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div class="checklist-content">
+                      <span class="checklist-title">${item.title}</span>
+                    </div>
+                    <button type="button" class="checklist-photo ${item.photo ? 'has-photo' : ''}" data-idx="${idx}" aria-label="Add photo for ${item.title}">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            </section>
+            ` : ''}
+            
+            <div class="action-buttons">
+              <button type="button" class="action-btn share" id="share-status">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                Text Update to Customer
+              </button>
+              ${job.status !== 'complete' ? `
+              <button type="button" class="action-btn complete" id="mark-complete">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Ready for Pickup
+              </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+        
+        // Switch to detail view
+        tabContents.forEach(c => c.classList.remove('active'));
+        jobDetailEl.classList.add('active');
+        tabs.forEach(t => t.classList.remove('active'));
+        
+        // Event handlers
+        document.getElementById('back-to-list').addEventListener('click', () => {
+          switchTab('active');
+          renderJobs();
+        });
+        
+        document.getElementById('share-status').addEventListener('click', () => shareStatus(job));
+        
+        const markCompleteBtn = document.getElementById('mark-complete');
+        if (markCompleteBtn) {
+          markCompleteBtn.addEventListener('click', () => markJobComplete(job.id));
+        }
+        
+        // Checklist item handlers
+        document.querySelectorAll('.checklist-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            if (e.target.closest('.checklist-photo')) return;
+            toggleChecklistItem(job.id, parseInt(item.dataset.idx));
+          });
+          item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleChecklistItem(job.id, parseInt(item.dataset.idx));
+            }
+          });
+        });
+      }
+      
+      function toggleChecklistItem(jobId, idx) {
+        const job = jobs.find(j => j.id === jobId);
+        if (!job || !job.checklist[idx]) return;
+        
+        job.checklist[idx].done = !job.checklist[idx].done;
+        saveJobs();
+        openJobDetail(jobId);
+      }
+      
+      function markJobComplete(jobId) {
+        const job = jobs.find(j => j.id === jobId);
+        if (!job) return;
+
+        job.status = 'complete';
+        saveJobs();
+        showToast('Job done — ready for pickup');
+        switchTab('active');
+        renderJobs();
+      }
+      
+      // === Share Status ===
+      async function shareStatus(job) {
+        const hasChecklist = job.checklist && job.checklist.length > 0;
+        const completedItems = hasChecklist ? job.checklist.filter(i => i.done).length : 0;
+        const totalItems = hasChecklist ? job.checklist.length : 0;
+
+        let statusText = `Gill Marine Update\n`;
+        statusText += `Job: ${job.id}\n`;
+        statusText += `Boat: ${job.boat.year} ${job.boat.make} ${job.boat.model}\n`;
+        statusText += `Service: ${getServiceLabel(job.service)}\n`;
+        statusText += `Status: ${getStatusLabel(job.status)}\n`;
+        if (hasChecklist) {
+          statusText += `Progress: ${completedItems}/${totalItems} done\n`;
+        }
+        statusText += `\nQuestions? Call Derek: (850) 454-0975`;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ text: statusText });
+            showToast('Update sent');
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              copyToClipboard(statusText);
+            }
+          }
+        } else {
+          copyToClipboard(statusText);
+        }
+      }
+      
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast('Copied — ready to paste');
+        } catch (err) {
+          showToast('Could not copy — try again');
+        }
+      }
+      
+      // === Toast ===
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+      }
+      
+      // === New Job Modal ===
+      newJobBtn.addEventListener('click', () => {
+        newJobModal.classList.add('open');
+        currentStep = 1;
+        selectedService = '';
+        capturedPhotos = [];
+        updateStepUI();
+        document.getElementById('customer-name').focus();
+      });
+      
+      closeModalBtn.addEventListener('click', closeModal);
+      newJobModal.addEventListener('click', (e) => {
+        if (e.target === newJobModal) closeModal();
+      });
+      
+      function closeModal() {
+        newJobModal.classList.remove('open');
+        document.getElementById('new-job-form').reset();
+        photoGrid.innerHTML = '';
+        capturedPhotos = [];
+        selectedService = '';
+        document.querySelectorAll('.service-type').forEach(st => st.classList.remove('selected'));
+      }
+      
+      function updateStepUI() {
+        for (let i = 1; i <= 4; i++) {
+          document.getElementById(`step-${i}`).style.display = i === currentStep ? 'block' : 'none';
+        }
+        prevStepBtn.style.display = currentStep > 1 ? 'block' : 'none';
+        nextStepBtn.textContent = currentStep === 4 ? 'Save Job' : 'Next';
+        const stepNumber = document.getElementById('step-number');
+        if (stepNumber) stepNumber.textContent = currentStep;
+      }
+      
+      prevStepBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+          currentStep--;
+          updateStepUI();
+        }
+      });
+      
+      nextStepBtn.addEventListener('click', () => {
+        if (currentStep < 4) {
+          currentStep++;
+          updateStepUI();
+        } else {
+          createJob();
+        }
+      });
+      
+      // === Service Type Selection ===
+      document.querySelectorAll('.service-type').forEach(st => {
+        st.addEventListener('click', () => {
+          document.querySelectorAll('.service-type').forEach(s => {
+            s.classList.remove('selected');
+            s.setAttribute('aria-checked', 'false');
+          });
+          st.classList.add('selected');
+          st.setAttribute('aria-checked', 'true');
+          selectedService = st.dataset.service;
+        });
+      });
+      
+      // === Photo Capture ===
+      photoCapture.addEventListener('click', () => photoInput.click());
+      photoCapture.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          photoInput.click();
+        }
+      });
+      
+      photoInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            capturedPhotos.push(event.target.result);
+            renderPhotoGrid();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+      
+      function renderPhotoGrid() {
+        photoGrid.innerHTML = capturedPhotos.map((photo, idx) => `
+          <div class="photo-thumb">
+            <img src="${photo}" alt="Captured photo ${idx + 1}">
+            <button type="button" class="photo-remove" data-idx="${idx}" aria-label="Remove photo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+        `).join('');
+        
+        document.querySelectorAll('.photo-remove').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            capturedPhotos.splice(parseInt(btn.dataset.idx), 1);
+            renderPhotoGrid();
+          });
+        });
+      }
+      
+      // === Create Job ===
+      function createJob() {
+        const customerName = document.getElementById('customer-name').value.trim();
+        const customerPhone = document.getElementById('customer-phone').value.trim();
+        const customerLocation = document.getElementById('customer-location').value.trim();
+        const boatYear = document.getElementById('boat-year').value;
+        const boatMake = document.getElementById('boat-make').value;
+        const boatModel = document.getElementById('boat-model').value.trim();
+        const engineMake = document.getElementById('engine-make').value;
+        const engineHp = document.getElementById('engine-hp').value.trim();
+        const boatHin = document.getElementById('boat-hin').value.trim();
+        const serviceNotes = document.getElementById('service-notes').value.trim();
+        
+        if (!customerName || !customerPhone) {
+          showToast('Need a name and phone number');
+          currentStep = 1;
+          updateStepUI();
+          return;
+        }
+        
+        // Generate job ID
+        const lastId = jobs.length > 0 ? parseInt(jobs[0].id.split('-')[1]) : 2483;
+        const newId = `GM-${lastId + 1}`;
+        
+        // Get checklist for seasonal services
+        let checklist = [];
+        if (selectedService === 'winterization') {
+          checklist = CHECKLISTS.winterization.map(item => ({ ...item }));
+        } else if (selectedService === 'commissioning') {
+          checklist = CHECKLISTS.commissioning.map(item => ({ ...item }));
+        }
+        
+        const newJob = {
+          id: newId,
+          customer: customerName,
+          phone: customerPhone,
+          location: customerLocation || 'Drop-off',
+          boat: {
+            year: boatYear || '',
+            make: boatMake || 'Unknown',
+            model: boatModel || '',
+            engine: engineMake || '',
+            hp: engineHp || '',
+            hin: boatHin
+          },
+          service: selectedService || 'repair',
+          notes: serviceNotes,
+          status: 'in-progress',
+          checklist: checklist,
+          photos: capturedPhotos,
+          created: new Date().toISOString()
+        };
+        
+        jobs.unshift(newJob);
+        saveJobs();
+        closeModal();
+        renderJobs();
+        showToast(`${newId} added — job logged`);
+      }
+      
+      // === Canvas Markup ===
+      const canvasToolBtns = document.querySelectorAll('.canvas-tool');
+      canvasToolBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          canvasToolBtns.forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
+          canvasTool = btn.dataset.tool;
+        });
+      });
+      
+      document.getElementById('canvas-cancel').addEventListener('click', () => {
+        canvasModal.classList.remove('open');
+      });
+      
+      document.getElementById('canvas-save').addEventListener('click', () => {
+        // Save marked up image
+        canvasModal.classList.remove('open');
+        showToast('Photo saved with markup');
+      });
+      
+      // === Init ===
+      async function initApp() {
+        // Load and render demo data immediately
+        jobs = [...DEMO_JOBS];
+        renderJobs();
+        
+        // Then try to sync with IndexedDB
+        try {
+          await openDB();
+          const tx = db.transaction('jobs', 'readonly');
+          const store = tx.objectStore('jobs');
+          const request = store.getAll();
+          request.onsuccess = () => {
+            if (request.result && request.result.length > 0) {
+              jobs = request.result;
+              renderJobs();
+            } else {
+              saveJobs();
+            }
+          };
+        } catch (err) {
+          // IndexedDB not available, keep demo data
+        }
+      }
+      
+      // === Auth ===
+      function authenticate(key) {
+        if (_h(key) === 2095329017) {
+          authScreen.classList.add('hidden');
+          app.classList.add('visible');
+          return true;
+        }
+        return false;
+      }
+      
+      // Setup form auth
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const key = authInput.value.trim();
+        if (authenticate(key)) {
+          initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+        } else {
+          authError.classList.add('show');
+          authInput.focus();
+        }
+      });
+      
+      // Check URL auth and auto-init if valid
+      if (_urlKey && authenticate(_urlKey)) {
+        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+      }
+    })();
+  </script>
+</body>
+</html>

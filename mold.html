@@ -1,0 +1,2174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>MoldScope Inspector | Pure Air</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Skip Link - Accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary-dark);
+      color: white;
+      padding: 8px 16px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      z-index: 10001;
+      border-radius: 0 0 var(--radius-md) 0;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid var(--warning);
+      outline-offset: -2px;
+    }
+
+    :root {
+      --primary: oklch(0.55 0.12 220);
+      --primary-light: oklch(0.65 0.10 220);
+      --primary-dark: oklch(0.45 0.14 220);
+      --warning: oklch(0.70 0.16 55);
+      --danger: oklch(0.55 0.18 25);
+      --success: oklch(0.65 0.15 145);
+      --bg: oklch(0.98 0.005 220);
+      --surface: oklch(1 0 0);
+      --text: oklch(0.20 0.02 220);
+      --text-muted: oklch(0.45 0.02 220);
+      --border: oklch(0.88 0.01 220);
+      --shadow-sm: 0 1px 2px oklch(0.20 0.02 220 / 0.05);
+      --shadow-md: 0 4px 12px oklch(0.20 0.02 220 / 0.08);
+      --shadow-lg: 0 8px 24px oklch(0.20 0.02 220 / 0.12);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-heading: 'Outfit', system-ui, sans-serif;
+      
+      /* Animation timing */
+      --transition-fast: 150ms;
+      --transition-medium: 250ms;
+      --transition-slow: 400ms;
+      --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    body { padding-bottom: 140px !important; }
+    
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+    
+    /* Anti-scrape: disable text selection on UI elements */
+    .tab-bar, .app-header, .btn, .tab-btn, .room-tab, .tool-btn, .capture-btn, .modal-header {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    /* Entrance animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* Staggered entrance for cards */
+    .inspection-card {
+      animation: fadeInUp var(--transition-medium) var(--ease-out) forwards;
+    }
+    
+    .photo-card {
+      animation: scaleIn var(--transition-medium) var(--ease-out) forwards;
+    }
+    
+    .tab-panel.active {
+      animation: fadeIn var(--transition-fast) var(--ease-out);
+    }
+    
+    /* Micro-interactions */
+    .btn, .tab-btn, .room-tab, .tool-btn, .photo-card, .capture-btn {
+      transition: transform var(--transition-fast) var(--ease-spring),
+                  box-shadow var(--transition-fast) var(--ease-out),
+                  background-color var(--transition-fast) var(--ease-out);
+    }
+    
+    .btn:hover, .room-tab:hover, .tool-btn:hover {
+      transform: translateY(-1px);
+    }
+    
+    .photo-card:hover {
+      transform: scale(1.02);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .photo-card:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .checklist-item {
+      transition: background-color var(--transition-fast) var(--ease-out);
+    }
+    
+    .checklist-item:hover {
+      background-color: var(--bg);
+      border-radius: var(--radius-sm);
+    }
+    
+    .capture-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .capture-btn:active {
+      transform: scale(0.92);
+    }
+    
+    .inspection-card, .report-preview, .modal-content {
+      transition: box-shadow var(--transition-medium) var(--ease-out);
+    }
+    
+    .inspection-card:hover, .report-preview:hover {
+      box-shadow: var(--shadow-lg);
+    }
+    
+    /* Auth screen entrance */
+    #auth-screen {
+      animation: fadeIn var(--transition-slow) var(--ease-out);
+    }
+    
+    #auth-screen h1 {
+      animation: fadeInUp var(--transition-medium) var(--ease-spring) 100ms backwards;
+    }
+    
+    #auth-screen p {
+      animation: fadeInUp var(--transition-medium) var(--ease-spring) 200ms backwards;
+    }
+    
+    #auth-form {
+      animation: fadeInUp var(--transition-medium) var(--ease-spring) 300ms backwards;
+    }
+    
+    /* Modal entrance */
+    .modal-overlay.visible .modal-content {
+      animation: scaleIn var(--transition-medium) var(--ease-spring);
+    }
+    
+    /* Toast entrance */
+    .toast {
+      transition: transform var(--transition-medium) var(--ease-spring), 
+                  opacity var(--transition-medium) var(--ease-out);
+    }
+    
+    /* Focus indicator improvements */
+    *:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    select:focus-visible,
+    input:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 0;
+    }
+    
+    /* Reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      
+      .inspection-card,
+      .photo-card,
+      .tab-panel.active,
+      #auth-screen,
+      #auth-screen h1,
+      #auth-screen p,
+      #auth-form,
+      .modal-overlay.visible .modal-content {
+        animation: none !important;
+      }
+    }
+    
+    /* Auth screen */
+    #auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    #auth-screen h1 {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    
+    #auth-screen p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    
+    #auth-form {
+      width: 100%;
+      max-width: 320px;
+    }
+    
+    #auth-form input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 12px;
+      transition: border-color 0.15s;
+    }
+    
+    #auth-form input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s, background-color 0.15s;
+    }
+    
+    .btn:focus-visible {
+      outline: 3px solid var(--primary-light);
+      outline-offset: 2px;
+    }
+    
+    .btn:active { transform: scale(0.97); }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary:hover { background: var(--primary-dark); }
+    
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    
+    .btn-secondary:hover { background: var(--bg); }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-full { width: 100%; }
+    
+    /* App container */
+    #app { display: none; }
+    #app.visible { display: block; }
+    
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 100;
+    }
+    
+    .app-header h1 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .inspection-count {
+      font-size: 13px;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    /* Tab bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 12px oklch(0.20 0.02 220 / 0.06);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    
+    .tab-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: -2px;
+    }
+    
+    .tab-btn.active {
+      color: var(--primary);
+    }
+    
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+    
+    .tab-btn.locked {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .tab-btn.locked::after {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") center/contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E") center/contain no-repeat;
+      position: absolute;
+      margin-top: -18px;
+      margin-left: 14px;
+    }
+    
+    /* Tab panels */
+    .tab-panel {
+      display: none;
+      padding: 16px;
+      min-height: calc(100vh - 140px);
+    }
+    
+    .tab-panel.active { display: block; }
+    
+    /* Inspect tab */
+    .inspection-selector {
+      margin-bottom: 20px;
+    }
+    
+    .inspection-selector label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .inspection-selector select {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-family: inherit;
+      background: var(--surface);
+      cursor: pointer;
+    }
+    
+    .inspection-selector select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .inspection-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .inspection-card h2 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .inspection-card .address {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .moisture-bar {
+      height: 8px;
+      background: var(--bg);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    
+    .moisture-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .moisture-low { background: var(--success); }
+    .moisture-medium { background: var(--warning); }
+    .moisture-high { background: var(--danger); }
+    
+    .moisture-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    /* Checklist */
+    .checklist-section {
+      margin-top: 20px;
+    }
+    
+    .checklist-section h3 {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .room-tab-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .room-tab {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      background: var(--bg);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .room-tab:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .room-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .checklist-item:last-child { border-bottom: none; }
+    
+    .checklist-item input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    
+    .checklist-item label {
+      flex: 1;
+      cursor: pointer;
+    }
+    
+    .checklist-item .severity {
+      font-size: 12px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    
+    .severity-low { background: oklch(0.92 0.04 145); color: oklch(0.35 0.12 145); }
+    .severity-medium { background: oklch(0.92 0.06 55); color: oklch(0.40 0.14 55); }
+    .severity-high { background: oklch(0.92 0.06 25); color: oklch(0.40 0.16 25); }
+    
+    /* Photos tab */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .photo-card {
+      position: relative;
+      aspect-ratio: 4/3;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .photo-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .photo-card .photo-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      background: linear-gradient(transparent, oklch(0 0 0 / 0.7));
+      color: white;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .photo-moisture-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .capture-btn-wrapper {
+      position: sticky;
+      bottom: 130px;
+      display: flex;
+      justify-content: center;
+      z-index: 50;
+    }
+    
+    .capture-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 4px solid var(--surface);
+      box-shadow: var(--shadow-lg);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s, background-color 0.15s;
+    }
+    
+    .capture-btn:focus-visible {
+      outline: 3px solid var(--primary-light);
+      outline-offset: 4px;
+    }
+    
+    .capture-btn:active { transform: scale(0.92); }
+    
+    .capture-btn svg {
+      width: 28px;
+      height: 28px;
+    }
+    
+    /* Annotation modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.8);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-overlay.visible { display: flex; }
+    
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      width: 95%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-header h2 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .modal-body { padding: 16px; }
+    
+    .annotation-canvas-container {
+      position: relative;
+      background: #000;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    
+    #annotation-canvas {
+      display: block;
+      width: 100%;
+      touch-action: none;
+    }
+    
+    .annotation-tools {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .tool-btn {
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+    }
+    
+    .tool-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .tool-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tool-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .moisture-input-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .moisture-input-row label {
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .moisture-input-row input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+    }
+    
+    .moisture-input-row input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .location-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+    
+    .location-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* Report tab */
+    .report-preview {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .report-header {
+      text-align: center;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 16px;
+    }
+    
+    .report-header h2 {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .report-header p {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    
+    .report-section {
+      margin-bottom: 20px;
+    }
+    
+    .report-section h3 {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+    
+    .report-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    
+    .report-stat {
+      text-align: center;
+      padding: 16px 8px;
+      background: var(--bg);
+      border-radius: var(--radius-md);
+    }
+    
+    .report-stat .value {
+      font-family: var(--font-heading);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    
+    .report-stat .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    
+    .report-stat.warning .value { color: var(--warning); }
+    .report-stat.danger .value { color: var(--danger); }
+    
+    .report-findings {
+      list-style: none;
+    }
+    
+    .report-findings li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .report-findings li:last-child { border-bottom: none; }
+    
+    .finding-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .finding-icon.issue {
+      background: oklch(0.92 0.06 25);
+      color: var(--danger);
+    }
+    
+    .finding-icon.ok {
+      background: oklch(0.92 0.04 145);
+      color: var(--success);
+    }
+    
+    .generate-report-btn {
+      position: sticky;
+      bottom: 130px;
+    }
+    
+    .watermark-notice {
+      text-align: center;
+      padding: 12px;
+      background: oklch(0.95 0.03 55);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: oklch(0.40 0.10 55);
+      margin-bottom: 16px;
+    }
+    
+    /* Before/After slider */
+    .before-after-section {
+      margin-top: 24px;
+    }
+    
+    .before-after-container {
+      position: relative;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      touch-action: pan-y;
+    }
+    
+    .before-after-container img {
+      display: block;
+      width: 100%;
+    }
+    
+    .before-after-slider {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 4px;
+      height: 100%;
+      background: white;
+      cursor: ew-resize;
+      box-shadow: 0 0 8px oklch(0 0 0 / 0.3);
+    }
+    
+    .before-after-slider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .before-after-label {
+      position: absolute;
+      bottom: 12px;
+      padding: 6px 12px;
+      background: oklch(0 0 0 / 0.7);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+    
+    .before-after-label.before { left: 12px; }
+    .before-after-label.after { right: 12px; }
+    
+    /* Claims tab (locked) */
+    .locked-feature {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .locked-feature svg {
+      width: 64px;
+      height: 64px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    
+    .locked-feature h2 {
+      font-family: var(--font-heading);
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .locked-feature p {
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      max-width: 300px;
+    }
+    
+    .locked-feature .features-list {
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    
+    .locked-feature .features-list li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+    }
+    
+    .locked-feature .features-list li svg {
+      width: 18px;
+      height: 18px;
+      color: var(--primary);
+      margin-bottom: 0;
+    }
+    
+    /* Toast notifications */
+    .toast {
+      position: fixed;
+      bottom: 150px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: white;
+      padding: 14px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 300;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* Demo notice */
+    .demo-banner {
+      background: oklch(0.95 0.04 220);
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--primary-dark);
+    }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .photo-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      
+      .report-summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .tab-panel {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <h1>MoldScope Inspector</h1>
+    <p>Field tool for Pure Air of Charlotte, NC. Photo docs, moisture readings, PDF reports.</p>
+    <form id="auth-form">
+      <label for="access-key" class="sr-only">Access Key</label>
+      <input type="text" id="access-key" name="access-key" placeholder="Enter access key" autocomplete="off" aria-label="Access key">
+      <button type="submit" class="btn btn-primary btn-full">Unlock Tool</button>
+    </form>
+  </div>
+  
+  <!-- Main App -->
+  <div id="main-content">
+    <div class="demo-banner" role="status">Demo — 3 sample jobs loaded (Ballantyne, Dilworth, Matthews)</div>
+    
+    <header class="app-header">
+      <h1>MoldScope</h1>
+      <span class="inspection-count" id="inspection-count" aria-live="polite">3 / 5 inspections</span>
+    </header>
+    
+    <!-- Tab Panels -->
+    <main>
+      <!-- Inspect Tab -->
+      <section id="panel-inspect" class="tab-panel active" role="tabpanel" aria-labelledby="tab-inspect">
+        <div class="inspection-selector">
+          <label for="inspection-select">Active Inspection</label>
+          <select id="inspection-select" aria-describedby="inspection-desc">
+            <!-- Populated by JS -->
+          </select>
+          <p id="inspection-desc" class="sr-only">Select an inspection to view or edit</p>
+        </div>
+        
+        <div id="inspection-details">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div class="checklist-section">
+          <h3>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            Room Checklist
+          </h3>
+          
+          <div class="room-tab-bar" role="tablist" aria-label="Rooms">
+            <button class="room-tab active" role="tab" aria-selected="true" data-room="crawlspace">Crawl Space</button>
+            <button class="room-tab" role="tab" aria-selected="false" data-room="attic">Attic</button>
+            <button class="room-tab" role="tab" aria-selected="false" data-room="basement">Basement</button>
+            <button class="room-tab" role="tab" aria-selected="false" data-room="bathroom">Bathrooms</button>
+            <button class="room-tab" role="tab" aria-selected="false" data-room="kitchen">Kitchen</button>
+            <button class="room-tab" role="tab" aria-selected="false" data-room="hvac">HVAC</button>
+          </div>
+          
+          <div id="checklist-items" role="group" aria-label="Checklist items">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        
+        <button class="btn btn-secondary btn-full" id="new-inspection-btn" style="margin-top: 20px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Inspection
+        </button>
+      </section>
+      
+      <!-- Photos Tab -->
+      <section id="panel-photos" class="tab-panel" role="tabpanel" aria-labelledby="tab-photos">
+        <h2 class="sr-only">Inspection Photos</h2>
+        <div id="photo-grid" class="photo-grid">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div class="capture-btn-wrapper">
+          <button class="capture-btn" id="capture-photo-btn" aria-label="Capture new photo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </button>
+        </div>
+      </section>
+      
+      <!-- Report Tab -->
+      <section id="panel-report" class="tab-panel" role="tabpanel" aria-labelledby="tab-report">
+        <div class="watermark-notice">
+          Free version — PDF includes watermark. Upgrade to remove it.
+        </div>
+        
+        <div id="report-preview" class="report-preview">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div class="before-after-section">
+          <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 600; margin-bottom: 12px;">Before / After Comparison</h3>
+          <div class="before-after-container" id="before-after-container">
+            <img id="before-img" src="" alt="Before remediation">
+            <div class="before-after-slider" id="before-after-slider" role="slider" aria-label="Compare before and after" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0"></div>
+            <span class="before-after-label before">Before</span>
+            <span class="before-after-label after">After</span>
+          </div>
+        </div>
+        
+        <button class="btn btn-primary btn-full generate-report-btn" id="generate-pdf-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Generate PDF Report
+        </button>
+        
+        <button class="btn btn-secondary btn-full" id="share-report-btn" style="margin-top: 12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Report
+        </button>
+      </section>
+      
+      <!-- Claims Tab (Locked) -->
+      <section id="panel-claims" class="tab-panel" role="tabpanel" aria-labelledby="tab-claims">
+        <div class="locked-feature">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <h2>Insurance Claims</h2>
+          <p>Paperwork for adjusters. Export claim-ready docs in one tap.</p>
+          
+          <ul class="features-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Pre-formatted claim templates
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Moisture documentation logs
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Photo evidence packages
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+              Direct adjuster submission
+            </li>
+          </ul>
+          
+          <button class="btn btn-primary" disabled>Upgrade to Full Version — $200</button>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Tab Bar -->
+    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+      <button class="tab-btn active" id="tab-inspect" role="tab" aria-selected="true" aria-controls="panel-inspect" data-panel="inspect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Inspect
+      </button>
+      <button class="tab-btn" id="tab-photos" role="tab" aria-selected="false" aria-controls="panel-photos" data-panel="photos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Photos
+      </button>
+      <button class="tab-btn" id="tab-report" role="tab" aria-selected="false" aria-controls="panel-report" data-panel="report">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Report
+      </button>
+      <button class="tab-btn locked" id="tab-claims" role="tab" aria-selected="false" aria-controls="panel-claims" data-panel="claims" aria-disabled="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Claims
+      </button>
+    </nav>
+  </div>
+  
+  <!-- Annotation Modal -->
+  <div class="modal-overlay" id="annotation-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Mark Up Photo</h2>
+        <button class="modal-close" id="modal-close-btn" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="annotation-canvas-container">
+          <canvas id="annotation-canvas" width="400" height="300"></canvas>
+        </div>
+        
+        <div class="annotation-tools" role="toolbar" aria-label="Annotation tools">
+          <button class="tool-btn active" data-tool="circle" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+            Circle
+          </button>
+          <button class="tool-btn" data-tool="arrow" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            Arrow
+          </button>
+          <button class="tool-btn" data-tool="text" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            Text
+          </button>
+          <button class="tool-btn" data-tool="erase" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 20H9L2 13l8-8 11 11-3 4z"/><path d="M18 13L11 6"/></svg>
+            Clear
+          </button>
+        </div>
+        
+        <div class="moisture-input-row">
+          <label for="moisture-reading">Moisture %</label>
+          <input type="number" id="moisture-reading" min="0" max="100" value="0" aria-describedby="moisture-help">
+          <span id="moisture-help" class="sr-only">Enter the moisture meter reading as a percentage</span>
+        </div>
+        
+        <input type="text" class="location-input" id="photo-location" placeholder="Location (e.g., North wall, floor joist)" aria-label="Photo location description">
+        
+        <button class="btn btn-primary btn-full" id="save-annotation-btn">Save Photo</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <!-- New Inspection Modal -->
+  <div class="modal-overlay" id="new-inspection-modal" role="dialog" aria-modal="true" aria-labelledby="new-inspection-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="new-inspection-title">New Inspection</h2>
+        <button class="modal-close" id="new-modal-close-btn" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 16px;">
+          <label for="new-address" style="display: block; font-weight: 500; margin-bottom: 8px;">Property Address</label>
+          <input type="text" id="new-address" class="location-input" placeholder="123 Main St, Charlotte, NC" style="margin-bottom: 0;">
+        </div>
+        <div style="margin-bottom: 16px;">
+          <label for="new-customer" style="display: block; font-weight: 500; margin-bottom: 8px;">Customer Name</label>
+          <input type="text" id="new-customer" class="location-input" placeholder="John Smith" style="margin-bottom: 0;">
+        </div>
+        <button class="btn btn-primary btn-full" id="create-inspection-btn">Create Inspection</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Demo Disclaimer - Compact -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo" style="position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;padding:6px 12px;font-size:11px;color:#999;z-index:99999;display:flex;align-items:center;justify-content:center;gap:12px;">
+    <span>Demo for <strong style="color:#ccc;">Pure Air of Charlotte, NC</strong> — not affiliated</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Pure%20Air" style="color:#ff6b6b;text-decoration:none;white-space:nowrap;">Delete →</a>
+  </div>
+  
+  <script>
+    // Hash function for auth
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    // Demo inspection data — Charlotte area
+    const DEMO_INSPECTIONS = [
+      {
+        id: 'demo-1',
+        address: '4521 Rea Rd, Ballantyne, NC 28226',
+        customer: 'Thompson Residence',
+        date: '2026-02-08',
+        maxMoisture: 45,
+        avgMoisture: 32,
+        status: 'active',
+        rooms: {
+          crawlspace: { visibleGrowth: true, mustyOdor: true, waterStains: true, condensation: false, properVentilation: false },
+          attic: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          basement: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          bathroom: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          kitchen: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          hvac: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true }
+        },
+        photos: [
+          { id: 'p1', location: 'North wall floor joist', moisture: 45, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23334155" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EMold on joist%3C/text%3E%3C/svg%3E' },
+          { id: 'p2', location: 'Vapor barrier tear', moisture: 38, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23475569" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EVapor barrier%3C/text%3E%3C/svg%3E' },
+          { id: 'p3', location: 'Foundation vent blocked', moisture: 28, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%2364748b" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EBlocked vent%3C/text%3E%3C/svg%3E' }
+        ],
+        findings: ['Active mold growth on floor joists', 'Vapor barrier damaged', 'Blocked foundation vents causing moisture buildup'],
+        recommendation: 'Full crawl space dry fog treatment. Replace vapor barrier. Clear all foundation vents.'
+      },
+      {
+        id: 'demo-2',
+        address: '1845 Dilworth Rd E, Dilworth, NC 28203',
+        customer: 'Martinez Family',
+        date: '2026-02-07',
+        maxMoisture: 38,
+        avgMoisture: 24,
+        status: 'active',
+        rooms: {
+          crawlspace: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          attic: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          basement: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          bathroom: { visibleGrowth: true, mustyOdor: true, waterStains: true, condensation: true, properVentilation: false },
+          kitchen: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          hvac: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true }
+        },
+        photos: [
+          { id: 'p4', location: 'Behind shower tile', moisture: 38, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%231e3a5f" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EBehind tile%3C/text%3E%3C/svg%3E' },
+          { id: 'p5', location: 'Grout line deterioration', moisture: 22, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%232563eb" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EGrout damage%3C/text%3E%3C/svg%3E' }
+        ],
+        findings: ['Mold behind shower tiles', 'Grout failure allowing water intrusion', 'Exhaust fan not venting to exterior'],
+        recommendation: 'Localized bathroom treatment. Repair grout lines. Vent exhaust fan to exterior.'
+      },
+      {
+        id: 'demo-3',
+        address: '9102 E Independence Blvd, Matthews, NC 28105',
+        customer: 'Chen Property',
+        date: '2026-02-06',
+        maxMoisture: 52,
+        avgMoisture: 41,
+        status: 'active',
+        rooms: {
+          crawlspace: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          attic: { visibleGrowth: true, mustyOdor: true, waterStains: true, condensation: true, properVentilation: false },
+          basement: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          bathroom: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          kitchen: { visibleGrowth: false, mustyOdor: false, waterStains: false, condensation: false, properVentilation: true },
+          hvac: { visibleGrowth: true, mustyOdor: false, waterStains: false, condensation: true, properVentilation: false }
+        },
+        photos: [
+          { id: 'p6', location: 'HVAC ductwork joint', moisture: 52, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23991b1b" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EHVAC duct mold%3C/text%3E%3C/svg%3E' },
+          { id: 'p7', location: 'Attic insulation', moisture: 44, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23b91c1c" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3EWet insulation%3C/text%3E%3C/svg%3E' },
+          { id: 'p8', location: 'Roof decking stain', moisture: 36, annotations: [], thumbnail: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="%23dc2626" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3ERoof staining%3C/text%3E%3C/svg%3E' }
+        ],
+        findings: ['Condensation mold on HVAC ductwork', 'Wet attic insulation', 'Roof decking showing water stains', 'Improper HVAC insulation'],
+        recommendation: 'Attic and HVAC treatment. Replace wet insulation. Insulate HVAC ducts properly. Check for roof leaks.'
+      }
+    ];
+    
+    const CHECKLIST_ITEMS = {
+      crawlspace: [
+        { id: 'cs1', label: 'Visible mold growth', key: 'visibleGrowth', severity: 'high' },
+        { id: 'cs2', label: 'Musty or earthy odor', key: 'mustyOdor', severity: 'medium' },
+        { id: 'cs3', label: 'Water stains on joists', key: 'waterStains', severity: 'medium' },
+        { id: 'cs4', label: 'Condensation present', key: 'condensation', severity: 'medium' },
+        { id: 'cs5', label: 'Proper ventilation', key: 'properVentilation', severity: 'low' }
+      ],
+      attic: [
+        { id: 'at1', label: 'Visible mold growth', key: 'visibleGrowth', severity: 'high' },
+        { id: 'at2', label: 'Musty odor', key: 'mustyOdor', severity: 'medium' },
+        { id: 'at3', label: 'Roof leak stains', key: 'waterStains', severity: 'high' },
+        { id: 'at4', label: 'Condensation on decking', key: 'condensation', severity: 'medium' },
+        { id: 'at5', label: 'Adequate ventilation', key: 'properVentilation', severity: 'low' }
+      ],
+      basement: [
+        { id: 'ba1', label: 'Visible mold growth', key: 'visibleGrowth', severity: 'high' },
+        { id: 'ba2', label: 'Musty smell', key: 'mustyOdor', severity: 'medium' },
+        { id: 'ba3', label: 'Efflorescence on walls', key: 'waterStains', severity: 'medium' },
+        { id: 'ba4', label: 'Standing water or dampness', key: 'condensation', severity: 'high' },
+        { id: 'ba5', label: 'Dehumidifier running', key: 'properVentilation', severity: 'low' }
+      ],
+      bathroom: [
+        { id: 'br1', label: 'Visible mold (caulk, grout)', key: 'visibleGrowth', severity: 'medium' },
+        { id: 'br2', label: 'Mildew smell', key: 'mustyOdor', severity: 'low' },
+        { id: 'br3', label: 'Water damage signs', key: 'waterStains', severity: 'medium' },
+        { id: 'br4', label: 'Mirror fogs up quickly', key: 'condensation', severity: 'low' },
+        { id: 'br5', label: 'Exhaust fan working', key: 'properVentilation', severity: 'medium' }
+      ],
+      kitchen: [
+        { id: 'ki1', label: 'Visible mold (sink area)', key: 'visibleGrowth', severity: 'medium' },
+        { id: 'ki2', label: 'Odor under cabinets', key: 'mustyOdor', severity: 'medium' },
+        { id: 'ki3', label: 'Past leak evidence', key: 'waterStains', severity: 'medium' },
+        { id: 'ki4', label: 'Window condensation', key: 'condensation', severity: 'low' },
+        { id: 'ki5', label: 'Range hood vented', key: 'properVentilation', severity: 'low' }
+      ],
+      hvac: [
+        { id: 'hv1', label: 'Visible mold in ducts', key: 'visibleGrowth', severity: 'high' },
+        { id: 'hv2', label: 'Musty air from vents', key: 'mustyOdor', severity: 'high' },
+        { id: 'hv3', label: 'Condensation on ducts', key: 'waterStains', severity: 'medium' },
+        { id: 'hv4', label: 'Drip pan overflow', key: 'condensation', severity: 'high' },
+        { id: 'hv5', label: 'Filter clean', key: 'properVentilation', severity: 'low' }
+      ]
+    };
+    
+    // App state
+    let inspections = [];
+    let currentInspectionId = null;
+    let currentRoom = 'crawlspace';
+    let currentTool = 'circle';
+    let annotationImage = null;
+    let annotations = [];
+    let canvasCtx = null;
+    
+    // DOM refs
+    const authScreen = document.getElementById('auth-screen');
+    const app = document.getElementById('app');
+    const authForm = document.getElementById('auth-form');
+    const accessKeyInput = document.getElementById('access-key');
+    const inspectionSelect = document.getElementById('inspection-select');
+    const inspectionDetails = document.getElementById('inspection-details');
+    const checklistItems = document.getElementById('checklist-items');
+    const photoGrid = document.getElementById('photo-grid');
+    const reportPreview = document.getElementById('report-preview');
+    const annotationModal = document.getElementById('annotation-modal');
+    const annotationCanvas = document.getElementById('annotation-canvas');
+    const toast = document.getElementById('toast');
+    const newInspectionModal = document.getElementById('new-inspection-modal');
+    
+    // Init
+    function init() {
+      // Check URL auth
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === 1023649007) {
+        showApp();
+        return;
+      }
+      
+      // Check stored auth
+      const storedAuth = localStorage.getItem('moldscope_auth');
+      if (storedAuth === 'valid') {
+        showApp();
+        return;
+      }
+      
+      // Show auth screen
+      authScreen.style.display = 'flex';
+    }
+    
+    function showApp() {
+      authScreen.style.display = 'none';
+      app.classList.add('visible');
+      localStorage.setItem('moldscope_auth', 'valid');
+      
+      // Load demo data
+      loadDemoData();
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Render initial state
+      renderInspectionSelect();
+      selectInspection(inspections[0].id);
+    }
+    
+    function loadDemoData() {
+      const stored = localStorage.getItem('moldscope_inspections');
+      if (stored) {
+        inspections = JSON.parse(stored);
+      } else {
+        inspections = JSON.parse(JSON.stringify(DEMO_INSPECTIONS));
+        saveInspections();
+      }
+      updateInspectionCount();
+    }
+    
+    function saveInspections() {
+      localStorage.setItem('moldscope_inspections', JSON.stringify(inspections));
+      updateInspectionCount();
+    }
+    
+    function updateInspectionCount() {
+      document.getElementById('inspection-count').textContent = `${inspections.length} / 5 inspections`;
+    }
+    
+    function setupEventListeners() {
+      // Auth form
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const key = accessKeyInput.value.trim();
+        if (_h(key) === 1023649007) {
+          showApp();
+        } else {
+          showToast('Invalid access key');
+          accessKeyInput.focus();
+        }
+      });
+      
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.classList.contains('locked')) return;
+          switchTab(btn.dataset.panel);
+        });
+      });
+      
+      // Room tabs
+      document.querySelectorAll('.room-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentRoom = btn.dataset.room;
+          document.querySelectorAll('.room-tab').forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          renderChecklist();
+        });
+      });
+      
+      // Inspection selector
+      inspectionSelect.addEventListener('change', () => {
+        selectInspection(inspectionSelect.value);
+      });
+      
+      // Photo capture
+      document.getElementById('capture-photo-btn').addEventListener('click', capturePhoto);
+      
+      // Annotation tools
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.dataset.tool === 'erase') {
+            annotations = [];
+            redrawCanvas();
+            return;
+          }
+          currentTool = btn.dataset.tool;
+          document.querySelectorAll('.tool-btn').forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-pressed', 'true');
+        });
+      });
+      
+      // Modal controls
+      document.getElementById('modal-close-btn').addEventListener('click', closeAnnotationModal);
+      document.getElementById('save-annotation-btn').addEventListener('click', saveAnnotation);
+      document.getElementById('new-modal-close-btn').addEventListener('click', () => {
+        newInspectionModal.classList.remove('visible');
+      });
+      
+      // New inspection
+      document.getElementById('new-inspection-btn').addEventListener('click', () => {
+        if (inspections.length >= 5) {
+          showToast('Free version limited to 5 inspections');
+          return;
+        }
+        newInspectionModal.classList.add('visible');
+        document.getElementById('new-address').focus();
+      });
+      
+      document.getElementById('create-inspection-btn').addEventListener('click', createNewInspection);
+      
+      // Generate PDF
+      document.getElementById('generate-pdf-btn').addEventListener('click', generatePDF);
+      
+      // Share report
+      document.getElementById('share-report-btn').addEventListener('click', shareReport);
+      
+      // Canvas drawing
+      setupCanvas();
+      
+      // Before/after slider
+      setupBeforeAfterSlider();
+    }
+    
+    function switchTab(panel) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        p.classList.remove('active');
+      });
+      
+      document.querySelector(`[data-panel="${panel}"]`).classList.add('active');
+      document.querySelector(`[data-panel="${panel}"]`).setAttribute('aria-selected', 'true');
+      document.getElementById(`panel-${panel}`).classList.add('active');
+      
+      if (panel === 'report') {
+        renderReport();
+      }
+    }
+    
+    function renderInspectionSelect() {
+      inspectionSelect.innerHTML = inspections.map(i => 
+        `<option value="${i.id}">${i.customer} - ${i.address.split(',')[0]}</option>`
+      ).join('');
+    }
+    
+    function selectInspection(id) {
+      currentInspectionId = id;
+      inspectionSelect.value = id;
+      renderInspectionDetails();
+      renderChecklist();
+      renderPhotos();
+    }
+    
+    function getCurrentInspection() {
+      return inspections.find(i => i.id === currentInspectionId);
+    }
+    
+    function renderInspectionDetails() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      const moistureClass = insp.maxMoisture > 40 ? 'moisture-high' : insp.maxMoisture > 25 ? 'moisture-medium' : 'moisture-low';
+      
+      inspectionDetails.innerHTML = `
+        <div class="inspection-card">
+          <h2>${insp.customer}</h2>
+          <p class="address">${insp.address}</p>
+          <div class="moisture-bar">
+            <div class="moisture-bar-fill ${moistureClass}" style="width: ${insp.maxMoisture}%"></div>
+          </div>
+          <div class="moisture-label">
+            <span>Max moisture: ${insp.maxMoisture}%</span>
+            <span>${insp.maxMoisture > 40 ? 'High risk' : insp.maxMoisture > 25 ? 'Moderate' : 'Normal'}</span>
+          </div>
+        </div>
+      `;
+    }
+    
+    function renderChecklist() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      const items = CHECKLIST_ITEMS[currentRoom] || [];
+      const roomData = insp.rooms[currentRoom] || {};
+      
+      checklistItems.innerHTML = items.map(item => `
+        <div class="checklist-item">
+          <input type="checkbox" id="${item.id}" ${roomData[item.key] ? 'checked' : ''} aria-label="${item.label}">
+          <label for="${item.id}">${item.label}</label>
+          <span class="severity severity-${item.severity}">${item.severity}</span>
+        </div>
+      `).join('');
+      
+      // Add change listeners
+      checklistItems.querySelectorAll('input').forEach(input => {
+        input.addEventListener('change', () => {
+          const item = items.find(i => i.id === input.id);
+          if (item && insp.rooms[currentRoom]) {
+            insp.rooms[currentRoom][item.key] = input.checked;
+            saveInspections();
+          }
+        });
+      });
+    }
+    
+    function renderPhotos() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      if (insp.photos.length === 0) {
+        photoGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-muted);">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 12px; opacity: 0.5;"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>No photos yet. Hit the camera button to snap your first shot.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      photoGrid.innerHTML = insp.photos.map(photo => {
+        const moistureClass = photo.moisture > 40 ? 'moisture-high' : photo.moisture > 25 ? 'moisture-medium' : 'moisture-low';
+        return `
+          <div class="photo-card" data-photo-id="${photo.id}" tabindex="0" role="button" aria-label="View photo: ${photo.location}">
+            <img src="${photo.thumbnail}" alt="${photo.location}">
+            <span class="photo-moisture-badge ${moistureClass}">${photo.moisture}%</span>
+            <span class="photo-label">${photo.location}</span>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click listeners
+      photoGrid.querySelectorAll('.photo-card').forEach(card => {
+        card.addEventListener('click', () => openPhotoEditor(card.dataset.photoId));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openPhotoEditor(card.dataset.photoId);
+          }
+        });
+      });
+    }
+    
+    function capturePhoto() {
+      // For demo, create a placeholder photo
+      // In production, this would use getUserMedia
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      const photoId = 'photo-' + Date.now();
+      const colors = ['#1e40af', '#0f766e', '#7c3aed', '#b91c1c', '#ca8a04'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      
+      const newPhoto = {
+        id: photoId,
+        location: 'New photo',
+        moisture: 0,
+        annotations: [],
+        thumbnail: `data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect fill="${encodeURIComponent(color)}" width="200" height="150"/%3E%3Ctext x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle"%3ENew capture%3C/text%3E%3C/svg%3E`
+      };
+      
+      insp.photos.push(newPhoto);
+      saveInspections();
+      renderPhotos();
+      openPhotoEditor(photoId);
+      
+      showToast('Photo captured');
+    }
+    
+    function openPhotoEditor(photoId) {
+      const insp = getCurrentInspection();
+      const photo = insp?.photos.find(p => p.id === photoId);
+      if (!photo) return;
+      
+      annotationImage = new Image();
+      annotationImage.onload = () => {
+        annotationModal.classList.add('visible');
+        document.getElementById('moisture-reading').value = photo.moisture;
+        document.getElementById('photo-location').value = photo.location;
+        annotations = [...(photo.annotations || [])];
+        redrawCanvas();
+      };
+      annotationImage.src = photo.thumbnail;
+      annotationImage.dataset.photoId = photoId;
+    }
+    
+    function closeAnnotationModal() {
+      annotationModal.classList.remove('visible');
+      annotationImage = null;
+      annotations = [];
+    }
+    
+    function saveAnnotation() {
+      const insp = getCurrentInspection();
+      const photoId = annotationImage?.dataset?.photoId;
+      const photo = insp?.photos.find(p => p.id === photoId);
+      if (!photo) return;
+      
+      photo.moisture = parseInt(document.getElementById('moisture-reading').value) || 0;
+      photo.location = document.getElementById('photo-location').value || 'Unlabeled';
+      photo.annotations = [...annotations];
+      
+      // Update max moisture if needed
+      const maxMoisture = Math.max(...insp.photos.map(p => p.moisture));
+      insp.maxMoisture = maxMoisture;
+      insp.avgMoisture = Math.round(insp.photos.reduce((sum, p) => sum + p.moisture, 0) / insp.photos.length);
+      
+      saveInspections();
+      renderPhotos();
+      renderInspectionDetails();
+      closeAnnotationModal();
+      showToast('Photo saved');
+    }
+    
+    function setupCanvas() {
+      const canvas = annotationCanvas;
+      canvasCtx = canvas.getContext('2d');
+      
+      let isDrawing = false;
+      let startX, startY;
+      
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const touch = e.touches ? e.touches[0] : e;
+        return {
+          x: (touch.clientX - rect.left) * scaleX,
+          y: (touch.clientY - rect.top) * scaleY
+        };
+      };
+      
+      const startDraw = (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getPos(e);
+        startX = pos.x;
+        startY = pos.y;
+      };
+      
+      const endDraw = (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        isDrawing = false;
+        const pos = getPos(e);
+        
+        if (currentTool === 'circle') {
+          const radius = Math.sqrt(Math.pow(pos.x - startX, 2) + Math.pow(pos.y - startY, 2));
+          annotations.push({ type: 'circle', x: startX, y: startY, radius });
+        } else if (currentTool === 'arrow') {
+          annotations.push({ type: 'arrow', x1: startX, y1: startY, x2: pos.x, y2: pos.y });
+        } else if (currentTool === 'text') {
+          const text = prompt('Enter text:');
+          if (text) {
+            annotations.push({ type: 'text', x: startX, y: startY, text });
+          }
+        }
+        
+        redrawCanvas();
+      };
+      
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchend', endDraw, { passive: false });
+    }
+    
+    function redrawCanvas() {
+      if (!canvasCtx || !annotationImage) return;
+      
+      const canvas = annotationCanvas;
+      canvas.width = 400;
+      canvas.height = 300;
+      
+      canvasCtx.drawImage(annotationImage, 0, 0, canvas.width, canvas.height);
+      
+      // Draw annotations
+      canvasCtx.strokeStyle = '#ef4444';
+      canvasCtx.fillStyle = '#ef4444';
+      canvasCtx.lineWidth = 3;
+      canvasCtx.font = '14px Inter, sans-serif';
+      
+      annotations.forEach(ann => {
+        if (ann.type === 'circle') {
+          canvasCtx.beginPath();
+          canvasCtx.arc(ann.x, ann.y, ann.radius, 0, Math.PI * 2);
+          canvasCtx.stroke();
+        } else if (ann.type === 'arrow') {
+          const angle = Math.atan2(ann.y2 - ann.y1, ann.x2 - ann.x1);
+          canvasCtx.beginPath();
+          canvasCtx.moveTo(ann.x1, ann.y1);
+          canvasCtx.lineTo(ann.x2, ann.y2);
+          canvasCtx.stroke();
+          // Arrow head
+          canvasCtx.beginPath();
+          canvasCtx.moveTo(ann.x2, ann.y2);
+          canvasCtx.lineTo(ann.x2 - 15 * Math.cos(angle - 0.4), ann.y2 - 15 * Math.sin(angle - 0.4));
+          canvasCtx.lineTo(ann.x2 - 15 * Math.cos(angle + 0.4), ann.y2 - 15 * Math.sin(angle + 0.4));
+          canvasCtx.closePath();
+          canvasCtx.fill();
+        } else if (ann.type === 'text') {
+          canvasCtx.fillStyle = '#ffffff';
+          canvasCtx.fillRect(ann.x - 2, ann.y - 14, canvasCtx.measureText(ann.text).width + 4, 18);
+          canvasCtx.fillStyle = '#ef4444';
+          canvasCtx.fillText(ann.text, ann.x, ann.y);
+        }
+      });
+    }
+    
+    function renderReport() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      const issuesFound = insp.findings.length;
+      const photosCount = insp.photos.length;
+      
+      reportPreview.innerHTML = `
+        <div class="report-header">
+          <h2>Mold Inspection Report</h2>
+          <p>${insp.address}</p>
+          <p>Date: ${new Date(insp.date).toLocaleDateString()}</p>
+        </div>
+        
+        <div class="report-section">
+          <h3>Summary</h3>
+          <div class="report-summary-grid">
+            <div class="report-stat ${insp.maxMoisture > 40 ? 'danger' : insp.maxMoisture > 25 ? 'warning' : ''}">
+              <div class="value">${insp.maxMoisture}%</div>
+              <div class="label">Max Moisture</div>
+            </div>
+            <div class="report-stat">
+              <div class="value">${photosCount}</div>
+              <div class="label">Photos</div>
+            </div>
+            <div class="report-stat ${issuesFound > 2 ? 'danger' : issuesFound > 0 ? 'warning' : ''}">
+              <div class="value">${issuesFound}</div>
+              <div class="label">Issues Found</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="report-section">
+          <h3>Findings</h3>
+          <ul class="report-findings">
+            ${insp.findings.map(f => `
+              <li>
+                <span class="finding-icon issue">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </span>
+                ${f}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+        
+        <div class="report-section">
+          <h3>Recommendation</h3>
+          <p style="color: var(--text-muted); font-size: 14px;">${insp.recommendation}</p>
+        </div>
+      `;
+      
+      // Setup before/after images
+      const beforeImg = document.getElementById('before-img');
+      if (insp.photos.length > 0) {
+        beforeImg.src = insp.photos[0].thumbnail;
+      }
+    }
+    
+    function setupBeforeAfterSlider() {
+      const container = document.getElementById('before-after-container');
+      const slider = document.getElementById('before-after-slider');
+      const beforeImg = document.getElementById('before-img');
+      
+      let isDragging = false;
+      
+      const updateSlider = (e) => {
+        const rect = container.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+        slider.style.left = percent + '%';
+        beforeImg.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+        slider.setAttribute('aria-valuenow', Math.round(percent));
+      };
+      
+      slider.addEventListener('mousedown', () => isDragging = true);
+      slider.addEventListener('touchstart', () => isDragging = true);
+      document.addEventListener('mouseup', () => isDragging = false);
+      document.addEventListener('touchend', () => isDragging = false);
+      
+      container.addEventListener('mousemove', (e) => isDragging && updateSlider(e));
+      container.addEventListener('touchmove', (e) => isDragging && updateSlider(e));
+      
+      // Keyboard support
+      slider.addEventListener('keydown', (e) => {
+        const current = parseInt(slider.style.left) || 50;
+        if (e.key === 'ArrowLeft') {
+          slider.style.left = Math.max(0, current - 5) + '%';
+          beforeImg.style.clipPath = `inset(0 ${100 - Math.max(0, current - 5)}% 0 0)`;
+        } else if (e.key === 'ArrowRight') {
+          slider.style.left = Math.min(100, current + 5) + '%';
+          beforeImg.style.clipPath = `inset(0 ${100 - Math.min(100, current + 5)}% 0 0)`;
+        }
+      });
+    }
+    
+    function createNewInspection() {
+      if (inspections.length >= 5) {
+        showToast('Free version limited to 5 inspections');
+        return;
+      }
+      
+      const address = document.getElementById('new-address').value.trim();
+      const customer = document.getElementById('new-customer').value.trim();
+      
+      if (!address || !customer) {
+        showToast('Please fill in all fields');
+        return;
+      }
+      
+      const newInsp = {
+        id: 'insp-' + Date.now(),
+        address,
+        customer,
+        date: new Date().toISOString().split('T')[0],
+        maxMoisture: 0,
+        avgMoisture: 0,
+        status: 'active',
+        rooms: {
+          crawlspace: {},
+          attic: {},
+          basement: {},
+          bathroom: {},
+          kitchen: {},
+          hvac: {}
+        },
+        photos: [],
+        findings: [],
+        recommendation: ''
+      };
+      
+      inspections.push(newInsp);
+      saveInspections();
+      renderInspectionSelect();
+      selectInspection(newInsp.id);
+      
+      newInspectionModal.classList.remove('visible');
+      document.getElementById('new-address').value = '';
+      document.getElementById('new-customer').value = '';
+      
+      showToast('Inspection created');
+    }
+    
+    async function generatePDF() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      showToast('Generating PDF...');
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(41, 98, 132);
+      doc.text('Mold Inspection Report', 105, 20, { align: 'center' });
+      
+      // Watermark
+      doc.setFontSize(12);
+      doc.setTextColor(200, 200, 200);
+      doc.text('DEMO - WATERMARK', 105, 140, { align: 'center', angle: 45 });
+      
+      // Info
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      doc.text(`Property: ${insp.address}`, 20, 35);
+      doc.text(`Customer: ${insp.customer}`, 20, 42);
+      doc.text(`Date: ${new Date(insp.date).toLocaleDateString()}`, 20, 49);
+      doc.text(`Max Moisture: ${insp.maxMoisture}%`, 20, 56);
+      
+      // Findings
+      doc.setFontSize(14);
+      doc.setTextColor(41, 98, 132);
+      doc.text('Findings', 20, 70);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      let y = 80;
+      insp.findings.forEach(f => {
+        doc.text('- ' + f, 25, y);
+        y += 7;
+      });
+      
+      // Recommendation
+      y += 10;
+      doc.setFontSize(14);
+      doc.setTextColor(41, 98, 132);
+      doc.text('Recommendation', 20, y);
+      
+      y += 10;
+      doc.setFontSize(10);
+      doc.setTextColor(60, 60, 60);
+      const lines = doc.splitTextToSize(insp.recommendation, 170);
+      doc.text(lines, 20, y);
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated by MoldScope Inspector - Demo Version', 105, 285, { align: 'center' });
+      
+      doc.save(`inspection-${insp.id}.pdf`);
+      showToast('PDF downloaded');
+    }
+    
+    async function shareReport() {
+      const insp = getCurrentInspection();
+      if (!insp) return;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Mold Inspection Report',
+            text: `Inspection for ${insp.address} - Max moisture: ${insp.maxMoisture}%`,
+            url: window.location.href
+          });
+          showToast('Report shared');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            showToast('Could not share');
+          }
+        }
+      } else {
+        // Fallback to clipboard
+        const text = `Mold Inspection Report\n${insp.address}\nMax moisture: ${insp.maxMoisture}%\nFindings: ${insp.findings.join(', ')}`;
+        await navigator.clipboard.writeText(text);
+        showToast('Report copied to clipboard');
+      }
+    }
+    
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+    
+    // Start app
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WaterTest Pro | Pioneer Water Treatment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --primary: oklch(0.55 0.18 220);
+      --primary-light: oklch(0.65 0.14 220);
+      --primary-dark: oklch(0.45 0.20 220);
+      --accent: oklch(0.70 0.16 160);
+      --accent-soft: oklch(0.92 0.04 160);
+      --surface: oklch(0.985 0.002 240);
+      --surface-raised: oklch(1 0 0);
+      --text: oklch(0.20 0.02 240);
+      --text-muted: oklch(0.50 0.02 240);
+      --border: oklch(0.90 0.01 240);
+      --error: oklch(0.55 0.20 25);
+      --warning: oklch(0.70 0.18 80);
+      --success: oklch(0.55 0.18 145);
+      
+      --shadow-sm: 0 1px 2px oklch(0.20 0.02 240 / 0.06);
+      --shadow-md: 0 4px 12px oklch(0.20 0.02 240 / 0.08), 0 2px 4px oklch(0.20 0.02 240 / 0.04);
+      --shadow-lg: 0 12px 32px oklch(0.20 0.02 240 / 0.12), 0 4px 8px oklch(0.20 0.02 240 / 0.06);
+      --shadow-float: 0 20px 48px oklch(0.20 0.02 240 / 0.16), 0 8px 16px oklch(0.20 0.02 240 / 0.08);
+      
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-display: 'DM Sans', var(--font-sans);
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--surface);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      overflow-x: hidden;
+    }
+    
+    /* Auth Screen */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .auth-screen::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+      animation: patternDrift 60s linear infinite;
+    }
+    
+    /* Grain texture overlay */
+    .grain-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+    
+    @keyframes patternDrift {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+    
+    .auth-card {
+      background: var(--surface-raised);
+      border-radius: var(--radius-xl);
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: var(--shadow-float);
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      animation: scaleIn 0.5s ease-out;
+    }
+    
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .auth-logo svg { width: 48px; height: 48px; color: white; }
+    
+    .auth-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    
+    .auth-input-group {
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    
+    .auth-input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px oklch(0.55 0.18 220 / 0.12);
+    }
+    
+    .auth-input.error { border-color: var(--error); }
+    
+    .auth-error {
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+    
+    .auth-error.visible { display: block; }
+    
+    .auth-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .auth-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .auth-btn:active { transform: translateY(0); }
+    .auth-btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+    
+    /* App Container */
+    .app { display: none; }
+    .app.visible { display: block; }
+    
+    /* Header */
+    .app-header {
+      background: var(--surface-raised);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .header-logo svg { width: 24px; height: 24px; color: white; }
+    
+    .header-text h1 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    
+    .header-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    /* Main Content */
+    .main-content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Tab Panels */
+    .tab-panel { display: none; animation: fadeSlideIn 0.3s ease-out; }
+    .tab-panel.active { display: block; }
+    
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slideUpIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .section-card {
+      animation: slideUpIn 0.4s ease-out backwards;
+    }
+    
+    .section-card:nth-child(1) { animation-delay: 0.05s; }
+    .section-card:nth-child(2) { animation-delay: 0.1s; }
+    .section-card:nth-child(3) { animation-delay: 0.15s; }
+    
+    /* Section Cards */
+    .section-card {
+      background: var(--surface-raised);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .section-title svg { width: 22px; height: 22px; color: var(--primary); flex-shrink: 0; }
+    
+    /* Camera Test UI */
+    .camera-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: oklch(0.15 0.02 240);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    
+    .camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    
+    .camera-video.active { display: block; }
+    
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .camera-placeholder.hidden { display: none; }
+    
+    .camera-placeholder svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.7; }
+    .camera-placeholder p { font-size: 14px; opacity: 0.8; }
+    
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: none;
+    }
+    
+    .camera-overlay.active { display: block; }
+    
+    .camera-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 40px;
+      border: 3px dashed white;
+      border-radius: 8px;
+      box-shadow: 0 0 0 9999px oklch(0 0 0 / 0.4);
+    }
+    
+    .camera-guide-text {
+      position: absolute;
+      top: calc(50% + 36px);
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      text-shadow: 0 1px 3px oklch(0 0 0 / 0.5);
+    }
+    
+    .captured-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    
+    .captured-image.active { display: block; }
+    
+    /* Camera Buttons */
+    .camera-controls {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 20px;
+      border-radius: var(--radius-md);
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      border: none;
+      min-height: 48px;
+    }
+    
+    .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    
+    .btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: var(--shadow-md);
+      flex: 1;
+    }
+    
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+    .btn-primary:active { transform: translateY(0); }
+    
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    
+    .btn-secondary:hover { background: var(--border); }
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      background: var(--surface);
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+    
+    .btn-icon:hover { background: var(--border); }
+    
+    /* Test Result Display */
+    .test-result {
+      background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      text-align: center;
+      margin-top: 16px;
+      display: none;
+    }
+    
+    .test-result.visible { display: block; animation: fadeSlideIn 0.4s ease-out; }
+    
+    .result-value {
+      font-family: var(--font-display);
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1;
+    }
+    
+    .result-unit { font-size: 20px; font-weight: 500; color: var(--text-muted); }
+    .result-label { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+    
+    .result-scale {
+      margin-top: 16px;
+      height: 12px;
+      background: linear-gradient(90deg, 
+        oklch(0.65 0.18 145) 0%, 
+        oklch(0.75 0.18 100) 25%, 
+        oklch(0.70 0.18 80) 50%, 
+        oklch(0.60 0.18 40) 75%, 
+        oklch(0.55 0.20 25) 100%
+      );
+      border-radius: 6px;
+      position: relative;
+    }
+    
+    .result-marker {
+      position: absolute;
+      top: -6px;
+      width: 4px;
+      height: 24px;
+      background: var(--text);
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transition: left 0.5s ease-out;
+    }
+    
+    .result-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    .result-status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .result-status.soft { background: oklch(0.92 0.06 145); color: oklch(0.35 0.12 145); }
+    .result-status.moderate { background: oklch(0.92 0.06 80); color: oklch(0.40 0.12 80); }
+    .result-status.hard { background: oklch(0.92 0.06 40); color: oklch(0.40 0.12 40); }
+    .result-status.very-hard { background: oklch(0.92 0.08 25); color: oklch(0.40 0.15 25); }
+    
+    /* Manual Entry */
+    .manual-entry {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .manual-entry-toggle {
+      font-size: 13px;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+    }
+    
+    .manual-entry-toggle:hover { text-decoration: underline; }
+    .manual-entry-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+    
+    .manual-form { display: none; margin-top: 16px; }
+    .manual-form.visible { display: block; }
+    
+    .input-group { margin-bottom: 16px; }
+    
+    .input-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px oklch(0.55 0.18 220 / 0.12);
+    }
+    
+    /* Test History */
+    .test-list { list-style: none; }
+    
+    .test-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .test-item:last-child { border-bottom: none; }
+    
+    .test-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    
+    .test-badge.soft { background: oklch(0.55 0.16 145); }
+    .test-badge.moderate { background: oklch(0.65 0.16 80); }
+    .test-badge.hard { background: oklch(0.60 0.16 40); }
+    .test-badge.very-hard { background: oklch(0.55 0.18 25); }
+    
+    .test-details { flex: 1; min-width: 0; }
+    .test-location { font-weight: 600; color: var(--text); font-size: 15px; }
+    .test-meta { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    
+    .test-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .btn-sm {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    
+    .btn-sm svg { width: 18px; height: 18px; }
+    .btn-sm:hover { background: var(--border); color: var(--text); }
+    .btn-sm:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+    
+    /* ROI Calculator */
+    .roi-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    @media (max-width: 400px) {
+      .roi-inputs { grid-template-columns: 1fr; }
+    }
+    
+    .roi-result {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      color: white;
+      margin-top: 20px;
+    }
+    
+    .roi-headline {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .roi-value {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    
+    .roi-breakdown {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid oklch(1 0 0 / 0.2);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      text-align: center;
+    }
+    
+    .roi-stat-value { font-size: 20px; font-weight: 700; }
+    .roi-stat-label { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+    
+    .chart-container {
+      margin-top: 20px;
+      background: var(--surface-raised);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    
+    /* Maintenance Schedule */
+    .reminder-list { list-style: none; }
+    
+    .reminder-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: var(--surface);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    
+    .reminder-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    
+    .reminder-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .reminder-icon svg { width: 22px; height: 22px; }
+    .reminder-icon.salt { background: oklch(0.92 0.08 220); color: var(--primary); }
+    .reminder-icon.filter { background: oklch(0.92 0.06 145); color: oklch(0.45 0.15 145); }
+    .reminder-icon.service { background: oklch(0.92 0.08 40); color: oklch(0.50 0.15 40); }
+    
+    .reminder-content { flex: 1; min-width: 0; }
+    .reminder-title { font-weight: 600; color: var(--text); font-size: 15px; }
+    .reminder-due { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    
+    .reminder-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    
+    .reminder-status.soon { background: oklch(0.92 0.08 40); color: oklch(0.45 0.15 40); }
+    .reminder-status.ok { background: oklch(0.92 0.06 145); color: oklch(0.40 0.12 145); }
+    .reminder-status.overdue { background: oklch(0.92 0.08 25); color: oklch(0.45 0.15 25); }
+    
+    /* Add Reminder Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0.10 0.02 240 / 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1000;
+    }
+    
+    .modal-overlay.visible { display: flex; }
+    
+    .modal {
+      background: var(--surface-raised);
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-float);
+      animation: modalIn 0.25s ease-out;
+    }
+    
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; }
+    
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+    }
+    
+    .modal-close:hover { background: var(--surface); color: var(--text); }
+    .modal-close:focus-visible { outline: 2px solid var(--primary); }
+    .modal-close svg { width: 20px; height: 20px; }
+    
+    .modal-body { padding: 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
+    
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, oklch(0.25 0.02 240) 0%, oklch(0.18 0.02 240) 100%);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      animation: slideUpIn 0.5s ease-out 0.2s backwards;
+    }
+    
+    .upsell-banner::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 200%;
+      background: radial-gradient(circle, oklch(0.55 0.18 220 / 0.15) 0%, transparent 70%);
+    }
+    
+    .upsell-content { position: relative; z-index: 1; }
+    
+    .upsell-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: oklch(0.55 0.18 220);
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    .upsell-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .upsell-text {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+    
+    .upsell-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+    
+    .upsell-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    
+    .upsell-features svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+    
+    .upsell-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: white;
+      color: var(--text);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    
+    .upsell-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .upsell-btn:focus-visible { outline: 3px solid white; outline-offset: 2px; }
+    .upsell-btn svg { width: 18px; height: 18px; }
+    
+    /* Bottom Tab Bar */
+    .tab-bar {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--surface-raised);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px 12px;
+      z-index: 100;
+      box-shadow: 0 -4px 16px oklch(0.20 0.02 240 / 0.06);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      max-width: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      background: none;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      min-height: 60px;
+    }
+    
+    .tab-btn svg { width: 24px; height: 24px; }
+    .tab-btn:hover { color: var(--text); background: var(--surface); }
+    .tab-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+    
+    .tab-btn.active {
+      color: var(--primary);
+      background: oklch(0.55 0.18 220 / 0.08);
+    }
+    
+    /* Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .empty-state svg { width: 64px; height: 64px; color: var(--border); margin-bottom: 16px; }
+    .empty-state h3 { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .empty-state p { font-size: 14px; color: var(--text-muted); max-width: 280px; margin: 0 auto 20px; }
+    
+    /* Toast notifications */
+    .toast-container {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    
+    .toast {
+      background: var(--text);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s forwards;
+    }
+    
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+    
+    /* Print styles */
+    @media print {
+      .tab-bar, .app-header, #bct-demo-disclaimer { display: none !important; }
+      body { padding-bottom: 0 !important; }
+      .section-card { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+    }
+    
+    /* Staggered animations */
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: white;
+      padding: 8px 16px;
+      text-decoration: none;
+      z-index: 10000;
+      border-radius: 0 0 var(--radius-md) 0;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: top 0.2s;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 3px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- Grain texture overlay -->
+  <div class="grain-overlay" aria-hidden="true"></div>
+  
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        </svg>
+      </div>
+      <h1 class="auth-title">WaterTest Pro</h1>
+      <p class="auth-subtitle">Built for Pioneer Water Treatment</p>
+      <form id="auth-form">
+        <div class="auth-input-group">
+          <label for="access-key">Access Key</label>
+          <input type="text" id="access-key" class="auth-input" placeholder="Enter your access key" autocomplete="off" required aria-describedby="auth-error">
+          <p id="auth-error" class="auth-error" role="alert">Invalid access key. Contact Pioneer Water Treatment.</p>
+        </div>
+        <button type="submit" class="auth-btn">Open WaterTest Pro</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app" class="app">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </div>
+        <div class="header-text">
+          <h1>WaterTest Pro</h1>
+          <p>Pioneer Water Treatment</p>
+        </div>
+      </div>
+    </header>
+    
+    <main id="main-content" class="main-content">
+      <!-- Test Tab -->
+      <section id="panel-test" class="tab-panel active" role="tabpanel" aria-labelledby="tab-test">
+        <div class="section-card">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+              <circle cx="12" cy="13" r="3"/>
+            </svg>
+            Snap a Photo of Your Test Strip
+          </h2>
+          
+          <div class="camera-container" role="img" aria-label="Camera preview for water test strip scanning">
+            <video id="camera-video" class="camera-video" autoplay playsinline muted></video>
+            <img id="captured-image" class="captured-image" alt="Captured test strip image">
+            <div id="camera-placeholder" class="camera-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              <p>Tap "Start Camera" to scan your water hardness test strip</p>
+            </div>
+            <div id="camera-overlay" class="camera-overlay">
+              <div class="camera-guide"></div>
+              <p class="camera-guide-text">Align test strip in the box</p>
+            </div>
+          </div>
+          
+          <div class="camera-controls">
+            <button id="btn-start-camera" class="btn btn-primary" type="button" aria-label="Start camera to scan test strip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              <span>Start Camera</span>
+            </button>
+            <button id="btn-capture" class="btn btn-icon" type="button" aria-label="Capture photo" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+              </svg>
+            </button>
+            <button id="btn-retake" class="btn btn-secondary" type="button" aria-label="Retake photo" style="display:none;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M3 21v-5h5"/>
+              </svg>
+              Retake
+            </button>
+          </div>
+          
+          <div id="test-result" class="test-result" aria-live="polite">
+            <div class="result-value"><span id="result-gpg">0</span><span class="result-unit"> GPG</span></div>
+            <p class="result-label">Grains Per Gallon</p>
+            <div class="result-scale" role="img" aria-label="Water hardness scale">
+              <div id="result-marker" class="result-marker" style="left: 0%"></div>
+            </div>
+            <div class="result-labels">
+              <span>Soft</span>
+              <span>Moderate</span>
+              <span>Hard</span>
+              <span>Very Hard</span>
+            </div>
+            <div id="result-status" class="result-status soft"></div>
+          </div>
+          
+          <div class="manual-entry">
+            <button id="manual-toggle" class="manual-entry-toggle" type="button">Or enter reading manually</button>
+            <form id="manual-form" class="manual-form">
+              <div class="input-group">
+                <label for="manual-gpg">Hardness (GPG)</label>
+                <input type="number" id="manual-gpg" class="input-field" min="0" max="100" step="0.5" placeholder="e.g., 25">
+              </div>
+              <div class="input-group">
+                <label for="manual-location">Location</label>
+                <input type="text" id="manual-location" class="input-field" placeholder="e.g., Kitchen faucet">
+              </div>
+              <button type="submit" class="btn btn-primary" style="width:100%;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Save Test Result
+              </button>
+            </form>
+          </div>
+        </div>
+      </section>
+      
+      <!-- History Tab -->
+      <section id="panel-history" class="tab-panel" role="tabpanel" aria-labelledby="tab-history">
+        <div class="section-card">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            Test History
+          </h2>
+          
+          <div id="history-empty" class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+            <h3>No tests yet</h3>
+            <p>Take your first reading to start tracking how hard your water is.</p>
+          </div>
+          
+          <ul id="test-list" class="test-list" aria-label="Water test history"></ul>
+        </div>
+        
+        <!-- Upsell for Trend Analysis -->
+        <div class="upsell-banner">
+          <div class="upsell-content">
+            <span class="upsell-badge">Coming Soon</span>
+            <h3 class="upsell-title">Trend Analysis Pro</h3>
+            <p class="upsell-text">Track how your water changes through the seasons. Spot problems before they get expensive.</p>
+            <ul class="upsell-features">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Unlimited test history
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                PDF reports for insurance
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Family account sharing
+              </li>
+            </ul>
+            <a href="tel:6166995968" class="upsell-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Call Pioneer to Upgrade
+            </a>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Calculator Tab -->
+      <section id="panel-calc" class="tab-panel" role="tabpanel" aria-labelledby="tab-calc">
+        <div class="section-card">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="2" width="16" height="20" rx="2"/>
+              <line x1="8" y1="6" x2="16" y2="6"/>
+              <line x1="8" y1="10" x2="16" y2="10"/>
+              <line x1="8" y1="14" x2="12" y2="14"/>
+              <line x1="8" y1="18" x2="10" y2="18"/>
+            </svg>
+            See What You Could Save
+          </h2>
+          
+          <form id="roi-form">
+            <div class="roi-inputs">
+              <div class="input-group">
+                <label for="calc-people">People in home</label>
+                <input type="number" id="calc-people" class="input-field" min="1" max="12" value="4">
+              </div>
+              <div class="input-group">
+                <label for="calc-hardness">Water hardness (GPG)</label>
+                <input type="number" id="calc-hardness" class="input-field" min="0" max="100" value="25">
+              </div>
+              <div class="input-group">
+                <label for="calc-water-bill">Monthly water bill ($)</label>
+                <input type="number" id="calc-water-bill" class="input-field" min="0" max="500" value="65">
+              </div>
+              <div class="input-group">
+                <label for="calc-bottled">Bottled water/month ($)</label>
+                <input type="number" id="calc-bottled" class="input-field" min="0" max="200" value="40">
+              </div>
+            </div>
+          </form>
+          
+          <div id="roi-result" class="roi-result">
+            <p class="roi-headline">Your estimated 5-year savings</p>
+            <p class="roi-value">$<span id="roi-total">0</span></p>
+            <div class="roi-breakdown">
+              <div>
+                <p class="roi-stat-value">$<span id="roi-appliance">0</span></p>
+                <p class="roi-stat-label">Appliance life</p>
+              </div>
+              <div>
+                <p class="roi-stat-value">$<span id="roi-soap">0</span></p>
+                <p class="roi-stat-label">Soap savings</p>
+              </div>
+              <div>
+                <p class="roi-stat-value">$<span id="roi-bottled">0</span></p>
+                <p class="roi-stat-label">No bottled water</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="savings-chart" height="200" aria-label="Savings comparison chart showing costs with and without water softener"></canvas>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Reminders Tab -->
+      <section id="panel-reminders" class="tab-panel" role="tabpanel" aria-labelledby="tab-reminders">
+        <div class="section-card">
+          <h2 class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Maintenance Reminders
+          </h2>
+          
+          <ul id="reminder-list" class="reminder-list" aria-label="Maintenance reminders"></ul>
+          
+          <button id="btn-add-reminder" class="btn btn-primary" type="button" style="width:100%; margin-top: 16px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="16"/>
+              <line x1="8" y1="12" x2="16" y2="12"/>
+            </svg>
+            Add Reminder
+          </button>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Bottom Tab Bar -->
+    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
+      <button id="tab-test" class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-test" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+          <circle cx="12" cy="13" r="3"/>
+        </svg>
+        <span>Test</span>
+      </button>
+      <button id="tab-history" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-history" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span>History</span>
+      </button>
+      <button id="tab-calc" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-calc" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <line x1="8" y1="6" x2="16" y2="6"/>
+          <line x1="8" y1="10" x2="16" y2="10"/>
+          <line x1="8" y1="14" x2="12" y2="14"/>
+          <line x1="8" y1="18" x2="10" y2="18"/>
+        </svg>
+        <span>Savings</span>
+      </button>
+      <button id="tab-reminders" class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-reminders" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span>Reminders</span>
+      </button>
+    </nav>
+    
+    <!-- Add Reminder Modal -->
+    <div id="modal-reminder" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-reminder-title">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modal-reminder-title" class="modal-title">Add Reminder</h2>
+          <button id="modal-close" class="modal-close" type="button" aria-label="Close modal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <form id="reminder-form">
+          <div class="modal-body">
+            <div class="input-group">
+              <label for="reminder-type">Type</label>
+              <select id="reminder-type" class="input-field">
+                <option value="salt">Salt refill</option>
+                <option value="filter">Filter replacement</option>
+                <option value="service">Annual service</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="reminder-date">Due date</label>
+              <input type="date" id="reminder-date" class="input-field" required>
+            </div>
+            <div class="input-group">
+              <label for="reminder-notes">Notes (optional)</label>
+              <input type="text" id="reminder-notes" class="input-field" placeholder="e.g., Morton Salt, 40lb bag">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Reminder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  </div>
+  
+  <!-- Demo Disclaimer - Compact -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:oklch(0.25 0.02 240);padding:8px 12px;font-size:11px;line-height:1.3;color:oklch(0.85 0 0);z-index:99999;display:flex;align-items:center;justify-content:center;gap:12px;">
+    <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 100px);"><strong style="color:oklch(0.95 0 0);">DEMO:</strong> Not affiliated with Pioneer Water Treatment</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Pioneer%20Water%20Treatment&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:oklch(0.55 0.18 25);color:#fff;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:600;white-space:nowrap;flex-shrink:0;">Delete Demo</a>
+  </div>
+
+  <script>
+    // Hash function for auth
+    function _h(s) { 
+      let h = 0; 
+      for (let i = 0; i < s.length; i++) { 
+        h = ((h << 5) - h) + s.charCodeAt(i); 
+        h |= 0; 
+      } 
+      return h; 
+    }
+    
+    // Database
+    const DB_NAME = 'WaterTestPro';
+    const DB_VERSION = 1;
+    let db = null;
+    
+    // Demo data for West Michigan
+    const DEMO_TESTS = [
+      { id: 1, gpg: 28, location: 'Kitchen sink', date: '2026-02-05', address: '1842 Pine Ridge Dr, Marne, MI' },
+      { id: 2, gpg: 26, location: 'Bathroom faucet', date: '2026-01-28', address: '1842 Pine Ridge Dr, Marne, MI' },
+      { id: 3, gpg: 31, location: 'Laundry room', date: '2026-01-15', address: '4521 Lake Michigan Dr, Grand Rapids, MI' },
+      { id: 4, gpg: 24, location: 'Kitchen sink', date: '2026-01-08', address: '892 Remembrance Rd, Walker, MI' },
+      { id: 5, gpg: 22, location: 'Main well', date: '2025-12-20', address: '3156 8 Mile Rd NW, Sparta, MI' }
+    ];
+    
+    const DEMO_REMINDERS = [
+      { id: 1, type: 'salt', date: '2026-02-15', notes: 'Morton System Saver II, 40lb bags x2' },
+      { id: 2, type: 'filter', date: '2026-03-01', notes: 'Sediment filter - basement unit' },
+      { id: 3, type: 'service', date: '2026-06-01', notes: 'Annual inspection and tune-up' }
+    ];
+    
+    // State
+    let cameraStream = null;
+    let tests = [];
+    let reminders = [];
+    let savingsChart = null;
+    
+    // Initialize IndexedDB
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('tests')) {
+            database.createObjectStore('tests', { keyPath: 'id', autoIncrement: true });
+          }
+          if (!database.objectStoreNames.contains('reminders')) {
+            database.createObjectStore('reminders', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+      });
+    }
+    
+    // DB Operations
+    async function getAllFromStore(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const store = tx.objectStore(storeName);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function addToStore(storeName, item) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        const request = store.add(item);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function deleteFromStore(storeName, id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    async function clearStore(storeName) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const store = tx.objectStore(storeName);
+        const request = store.clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // Load demo data on first visit
+    async function loadDemoData() {
+      const existingTests = await getAllFromStore('tests');
+      if (existingTests.length === 0) {
+        for (const test of DEMO_TESTS) {
+          await addToStore('tests', test);
+        }
+        for (const reminder of DEMO_REMINDERS) {
+          await addToStore('reminders', reminder);
+        }
+      }
+    }
+    
+    // Auth
+    function checkAuth() {
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === 200333042) {
+        showApp();
+        return true;
+      }
+      const storedKey = localStorage.getItem('wtp_key');
+      if (storedKey && _h(storedKey) === 200333042) {
+        showApp();
+        return true;
+      }
+      return false;
+    }
+    
+    function showApp() {
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+    }
+    
+    async function initApp() {
+      await initDB();
+      await loadDemoData();
+      tests = await getAllFromStore('tests');
+      reminders = await getAllFromStore('reminders');
+      renderTestHistory();
+      renderReminders();
+      initCalculator();
+      initTabs();
+    }
+    
+    // Auth form
+    document.getElementById('auth-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const key = document.getElementById('access-key').value.trim();
+      if (_h(key) === 200333042) {
+        localStorage.setItem('wtp_key', key);
+        showApp();
+      } else {
+        document.getElementById('access-key').classList.add('error');
+        document.getElementById('auth-error').classList.add('visible');
+      }
+    });
+    
+    // Tab navigation
+    function initTabs() {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panels = document.querySelectorAll('.tab-panel');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
+          panels.forEach(p => p.classList.remove('active'));
+          
+          tab.classList.add('active');
+          tab.setAttribute('aria-selected', 'true');
+          const panelId = tab.getAttribute('aria-controls');
+          document.getElementById(panelId).classList.add('active');
+        });
+      });
+    }
+    
+    // Camera functionality
+    const btnStartCamera = document.getElementById('btn-start-camera');
+    const btnCapture = document.getElementById('btn-capture');
+    const btnRetake = document.getElementById('btn-retake');
+    const cameraVideo = document.getElementById('camera-video');
+    const capturedImage = document.getElementById('captured-image');
+    const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const cameraOverlay = document.getElementById('camera-overlay');
+    
+    btnStartCamera.addEventListener('click', async () => {
+      try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } } 
+        });
+        cameraVideo.srcObject = cameraStream;
+        cameraVideo.classList.add('active');
+        cameraPlaceholder.classList.add('hidden');
+        cameraOverlay.classList.add('active');
+        btnStartCamera.style.display = 'none';
+        btnCapture.style.display = 'flex';
+      } catch (err) {
+        showToast('Camera access denied. Use manual entry below.');
+      }
+    });
+    
+    btnCapture.addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = cameraVideo.videoWidth;
+      canvas.height = cameraVideo.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cameraVideo, 0, 0);
+      
+      capturedImage.src = canvas.toDataURL('image/jpeg');
+      capturedImage.classList.add('active');
+      cameraVideo.classList.remove('active');
+      cameraOverlay.classList.remove('active');
+      
+      // Stop camera
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      
+      btnCapture.style.display = 'none';
+      btnRetake.style.display = 'flex';
+      
+      // Simulate color analysis (in production, this would use Canvas pixel analysis)
+      analyzeTestStrip(canvas);
+    });
+    
+    btnRetake.addEventListener('click', () => {
+      capturedImage.classList.remove('active');
+      capturedImage.src = '';
+      cameraPlaceholder.classList.remove('hidden');
+      btnRetake.style.display = 'none';
+      btnStartCamera.style.display = 'flex';
+      document.getElementById('test-result').classList.remove('visible');
+    });
+    
+    // Simulate test strip analysis
+    function analyzeTestStrip(canvas) {
+      const ctx = canvas.getContext('2d');
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      
+      // Sample pixels from center region
+      const imageData = ctx.getImageData(centerX - 50, centerY - 20, 100, 40);
+      const data = imageData.data;
+      
+      let totalR = 0, totalG = 0, totalB = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        totalR += data[i];
+        totalG += data[i + 1];
+        totalB += data[i + 2];
+      }
+      const pixelCount = data.length / 4;
+      const avgR = totalR / pixelCount;
+      const avgG = totalG / pixelCount;
+      const avgB = totalB / pixelCount;
+      
+      // Map color to hardness (simplified - real implementation would use calibrated color matching)
+      // Typically: pink/red = soft, purple = moderate, blue = hard, dark blue = very hard
+      let gpg;
+      const hue = rgbToHue(avgR, avgG, avgB);
+      
+      if (hue > 330 || hue < 30) gpg = Math.floor(Math.random() * 7) + 1; // Soft (0-7)
+      else if (hue >= 30 && hue < 60) gpg = Math.floor(Math.random() * 4) + 7; // Slightly hard
+      else if (hue >= 270 && hue <= 330) gpg = Math.floor(Math.random() * 7) + 11; // Hard
+      else gpg = Math.floor(Math.random() * 15) + 18; // Very hard
+      
+      // For demo, use realistic West Michigan hardness
+      gpg = 22 + Math.floor(Math.random() * 12);
+      
+      displayResult(gpg);
+      saveTest(gpg, 'Camera scan');
+    }
+    
+    function rgbToHue(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h;
+      if (max === min) h = 0;
+      else if (max === r) h = 60 * (((g - b) / (max - min)) % 6);
+      else if (max === g) h = 60 * (((b - r) / (max - min)) + 2);
+      else h = 60 * (((r - g) / (max - min)) + 4);
+      if (h < 0) h += 360;
+      return h;
+    }
+    
+    function displayResult(gpg) {
+      const resultDiv = document.getElementById('test-result');
+      const gpgEl = document.getElementById('result-gpg');
+      const markerEl = document.getElementById('result-marker');
+      const statusEl = document.getElementById('result-status');
+      
+      resultDiv.classList.add('visible');
+      gpgEl.textContent = gpg;
+      
+      // Position marker (0-50+ GPG scale)
+      const position = Math.min((gpg / 50) * 100, 100);
+      markerEl.style.left = position + '%';
+      
+      // Status message
+      let status, className;
+      if (gpg <= 3) { status = 'Soft water - no treatment needed'; className = 'soft'; }
+      else if (gpg <= 7) { status = 'Slightly hard - minimal scale buildup'; className = 'soft'; }
+      else if (gpg <= 14) { status = 'Moderately hard - consider a softener'; className = 'moderate'; }
+      else if (gpg <= 25) { status = 'Hard water - softener recommended'; className = 'hard'; }
+      else { status = 'Very hard water - softener strongly recommended'; className = 'very-hard'; }
+      
+      statusEl.textContent = status;
+      statusEl.className = 'result-status ' + className;
+    }
+    
+    async function saveTest(gpg, location) {
+      const test = {
+        gpg,
+        location,
+        date: new Date().toISOString().split('T')[0],
+        address: 'Manual entry'
+      };
+      
+      const id = await addToStore('tests', test);
+      test.id = id;
+      tests.unshift(test);
+      renderTestHistory();
+      showToast('Test saved: ' + gpg + ' GPG');
+    }
+    
+    // Manual entry
+    document.getElementById('manual-toggle').addEventListener('click', () => {
+      document.getElementById('manual-form').classList.toggle('visible');
+    });
+    
+    document.getElementById('manual-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const gpg = parseFloat(document.getElementById('manual-gpg').value);
+      const location = document.getElementById('manual-location').value || 'Unknown';
+      
+      if (gpg >= 0 && gpg <= 100) {
+        displayResult(gpg);
+        await saveTest(gpg, location);
+        document.getElementById('manual-form').reset();
+        document.getElementById('manual-form').classList.remove('visible');
+      }
+    });
+    
+    // Render test history
+    function renderTestHistory() {
+      const listEl = document.getElementById('test-list');
+      const emptyEl = document.getElementById('history-empty');
+      
+      if (tests.length === 0) {
+        listEl.innerHTML = '';
+        emptyEl.style.display = 'block';
+        return;
+      }
+      
+      emptyEl.style.display = 'none';
+      
+      listEl.innerHTML = tests.map(test => {
+        let badgeClass = 'soft';
+        if (test.gpg > 25) badgeClass = 'very-hard';
+        else if (test.gpg > 14) badgeClass = 'hard';
+        else if (test.gpg > 7) badgeClass = 'moderate';
+        
+        return `
+          <li class="test-item">
+            <div class="test-badge ${badgeClass}">${test.gpg}</div>
+            <div class="test-details">
+              <p class="test-location">${test.location}</p>
+              <p class="test-meta">${formatDate(test.date)} ${test.address ? '• ' + test.address : ''}</p>
+            </div>
+            <div class="test-actions">
+              <button class="btn-sm" onclick="shareTest(${test.id})" aria-label="Share test result">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              </button>
+              <button class="btn-sm" onclick="deleteTest(${test.id})" aria-label="Delete test">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </div>
+          </li>
+        `;
+      }).join('');
+    }
+    
+    async function deleteTest(id) {
+      await deleteFromStore('tests', id);
+      tests = tests.filter(t => t.id !== id);
+      renderTestHistory();
+      showToast('Test deleted');
+    }
+    
+    async function shareTest(id) {
+      const test = tests.find(t => t.id === id);
+      if (!test) return;
+      
+      const text = `Water Test Result: ${test.gpg} GPG at ${test.location} (${formatDate(test.date)}). Tested with WaterTest Pro from Pioneer Water Treatment.`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: 'Water Test Result', text });
+        } catch (e) {}
+      } else {
+        await navigator.clipboard.writeText(text);
+        showToast('Result copied to clipboard');
+      }
+    }
+    
+    // Reminders
+    function renderReminders() {
+      const listEl = document.getElementById('reminder-list');
+      
+      if (reminders.length === 0) {
+        listEl.innerHTML = '<li class="empty-state" style="padding: 32px;"><p>No reminders set. Add one to stay on top of maintenance.</p></li>';
+        return;
+      }
+      
+      const now = new Date();
+      
+      listEl.innerHTML = reminders.map(r => {
+        const dueDate = new Date(r.date);
+        const daysUntil = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+        
+        let statusClass, statusText;
+        if (daysUntil < 0) { statusClass = 'overdue'; statusText = 'Overdue'; }
+        else if (daysUntil <= 7) { statusClass = 'soon'; statusText = 'Due soon'; }
+        else { statusClass = 'ok'; statusText = `${daysUntil} days`; }
+        
+        const iconClass = r.type;
+        let iconSvg;
+        switch (r.type) {
+          case 'salt':
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>';
+            break;
+          case 'filter':
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>';
+            break;
+          case 'service':
+            iconSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
+            break;
+        }
+        
+        const typeLabel = r.type.charAt(0).toUpperCase() + r.type.slice(1) + (r.type === 'salt' ? ' refill' : r.type === 'filter' ? ' change' : ' checkup');
+        
+        return `
+          <li class="reminder-item">
+            <div class="reminder-icon ${iconClass}">${iconSvg}</div>
+            <div class="reminder-content">
+              <p class="reminder-title">${typeLabel}</p>
+              <p class="reminder-due">${formatDate(r.date)}${r.notes ? ' • ' + r.notes : ''}</p>
+            </div>
+            <span class="reminder-status ${statusClass}">${statusText}</span>
+          </li>
+        `;
+      }).join('');
+    }
+    
+    // Add reminder modal
+    const modalOverlay = document.getElementById('modal-reminder');
+    const btnAddReminder = document.getElementById('btn-add-reminder');
+    const modalClose = document.getElementById('modal-close');
+    const modalCancel = document.getElementById('modal-cancel');
+    const reminderForm = document.getElementById('reminder-form');
+    
+    btnAddReminder.addEventListener('click', () => {
+      modalOverlay.classList.add('visible');
+      document.getElementById('reminder-type').focus();
+    });
+    
+    function closeModal() {
+      modalOverlay.classList.remove('visible');
+    }
+    
+    modalClose.addEventListener('click', closeModal);
+    modalCancel.addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) closeModal();
+    });
+    
+    reminderForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const reminder = {
+        type: document.getElementById('reminder-type').value,
+        date: document.getElementById('reminder-date').value,
+        notes: document.getElementById('reminder-notes').value
+      };
+      
+      const id = await addToStore('reminders', reminder);
+      reminder.id = id;
+      reminders.push(reminder);
+      reminders.sort((a, b) => new Date(a.date) - new Date(b.date));
+      renderReminders();
+      closeModal();
+      reminderForm.reset();
+      showToast('Reminder added');
+    });
+    
+    // ROI Calculator
+    function initCalculator() {
+      const inputs = ['calc-people', 'calc-hardness', 'calc-water-bill', 'calc-bottled'];
+      inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateROI);
+      });
+      calculateROI();
+    }
+    
+    function calculateROI() {
+      const people = parseInt(document.getElementById('calc-people').value) || 4;
+      const hardness = parseInt(document.getElementById('calc-hardness').value) || 25;
+      const waterBill = parseInt(document.getElementById('calc-water-bill').value) || 65;
+      const bottled = parseInt(document.getElementById('calc-bottled').value) || 40;
+      
+      // Appliance savings: 20-40% reduction in appliance replacement costs based on hardness
+      const applianceFactor = Math.min(0.4, hardness * 0.015);
+      const applianceSavings = Math.round(2500 * applianceFactor);
+      
+      // Soap/detergent savings: 50-70% reduction in usage
+      const soapSavings = Math.round(people * 12 * 5 * 0.6); // ~$5/month per person in soap
+      
+      // Bottled water elimination
+      const bottledSavings = bottled * 12 * 5;
+      
+      // Energy savings from water heater efficiency (2-4%)
+      const energySavings = Math.round(waterBill * 12 * 5 * 0.03);
+      
+      const totalSavings = applianceSavings + soapSavings + bottledSavings + energySavings;
+      
+      document.getElementById('roi-total').textContent = totalSavings.toLocaleString();
+      document.getElementById('roi-appliance').textContent = applianceSavings.toLocaleString();
+      document.getElementById('roi-soap').textContent = soapSavings.toLocaleString();
+      document.getElementById('roi-bottled').textContent = bottledSavings.toLocaleString();
+      
+      updateChart(totalSavings, hardness);
+    }
+    
+    function updateChart(savings, hardness) {
+      const ctx = document.getElementById('savings-chart');
+      
+      // Costs without softener
+      const withoutSoftener = [
+        Math.round(hardness * 80),
+        Math.round(hardness * 80 * 2.1),
+        Math.round(hardness * 80 * 3.3),
+        Math.round(hardness * 80 * 4.6),
+        Math.round(hardness * 80 * 6)
+      ];
+      
+      // Costs with softener
+      const softenerCost = 1800; // Initial investment
+      const withSoftener = withoutSoftener.map((cost, i) => {
+        const cumSavings = savings * ((i + 1) / 5);
+        return Math.max(0, cost - cumSavings + (i === 0 ? softenerCost : 0));
+      });
+      
+      if (savingsChart) savingsChart.destroy();
+      
+      savingsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
+          datasets: [
+            {
+              label: 'Without softener',
+              data: withoutSoftener,
+              borderColor: 'oklch(0.55 0.18 25)',
+              backgroundColor: 'oklch(0.55 0.18 25 / 0.1)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'With softener',
+              data: withSoftener,
+              borderColor: 'oklch(0.55 0.18 145)',
+              backgroundColor: 'oklch(0.55 0.18 145 / 0.1)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { usePointStyle: true, padding: 16 }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => '$' + value.toLocaleString()
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Utilities
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+    
+    // Init
+    if (!checkAuth()) {
+      document.getElementById('auth-screen').style.display = 'flex';
+    }
+    
+    // Keyboard trap for modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('visible')) {
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>

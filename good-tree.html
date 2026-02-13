@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta name="robots" content="noindex, nofollow">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Storm Command Center — The Good Tree Company</title>
@@ -13,15 +12,6 @@
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script>
-
-// Security: HTML entity escaping to prevent XSS
-function escapeHTML(str) {
-  if (str === null || str === undefined) return '';
-  const s = String(str);
-  const div = document.createElement('div');
-  div.appendChild(document.createTextNode(s));
-  return div.innerHTML;
-}
         tailwind.config = {
             theme: {
                 extend: {
@@ -134,6 +124,23 @@ function escapeHTML(str) {
             box-shadow: 0 0 30px rgba(106, 150, 31, 0.6);
             transform: scale(1.02);
         }
+
+        /* Skip Link Accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #c8a96e;
+            color: #fff;
+            padding: 8px 16px;
+            z-index: 9999;
+            font-weight: 600;
+            transition: top .15s;
+            text-decoration: none;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
         
         /* Storm mode header */
         .storm-active {
@@ -145,69 +152,14 @@ function escapeHTML(str) {
             0%, 100% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
         }
-    
-/* === DEMO DISCLAIMER === */
-#bct-demo-disclaimer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #f8f8f8;
-  border-top: 1px solid #ddd;
-  padding: 10px 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #666;
-  z-index: 99999;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 16px;
-  text-align: center;
-}
-#bct-demo-disclaimer p {
-  margin: 0;
-  max-width: 700px;
-}
-#bct-demo-disclaimer strong {
-  color: #333;
-  font-weight: 600;
-}
-#bct-demo-disclaimer a.bct-delete-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #dc3545;
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 11px;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: background 0.15s;
-}
-#bct-demo-disclaimer a.bct-delete-btn:hover {
-  background: #b02a37;
-}
-@media (max-width: 600px) {
-  #bct-demo-disclaimer {
-    flex-direction: column;
-    padding: 8px 12px 12px;
-    font-size: 11px;
-  }
-}
-/* Add bottom padding to body so disclaimer doesn't cover content */
-body { padding-bottom: 60px !important; }
-</style>
+    </style>
 </head>
 <body class="min-h-screen bg-forest-dark text-white" x-data="stormCommand()" x-init="init()">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     
     <!-- Demo Banner -->
     <div x-show="showDemoBanner" x-transition class="bg-alert-orange text-white px-4 py-3 text-center font-poppins text-sm fixed top-0 left-0 right-0 z-50 no-print">
-        <span class="font-medium">📋 Showing sample data.</span>
+        <span class="font-medium"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Showing sample data.</span>
         <button @click="clearDemoData()" class="underline ml-2 font-semibold hover:text-cream">Tap to clear and start fresh.</button>
         <button @click="showDemoBanner = false" class="ml-4 opacity-70 hover:opacity-100">✕</button>
     </div>
@@ -216,7 +168,7 @@ body { padding-bottom: 60px !important; }
     <div id="toast-container" class="fixed bottom-24 lg:bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 no-print"></div>
     
     <!-- Main Container -->
-    <div class="pb-20 lg:pb-0" :class="showDemoBanner ? 'pt-14' : 'pt-0'">
+    <div class="pb-20 lg:pb-0" :class="showDemoBanner ? 'pt-14' : 'pt-0'" id="main-content">
         
         <!-- Desktop Header -->
         <header class="hidden lg:flex items-center justify-between px-6 py-4 bg-forest-green border-b border-brand-green/30">
@@ -402,8 +354,8 @@ body { padding-bottom: 60px !important; }
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center gap-2 mb-1">
                                             <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="'status-' + job.status" x-text="formatStatus(job.status)"></span>
-                                            <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">⚡ Power Lines</span>
-                                            <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">🏠 Structure</span>
+                                            <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Power Lines</span>
+                                            <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Structure</span>
                                         </div>
                                         <h3 class="font-poppins font-semibold text-cream truncate" x-text="job.customerName"></h3>
                                         <p class="text-sm text-brand-green truncate" x-text="job.address"></p>
@@ -492,9 +444,9 @@ body { padding-bottom: 60px !important; }
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1 flex-wrap">
                                         <span class="text-xs font-medium px-2 py-0.5 rounded-full" :class="'status-' + job.status" x-text="formatStatus(job.status)"></span>
-                                        <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">⚡ Power</span>
-                                        <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full">🏠 Struct</span>
-                                        <span x-show="job.blocked" class="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">🚗 Blocked</span>
+                                        <span x-show="job.powerLines" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Power</span>
+                                        <span x-show="job.structuralDamage" class="text-xs bg-red-600 text-white px-2 py-0.5 rounded-full"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Struct</span>
+                                        <span x-show="job.blocked" class="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg> Blocked</span>
                                     </div>
                                     <h3 class="font-poppins font-semibold text-cream" x-text="job.customerName"></h3>
                                     <p class="text-sm text-brand-green" x-text="job.address"></p>
@@ -579,13 +531,13 @@ body { padding-bottom: 60px !important; }
                             </div>
                             
                             <div x-show="crew.currentJob" class="bg-alert-orange/10 border border-alert-orange/30 rounded-lg p-3">
-                                <p class="text-xs text-alert-orange mb-1">🔧 Currently Working</p>
+                                <p class="text-xs text-alert-orange mb-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg> Currently Working</p>
                                 <p class="text-sm text-cream font-medium" x-text="getJobById(crew.currentJob)?.customerName"></p>
                                 <p class="text-xs text-cream/60" x-text="getJobById(crew.currentJob)?.address"></p>
                             </div>
                             
                             <div x-show="!crew.currentJob && crew.status === 'active'" class="bg-brand-green/10 border border-brand-green/30 rounded-lg p-3 text-center">
-                                <p class="text-sm text-brand-green font-medium">✓ Available for dispatch</p>
+                                <p class="text-sm text-brand-green font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><polyline points="20 6 9 17 4 12"></polyline></svg> Available for dispatch</p>
                             </div>
                         </div>
                     </template>
@@ -715,19 +667,19 @@ body { padding-bottom: 60px !important; }
                 <div class="grid grid-cols-2 gap-3">
                     <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.powerLines ? 'border-red-500 bg-red-900/20' : ''">
                         <input type="checkbox" x-model="newRequest.powerLines" class="w-5 h-5 rounded border-brand-green/30 text-alert-orange focus:ring-alert-orange">
-                        <span class="text-sm text-cream">⚡ Power Lines</span>
+                        <span class="text-sm text-cream"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Power Lines</span>
                     </label>
                     <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.structuralDamage ? 'border-red-500 bg-red-900/20' : ''">
                         <input type="checkbox" x-model="newRequest.structuralDamage" class="w-5 h-5 rounded border-brand-green/30 text-alert-orange focus:ring-alert-orange">
-                        <span class="text-sm text-cream">🏠 Structure Hit</span>
+                        <span class="text-sm text-cream"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Structure Hit</span>
                     </label>
                     <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.blocked ? 'border-purple-500 bg-purple-900/20' : ''">
                         <input type="checkbox" x-model="newRequest.blocked" class="w-5 h-5 rounded border-brand-green/30 text-purple-400 focus:ring-purple-400">
-                        <span class="text-sm text-cream">🚗 Access Blocked</span>
+                        <span class="text-sm text-cream"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg> Access Blocked</span>
                     </label>
                     <label class="flex items-center gap-3 bg-forest-dark border border-brand-green/30 rounded-lg p-3 cursor-pointer" :class="newRequest.injured ? 'border-red-500 bg-red-900/20' : ''">
                         <input type="checkbox" x-model="newRequest.injured" class="w-5 h-5 rounded border-brand-green/30 text-red-500 focus:ring-red-500">
-                        <span class="text-sm text-cream">🚨 Injury</span>
+                        <span class="text-sm text-cream"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Injury</span>
                     </label>
                 </div>
                 
@@ -811,10 +763,10 @@ body { padding-bottom: 60px !important; }
                         
                         <!-- Flags -->
                         <div class="flex flex-wrap gap-2" x-show="selectedJob.powerLines || selectedJob.structuralDamage || selectedJob.blocked || selectedJob.injured">
-                            <span x-show="selectedJob.powerLines" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">⚡ Power Lines Involved</span>
-                            <span x-show="selectedJob.structuralDamage" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">🏠 Structural Damage</span>
-                            <span x-show="selectedJob.blocked" class="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium">🚗 Access Blocked</span>
-                            <span x-show="selectedJob.injured" class="bg-red-800 text-white px-3 py-1.5 rounded-full text-sm font-medium">🚨 Injury Reported</span>
+                            <span x-show="selectedJob.powerLines" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Power Lines Involved</span>
+                            <span x-show="selectedJob.structuralDamage" class="bg-red-600 text-white px-3 py-1.5 rounded-full text-sm font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Structural Damage</span>
+                            <span x-show="selectedJob.blocked" class="bg-purple-600 text-white px-3 py-1.5 rounded-full text-sm font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg> Access Blocked</span>
+                            <span x-show="selectedJob.injured" class="bg-red-800 text-white px-3 py-1.5 rounded-full text-sm font-medium"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> Injury Reported</span>
                         </div>
                         
                         <!-- Description -->
@@ -1058,55 +1010,6 @@ body { padding-bottom: 60px !important; }
             document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Denied</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
             throw new Error('Invalid key');
         }
-
-// Security: Rate limiting + session expiry
-(function(){
-  const RL_KEY = 'bct_rl';
-  const SE_KEY = 'bct_se';
-  const MAX_ATTEMPTS = 5;
-  const LOCKOUT_MS = 30 * 60 * 1000; // 30 minutes
-  const SESSION_MS = 24 * 60 * 60 * 1000; // 24 hours
-  
-  // Check session expiry
-  const sessionExp = localStorage.getItem(SE_KEY);
-  if (sessionExp && Date.now() > parseInt(sessionExp)) {
-    localStorage.removeItem('bct_auth');
-    localStorage.removeItem(SE_KEY);
-  }
-  
-  // Set session expiry on successful auth
-  if (!localStorage.getItem(SE_KEY)) {
-    localStorage.setItem(SE_KEY, String(Date.now() + SESSION_MS));
-  }
-  
-  // Rate limit check (used by auth forms)
-  window._bctCheckRL = function() {
-    try {
-      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
-      if (rl.c >= MAX_ATTEMPTS && (Date.now() - rl.t) < LOCKOUT_MS) {
-        const mins = Math.ceil((LOCKOUT_MS - (Date.now() - rl.t)) / 60000);
-        return { locked: true, mins: mins };
-      }
-      if ((Date.now() - rl.t) >= LOCKOUT_MS) {
-        localStorage.setItem(RL_KEY, JSON.stringify({c: 0, t: Date.now()}));
-        return { locked: false };
-      }
-      return { locked: false };
-    } catch(e) { return { locked: false }; }
-  };
-  window._bctRecordFail = function() {
-    try {
-      const rl = JSON.parse(localStorage.getItem(RL_KEY) || '{"c":0,"t":0}');
-      rl.c++;
-      rl.t = Date.now();
-      localStorage.setItem(RL_KEY, JSON.stringify(rl));
-    } catch(e) {}
-  };
-  window._bctResetRL = function() {
-    localStorage.removeItem(RL_KEY);
-  };
-})();
-
         
         // Security: Prevent right-click
         document.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1534,7 +1437,7 @@ body { padding-bottom: 60px !important; }
                     const toast = document.createElement('div');
                     toast.className = 'toast px-4 py-3 rounded-xl shadow-lg font-medium text-sm bg-forest-green text-cream border border-brand-green/30 flex items-center gap-4';
                     toast.innerHTML = `
-                        <span>${escapeHTML(message)}</span>
+                        <span>${message}</span>
                         <button class="bg-brand-green hover:bg-brand-deep text-white px-3 py-1 rounded-lg text-xs font-semibold transition-all" onclick="window.dispatchEvent(new CustomEvent('undo'))">Undo</button>
                     `;
                     container.appendChild(toast);
@@ -1817,106 +1720,5 @@ body { padding-bottom: 60px !important; }
             };
         }
     </script>
-
-<!-- DEMO DISCLAIMER - Legal Notice -->
-
-<!-- BennyCuTools Purchase CTA — injected by inject-cta.py -->
-<style>
-#bct-cta-bar {
-  position: fixed;
-  bottom: 48px;
-  left: 0;
-  right: 0;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border-top: 2px solid #6366f1;
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  z-index: 99998;
-  flex-wrap: wrap;
-  box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
-}
-#bct-cta-bar .bct-cta-text {
-  color: #e4e4e7;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-}
-#bct-cta-bar .bct-cta-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 20px;
-  background: #6366f1;
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-}
-#bct-cta-bar .bct-cta-btn:hover {
-  background: #4f46e5;
-  transform: translateY(-1px);
-}
-#bct-cta-bar .bct-cta-btn-secondary {
-  background: transparent;
-  border: 1px solid #6366f1;
-  color: #a5b4fc;
-}
-#bct-cta-bar .bct-cta-btn-secondary:hover {
-  background: rgba(99,102,241,0.15);
-}
-@media (max-width: 600px) {
-  #bct-cta-bar {
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px 12px;
-    bottom: 44px;
-  }
-  #bct-cta-bar .bct-cta-text { font-size: 12px; }
-  #bct-cta-bar .bct-cta-btn { font-size: 13px; padding: 7px 16px; width: 100%; justify-content: center; }
-}
-</style>
-<div id="bct-cta-bar" role="banner" aria-label="Purchase this tool">
-  <span class="bct-cta-text">Like this tool? Make it yours.</span>
-  <a class="bct-cta-btn" id="bct-buy-btn" href="https://bennycutools.com/buy.html">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-    Get It — $200 One-Time
-  </a>
-  <a class="bct-cta-btn bct-cta-btn-secondary" href="mailto:cuuper225@gmail.com?subject=Question%20about%20my%20custom%20tool">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-    Questions? Email Ben
-  </a>
-</div>
-<script>
-// Auto-fill the buy link with the current tool's page name
-(function(){
-  try {
-    var pg = location.pathname.replace(/.*\//, '').replace('.html','');
-    var buyBtn = document.getElementById('bct-buy-btn');
-    if (buyBtn && pg) {
-      buyBtn.href = 'https://bennycutools.com/buy.html?tool=' + encodeURIComponent(pg);
-    }
-  } catch(e){}
-})();
-</script>
-<!-- End BennyCuTools Purchase CTA -->
-
-<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer">
-  <p><strong>DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only.
-  It is not affiliated with, endorsed by, or authorized by The Good Tree Company.
-  All brand references are used solely for demonstration purposes.</p>
-  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20The%20Good%20Tree%20Company&body=I%20am%20the%20owner%20of%20The%20Good%20Tree%20Company%20and%20I%20request%20permanent%20deletion%20of%20the%20demo%20tool%20on%20bennycutools.com." class="bct-delete-btn" aria-label="Request permanent deletion of this demo">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-    Request Permanent Deletion
-  </a>
-</div>
-
 </body>
 </html>

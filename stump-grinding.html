@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>StumpRoute - Job Tracker for Franklin Stump Grinding</title>
+  <meta name="description" content="Map-first job tracker for stump grinding. See all your jobs on a map, get directions, text customers.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@700;900&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  
+  <style>
+    :root {
+      --stump-brown: #5D4037;
+      --stump-brown-dark: #4E342E;
+      --grass-green: #4CAF50;
+      --grass-green-light: #81C784;
+      --dirt-orange: #FF6F00;
+      --dirt-orange-light: #FFB74D;
+      --sky-blue: #2196F3;
+      --sky-blue-light: #64B5F6;
+      --chalk-white: #FAFAFA;
+      --sawdust-gray: #9E9E9E;
+      --sawdust-dark: #616161;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.15), 0 4px 10px rgba(0,0,0,0.1);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--chalk-white);
+      color: #333;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    h1, h2, h3 {
+      font-family: 'Roboto', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+    }
+    
+    button:focus-visible {
+      outline: 3px solid var(--sky-blue);
+      outline-offset: 2px;
+    }
+    
+    input, textarea {
+      font-family: inherit;
+      font-size: 16px;
+    }
+    
+    input:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--sky-blue);
+      outline-offset: 1px;
+    }
+    
+    /* Auth Gate */
+    #auth-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    #auth-gate h1 {
+      font-size: 28px;
+      color: var(--stump-brown);
+      margin-bottom: 8px;
+    }
+    
+    #auth-gate p {
+      color: var(--sawdust-dark);
+      margin-bottom: 24px;
+    }
+    
+    #auth-gate input {
+      width: 100%;
+      max-width: 280px;
+      padding: 14px 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      text-align: center;
+      font-size: 18px;
+      letter-spacing: 2px;
+    }
+    
+    #auth-gate button {
+      background: var(--stump-brown);
+      color: white;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: transform 150ms, background 150ms;
+    }
+    
+    #auth-gate button:hover {
+      background: var(--stump-brown-dark);
+    }
+    
+    #auth-gate button:active {
+      transform: scale(0.97);
+    }
+    
+    .auth-error {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+    
+    /* Main App */
+    #app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    
+    /* Header */
+    header {
+      background: var(--stump-brown);
+      color: white;
+      padding: 16px 16px 12px;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--grass-green);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .logo h1 {
+      font-size: 22px;
+      font-weight: 900;
+    }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin: 0 -8px;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 10px 12px;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 150ms;
+    }
+    
+    .tab:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .tab.active {
+      background: rgba(255,255,255,0.2);
+      color: white;
+    }
+    
+    .tab.locked {
+      color: rgba(255,255,255,0.4);
+      position: relative;
+    }
+    
+    .tab.locked::after {
+      content: "PRO";
+      font-size: 8px;
+      background: var(--dirt-orange);
+      padding: 2px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: linear-gradient(90deg, var(--sky-blue-light), var(--sky-blue));
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+    
+    .demo-banner p {
+      flex: 1;
+    }
+    
+    .demo-banner button {
+      background: rgba(255,255,255,0.25);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    
+    .demo-banner button:hover {
+      background: rgba(255,255,255,0.35);
+    }
+    
+    /* Views */
+    .view {
+      display: none;
+      flex: 1;
+    }
+    
+    .view.active {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Map View */
+    #map-container {
+      flex: 1;
+      min-height: 400px;
+      position: relative;
+    }
+    
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 400px;
+    }
+    
+    .map-legend {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      background: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+      z-index: 500;
+      font-size: 12px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    
+    .legend-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .legend-dot.today { background: var(--dirt-orange); }
+    .legend-dot.scheduled { background: var(--sky-blue); }
+    .legend-dot.done { background: var(--grass-green); }
+    
+    /* Jobs List */
+    .jobs-list {
+      padding: 16px;
+    }
+    
+    .jobs-section {
+      margin-bottom: 24px;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: var(--sawdust-dark);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .section-count {
+      background: var(--sawdust-gray);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    
+    /* Job Card */
+    .job-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--sky-blue);
+      transition: box-shadow 150ms, transform 150ms;
+    }
+    
+    .job-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .job-card.today {
+      border-left-color: var(--dirt-orange);
+      background: linear-gradient(90deg, rgba(255,111,0,0.05), transparent);
+    }
+    
+    .job-card.done {
+      border-left-color: var(--grass-green);
+      opacity: 0.75;
+    }
+    
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .job-address {
+      font-weight: 600;
+      font-size: 15px;
+      color: #333;
+    }
+    
+    .job-date {
+      font-size: 12px;
+      color: var(--sawdust-gray);
+      background: #f5f5f5;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .job-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      color: var(--sawdust-dark);
+    }
+    
+    .job-detail {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .job-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .job-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 100ms, opacity 150ms;
+    }
+    
+    .job-btn:active {
+      transform: scale(0.97);
+    }
+    
+    .job-btn.primary {
+      background: var(--stump-brown);
+      color: white;
+    }
+    
+    .job-btn.primary:hover {
+      background: var(--stump-brown-dark);
+    }
+    
+    .job-btn.secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+    
+    .job-btn.secondary:hover {
+      background: #e5e5e5;
+    }
+    
+    .job-btn.success {
+      background: var(--grass-green);
+      color: white;
+    }
+    
+    /* Calendar View */
+    .calendar-container {
+      padding: 16px;
+    }
+    
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    
+    .calendar-nav button {
+      background: #f0f0f0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 18px;
+      color: #333;
+    }
+    
+    .calendar-nav button:hover {
+      background: #e5e5e5;
+    }
+    
+    .calendar-month {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    
+    .calendar-day-name {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sawdust-gray);
+      padding: 8px 0;
+      text-transform: uppercase;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 150ms;
+      position: relative;
+    }
+    
+    .calendar-day:hover {
+      background: #f5f5f5;
+    }
+    
+    .calendar-day.other-month {
+      color: #ccc;
+    }
+    
+    .calendar-day.today {
+      background: var(--dirt-orange);
+      color: white;
+      font-weight: 600;
+    }
+    
+    .calendar-day.has-jobs::after {
+      content: "";
+      position: absolute;
+      bottom: 6px;
+      width: 6px;
+      height: 6px;
+      background: var(--sky-blue);
+      border-radius: 50%;
+    }
+    
+    .calendar-day.today.has-jobs::after {
+      background: white;
+    }
+    
+    /* Add Job Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    
+    .modal-overlay.open {
+      display: flex;
+    }
+    
+    .modal {
+      background: white;
+      width: 100%;
+      max-width: 480px;
+      border-radius: 20px 20px 0 0;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 200ms ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .modal-header h2 {
+      font-size: 20px;
+    }
+    
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      font-size: 20px;
+      color: #666;
+    }
+    
+    .modal-close:hover {
+      background: #e5e5e5;
+    }
+    
+    .modal-body {
+      padding: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #333;
+    }
+    
+    .form-group .required {
+      color: #d32f2f;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 150ms;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      border-color: var(--stump-brown);
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .location-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--stump-brown);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    
+    .location-btn:hover {
+      background: #ebebeb;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--stump-brown);
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      transition: transform 150ms, background 150ms;
+    }
+    
+    .submit-btn:hover {
+      background: var(--stump-brown-dark);
+    }
+    
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+    
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: var(--stump-brown);
+      color: white;
+      border-radius: 50%;
+      font-size: 28px;
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
+      transition: transform 150ms, box-shadow 150ms;
+    }
+    
+    .fab:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+    }
+    
+    .fab:active {
+      transform: scale(0.95);
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 1500;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 200ms, visibility 200ms;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Upsell Banner */
+    .upsell-banner {
+      background: linear-gradient(135deg, #f8f4f0, #fff);
+      border: 2px dashed var(--stump-brown);
+      border-radius: 12px;
+      padding: 20px;
+      margin: 16px;
+      text-align: center;
+    }
+    
+    .upsell-banner h3 {
+      color: var(--stump-brown);
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+    
+    .upsell-banner p {
+      color: var(--sawdust-dark);
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+    
+    .upsell-features {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    
+    .upsell-feature {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--sawdust-dark);
+    }
+    
+    .upsell-feature.locked {
+      opacity: 0.5;
+    }
+    
+    .upsell-price {
+      background: var(--stump-brown);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    
+    /* Route Suggestion */
+    .route-suggestion {
+      background: linear-gradient(90deg, var(--grass-green), var(--grass-green-light));
+      color: white;
+      padding: 14px 16px;
+      margin: 0 16px 16px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .route-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .route-text {
+      flex: 1;
+    }
+    
+    .route-text strong {
+      display: block;
+      font-size: 14px;
+    }
+    
+    .route-text span {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .route-btn {
+      background: white;
+      color: var(--grass-green);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    
+    /* Job Detail Modal */
+    .job-detail-modal .modal {
+      max-height: 85vh;
+    }
+    
+    .job-detail-content {
+      padding: 20px;
+    }
+    
+    .job-detail-status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+    
+    .job-detail-status.scheduled {
+      background: var(--sky-blue-light);
+      color: white;
+    }
+    
+    .job-detail-status.today {
+      background: var(--dirt-orange);
+      color: white;
+    }
+    
+    .job-detail-status.done {
+      background: var(--grass-green);
+      color: white;
+    }
+    
+    .job-detail-address {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .job-detail-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .job-info-item label {
+      font-size: 12px;
+      color: var(--sawdust-gray);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    
+    .job-info-item p {
+      font-size: 15px;
+      font-weight: 500;
+    }
+    
+    .job-detail-notes {
+      background: #f9f9f9;
+      padding: 14px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--sawdust-dark);
+    }
+    
+    .job-detail-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .job-detail-actions button {
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    /* Hidden class */
+    .hidden {
+      display: none !important;
+    }
+    
+    /* Leaflet popup custom */
+    .leaflet-popup-content-wrapper {
+      border-radius: 10px;
+      padding: 0;
+    }
+    
+    .leaflet-popup-content {
+      margin: 12px 14px;
+      min-width: 180px;
+    }
+    
+    .popup-address {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+    
+    .popup-date {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .popup-btn {
+      display: block;
+      width: 100%;
+      padding: 8px;
+      background: var(--stump-brown);
+      color: white;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .modal {
+        border-radius: 20px;
+        margin: auto;
+        max-height: 85vh;
+      }
+      
+      #map-container {
+        min-height: 500px;
+      }
+      
+      .jobs-list {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Auth Gate -->
+  <div id="auth-gate">
+    <div class="logo-icon" style="width:64px;height:64px;margin-bottom:20px;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+      </svg>
+    </div>
+    <h1>StumpRoute</h1>
+    <p>Built for Franklin Stump Grinding</p>
+    <input type="text" id="access-key" placeholder="Access Key" maxlength="12" autocomplete="off" aria-label="Access key">
+    <button type="button" onclick="checkAccess()" aria-label="Enter tool">Enter</button>
+    <p class="auth-error hidden" id="auth-error" role="alert" aria-live="polite">Wrong key. Check your email for the access code.</p>
+  </div>
+  
+  <!-- Main App -->
+  <div id="app" role="main" tabindex="-1">
+    <header>
+      <div class="header-top">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+          <h1>StumpRoute</h1>
+        </div>
+      </div>
+      <nav class="tabs" role="tablist" aria-label="Main navigation">
+        <button class="tab active" role="tab" aria-selected="true" aria-controls="view-map" id="tab-map" onclick="switchTab('map')">Map</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="view-jobs" id="tab-jobs" onclick="switchTab('jobs')">Jobs</button>
+        <button class="tab" role="tab" aria-selected="false" aria-controls="view-calendar" id="tab-calendar" onclick="switchTab('calendar')">Schedule</button>
+        <button class="tab locked" role="tab" aria-selected="false" aria-disabled="true" onclick="showUpsell()">Reminders</button>
+      </nav>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demo-banner" role="status">
+      <p>Sample jobs near Chesterfield. Tap clear to start fresh.</p>
+      <button onclick="clearDemoData()" aria-label="Clear sample jobs">Clear</button>
+    </div>
+    
+    <!-- Map View -->
+    <section class="view active" id="view-map" role="tabpanel" aria-labelledby="tab-map">
+      <div id="map-container">
+        <div id="map" role="application" aria-label="Jobs map"></div>
+        <div class="map-legend" aria-label="Map legend">
+          <div class="legend-item"><span class="legend-dot today"></span> Today</div>
+          <div class="legend-item"><span class="legend-dot scheduled"></span> Scheduled</div>
+          <div class="legend-item"><span class="legend-dot done"></span> Done</div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Jobs View -->
+    <section class="view" id="view-jobs" role="tabpanel" aria-labelledby="tab-jobs">
+      <div class="route-suggestion" id="route-suggestion">
+        <div class="route-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12h18M3 12l6-6M3 12l6 6"/>
+          </svg>
+        </div>
+        <div class="route-text">
+          <strong>3 jobs today</strong>
+          <span>Start in Chesterfield, end at Hull St</span>
+        </div>
+        <button class="route-btn" onclick="startRoute()" aria-label="Start route">Go</button>
+      </div>
+      <div class="jobs-list" id="jobs-list">
+        <!-- Jobs rendered here -->
+      </div>
+    </section>
+    
+    <!-- Calendar View -->
+    <section class="view" id="view-calendar" role="tabpanel" aria-labelledby="tab-calendar">
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <div class="calendar-nav">
+            <button onclick="prevMonth()" aria-label="Previous month">&lt;</button>
+            <span class="calendar-month" id="calendar-month">February 2026</span>
+            <button onclick="nextMonth()" aria-label="Next month">&gt;</button>
+          </div>
+        </div>
+        <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Job calendar">
+          <!-- Calendar rendered here -->
+        </div>
+      </div>
+      <div class="upsell-banner">
+        <h3>StumpRoute Pro</h3>
+        <p>Auto-reminders, tax reports, and more. One-time fee.</p>
+        <div class="upsell-features">
+          <div class="upsell-feature locked">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span>Auto text reminders (day before)</span>
+          </div>
+          <div class="upsell-feature locked">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span>Year-end tax report</span>
+          </div>
+          <div class="upsell-feature locked">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span>Repeat customer reminders</span>
+          </div>
+          <div class="upsell-feature locked">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span>Online booking page</span>
+          </div>
+        </div>
+        <div class="upsell-price">$200 one-time</div>
+      </div>
+    </section>
+    
+    <!-- FAB -->
+    <button class="fab" onclick="openAddJob()" aria-label="Add new job">+</button>
+    
+    <!-- Add Job Modal -->
+    <div class="modal-overlay" id="add-job-modal" role="dialog" aria-labelledby="modal-title" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modal-title">New Job</h2>
+          <button class="modal-close" onclick="closeAddJob()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <form id="add-job-form" onsubmit="addJob(event)">
+            <div class="form-group">
+              <label for="job-phone">Phone <span class="required">*</span></label>
+              <input type="tel" id="job-phone" required placeholder="(804) 555-1234" autocomplete="tel">
+            </div>
+            <div class="form-group">
+              <label for="job-address">Address</label>
+              <input type="text" id="job-address" placeholder="123 Main St, Richmond VA">
+              <button type="button" class="location-btn" onclick="useCurrentLocation()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                Use Current Location
+              </button>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="job-date">Date</label>
+                <input type="date" id="job-date">
+              </div>
+              <div class="form-group">
+                <label for="job-size">Stump Size</label>
+                <select id="job-size">
+                  <option value="">Pick size</option>
+                  <option value="small">Small (under 12")</option>
+                  <option value="medium">Medium (12-24")</option>
+                  <option value="large">Large (24-36")</option>
+                  <option value="xlarge">Extra Large (36"+)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="job-notes">Notes</label>
+              <textarea id="job-notes" placeholder="Backyard access, 3 stumps total, customer paid deposit..."></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Add Job</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Job Detail Modal -->
+    <div class="modal-overlay job-detail-modal" id="job-detail-modal" role="dialog" aria-labelledby="detail-title" aria-modal="true">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="detail-title">Job Details</h2>
+          <button class="modal-close" onclick="closeJobDetail()" aria-label="Close">&times;</button>
+        </div>
+        <div class="job-detail-content" id="job-detail-content">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  
+  <!-- Legal Disclaimer -->
+  <div id="bct-demo-disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:oklch(0.25 0 0 / 0.95);border-top:1px solid oklch(0.35 0 0);padding:8px 12px;font-size:11px;line-height:1.3;color:oklch(0.7 0 0);z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <span>Demo for <strong style="color:oklch(0.9 0 0);">Franklin Stump Grinding</strong> • Not affiliated</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Franklin%20Stump%20Grinding" style="color:oklch(0.7 0.15 220);text-decoration:none;white-space:nowrap;font-weight:500;">Delete</a>
+  </div>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <style>
+    /* Animations */
+    @keyframes cardEnter {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes pinDrop {
+      0% {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.5);
+      }
+      50% {
+        transform: translateY(5px) scale(1.1);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    @keyframes routeDraw {
+      from {
+        stroke-dashoffset: 1000;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .job-card {
+      animation: cardEnter 300ms ease-out;
+    }
+    
+    .job-card:nth-child(1) { animation-delay: 0ms; }
+    .job-card:nth-child(2) { animation-delay: 50ms; }
+    .job-card:nth-child(3) { animation-delay: 100ms; }
+    .job-card:nth-child(4) { animation-delay: 150ms; }
+    .job-card:nth-child(5) { animation-delay: 200ms; }
+    
+    .custom-marker {
+      animation: pinDrop 400ms ease-out;
+    }
+    
+    .view.active {
+      animation: fadeIn 200ms ease-out;
+    }
+    
+    .fab {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .fab:hover {
+      animation: none;
+    }
+    
+    /* prefers-reduced-motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* Focus visible improvements */
+    *:focus-visible {
+      outline: 3px solid var(--sky-blue);
+      outline-offset: 2px;
+    }
+    
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 3px solid var(--sky-blue);
+      outline-offset: 2px;
+    }
+    
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--stump-brown);
+      color: white;
+      padding: 8px 16px;
+      z-index: 9999;
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: 0 0 4px 0;
+    }
+    
+    .skip-link:focus {
+      top: 0;
+    }
+  </style>
+  
+  <script>
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('#map')) return; // Allow map context menu
+      e.preventDefault();
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
+      if (e.key === 'F12' || 
+          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+          (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+      }
+    });
+    
+    // Access Key Auth
+    const VALID_HASH = 1486558734;
+    
+    function hashCode(str) {
+      let h = 0;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) - h) + str.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    
+    function checkAccess() {
+      const key = document.getElementById('access-key').value.trim().toLowerCase();
+      if (hashCode(key) === VALID_HASH) {
+        document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+      } else {
+        document.getElementById('auth-error').classList.remove('hidden');
+      }
+    }
+    
+    // Auto-auth from URL
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('key')) {
+      document.getElementById('access-key').value = params.get('key');
+      checkAccess();
+    }
+    
+    document.getElementById('access-key').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') checkAccess();
+    });
+    
+    // App State
+    let map = null;
+    let markers = [];
+    let currentMonth = new Date(2026, 1, 1); // Feb 2026
+    let selectedJobId = null;
+    
+    // Demo Data - Real Richmond/Chesterfield area addresses
+    const demoJobs = [
+      {
+        id: 'demo-1',
+        phone: '(804) 555-2847',
+        address: '8120 Midlothian Tpke, Richmond, VA',
+        lat: 37.5044,
+        lng: -77.5456,
+        date: '2026-02-08',
+        size: 'large',
+        notes: '36" oak stump in front yard. Customer said backyard has 2 more.',
+        status: 'today'
+      },
+      {
+        id: 'demo-2',
+        phone: '(804) 555-9123',
+        address: '2401 Hull St, Richmond, VA',
+        lat: 37.5119,
+        lng: -77.4560,
+        date: '2026-02-08',
+        size: 'medium',
+        notes: 'Pine stump near driveway. Watch for gas line.',
+        status: 'today'
+      },
+      {
+        id: 'demo-3',
+        phone: '(804) 555-3842',
+        address: '6600 Iron Bridge Rd, Chesterfield, VA',
+        lat: 37.4203,
+        lng: -77.4092,
+        date: '2026-02-08',
+        size: 'small',
+        notes: '',
+        status: 'today'
+      },
+      {
+        id: 'demo-4',
+        phone: '(804) 555-7261',
+        address: '13200 Genito Rd, Midlothian, VA',
+        lat: 37.4456,
+        lng: -77.6234,
+        date: '2026-02-10',
+        size: 'xlarge',
+        notes: 'Huge maple. Customer wants roots gone too. Quoted $350.',
+        status: 'scheduled'
+      },
+      {
+        id: 'demo-5',
+        phone: '(804) 555-1094',
+        address: '4700 Courthouse Rd, Chesterfield, VA',
+        lat: 37.3767,
+        lng: -77.5012,
+        date: '2026-02-05',
+        size: 'medium',
+        notes: 'Done. Customer tipped $40.',
+        status: 'done'
+      }
+    ];
+    
+    // IndexedDB Setup
+    let db;
+    const DB_NAME = 'stumproute';
+    const STORE_NAME = 'jobs';
+    
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains(STORE_NAME)) {
+            database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+          }
+        };
+      });
+    }
+    
+    function getAllJobs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    function saveJob(job) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.put(job);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    function deleteJob(id) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(id);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    function clearAllJobs() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+    
+    // Init App
+    async function initApp() {
+      await initDB();
+      let jobs = await getAllJobs();
+      
+      // Load demo data if empty
+      if (jobs.length === 0) {
+        for (const job of demoJobs) {
+          await saveJob(job);
+        }
+        jobs = demoJobs;
+      } else {
+        document.getElementById('demo-banner').classList.add('hidden');
+      }
+      
+      initMap(jobs);
+      renderJobs(jobs);
+      renderCalendar();
+      updateRouteSuggestion(jobs);
+    }
+    
+    // Map
+    function initMap(jobs) {
+      // Center on Chesterfield
+      map = L.map('map').setView([37.45, -77.5], 11);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+      }).addTo(map);
+      
+      updateMapMarkers(jobs);
+    }
+    
+    function updateMapMarkers(jobs) {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      
+      jobs.forEach(job => {
+        if (!job.lat || !job.lng) return;
+        
+        let color = '#2196F3'; // scheduled
+        if (job.status === 'today') color = '#FF6F00';
+        if (job.status === 'done') color = '#4CAF50';
+        
+        const icon = L.divIcon({
+          className: 'custom-marker',
+          html: `<div style="background:${color};width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+        
+        const marker = L.marker([job.lat, job.lng], { icon }).addTo(map);
+        
+        const popupContent = `
+          <div class="popup-address">${job.address.split(',')[0]}</div>
+          <div class="popup-date">${formatDate(job.date)}</div>
+          <button class="popup-btn" onclick="openJobDetail('${job.id}')">View Job</button>
+        `;
+        marker.bindPopup(popupContent);
+        markers.push(marker);
+      });
+      
+      // Fit bounds if markers exist
+      if (markers.length > 0) {
+        const group = new L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+      }
+    }
+    
+    // Tabs
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      
+      document.getElementById(`tab-${tab}`).classList.add('active');
+      document.getElementById(`tab-${tab}`).setAttribute('aria-selected', 'true');
+      document.getElementById(`view-${tab}`).classList.add('active');
+      
+      if (tab === 'map' && map) {
+        setTimeout(() => map.invalidateSize(), 100);
+      }
+    }
+    
+    // Jobs List
+    async function renderJobs(jobs) {
+      if (!jobs) jobs = await getAllJobs();
+      
+      const today = jobs.filter(j => j.status === 'today');
+      const scheduled = jobs.filter(j => j.status === 'scheduled');
+      const done = jobs.filter(j => j.status === 'done');
+      
+      const container = document.getElementById('jobs-list');
+      container.innerHTML = '';
+      
+      if (today.length > 0) {
+        container.innerHTML += `
+          <div class="jobs-section">
+            <div class="section-header">Today <span class="section-count">${today.length}</span></div>
+            ${today.map(j => jobCard(j, 'today')).join('')}
+          </div>
+        `;
+      }
+      
+      if (scheduled.length > 0) {
+        container.innerHTML += `
+          <div class="jobs-section">
+            <div class="section-header">Scheduled <span class="section-count">${scheduled.length}</span></div>
+            ${scheduled.map(j => jobCard(j, 'scheduled')).join('')}
+          </div>
+        `;
+      }
+      
+      if (done.length > 0) {
+        container.innerHTML += `
+          <div class="jobs-section">
+            <div class="section-header">Completed <span class="section-count">${done.length}</span></div>
+            ${done.map(j => jobCard(j, 'done')).join('')}
+          </div>
+        `;
+      }
+      
+      if (jobs.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:60px 20px;color:#999;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:16px;opacity:0.5">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            <p style="font-size:16px;margin-bottom:8px;">No jobs yet</p>
+            <p style="font-size:14px;">Tap the + button to add a job.</p>
+          </div>
+        `;
+      }
+    }
+    
+    function jobCard(job, status) {
+      const shortAddr = job.address ? job.address.split(',')[0] : 'No address';
+      return `
+        <article class="job-card ${status}" tabindex="0" role="button" aria-label="Job at ${shortAddr}" onclick="openJobDetail('${job.id}')">
+          <div class="job-header">
+            <span class="job-address">${shortAddr}</span>
+            <span class="job-date">${formatDate(job.date)}</span>
+          </div>
+          <div class="job-details">
+            <span class="job-detail">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              ${job.phone}
+            </span>
+            ${job.size ? `<span class="job-detail">${job.size}</span>` : ''}
+          </div>
+          <div class="job-actions" onclick="event.stopPropagation()">
+            ${status !== 'done' ? `
+              <button class="job-btn secondary" onclick="navigateToJob('${job.id}')" aria-label="Get directions">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                Directions
+              </button>
+              <button class="job-btn primary" onclick="textCustomer('${job.id}')" aria-label="Text customer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Text
+              </button>
+            ` : `
+              <button class="job-btn success" disabled style="opacity:0.8;cursor:default;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Done
+              </button>
+            `}
+          </div>
+        </article>
+      `;
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return 'No date';
+      const d = new Date(dateStr + 'T12:00:00');
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (d.toDateString() === today.toDateString()) return 'Today';
+      if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+      
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    
+    // Route Suggestion
+    async function updateRouteSuggestion(jobs) {
+      if (!jobs) jobs = await getAllJobs();
+      const today = jobs.filter(j => j.status === 'today');
+      const suggestion = document.getElementById('route-suggestion');
+      
+      if (today.length < 2) {
+        suggestion.classList.add('hidden');
+        return;
+      }
+      
+      suggestion.classList.remove('hidden');
+      const firstAddr = today[0].address?.split(',')[0] || 'First job';
+      const lastAddr = today[today.length - 1].address?.split(',')[0] || 'Last job';
+      
+      suggestion.querySelector('.route-text strong').textContent = `${today.length} jobs today`;
+      suggestion.querySelector('.route-text span').textContent = `Start at ${firstAddr}, end at ${lastAddr}`;
+    }
+    
+    async function startRoute() {
+      const jobs = await getAllJobs();
+      const today = jobs.filter(j => j.status === 'today' && j.lat && j.lng);
+      if (today.length === 0) return;
+      
+      // Build Google Maps multi-stop URL
+      const waypoints = today.map(j => `${j.lat},${j.lng}`).join('/');
+      const url = `https://www.google.com/maps/dir/${waypoints}`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Today\'s Route',
+            text: `${today.length} jobs planned`,
+            url: url
+          });
+        } catch {
+          window.open(url, '_blank');
+        }
+      } else {
+        window.open(url, '_blank');
+      }
+    }
+    
+    // Calendar
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const monthLabel = document.getElementById('calendar-month');
+      
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      
+      monthLabel.textContent = currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDay = firstDay.getDay();
+      const totalDays = lastDay.getDate();
+      
+      const today = new Date();
+      
+      let html = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        .map(d => `<div class="calendar-day-name">${d}</div>`)
+        .join('');
+      
+      // Previous month days
+      const prevMonth = new Date(year, month, 0);
+      for (let i = startDay - 1; i >= 0; i--) {
+        html += `<div class="calendar-day other-month">${prevMonth.getDate() - i}</div>`;
+      }
+      
+      // Current month days
+      for (let d = 1; d <= totalDays; d++) {
+        const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        html += `<div class="calendar-day${isToday ? ' today' : ''}" data-date="${dateStr}" onclick="selectDate('${dateStr}')">${d}</div>`;
+      }
+      
+      // Next month days
+      const remaining = 42 - (startDay + totalDays);
+      for (let d = 1; d <= remaining; d++) {
+        html += `<div class="calendar-day other-month">${d}</div>`;
+      }
+      
+      grid.innerHTML = html;
+      
+      // Mark days with jobs
+      getAllJobs().then(jobs => {
+        jobs.forEach(job => {
+          const el = grid.querySelector(`[data-date="${job.date}"]`);
+          if (el) el.classList.add('has-jobs');
+        });
+      });
+    }
+    
+    function prevMonth() {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      renderCalendar();
+    }
+    
+    function nextMonth() {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      renderCalendar();
+    }
+    
+    function selectDate(dateStr) {
+      document.getElementById('job-date').value = dateStr;
+      openAddJob();
+    }
+    
+    // Add Job Modal
+    function openAddJob() {
+      document.getElementById('add-job-modal').classList.add('open');
+      document.getElementById('job-phone').focus();
+    }
+    
+    function closeAddJob() {
+      document.getElementById('add-job-modal').classList.remove('open');
+      document.getElementById('add-job-form').reset();
+    }
+    
+    async function addJob(e) {
+      e.preventDefault();
+      
+      const phone = document.getElementById('job-phone').value;
+      const address = document.getElementById('job-address').value;
+      const date = document.getElementById('job-date').value;
+      const size = document.getElementById('job-size').value;
+      const notes = document.getElementById('job-notes').value;
+      
+      // Determine status
+      const today = new Date().toISOString().split('T')[0];
+      let status = 'scheduled';
+      if (date === today || date === '2026-02-08') status = 'today';
+      if (!date) status = 'scheduled';
+      
+      // Simple geocoding via Nominatim (free)
+      let lat = null, lng = null;
+      if (address) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+          const data = await res.json();
+          if (data.length > 0) {
+            lat = parseFloat(data[0].lat);
+            lng = parseFloat(data[0].lon);
+          }
+        } catch { /* offline - no coordinates */ }
+      }
+      
+      const job = {
+        id: 'job-' + Date.now(),
+        phone,
+        address: address || '',
+        lat,
+        lng,
+        date: date || '',
+        size,
+        notes,
+        status
+      };
+      
+      await saveJob(job);
+      closeAddJob();
+      
+      const jobs = await getAllJobs();
+      renderJobs(jobs);
+      updateMapMarkers(jobs);
+      updateRouteSuggestion(jobs);
+      renderCalendar();
+      
+      showToast('Job added');
+    }
+    
+    // Geolocation
+    function useCurrentLocation() {
+      if (!navigator.geolocation) {
+        showToast('Location not available');
+        return;
+      }
+      
+      showToast('Getting location...');
+      
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const { latitude, longitude } = pos.coords;
+          
+          // Reverse geocode
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            if (data.display_name) {
+              document.getElementById('job-address').value = data.display_name;
+              showToast('Location set');
+            }
+          } catch {
+            document.getElementById('job-address').value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+            showToast('Location set (coordinates)');
+          }
+        },
+        () => {
+          showToast('Could not get location');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+    
+    // Job Detail
+    async function openJobDetail(id) {
+      const jobs = await getAllJobs();
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+      
+      selectedJobId = id;
+      
+      const statusLabel = job.status === 'today' ? 'Today' : job.status === 'done' ? 'Completed' : 'Scheduled';
+      
+      document.getElementById('job-detail-content').innerHTML = `
+        <span class="job-detail-status ${job.status}">${statusLabel}</span>
+        <h3 class="job-detail-address">${job.address || 'No address'}</h3>
+        <div class="job-detail-info">
+          <div class="job-info-item">
+            <label>Phone</label>
+            <p>${job.phone}</p>
+          </div>
+          <div class="job-info-item">
+            <label>Date</label>
+            <p>${formatDate(job.date)}</p>
+          </div>
+          <div class="job-info-item">
+            <label>Stump Size</label>
+            <p>${job.size || 'Not set'}</p>
+          </div>
+          <div class="job-info-item">
+            <label>Status</label>
+            <p>${statusLabel}</p>
+          </div>
+        </div>
+        ${job.notes ? `<div class="job-detail-notes">${job.notes}</div>` : ''}
+        <div class="job-detail-actions">
+          ${job.status !== 'done' ? `
+            <button class="job-btn primary" onclick="navigateToJob('${job.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              Get Directions
+            </button>
+            <button class="job-btn secondary" onclick="textCustomer('${job.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Text Customer
+            </button>
+            <button class="job-btn success" onclick="markDone('${job.id}')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              Mark Done
+            </button>
+          ` : ''}
+          <button class="job-btn secondary" style="color:#d32f2f;" onclick="removeJob('${job.id}')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete Job
+          </button>
+        </div>
+      `;
+      
+      document.getElementById('job-detail-modal').classList.add('open');
+    }
+    
+    function closeJobDetail() {
+      document.getElementById('job-detail-modal').classList.remove('open');
+      selectedJobId = null;
+    }
+    
+    // Actions
+    async function navigateToJob(id) {
+      const jobs = await getAllJobs();
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+      
+      if (job.lat && job.lng) {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}`, '_blank');
+      } else if (job.address) {
+        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.address)}`, '_blank');
+      } else {
+        showToast('No address for this job');
+      }
+    }
+    
+    async function textCustomer(id) {
+      const jobs = await getAllJobs();
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+      
+      const dateText = job.date ? formatDate(job.date) : 'soon';
+      const msg = `Hi, this is Paul from Franklin Stump Grinding. Just confirming your stump grinding for ${dateText}. Reply to confirm or call (804) 276-8995 with questions.`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Customer Text',
+            text: msg
+          });
+          showToast('Message shared');
+          return;
+        } catch { /* fallback */ }
+      }
+      
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(msg);
+        showToast('Message copied');
+      } catch {
+        showToast('Could not copy');
+      }
+    }
+    
+    async function markDone(id) {
+      const jobs = await getAllJobs();
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+      
+      job.status = 'done';
+      await saveJob(job);
+      
+      closeJobDetail();
+      const allJobs = await getAllJobs();
+      renderJobs(allJobs);
+      updateMapMarkers(allJobs);
+      updateRouteSuggestion(allJobs);
+      
+      showToast('Job marked done');
+    }
+    
+    async function removeJob(id) {
+      if (!confirm('Delete this job?')) return;
+      
+      await deleteJob(id);
+      closeJobDetail();
+      
+      const jobs = await getAllJobs();
+      renderJobs(jobs);
+      updateMapMarkers(jobs);
+      updateRouteSuggestion(jobs);
+      renderCalendar();
+      
+      showToast('Job deleted');
+    }
+    
+    // Clear Demo
+    async function clearDemoData() {
+      await clearAllJobs();
+      document.getElementById('demo-banner').classList.add('hidden');
+      
+      renderJobs([]);
+      updateMapMarkers([]);
+      updateRouteSuggestion([]);
+      renderCalendar();
+      
+      showToast('Sample jobs cleared');
+    }
+    
+    // Upsell
+    function showUpsell() {
+      switchTab('calendar');
+      showToast('Upgrade to Pro for reminders');
+    }
+    
+    // Toast
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+    
+    // Close modals on backdrop click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('open');
+        }
+      });
+    });
+    
+    // Keyboard nav
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+      }
+    });
+  </script>
+</body>
+</html>

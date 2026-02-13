@@ -1,0 +1,2321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Deck Visualizer — Deep Roots Decks</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7DD159;
+      --primary-dark: #5fb840;
+      --charcoal: #2D3A3A;
+      --charcoal-light: #3d4f4f;
+      --bg: #F4F7F9;
+      --white: #ffffff;
+      --gray-100: #f8f9fa;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-500: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --warning: #FF8200;
+      --error: #dc3545;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(45,58,58,0.05);
+      --shadow: 0 4px 12px rgba(45,58,58,0.1);
+      --shadow-lg: 0 8px 24px rgba(45,58,58,0.15);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--charcoal);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
+    }
+    
+    /* Access Gate */
+    .gate-overlay {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+    
+    .gate-overlay.hidden { display: none; }
+    
+    .gate-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--primary);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .gate-logo svg {
+      width: 48px;
+      height: 48px;
+      fill: var(--white);
+    }
+    
+    .gate-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    
+    .gate-subtitle {
+      font-size: 14px;
+      color: var(--gray-400);
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    
+    .gate-input-wrap {
+      width: 100%;
+      max-width: 320px;
+    }
+    
+    .gate-input {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 16px;
+      font-family: inherit;
+      border: 2px solid var(--charcoal-light);
+      border-radius: var(--radius);
+      background: var(--charcoal);
+      color: var(--white);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .gate-input:focus {
+      border-color: var(--primary);
+    }
+    
+    .gate-input::placeholder {
+      color: var(--gray-500);
+    }
+    
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--primary);
+      color: var(--charcoal);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .gate-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    
+    .gate-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .gate-btn:focus-visible {
+      outline: 3px solid var(--white);
+      outline-offset: 2px;
+    }
+    
+    .gate-error {
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 12px;
+      text-align: center;
+    }
+    
+    /* App Container */
+    .app {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    
+    .app.active { display: flex; }
+    
+    /* Header */
+    .header {
+      background: var(--white);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .header-logo svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--white);
+    }
+    
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--charcoal);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--gray-100);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    
+    .icon-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--charcoal);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .icon-btn:hover {
+      background: var(--gray-200);
+    }
+    
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    /* Demo Banner */
+    .demo-banner {
+      background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+      color: var(--white);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+    
+    .demo-banner.hidden { display: none; }
+    
+    .demo-banner-text {
+      flex: 1;
+    }
+    
+    .demo-banner-close {
+      background: none;
+      border: none;
+      color: var(--gray-400);
+      cursor: pointer;
+      padding: 4px;
+      font-size: 18px;
+      line-height: 1;
+    }
+    
+    .demo-banner-close:hover {
+      color: var(--white);
+    }
+    
+    .demo-banner-close:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    /* Project List */
+    .projects-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .projects-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+    
+    .new-project-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--primary);
+      color: var(--charcoal);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .new-project-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
+    }
+    
+    .new-project-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+    
+    .new-project-btn:active {
+      transform: scale(0.98);
+    }
+    
+    .new-project-btn:focus-visible {
+      outline: 2px solid var(--charcoal);
+      outline-offset: 2px;
+    }
+    
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .project-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid var(--gray-200);
+    }
+    
+    .project-card:hover {
+      box-shadow: var(--shadow);
+      transform: translateY(-2px);
+    }
+    
+    .project-card:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .project-thumb {
+      width: 80px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      background: var(--gray-200);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    
+    .project-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .project-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .project-address {
+      font-size: 13px;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .project-stain {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--gray-600);
+      background: var(--gray-100);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    .stain-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    /* Upsell Tab */
+    .upsell-tab {
+      background: var(--gray-100);
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-top: 24px;
+    }
+    
+    .upsell-label {
+      display: inline-block;
+      background: var(--warning);
+      color: var(--white);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .upsell-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+    
+    .upsell-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+    
+    /* Editor View */
+    .editor-view {
+      display: none;
+    }
+    
+    .editor-view.active {
+      display: block;
+    }
+    
+    .editor-back {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--charcoal);
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    
+    .editor-back svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .editor-back:hover {
+      color: var(--primary-dark);
+    }
+    
+    .editor-back:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .canvas-container {
+      position: relative;
+      background: var(--gray-200);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      aspect-ratio: 4/3;
+    }
+    
+    .canvas-container canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+    
+    .canvas-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .canvas-placeholder.hidden { display: none; }
+    
+    .canvas-placeholder svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--gray-500);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    
+    .canvas-placeholder p {
+      color: var(--gray-600);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .capture-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--primary);
+      color: var(--charcoal);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .capture-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .capture-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .capture-btn:focus-visible {
+      outline: 2px solid var(--charcoal);
+      outline-offset: 2px;
+    }
+    
+    /* Canvas Tools */
+    .canvas-tools {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+    }
+    
+    .canvas-tools.hidden { display: none; }
+    
+    .tool-btn {
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--white);
+      color: var(--charcoal);
+      border: none;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .tool-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .tool-btn.active {
+      background: var(--primary);
+      color: var(--charcoal);
+    }
+    
+    .tool-btn:hover {
+      transform: translateY(-1px);
+    }
+    
+    .tool-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .control-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--gray-200);
+    }
+    
+    .control-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .control-label svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    /* Stain Picker */
+    .stain-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    
+    .stain-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--white);
+    }
+    
+    .stain-option:hover {
+      border-color: var(--gray-400);
+    }
+    
+    .stain-option.selected {
+      border-color: var(--primary);
+      background: rgba(125, 209, 89, 0.1);
+    }
+    
+    .stain-option:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .stain-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .stain-name {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gray-700);
+      text-align: center;
+    }
+    
+    /* Board Direction */
+    .direction-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .direction-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--white);
+    }
+    
+    .direction-option:hover {
+      border-color: var(--gray-400);
+    }
+    
+    .direction-option.selected {
+      border-color: var(--primary);
+      background: rgba(125, 209, 89, 0.1);
+    }
+    
+    .direction-option:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .direction-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--gray-100);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .direction-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--charcoal);
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .direction-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    /* Project Name Input */
+    .input-group {
+      margin-bottom: 16px;
+    }
+    
+    .input-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+    
+    .text-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      color: var(--charcoal);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    
+    .text-input:focus {
+      border-color: var(--primary);
+    }
+    
+    .text-input::placeholder {
+      color: var(--gray-400);
+    }
+    
+    /* Action Buttons */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .action-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .action-btn.primary {
+      background: var(--primary);
+      color: var(--charcoal);
+    }
+    
+    .action-btn.primary:hover {
+      background: var(--primary-dark);
+    }
+    
+    .action-btn.secondary {
+      background: var(--gray-100);
+      color: var(--charcoal);
+    }
+    
+    .action-btn.secondary:hover {
+      background: var(--gray-200);
+    }
+    
+    .action-btn:focus-visible {
+      outline: 2px solid var(--charcoal);
+      outline-offset: 2px;
+    }
+    
+    .action-btn.full-width {
+      grid-column: span 2;
+    }
+    
+    /* Footer Disclaimer */
+    .disclaimer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--charcoal);
+      color: var(--gray-400);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 11px;
+      z-index: 200;
+    }
+    
+    .disclaimer-text {
+      flex: 1;
+    }
+    
+    .disclaimer-text strong {
+      color: var(--warning);
+    }
+    
+    .disclaimer-btn {
+      background: transparent;
+      border: 1px solid var(--gray-600);
+      color: var(--gray-400);
+      padding: 6px 12px;
+      font-size: 11px;
+      font-family: inherit;
+      border-radius: 4px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    
+    .disclaimer-btn:hover {
+      border-color: var(--gray-400);
+      color: var(--white);
+    }
+    
+    .disclaimer-btn:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    /* Camera Modal */
+    .camera-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      z-index: 500;
+      display: none;
+      flex-direction: column;
+    }
+    
+    .camera-modal.active {
+      display: flex;
+    }
+    
+    .camera-header {
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .camera-title {
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .camera-close {
+      background: none;
+      border: none;
+      color: var(--white);
+      cursor: pointer;
+      padding: 8px;
+    }
+    
+    .camera-close svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .camera-close:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .camera-preview {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .camera-preview video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .camera-actions {
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .shutter-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 4px solid var(--gray-400);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .shutter-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .shutter-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .shutter-btn:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 4px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--charcoal);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s;
+      z-index: 600;
+    }
+    
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* File input hidden */
+    .hidden-input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .main {
+        padding: 32px;
+      }
+      
+      .stain-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+    
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: var(--charcoal);
+      padding: 8px 16px;
+      font-weight: 600;
+      z-index: 10000;
+      transition: top 0.2s;
+      text-decoration: none;
+      border-radius: 0 0 8px 0;
+    }
+    
+    .skip-link:focus {
+      top: 0;
+    }
+    
+    /* Entrance Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .animate-in {
+      animation: fadeInUp 0.4s ease-out forwards;
+    }
+    
+    .animate-fade {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    
+    .animate-scale {
+      animation: scaleIn 0.3s ease-out forwards;
+    }
+    
+    /* Card hover lift effect */
+    .project-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .project-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(45,58,58,0.12), 0 2px 8px rgba(125,209,89,0.1);
+    }
+    
+    /* Button press effect */
+    .capture-btn, .new-project-btn, .action-btn, .gate-btn {
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    
+    .capture-btn:active, .new-project-btn:active, .action-btn:active, .gate-btn:active {
+      transform: scale(0.97);
+    }
+    
+    /* Stain option selection animation */
+    .stain-option {
+      transition: all 0.2s ease;
+    }
+    
+    .stain-option.selected {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(125,209,89,0.3);
+    }
+    
+    /* Direction option hover */
+    .direction-option {
+      transition: all 0.2s ease;
+    }
+    
+    .direction-option.selected {
+      border-color: var(--primary);
+      background: rgba(125, 209, 89, 0.08);
+      box-shadow: inset 0 0 0 1px var(--primary);
+    }
+    
+    /* Hero section for camera action */
+    .camera-hero {
+      background: linear-gradient(135deg, var(--charcoal) 0%, var(--charcoal-light) 100%);
+      border-radius: var(--radius);
+      padding: 32px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .camera-hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 30%, rgba(125,209,89,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    
+    .camera-hero-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      box-shadow: 0 8px 24px rgba(125,209,89,0.3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .camera-hero-icon svg {
+      width: 32px;
+      height: 32px;
+      stroke: var(--charcoal);
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .camera-hero h2 {
+      color: var(--white);
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .camera-hero p {
+      color: var(--gray-400);
+      font-size: 14px;
+      margin-bottom: 20px;
+      max-width: 280px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .camera-hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      background: var(--primary);
+      color: var(--charcoal);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(125,209,89,0.3);
+      transition: all 0.15s ease;
+    }
+    
+    .camera-hero-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(125,209,89,0.4);
+    }
+    
+    .camera-hero-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    /* Recent projects section header */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    
+    .section-header h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-700);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .section-header-count {
+      background: var(--gray-200);
+      color: var(--gray-600);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    
+    /* Empty state with camera emphasis */
+    .empty-state {
+      text-align: center;
+      padding: 40px 24px;
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 2px dashed var(--gray-300);
+    }
+    
+    .empty-state-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--gray-100);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    
+    .empty-state-icon svg {
+      width: 28px;
+      height: 28px;
+      stroke: var(--gray-500);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    
+    .empty-state h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+    
+    .empty-state p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 20px;
+    }
+    
+    /* Tool button active state enhancement */
+    .tool-btn.active {
+      background: var(--primary);
+      color: var(--charcoal);
+      box-shadow: 0 4px 12px rgba(125,209,89,0.3);
+    }
+    
+    /* Gate animation */
+    .gate-logo {
+      animation: scaleIn 0.5s ease-out;
+    }
+    
+    .gate-title {
+      animation: fadeInUp 0.5s ease-out 0.1s backwards;
+    }
+    
+    .gate-subtitle {
+      animation: fadeInUp 0.5s ease-out 0.2s backwards;
+    }
+    
+    .gate-input-wrap {
+      animation: fadeInUp 0.5s ease-out 0.3s backwards;
+    }
+    
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Skip Link for Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Access Gate -->
+  <div class="gate-overlay" id="gate">
+    <div class="gate-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h1 class="gate-title">Deck Visualizer</h1>
+    <p class="gate-subtitle">Built for Deep Roots Decks</p>
+    <div class="gate-input-wrap">
+      <input type="text" class="gate-input" id="accessKey" placeholder="Enter access key" autocomplete="off" aria-label="Access key">
+      <button class="gate-btn" id="gateSubmit" type="button">Open Tool</button>
+      <p class="gate-error" id="gateError" aria-live="polite"></p>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div class="app" id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-brand">
+        <div class="header-logo">
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="header-title">Deck Visualizer</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="helpBtn" aria-label="Help and tips">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demoBanner">
+      <span class="demo-banner-text">Sample Knoxville projects loaded — tap x to clear and start fresh</span>
+      <button class="demo-banner-close" id="clearDemo" aria-label="Clear demo data">&times;</button>
+    </div>
+    
+    <!-- Main Content -->
+    <main class="main" id="main-content">
+      <!-- Project List View -->
+      <div class="list-view" id="listView">
+        <!-- Camera Hero - Primary Action -->
+        <div class="camera-hero animate-scale">
+          <div class="camera-hero-icon">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <h2>Show customers their deck before you build it</h2>
+          <p>Snap a photo, trace the outline, and show stain colors on the spot.</p>
+          <button class="camera-hero-btn" id="heroCameraBtn">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+            Start New Project
+          </button>
+        </div>
+        
+        <!-- Recent Projects Section -->
+        <div class="section-header">
+          <h2>Recent Projects</h2>
+          <span class="section-header-count" id="projectCount">0</span>
+        </div>
+        
+        <div class="project-list" id="projectList" role="list">
+          <!-- Projects render here -->
+        </div>
+        
+        <!-- Upsell -->
+        <div class="upsell-tab animate-in" style="animation-delay: 0.2s;">
+          <span class="upsell-label">Coming Soon</span>
+          <h3 class="upsell-title">Multi-Level Deck Designer</h3>
+          <p class="upsell-desc">Add upper decks, stair connections, and railings. Full version includes permit-ready exports.</p>
+        </div>
+      </div>
+      
+      <!-- Editor View -->
+      <div class="editor-view" id="editorView">
+        <button class="editor-back" id="backBtn">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Projects
+        </button>
+        
+        <!-- Project Name -->
+        <div class="input-group">
+          <label class="input-label" for="projectName">Project Name</label>
+          <input type="text" class="text-input" id="projectName" placeholder="e.g., Johnson Backyard Deck">
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label" for="projectAddress">Address (optional)</label>
+          <input type="text" class="text-input" id="projectAddress" placeholder="e.g., 123 Oak Lane, Knoxville">
+        </div>
+        
+        <!-- Canvas -->
+        <div class="canvas-container" id="canvasContainer">
+          <canvas id="deckCanvas"></canvas>
+          <div class="canvas-placeholder" id="canvasPlaceholder">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p>Take a photo of the deck area. Trace the outline with your finger to show stain colors right on the customer's actual space.</p>
+            <button class="capture-btn" id="captureBtn">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Take Photo
+            </button>
+            <button class="capture-btn secondary" id="uploadBtn" style="background: var(--gray-100); color: var(--charcoal); margin-top: 8px;">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload Photo
+            </button>
+          </div>
+          <div class="canvas-tools hidden" id="canvasTools">
+            <button class="tool-btn active" id="drawTool" aria-pressed="true">
+              <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+              Trace
+            </button>
+            <button class="tool-btn" id="clearTool" aria-pressed="false">
+              <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear
+            </button>
+            <button class="tool-btn" id="retakeTool" aria-pressed="false">
+              <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+              Retake
+            </button>
+          </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+          <!-- Stain Colors -->
+          <section class="control-section">
+            <label class="control-label">
+              <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.6.376 3.112 1.043 4.453"/><circle cx="12" cy="12" r="3"/></svg>
+              Stain Color
+            </label>
+            <div class="stain-grid" id="stainGrid" role="radiogroup" aria-label="Stain color options">
+              <!-- Stain options render here -->
+            </div>
+          </section>
+          
+          <!-- Board Direction -->
+          <section class="control-section">
+            <label class="control-label">
+              <svg viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>
+              Board Direction
+            </label>
+            <div class="direction-options" role="radiogroup" aria-label="Board direction">
+              <button class="direction-option selected" id="dirHorizontal" role="radio" aria-checked="true">
+                <span class="direction-icon">
+                  <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </span>
+                <span class="direction-text">Horizontal</span>
+              </button>
+              <button class="direction-option" id="dirVertical" role="radio" aria-checked="false">
+                <span class="direction-icon">
+                  <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/></svg>
+                </span>
+                <span class="direction-text">Vertical</span>
+              </button>
+            </div>
+          </section>
+        </div>
+        
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="action-btn secondary" id="saveBtn">
+            <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+          </button>
+          <button class="action-btn primary" id="shareBtn">
+            <svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share with Customer
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Camera Modal -->
+  <div class="camera-modal" id="cameraModal" role="dialog" aria-modal="true" aria-label="Camera capture">
+    <div class="camera-header">
+      <span class="camera-title">Capture Deck Area</span>
+      <button class="camera-close" id="cameraClose" aria-label="Close camera">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="camera-preview">
+      <video id="cameraVideo" autoplay playsinline></video>
+    </div>
+    <div class="camera-actions">
+      <button class="shutter-btn" id="shutterBtn" aria-label="Take photo"></button>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  
+  <!-- Hidden file input -->
+  <input type="file" class="hidden-input" id="fileInput" accept="image/*" aria-hidden="true">
+  
+  <!-- Footer Disclaimer -->
+  <footer class="disclaimer">
+    <span class="disclaimer-text"><strong>DEMO NOTICE</strong> — This tool was built by an independent developer for Deep Roots Decks. Data is stored locally on your device.</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Deletion%20Request%20-%20Deep%20Roots%20Decks%20Tool" class="disclaimer-btn">Request Permanent Deletion</a>
+  </footer>
+  
+  <script>
+    // Hash function for access key validation
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+    const _V = 1560533899;
+    
+    // DOM Elements
+    const gate = document.getElementById('gate');
+    const app = document.getElementById('app');
+    const accessKeyInput = document.getElementById('accessKey');
+    const gateSubmit = document.getElementById('gateSubmit');
+    const gateError = document.getElementById('gateError');
+    const demoBanner = document.getElementById('demoBanner');
+    const clearDemoBtn = document.getElementById('clearDemo');
+    const listView = document.getElementById('listView');
+    const editorView = document.getElementById('editorView');
+    const projectList = document.getElementById('projectList');
+    const newProjectBtn = document.getElementById('newProjectBtn');
+    const heroCameraBtn = document.getElementById('heroCameraBtn');
+    const projectCount = document.getElementById('projectCount');
+    const backBtn = document.getElementById('backBtn');
+    const projectNameInput = document.getElementById('projectName');
+    const projectAddressInput = document.getElementById('projectAddress');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const canvas = document.getElementById('deckCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasPlaceholder = document.getElementById('canvasPlaceholder');
+    const canvasTools = document.getElementById('canvasTools');
+    const captureBtn = document.getElementById('captureBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraVideo = document.getElementById('cameraVideo');
+    const cameraClose = document.getElementById('cameraClose');
+    const shutterBtn = document.getElementById('shutterBtn');
+    const stainGrid = document.getElementById('stainGrid');
+    const dirHorizontal = document.getElementById('dirHorizontal');
+    const dirVertical = document.getElementById('dirVertical');
+    const drawTool = document.getElementById('drawTool');
+    const clearTool = document.getElementById('clearTool');
+    const retakeTool = document.getElementById('retakeTool');
+    const saveBtn = document.getElementById('saveBtn');
+    const shareBtn = document.getElementById('shareBtn');
+    const toast = document.getElementById('toast');
+    
+    // Stain colors (real deck stain hex approximations)
+    const STAINS = [
+      { name: 'Natural Cedar', hex: '#C19A6B' },
+      { name: 'Honey Gold', hex: '#DAA520' },
+      { name: 'Redwood', hex: '#8B4513' },
+      { name: 'Chestnut', hex: '#654321' },
+      { name: 'Weathered Gray', hex: '#8B8B8B' },
+      { name: 'Slate Gray', hex: '#708090' },
+      { name: 'Dark Walnut', hex: '#5D432C' },
+      { name: 'Ebony', hex: '#3D3D3D' }
+    ];
+    
+    // Demo data for Knoxville
+    const DEMO_PROJECTS = [
+      {
+        id: 'demo-1',
+        name: 'Thompson Backyard Remodel',
+        address: '4521 Papermill Dr, Knoxville',
+        stainIndex: 0,
+        direction: 'horizontal',
+        hasImage: false,
+        createdAt: Date.now() - 86400000 * 2
+      },
+      {
+        id: 'demo-2',
+        name: 'Miller Lake House Deck',
+        address: '892 Lakeshore Dr, Norris',
+        stainIndex: 4,
+        direction: 'vertical',
+        hasImage: false,
+        createdAt: Date.now() - 86400000 * 5
+      },
+      {
+        id: 'demo-3',
+        name: 'Henderson Pool Deck',
+        address: '1203 Kingston Pike, Knoxville',
+        stainIndex: 6,
+        direction: 'horizontal',
+        hasImage: false,
+        createdAt: Date.now() - 86400000 * 8
+      },
+      {
+        id: 'demo-4',
+        name: 'Garcia Front Porch',
+        address: '567 Maryville Rd, Alcoa',
+        stainIndex: 2,
+        direction: 'horizontal',
+        hasImage: false,
+        createdAt: Date.now() - 86400000 * 12
+      }
+    ];
+    
+    // State
+    let projects = [];
+    let currentProject = null;
+    let selectedStainIndex = 0;
+    let boardDirection = 'horizontal';
+    let hasImage = false;
+    let baseImage = null;
+    let tracePoints = [];
+    let isDrawing = false;
+    let cameraStream = null;
+    let isDemoData = false;
+    
+    // Initialize
+    function init() {
+      // Anti-scrape protection
+      document.addEventListener('contextmenu', (e) => {
+        if (e.target.closest('canvas') || e.target.closest('.canvas-container')) {
+          e.preventDefault();
+        }
+      });
+      
+      // Check URL for access key
+      const urlParams = new URLSearchParams(window.location.search);
+      const keyParam = urlParams.get('key');
+      
+      if (keyParam && _h(keyParam) === _V) {
+        unlockApp();
+      }
+      
+      // Load projects from storage
+      loadProjects();
+      
+      // Setup event listeners
+      setupEventListeners();
+      
+      // Render stain options
+      renderStainGrid();
+    }
+    
+    function unlockApp() {
+      gate.classList.add('hidden');
+      app.classList.add('active');
+    }
+    
+    function loadProjects() {
+      const stored = localStorage.getItem('deckViz_projects');
+      const isFirstVisit = !localStorage.getItem('deckViz_visited');
+      
+      if (stored) {
+        projects = JSON.parse(stored);
+        isDemoData = localStorage.getItem('deckViz_isDemo') === 'true';
+      } else if (isFirstVisit) {
+        // First visit - load demo data
+        projects = DEMO_PROJECTS;
+        isDemoData = true;
+        localStorage.setItem('deckViz_isDemo', 'true');
+        saveProjects();
+      }
+      
+      localStorage.setItem('deckViz_visited', 'true');
+      
+      if (!isDemoData) {
+        demoBanner.classList.add('hidden');
+      }
+      
+      renderProjectList();
+    }
+    
+    function saveProjects() {
+      localStorage.setItem('deckViz_projects', JSON.stringify(projects));
+    }
+    
+    function renderProjectList() {
+      // Update project count
+      if (projectCount) {
+        projectCount.textContent = projects.length;
+      }
+      
+      if (projects.length === 0) {
+        projectList.innerHTML = `
+          <div class="empty-state animate-fade">
+            <div class="empty-state-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <h3>No projects yet</h3>
+            <p>Tap "Start New Project" above to snap a photo and show your first deck visualization.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      projectList.innerHTML = projects.map((p, i) => `
+        <article class="project-card animate-in" style="animation-delay: ${i * 0.05}s;" role="listitem" tabindex="0" data-id="${p.id}" aria-label="${escapeHtml(p.name || 'Untitled Project')}, ${STAINS[p.stainIndex].name} stain">
+          <div class="project-thumb" style="background: linear-gradient(135deg, ${STAINS[p.stainIndex].hex}88 0%, ${STAINS[p.stainIndex].hex} 100%);"></div>
+          <div class="project-info">
+            <h3 class="project-name">${escapeHtml(p.name || 'Untitled Project')}</h3>
+            <p class="project-address">${escapeHtml(p.address || 'No address')}</p>
+            <span class="project-stain">
+              <span class="stain-dot" style="background: ${STAINS[p.stainIndex].hex};"></span>
+              ${STAINS[p.stainIndex].name}
+            </span>
+          </div>
+        </article>
+      `).join('');
+      
+      // Add click handlers
+      projectList.querySelectorAll('.project-card').forEach(card => {
+        card.addEventListener('click', () => openProject(card.dataset.id));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openProject(card.dataset.id);
+          }
+        });
+      });
+    }
+    
+    function renderStainGrid() {
+      stainGrid.innerHTML = STAINS.map((stain, i) => `
+        <button class="stain-option ${i === selectedStainIndex ? 'selected' : ''}" 
+                role="radio" 
+                aria-checked="${i === selectedStainIndex}"
+                data-index="${i}">
+          <span class="stain-swatch" style="background: ${stain.hex};"></span>
+          <span class="stain-name">${stain.name}</span>
+        </button>
+      `).join('');
+      
+      stainGrid.querySelectorAll('.stain-option').forEach(btn => {
+        btn.addEventListener('click', () => selectStain(parseInt(btn.dataset.index)));
+      });
+    }
+    
+    function selectStain(index) {
+      selectedStainIndex = index;
+      stainGrid.querySelectorAll('.stain-option').forEach((btn, i) => {
+        btn.classList.toggle('selected', i === index);
+        btn.setAttribute('aria-checked', i === index);
+      });
+      renderCanvas();
+    }
+    
+    function setupEventListeners() {
+      // Gate
+      gateSubmit.addEventListener('click', validateAccess);
+      accessKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') validateAccess();
+      });
+      
+      // Demo banner
+      clearDemoBtn.addEventListener('click', clearDemoData);
+      
+      // Navigation
+      newProjectBtn.addEventListener('click', createNewProject);
+      if (heroCameraBtn) {
+        heroCameraBtn.addEventListener('click', createNewProject);
+      }
+      backBtn.addEventListener('click', goBack);
+      
+      // Camera
+      captureBtn.addEventListener('click', openCamera);
+      uploadBtn.addEventListener('click', () => fileInput.click());
+      fileInput.addEventListener('change', handleFileUpload);
+      cameraClose.addEventListener('click', closeCamera);
+      shutterBtn.addEventListener('click', capturePhoto);
+      
+      // Canvas tools
+      drawTool.addEventListener('click', () => setActiveTool('draw'));
+      clearTool.addEventListener('click', clearTrace);
+      retakeTool.addEventListener('click', retakePhoto);
+      
+      // Board direction
+      dirHorizontal.addEventListener('click', () => setDirection('horizontal'));
+      dirVertical.addEventListener('click', () => setDirection('vertical'));
+      
+      // Actions
+      saveBtn.addEventListener('click', saveProject);
+      shareBtn.addEventListener('click', shareProject);
+      
+      // Canvas drawing
+      canvas.addEventListener('pointerdown', startDraw);
+      canvas.addEventListener('pointermove', draw);
+      canvas.addEventListener('pointerup', endDraw);
+      canvas.addEventListener('pointerleave', endDraw);
+    }
+    
+    function validateAccess() {
+      const key = accessKeyInput.value.trim();
+      if (_h(key) === _V) {
+        unlockApp();
+      } else {
+        gateError.textContent = 'Invalid access key. Please check and try again.';
+        accessKeyInput.focus();
+      }
+    }
+    
+    function clearDemoData() {
+      projects = [];
+      isDemoData = false;
+      localStorage.removeItem('deckViz_isDemo');
+      saveProjects();
+      demoBanner.classList.add('hidden');
+      renderProjectList();
+      showToast('Demo cleared — ready for your projects');
+    }
+    
+    function createNewProject() {
+      currentProject = {
+        id: 'proj-' + Date.now(),
+        name: '',
+        address: '',
+        stainIndex: 0,
+        direction: 'horizontal',
+        hasImage: false,
+        imageData: null,
+        tracePoints: [],
+        createdAt: Date.now()
+      };
+      
+      selectedStainIndex = 0;
+      boardDirection = 'horizontal';
+      hasImage = false;
+      baseImage = null;
+      tracePoints = [];
+      
+      projectNameInput.value = '';
+      projectAddressInput.value = '';
+      renderStainGrid();
+      updateDirectionUI();
+      
+      showEditor();
+    }
+    
+    function openProject(id) {
+      const project = projects.find(p => p.id === id);
+      if (!project) return;
+      
+      currentProject = { ...project };
+      selectedStainIndex = project.stainIndex || 0;
+      boardDirection = project.direction || 'horizontal';
+      tracePoints = project.tracePoints || [];
+      hasImage = project.hasImage || false;
+      
+      projectNameInput.value = project.name || '';
+      projectAddressInput.value = project.address || '';
+      renderStainGrid();
+      updateDirectionUI();
+      
+      if (project.imageData) {
+        loadImageFromData(project.imageData);
+      }
+      
+      showEditor();
+    }
+    
+    function showEditor() {
+      listView.style.display = 'none';
+      editorView.classList.add('active');
+      
+      if (hasImage) {
+        canvasPlaceholder.classList.add('hidden');
+        canvasTools.classList.remove('hidden');
+      } else {
+        canvasPlaceholder.classList.remove('hidden');
+        canvasTools.classList.add('hidden');
+      }
+      
+      resizeCanvas();
+    }
+    
+    function goBack() {
+      editorView.classList.remove('active');
+      listView.style.display = 'block';
+      renderProjectList();
+    }
+    
+    function resizeCanvas() {
+      const rect = canvasContainer.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      renderCanvas();
+    }
+    
+    function openCamera() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast('Camera not available — uploading instead');
+        fileInput.click();
+        return;
+      }
+      
+      cameraModal.classList.add('active');
+      
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      })
+      .then(stream => {
+        cameraStream = stream;
+        cameraVideo.srcObject = stream;
+      })
+      .catch(err => {
+        console.error('Camera error:', err);
+        closeCamera();
+        showToast('Camera blocked — upload a photo instead');
+        fileInput.click();
+      });
+    }
+    
+    function closeCamera() {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+        cameraStream = null;
+      }
+      cameraVideo.srcObject = null;
+      cameraModal.classList.remove('active');
+    }
+    
+    function capturePhoto() {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = cameraVideo.videoWidth;
+      tempCanvas.height = cameraVideo.videoHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(cameraVideo, 0, 0);
+      
+      const imageData = tempCanvas.toDataURL('image/jpeg', 0.8);
+      loadImageFromData(imageData);
+      closeCamera();
+    }
+    
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        loadImageFromData(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+      fileInput.value = '';
+    }
+    
+    function loadImageFromData(dataUrl) {
+      const img = new Image();
+      img.onload = () => {
+        baseImage = img;
+        hasImage = true;
+        if (currentProject) {
+          currentProject.hasImage = true;
+          currentProject.imageData = dataUrl;
+        }
+        canvasPlaceholder.classList.add('hidden');
+        canvasTools.classList.remove('hidden');
+        resizeCanvas();
+        showToast('Photo ready — trace the deck outline with your finger');
+      };
+      img.src = dataUrl;
+    }
+    
+    function retakePhoto() {
+      hasImage = false;
+      baseImage = null;
+      tracePoints = [];
+      if (currentProject) {
+        currentProject.hasImage = false;
+        currentProject.imageData = null;
+        currentProject.tracePoints = [];
+      }
+      canvasPlaceholder.classList.remove('hidden');
+      canvasTools.classList.add('hidden');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    function setActiveTool(tool) {
+      drawTool.classList.toggle('active', tool === 'draw');
+      drawTool.setAttribute('aria-pressed', tool === 'draw');
+    }
+    
+    function clearTrace() {
+      tracePoints = [];
+      if (currentProject) {
+        currentProject.tracePoints = [];
+      }
+      renderCanvas();
+      showToast('Trace cleared');
+    }
+    
+    function setDirection(dir) {
+      boardDirection = dir;
+      if (currentProject) {
+        currentProject.direction = dir;
+      }
+      updateDirectionUI();
+      renderCanvas();
+    }
+    
+    function updateDirectionUI() {
+      dirHorizontal.classList.toggle('selected', boardDirection === 'horizontal');
+      dirVertical.classList.toggle('selected', boardDirection === 'vertical');
+      dirHorizontal.setAttribute('aria-checked', boardDirection === 'horizontal');
+      dirVertical.setAttribute('aria-checked', boardDirection === 'vertical');
+    }
+    
+    // Drawing functions
+    function startDraw(e) {
+      if (!hasImage) return;
+      isDrawing = true;
+      const pos = getCanvasPos(e);
+      tracePoints.push(pos);
+      renderCanvas();
+    }
+    
+    function draw(e) {
+      if (!isDrawing || !hasImage) return;
+      const pos = getCanvasPos(e);
+      tracePoints.push(pos);
+      renderCanvas();
+    }
+    
+    function endDraw() {
+      isDrawing = false;
+      if (currentProject) {
+        currentProject.tracePoints = [...tracePoints];
+      }
+    }
+    
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left) / rect.width,
+        y: (e.clientY - rect.top) / rect.height
+      };
+    }
+    
+    function renderCanvas() {
+      const rect = canvasContainer.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      
+      ctx.clearRect(0, 0, w, h);
+      
+      if (baseImage) {
+        // Draw base image to fill canvas
+        const imgRatio = baseImage.width / baseImage.height;
+        const canvasRatio = w / h;
+        
+        let drawW, drawH, drawX, drawY;
+        
+        if (imgRatio > canvasRatio) {
+          drawH = h;
+          drawW = h * imgRatio;
+          drawX = (w - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = w;
+          drawH = w / imgRatio;
+          drawX = 0;
+          drawY = (h - drawH) / 2;
+        }
+        
+        ctx.drawImage(baseImage, drawX, drawY, drawW, drawH);
+      }
+      
+      // Draw traced area with stain overlay
+      if (tracePoints.length > 2) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(tracePoints[0].x * w, tracePoints[0].y * h);
+        for (let i = 1; i < tracePoints.length; i++) {
+          ctx.lineTo(tracePoints[i].x * w, tracePoints[i].y * h);
+        }
+        ctx.closePath();
+        ctx.clip();
+        
+        // Fill with stain color at reduced opacity
+        ctx.fillStyle = STAINS[selectedStainIndex].hex + 'AA';
+        ctx.fillRect(0, 0, w, h);
+        
+        // Draw board lines
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1;
+        const gap = 12;
+        
+        if (boardDirection === 'horizontal') {
+          for (let y = 0; y < h; y += gap) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+          }
+        } else {
+          for (let x = 0; x < w; x += gap) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+          }
+        }
+        
+        ctx.restore();
+      }
+      
+      // Draw trace outline
+      if (tracePoints.length > 0) {
+        ctx.strokeStyle = '#7DD159';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        ctx.beginPath();
+        ctx.moveTo(tracePoints[0].x * w, tracePoints[0].y * h);
+        for (let i = 1; i < tracePoints.length; i++) {
+          ctx.lineTo(tracePoints[i].x * w, tracePoints[i].y * h);
+        }
+        ctx.stroke();
+      }
+    }
+    
+    function saveProject() {
+      if (!currentProject) return;
+      
+      currentProject.name = projectNameInput.value.trim() || 'Untitled Project';
+      currentProject.address = projectAddressInput.value.trim();
+      currentProject.stainIndex = selectedStainIndex;
+      currentProject.direction = boardDirection;
+      currentProject.tracePoints = tracePoints;
+      
+      const existingIndex = projects.findIndex(p => p.id === currentProject.id);
+      if (existingIndex >= 0) {
+        projects[existingIndex] = currentProject;
+      } else {
+        projects.unshift(currentProject);
+      }
+      
+      saveProjects();
+      showToast('Saved');
+    }
+    
+    async function shareProject() {
+      if (!hasImage) {
+        showToast('Add a photo first to share');
+        return;
+      }
+      
+      // Render canvas to image
+      const tempCanvas = document.createElement('canvas');
+      const rect = canvasContainer.getBoundingClientRect();
+      tempCanvas.width = rect.width * 2;
+      tempCanvas.height = rect.height * 2;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.scale(2, 2);
+      
+      // Redraw everything
+      if (baseImage) {
+        const w = rect.width;
+        const h = rect.height;
+        const imgRatio = baseImage.width / baseImage.height;
+        const canvasRatio = w / h;
+        let drawW, drawH, drawX, drawY;
+        
+        if (imgRatio > canvasRatio) {
+          drawH = h;
+          drawW = h * imgRatio;
+          drawX = (w - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = w;
+          drawH = w / imgRatio;
+          drawX = 0;
+          drawY = (h - drawH) / 2;
+        }
+        
+        tempCtx.drawImage(baseImage, drawX, drawY, drawW, drawH);
+        
+        if (tracePoints.length > 2) {
+          tempCtx.save();
+          tempCtx.beginPath();
+          tempCtx.moveTo(tracePoints[0].x * w, tracePoints[0].y * h);
+          for (let i = 1; i < tracePoints.length; i++) {
+            tempCtx.lineTo(tracePoints[i].x * w, tracePoints[i].y * h);
+          }
+          tempCtx.closePath();
+          tempCtx.clip();
+          tempCtx.fillStyle = STAINS[selectedStainIndex].hex + 'AA';
+          tempCtx.fillRect(0, 0, w, h);
+          
+          tempCtx.strokeStyle = 'rgba(0,0,0,0.15)';
+          tempCtx.lineWidth = 1;
+          const gap = 12;
+          
+          if (boardDirection === 'horizontal') {
+            for (let y = 0; y < h; y += gap) {
+              tempCtx.beginPath();
+              tempCtx.moveTo(0, y);
+              tempCtx.lineTo(w, y);
+              tempCtx.stroke();
+            }
+          } else {
+            for (let x = 0; x < w; x += gap) {
+              tempCtx.beginPath();
+              tempCtx.moveTo(x, 0);
+              tempCtx.lineTo(x, h);
+              tempCtx.stroke();
+            }
+          }
+          tempCtx.restore();
+        }
+        
+        if (tracePoints.length > 0) {
+          tempCtx.strokeStyle = '#7DD159';
+          tempCtx.lineWidth = 3;
+          tempCtx.beginPath();
+          tempCtx.moveTo(tracePoints[0].x * w, tracePoints[0].y * h);
+          for (let i = 1; i < tracePoints.length; i++) {
+            tempCtx.lineTo(tracePoints[i].x * w, tracePoints[i].y * h);
+          }
+          tempCtx.stroke();
+        }
+      }
+      
+      // Add watermark
+      tempCtx.font = 'bold 14px Poppins, sans-serif';
+      tempCtx.fillStyle = 'rgba(45,58,58,0.7)';
+      tempCtx.textAlign = 'right';
+      tempCtx.fillText('Deep Roots Decks | ' + STAINS[selectedStainIndex].name, rect.width - 16, rect.height - 16);
+      
+      // Try Web Share API
+      try {
+        const blob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/jpeg', 0.9));
+        const file = new File([blob], 'deck-visualization.jpg', { type: 'image/jpeg' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: projectNameInput.value || 'Deck Visualization',
+            text: `Here's how your deck looks with ${STAINS[selectedStainIndex].name} stain. Let me know what you think! - Deep Roots Decks`,
+            files: [file]
+          });
+          showToast('Sent');
+        } else {
+          // Fallback: download
+          const url = tempCanvas.toDataURL('image/jpeg', 0.9);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'deck-visualization.jpg';
+          a.click();
+          showToast('Saved to your device');
+        }
+      } catch (err) {
+        console.error('Share failed:', err);
+        // Fallback: download
+        const url = tempCanvas.toDataURL('image/jpeg', 0.9);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'deck-visualization.jpg';
+        a.click();
+        showToast('Saved to your device');
+      }
+    }
+    
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('visible');
+      setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 2500);
+    }
+    
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    
+    // Handle resize
+    window.addEventListener('resize', () => {
+      if (hasImage) resizeCanvas();
+    });
+    
+    // Initialize app
+    init();
+  </script>
+</body>
+</html>

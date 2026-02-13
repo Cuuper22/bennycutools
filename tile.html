@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TileScope Estimator - Jay Tile Install & Repair</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      /* Terracotta/Clay palette */
+      --primary: oklch(0.58 0.12 45);
+      --primary-hover: oklch(0.52 0.14 45);
+      --primary-light: oklch(0.85 0.06 45);
+      --cream: oklch(0.97 0.01 90);
+      --cream-dark: oklch(0.93 0.02 85);
+      --charcoal: oklch(0.25 0.02 270);
+      --charcoal-light: oklch(0.45 0.02 270);
+      --white: oklch(1 0 0);
+      --success: oklch(0.65 0.15 145);
+      --success-bg: oklch(0.92 0.05 145);
+      --error: oklch(0.55 0.2 25);
+      --shadow-sm: 0 1px 2px oklch(0.25 0.02 270 / 0.06);
+      --shadow-md: 0 4px 12px oklch(0.25 0.02 270 / 0.08), 0 2px 4px oklch(0.25 0.02 270 / 0.04);
+      --shadow-lg: 0 8px 24px oklch(0.25 0.02 270 / 0.12), 0 4px 8px oklch(0.25 0.02 270 / 0.06);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-heading: 'DM Serif Display', Georgia, serif;
+      --font-body: 'Source Sans 3', system-ui, sans-serif;
+      --focus-ring: 0 0 0 3px var(--primary-light), 0 0 0 5px var(--primary);
+    }
+    
+    html { font-size: 16px; }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--charcoal);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Grain texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* Entrance animations */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulse-soft {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+
+    .card {
+      animation: fadeSlideUp 0.4s ease forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0ms; }
+    .card:nth-child(2) { animation-delay: 80ms; }
+    .card:nth-child(3) { animation-delay: 160ms; }
+    .card:nth-child(4) { animation-delay: 240ms; }
+
+    /* Micro-interactions */
+    .room-option, .tile-option, .btn, .nav-item {
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    }
+
+    .room-option:hover, .tile-option:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .room-option:active, .tile-option:active, .btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Focus indicators */
+    *:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: none;
+      box-shadow: var(--focus-ring);
+    }
+
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: var(--white);
+      padding: 8px 16px;
+      z-index: 10000;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 0 0 var(--radius-sm) 0;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    /* Reduced motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+      
+      .card { animation: none; }
+      .room-option:hover, .tile-option:hover { transform: none; }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      :root {
+        --primary: oklch(0.5 0.15 45);
+        --charcoal: oklch(0.15 0.02 270);
+        --charcoal-light: oklch(0.3 0.02 270);
+      }
+      
+      .room-option.selected, .tile-option.selected {
+        outline: 3px solid var(--primary);
+        outline-offset: 2px;
+      }
+    }
+    
+    /* Auth screen */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    
+    #auth-screen h1 {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+    
+    #auth-screen p {
+      color: var(--charcoal-light);
+      margin-bottom: 24px;
+    }
+    
+    .auth-input-group {
+      width: 100%;
+      max-width: 300px;
+    }
+    
+    .auth-input-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    
+    .auth-input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid oklch(0.85 0.02 45);
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      transition: border-color 0.15s ease;
+    }
+    
+    .auth-input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .auth-btn {
+      margin-top: 16px;
+      width: 100%;
+      max-width: 300px;
+      padding: 14px 24px;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .auth-btn:hover { background: var(--primary-hover); }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:focus-visible { outline: 3px solid var(--primary-light); outline-offset: 2px; }
+    
+    .auth-error {
+      color: var(--error);
+      font-size: 0.875rem;
+      margin-top: 12px;
+    }
+    
+    /* Main app */
+    #app { display: none; }
+    #app.active { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--white);
+      padding: 16px 20px;
+      border-bottom: 1px solid oklch(0.9 0.01 90);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--primary);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--white);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .brand-text h1 {
+      font-family: var(--font-heading);
+      font-size: 1.125rem;
+      font-weight: 400;
+      color: var(--charcoal);
+    }
+    
+    .brand-text span {
+      font-size: 0.75rem;
+      color: var(--charcoal-light);
+    }
+    
+    /* Main content */
+    .main {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    /* Section cards */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      margin-bottom: 4px;
+      color: var(--charcoal);
+    }
+    
+    .card-subtitle {
+      font-size: 0.875rem;
+      color: var(--charcoal-light);
+      margin-bottom: 16px;
+    }
+    
+    /* Room selector */
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    
+    .room-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 12px;
+      background: var(--cream);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .room-option:hover {
+      background: var(--cream-dark);
+    }
+    
+    .room-option:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .room-option.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    
+    .room-option:active { transform: scale(0.97); }
+    
+    .room-option svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--primary);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    
+    .room-option span {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--charcoal);
+      text-align: center;
+    }
+    
+    /* Measurements */
+    .measurement-group {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .input-group.full { grid-column: span 2; }
+    
+    .input-group label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--charcoal);
+    }
+    
+    .input-with-unit {
+      display: flex;
+      align-items: center;
+      border: 2px solid oklch(0.88 0.02 90);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 0.15s ease;
+    }
+    
+    .input-with-unit:focus-within {
+      border-color: var(--primary);
+    }
+    
+    .input-with-unit input {
+      flex: 1;
+      padding: 12px 14px;
+      border: none;
+      font-size: 1rem;
+      font-family: var(--font-body);
+      background: var(--white);
+    }
+    
+    .input-with-unit input:focus { outline: none; }
+    
+    .input-with-unit .unit {
+      padding: 12px 14px;
+      background: var(--cream);
+      color: var(--charcoal-light);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    
+    .sqft-display {
+      background: var(--success-bg);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      margin-top: 8px;
+    }
+    
+    .sqft-display .label {
+      font-size: 0.875rem;
+      color: var(--charcoal-light);
+      margin-bottom: 4px;
+    }
+    
+    .sqft-display .value {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      color: var(--charcoal);
+    }
+    
+    .sqft-display .value span {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--charcoal-light);
+    }
+    
+    /* Tile type picker */
+    .tile-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .tile-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--cream);
+      border: 2px solid transparent;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    
+    .tile-option:hover { background: var(--cream-dark); }
+    
+    .tile-option:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .tile-option.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    
+    .tile-swatch {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+    }
+    
+    .tile-swatch.ceramic { background: linear-gradient(135deg, #e8dcd0 0%, #d4c4b5 100%); }
+    .tile-swatch.porcelain { background: linear-gradient(135deg, #f5f2ed 0%, #ddd8d0 100%); border: 1px solid oklch(0.85 0.02 90); }
+    .tile-swatch.stone { background: linear-gradient(135deg, #a89b8c 0%, #8a7d6e 100%); }
+    .tile-swatch.glass { background: linear-gradient(135deg, #b8d4e3 0%, #8bc4d9 100%); }
+    
+    .tile-info { flex: 1; }
+    
+    .tile-info .name {
+      font-weight: 600;
+      color: var(--charcoal);
+      margin-bottom: 2px;
+    }
+    
+    .tile-info .price {
+      font-size: 0.875rem;
+      color: var(--charcoal-light);
+    }
+    
+    /* Quote display */
+    .quote-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+      color: var(--white);
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+    }
+    
+    .quote-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    
+    .quote-header h3 {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 400;
+    }
+    
+    .quote-header .room-badge {
+      background: oklch(1 0 0 / 0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .quote-total {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .quote-total .label {
+      font-size: 0.875rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+    
+    .quote-total .amount {
+      font-family: var(--font-heading);
+      font-size: 2.5rem;
+    }
+    
+    .quote-breakdown {
+      background: oklch(1 0 0 / 0.1);
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+    
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+    
+    .breakdown-row:not(:last-child) {
+      border-bottom: 1px solid oklch(1 0 0 / 0.15);
+    }
+    
+    .breakdown-row .label { opacity: 0.9; }
+    .breakdown-row .value { font-weight: 600; }
+    
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 24px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+    
+    .btn:focus-visible {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
+    }
+    
+    .btn:active { transform: scale(0.98); }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: var(--white);
+    }
+    
+    .btn-primary:hover { background: var(--primary-hover); }
+    
+    .btn-secondary {
+      background: var(--cream);
+      color: var(--charcoal);
+      border: 2px solid oklch(0.88 0.02 90);
+    }
+    
+    .btn-secondary:hover { background: var(--cream-dark); }
+    
+    .btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    /* Camera view */
+    .camera-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: var(--charcoal);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    
+    .camera-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .camera-container canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .camera-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--cream);
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .camera-placeholder svg {
+      width: 64px;
+      height: 64px;
+      stroke: var(--cream);
+      fill: none;
+      stroke-width: 1.5;
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+    
+    .camera-placeholder h3 {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      margin-bottom: 8px;
+    }
+    
+    .camera-placeholder p {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      margin-bottom: 20px;
+    }
+    
+    .grid-info {
+      background: var(--white);
+      padding: 16px;
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+    }
+    
+    .grid-info h4 {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .grid-info p {
+      font-size: 0.875rem;
+      color: var(--charcoal-light);
+      line-height: 1.6;
+    }
+    
+    /* History list */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .history-item {
+      background: var(--white);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .history-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    
+    .history-item-header h4 {
+      font-weight: 600;
+      color: var(--charcoal);
+    }
+    
+    .history-item-header .date {
+      font-size: 0.75rem;
+      color: var(--charcoal-light);
+    }
+    
+    .history-item-details {
+      font-size: 0.875rem;
+      color: var(--charcoal-light);
+      margin-bottom: 8px;
+    }
+    
+    .history-item-total {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--charcoal-light);
+    }
+    
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      stroke: var(--charcoal-light);
+      fill: none;
+      stroke-width: 1.5;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    .empty-state h3 {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+    
+    /* Pro locked tab */
+    .pro-locked {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .pro-locked .lock-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    
+    .pro-locked .lock-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke: var(--charcoal-light);
+      fill: none;
+      stroke-width: 1.5;
+    }
+    
+    .pro-locked h3 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+    
+    .pro-locked p {
+      color: var(--charcoal-light);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+    
+    .pro-features {
+      text-align: left;
+      background: var(--cream);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    
+    .pro-features h4 {
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    
+    .pro-features ul {
+      list-style: none;
+    }
+    
+    .pro-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      font-size: 0.9rem;
+      color: var(--charcoal-light);
+    }
+    
+    .pro-features li svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--success);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+    
+    .pro-price {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      color: var(--charcoal);
+      margin-bottom: 8px;
+    }
+    
+    .pro-price span {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--charcoal-light);
+    }
+    
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid oklch(0.92 0.01 90);
+      padding: 8px 16px;
+      z-index: 100;
+    }
+    
+    .nav-inner {
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-around;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--charcoal-light);
+      transition: color 0.15s ease;
+    }
+    
+    .nav-item:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+    
+    .nav-item.active { color: var(--primary); }
+    
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+    }
+    
+    .nav-item span {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    
+    .nav-item.locked {
+      color: oklch(0.7 0.02 90);
+    }
+    
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--charcoal);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 500;
+      z-index: 200;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* Demo badge */
+    .demo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary-hover);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    /* Animations */
+    @keyframes countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-in {
+      animation: countUp 0.4s ease forwards;
+    }
+    
+    /* Responsive */
+    @media (min-width: 768px) {
+      .main { padding: 32px; }
+      .card { padding: 28px; }
+      .room-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    
+    /* Demo Notice (Compact) */
+    #bct-demo {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a1a;
+      color: #999;
+      padding: 8px 12px;
+      font-size: 11px;
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    #bct-demo a { color: #fff; text-decoration: none; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Auth Screen -->
+  <div id="auth-screen">
+    <h1>TileScope Estimator</h1>
+    <p>Enter your access key to get started</p>
+    <div class="auth-input-group">
+      <label for="access-key">Access Key</label>
+      <input type="text" id="access-key" placeholder="Your key">
+    </div>
+    <button class="auth-btn" id="auth-btn">Open App</button>
+    <p class="auth-error" id="auth-error" aria-live="polite"></p>
+  </div>
+
+  <!-- Main App -->
+  <div id="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          </div>
+          <div class="brand-text">
+            <h1>TileScope</h1>
+            <span>Jay Tile Install & Repair</span>
+          </div>
+        </div>
+        <div class="demo-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Demo
+        </div>
+      </div>
+    </header>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <!-- Estimate Tab -->
+      <div id="tab-estimate" class="tab-content active">
+        <!-- Room Selector -->
+        <div class="card">
+          <h2 class="card-title">What room are we tiling?</h2>
+          <p class="card-subtitle">Pick the space and we'll figure the rest</p>
+          <div class="room-grid" role="radiogroup" aria-label="Room type selection">
+            <button class="room-option" data-room="backsplash" role="radio" aria-checked="false" tabindex="0">
+              <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="6" rx="1"/><rect x="2" y="12" width="9" height="8" rx="1"/><rect x="13" y="12" width="9" height="8" rx="1"/></svg>
+              <span>Kitchen Backsplash</span>
+            </button>
+            <button class="room-option" data-room="bathroom-floor" role="radio" aria-checked="false" tabindex="-1">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18M15 3v18M3 15h18"/></svg>
+              <span>Bathroom Floor</span>
+            </button>
+            <button class="room-option" data-room="shower" role="radio" aria-checked="false" tabindex="-1">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 4v16M20 4v16M12 4v16M4 10h16M4 16h16"/></svg>
+              <span>Shower Walls</span>
+            </button>
+            <button class="room-option" data-room="kitchen-floor" role="radio" aria-checked="false" tabindex="-1">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M2 8h20M2 14h20M8 2v20M14 2v20"/></svg>
+              <span>Kitchen Floor</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Measurements -->
+        <div class="card" id="measurements-card" style="display: none;">
+          <h2 class="card-title">Room Size</h2>
+          <p class="card-subtitle" id="measure-hint">How big's the space? (in feet)</p>
+          <div class="measurement-group">
+            <div class="input-row">
+              <div class="input-group">
+                <label for="input-length">Length</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-length" min="1" max="100" placeholder="0" aria-describedby="measure-hint">
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+              <div class="input-group">
+                <label for="input-width">Width</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-width" min="1" max="100" placeholder="0">
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+            </div>
+            <div class="input-row" id="height-row" style="display: none;">
+              <div class="input-group full">
+                <label for="input-height">Wall Height</label>
+                <div class="input-with-unit">
+                  <input type="number" id="input-height" min="1" max="20" value="8" placeholder="8">
+                  <span class="unit">ft</span>
+                </div>
+              </div>
+            </div>
+            <div class="sqft-display">
+              <div class="label">Total Area</div>
+              <div class="value"><span id="sqft-value">0</span> <span>sq ft</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tile Type -->
+        <div class="card" id="tile-card" style="display: none;">
+          <h2 class="card-title">What kind of tile?</h2>
+          <p class="card-subtitle">Nashville-area prices — materials and labor included</p>
+          <div class="tile-options" role="radiogroup" aria-label="Tile type selection">
+            <button class="tile-option" data-tile="ceramic" data-min="8" data-max="15" role="radio" aria-checked="false" tabindex="0">
+              <div class="tile-swatch ceramic" aria-hidden="true"></div>
+              <div class="tile-info">
+                <div class="name">Ceramic</div>
+                <div class="price">$8 - $15 per sq ft installed</div>
+              </div>
+            </button>
+            <button class="tile-option" data-tile="porcelain" data-min="12" data-max="20" role="radio" aria-checked="false" tabindex="-1">
+              <div class="tile-swatch porcelain" aria-hidden="true"></div>
+              <div class="tile-info">
+                <div class="name">Porcelain</div>
+                <div class="price">$12 - $20 per sq ft installed</div>
+              </div>
+            </button>
+            <button class="tile-option" data-tile="stone" data-min="15" data-max="25" role="radio" aria-checked="false" tabindex="-1">
+              <div class="tile-swatch stone" aria-hidden="true"></div>
+              <div class="tile-info">
+                <div class="name">Natural Stone</div>
+                <div class="price">$15 - $25 per sq ft installed</div>
+              </div>
+            </button>
+            <button class="tile-option" data-tile="glass" data-min="20" data-max="35" role="radio" aria-checked="false" tabindex="-1">
+              <div class="tile-swatch glass" aria-hidden="true"></div>
+              <div class="tile-info">
+                <div class="name">Glass Mosaic</div>
+                <div class="price">$20 - $35 per sq ft installed</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quote -->
+        <div id="quote-section" style="display: none;">
+          <div class="quote-card">
+            <div class="quote-header">
+              <h3>Your Estimate</h3>
+              <span class="room-badge" id="quote-room">Bathroom Floor</span>
+            </div>
+            <div class="quote-total">
+              <div class="label">Estimated Total</div>
+              <div class="amount" id="quote-total">$0 - $0</div>
+            </div>
+            <div class="quote-breakdown">
+              <div class="breakdown-row">
+                <span class="label">Area</span>
+                <span class="value" id="quote-sqft">0 sq ft</span>
+              </div>
+              <div class="breakdown-row">
+                <span class="label">Tile + Labor</span>
+                <span class="value" id="quote-tile">$0 - $0</span>
+              </div>
+              <div class="breakdown-row">
+                <span class="label">Grout & Supplies</span>
+                <span class="value" id="quote-supplies">$0 - $0</span>
+              </div>
+              <div class="breakdown-row">
+                <span class="label">Waste Factor (12%)</span>
+                <span class="value" id="quote-waste">$0 - $0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-primary" id="share-quote-btn" aria-label="Share this estimate with Kathy">
+              <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              Text This Quote to Kathy
+            </button>
+            <button class="btn btn-secondary" id="copy-quote-btn" aria-label="Copy estimate to clipboard">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              Copy Estimate
+            </button>
+            <button class="btn btn-secondary" id="new-quote-btn" aria-label="Start a new estimate">
+              <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              New Estimate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera Tab -->
+      <div id="tab-camera" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">Grid Overlay</h2>
+          <p class="card-subtitle">Point your phone at the wall or floor. Count the squares to figure your square footage.</p>
+        </div>
+        
+        <div class="camera-container" id="camera-container">
+          <div class="camera-placeholder" id="camera-placeholder">
+            <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <h3>Camera Grid</h3>
+            <p>See a grid on your screen. Each square is about a foot. Count them up to get your measurements.</p>
+            <button class="btn btn-primary" id="start-camera-btn">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Open Camera
+            </button>
+          </div>
+          <video id="camera-video" autoplay playsinline style="display: none;"></video>
+          <canvas id="camera-canvas"></canvas>
+        </div>
+        
+        <button class="btn btn-secondary" id="stop-camera-btn" style="display: none; width: 100%;">
+          <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>
+          Close Camera
+        </button>
+        
+        <div class="grid-info">
+          <h4>How to use this</h4>
+          <p>Stand about 6 feet back from the wall or floor. Each grid square is roughly 1 foot. Count how many squares across and down — multiply them to get your square footage. A 6 by 8 grid means about 48 square feet.</p>
+        </div>
+      </div>
+
+      <!-- History Tab -->
+      <div id="tab-history" class="tab-content">
+        <div class="card">
+          <h2 class="card-title">Your Saved Quotes</h2>
+          <p class="card-subtitle">Estimates you've put together</p>
+        </div>
+        
+        <div class="history-list" id="history-list">
+          <!-- Populated by JS -->
+        </div>
+        
+        <div class="empty-state" id="history-empty" style="display: none;">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          <h3>No quotes saved yet</h3>
+          <p>Your estimates will show up here once you make them.</p>
+        </div>
+      </div>
+
+      <!-- Pro Tab (locked) -->
+      <div id="tab-pro" class="tab-content">
+        <div class="pro-locked">
+          <div class="lock-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3>My Projects</h3>
+          <p>Save all your quotes in one place, send photos to Kathy for a look, and keep track of your jobs.</p>
+          
+          <div class="pro-features">
+            <h4>Full version gets you:</h4>
+            <ul>
+              <li>
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Unlimited saved quotes
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Send photos to Kathy
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Professional PDF quotes
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                More room types (entry, patio, laundry)
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                Custom materials list
+              </li>
+            </ul>
+          </div>
+          
+          <div class="pro-price">$200 <span>one-time</span></div>
+          <button class="btn btn-primary" style="width: 100%;" disabled>Coming Soon</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <div class="nav-inner">
+        <button class="nav-item active" data-tab="estimate" aria-label="Estimate" aria-current="page">
+          <svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg>
+          <span>Estimate</span>
+        </button>
+        <button class="nav-item" data-tab="camera" aria-label="Camera">
+          <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Camera</span>
+        </button>
+        <button class="nav-item" data-tab="history" aria-label="History">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>History</span>
+        </button>
+        <button class="nav-item locked" data-tab="pro" aria-label="My Projects (locked)">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <span>Pro</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Demo Notice (Compact) -->
+  <div id="bct-demo">
+    <span>Demo by BennyCuTools — not affiliated with Jay Tile Install</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Jay%20Tile">Remove →</a>
+  </div>
+
+  <script>
+    // Hash function for auth
+    function _h(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    // State
+    const state = {
+      room: null,
+      tile: null,
+      length: 0,
+      width: 0,
+      height: 8,
+      sqft: 0,
+      priceMin: 0,
+      priceMax: 0,
+      history: [],
+      cameraStream: null
+    };
+
+    // Room display names
+    const roomNames = {
+      'backsplash': 'Kitchen Backsplash',
+      'bathroom-floor': 'Bathroom Floor',
+      'shower': 'Shower Walls',
+      'kitchen-floor': 'Kitchen Floor'
+    };
+
+    // DOM elements
+    const authScreen = document.getElementById('auth-screen');
+    const app = document.getElementById('app');
+    const accessKeyInput = document.getElementById('access-key');
+    const authBtn = document.getElementById('auth-btn');
+    const authError = document.getElementById('auth-error');
+    
+    const measurementsCard = document.getElementById('measurements-card');
+    const tileCard = document.getElementById('tile-card');
+    const quoteSection = document.getElementById('quote-section');
+    const heightRow = document.getElementById('height-row');
+    
+    const inputLength = document.getElementById('input-length');
+    const inputWidth = document.getElementById('input-width');
+    const inputHeight = document.getElementById('input-height');
+    const sqftValue = document.getElementById('sqft-value');
+    
+    const toast = document.getElementById('toast');
+
+    // Anti-scrape protection
+    (function() {
+      const _0x1f = ['content', 'apply', 'TileScope', 'Jay Tile Install & Repair LLC of Nashville, TN'];
+      Object.defineProperty(window, '_brand', {
+        get() { return _0x1f[2]; },
+        set() {}
+      });
+      if (document.readyState === 'complete' && document.body.innerText.indexOf(_0x1f[3]) < 0) {
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;">Error: Content integrity check failed.</div>';
+      }
+    })();
+
+    // Auth check on load
+    function checkAuth() {
+      const urlKey = new URLSearchParams(window.location.search).get('key');
+      if (urlKey && _h(urlKey) === 769703771) {
+        showApp();
+        return;
+      }
+      authScreen.style.display = 'flex';
+    }
+
+    function showApp() {
+      authScreen.style.display = 'none';
+      app.classList.add('active');
+      loadHistory();
+      loadDemoData();
+    }
+
+    authBtn.addEventListener('click', () => {
+      const key = accessKeyInput.value.trim();
+      if (_h(key) === 769703771) {
+        showApp();
+      } else {
+        authError.textContent = 'That key does not look right. Try again.';
+      }
+    });
+
+    accessKeyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') authBtn.click();
+    });
+
+    // Load demo data on first visit
+    function loadDemoData() {
+      const hasVisited = localStorage.getItem('tilescope-visited');
+      if (hasVisited) return;
+      
+      localStorage.setItem('tilescope-visited', 'true');
+      
+      // Pre-load Nashville demo estimates
+      const demoHistory = [
+        {
+          id: Date.now() - 86400000 * 2,
+          room: 'bathroom-floor',
+          tile: 'porcelain',
+          sqft: 48,
+          priceMin: 2400,
+          priceMax: 2800,
+          date: new Date(Date.now() - 86400000 * 2).toLocaleDateString()
+        },
+        {
+          id: Date.now() - 86400000 * 5,
+          room: 'backsplash',
+          tile: 'glass',
+          sqft: 24,
+          priceMin: 1200,
+          priceMax: 1600,
+          date: new Date(Date.now() - 86400000 * 5).toLocaleDateString()
+        },
+        {
+          id: Date.now() - 86400000 * 10,
+          room: 'shower',
+          tile: 'ceramic',
+          sqft: 96,
+          priceMin: 3800,
+          priceMax: 4600,
+          date: new Date(Date.now() - 86400000 * 10).toLocaleDateString()
+        }
+      ];
+      
+      state.history = demoHistory;
+      saveHistory();
+      renderHistory();
+    }
+
+    // Room selection
+    document.querySelectorAll('.room-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.room-option').forEach(b => {
+          b.classList.remove('selected');
+          b.setAttribute('aria-checked', 'false');
+          b.setAttribute('tabindex', '-1');
+        });
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+        btn.setAttribute('tabindex', '0');
+        
+        state.room = btn.dataset.room;
+        measurementsCard.style.display = 'block';
+        
+        // Show height input for showers
+        if (state.room === 'shower') {
+          heightRow.style.display = 'block';
+          document.getElementById('measure-hint').textContent = 'Enter the perimeter length, width of one wall, and ceiling height';
+        } else {
+          heightRow.style.display = 'none';
+          document.getElementById('measure-hint').textContent = 'Enter your length and width in feet';
+        }
+        
+        calculateSqft();
+      });
+      
+      // Keyboard navigation for radio group
+      btn.addEventListener('keydown', (e) => {
+        const options = Array.from(document.querySelectorAll('.room-option'));
+        const idx = options.indexOf(btn);
+        let newIdx;
+        
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          newIdx = (idx + 1) % options.length;
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          newIdx = (idx - 1 + options.length) % options.length;
+        }
+        
+        if (newIdx !== undefined) {
+          options[newIdx].click();
+          options[newIdx].focus();
+        }
+      });
+    });
+
+    // Tile selection
+    document.querySelectorAll('.tile-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tile-option').forEach(b => {
+          b.classList.remove('selected');
+          b.setAttribute('aria-checked', 'false');
+          b.setAttribute('tabindex', '-1');
+        });
+        btn.classList.add('selected');
+        btn.setAttribute('aria-checked', 'true');
+        btn.setAttribute('tabindex', '0');
+        
+        state.tile = btn.dataset.tile;
+        state.tileMin = parseInt(btn.dataset.min);
+        state.tileMax = parseInt(btn.dataset.max);
+        
+        calculateQuote();
+      });
+      
+      // Keyboard navigation
+      btn.addEventListener('keydown', (e) => {
+        const options = Array.from(document.querySelectorAll('.tile-option'));
+        const idx = options.indexOf(btn);
+        let newIdx;
+        
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          newIdx = (idx + 1) % options.length;
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          newIdx = (idx - 1 + options.length) % options.length;
+        }
+        
+        if (newIdx !== undefined) {
+          options[newIdx].click();
+          options[newIdx].focus();
+        }
+      });
+    });
+
+    // Measurement inputs
+    function calculateSqft() {
+      const length = parseFloat(inputLength.value) || 0;
+      const width = parseFloat(inputWidth.value) || 0;
+      const height = parseFloat(inputHeight.value) || 8;
+      
+      state.length = length;
+      state.width = width;
+      state.height = height;
+      
+      if (state.room === 'shower') {
+        // For showers: perimeter * height (3 walls typically)
+        state.sqft = Math.round((length * 2 + width) * height);
+      } else {
+        state.sqft = Math.round(length * width);
+      }
+      
+      // Animate the number
+      animateNumber(sqftValue, state.sqft);
+      
+      if (state.sqft > 0) {
+        tileCard.style.display = 'block';
+      }
+      
+      if (state.tile) {
+        calculateQuote();
+      }
+    }
+
+    inputLength.addEventListener('input', calculateSqft);
+    inputWidth.addEventListener('input', calculateSqft);
+    inputHeight.addEventListener('input', calculateSqft);
+
+    // Calculate quote
+    function calculateQuote() {
+      if (!state.sqft || !state.tile) return;
+      
+      const basePriceMin = state.sqft * state.tileMin;
+      const basePriceMax = state.sqft * state.tileMax;
+      
+      // Add supplies (5-8% of base)
+      const suppliesMin = Math.round(basePriceMin * 0.05);
+      const suppliesMax = Math.round(basePriceMax * 0.08);
+      
+      // Add waste factor (12%)
+      const wasteMin = Math.round(basePriceMin * 0.12);
+      const wasteMax = Math.round(basePriceMax * 0.12);
+      
+      state.priceMin = basePriceMin + suppliesMin + wasteMin;
+      state.priceMax = basePriceMax + suppliesMax + wasteMax;
+      
+      // Round to nearest 50
+      state.priceMin = Math.round(state.priceMin / 50) * 50;
+      state.priceMax = Math.round(state.priceMax / 50) * 50;
+      
+      // Update UI
+      quoteSection.style.display = 'block';
+      document.getElementById('quote-room').textContent = roomNames[state.room];
+      document.getElementById('quote-total').textContent = `$${state.priceMin.toLocaleString()} - $${state.priceMax.toLocaleString()}`;
+      document.getElementById('quote-sqft').textContent = `${state.sqft} sq ft`;
+      document.getElementById('quote-tile').textContent = `$${basePriceMin.toLocaleString()} - $${basePriceMax.toLocaleString()}`;
+      document.getElementById('quote-supplies').textContent = `$${suppliesMin.toLocaleString()} - $${suppliesMax.toLocaleString()}`;
+      document.getElementById('quote-waste').textContent = `$${wasteMin.toLocaleString()} - $${wasteMax.toLocaleString()}`;
+      
+      // Animate total
+      document.getElementById('quote-total').classList.add('animate-in');
+      setTimeout(() => {
+        document.getElementById('quote-total').classList.remove('animate-in');
+      }, 500);
+      
+      // Save to history
+      saveQuoteToHistory();
+    }
+
+    // Animate number counting
+    function animateNumber(el, target, duration = 400) {
+      const start = parseInt(el.textContent) || 0;
+      const startTime = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        
+        el.textContent = current;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+
+    // History management
+    function saveQuoteToHistory() {
+      const quote = {
+        id: Date.now(),
+        room: state.room,
+        tile: state.tile,
+        sqft: state.sqft,
+        priceMin: state.priceMin,
+        priceMax: state.priceMax,
+        date: new Date().toLocaleDateString()
+      };
+      
+      // Add to front, limit to 10
+      state.history.unshift(quote);
+      state.history = state.history.slice(0, 10);
+      saveHistory();
+      renderHistory();
+    }
+
+    function saveHistory() {
+      localStorage.setItem('tilescope-history', JSON.stringify(state.history));
+    }
+
+    function loadHistory() {
+      const saved = localStorage.getItem('tilescope-history');
+      if (saved) {
+        state.history = JSON.parse(saved);
+        renderHistory();
+      }
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      const empty = document.getElementById('history-empty');
+      
+      if (state.history.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      
+      empty.style.display = 'none';
+      list.innerHTML = state.history.map(item => `
+        <div class="history-item">
+          <div class="history-item-header">
+            <h4>${roomNames[item.room] || item.room}</h4>
+            <span class="date">${item.date}</span>
+          </div>
+          <div class="history-item-details">
+            ${item.sqft} sq ft of ${item.tile}
+          </div>
+          <div class="history-item-total">
+            $${item.priceMin.toLocaleString()} - $${item.priceMax.toLocaleString()}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Share quote
+    document.getElementById('share-quote-btn').addEventListener('click', async () => {
+      const message = `Hi Kathy, I'm looking to tile my ${roomNames[state.room].toLowerCase()}. Your online tool showed ${state.sqft} sq ft of ${state.tile} runs about $${state.priceMin.toLocaleString()} - $${state.priceMax.toLocaleString()}. Can you confirm or come take a look?\n\n- Sent from TileScope Estimator`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Tile Estimate for Jay Tile',
+            text: message
+          });
+          showToast('Quote shared!');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            fallbackCopy(message);
+          }
+        }
+      } else {
+        fallbackCopy(message);
+      }
+    });
+
+    document.getElementById('copy-quote-btn').addEventListener('click', () => {
+      const message = `Tile Estimate - ${roomNames[state.room]}\n${state.sqft} sq ft of ${state.tile}\nEstimate: $${state.priceMin.toLocaleString()} - $${state.priceMax.toLocaleString()}\n\nContact: Jay Tile Install & Repair\nPhone: (317) 319-3041`;
+      fallbackCopy(message);
+    });
+
+    function fallbackCopy(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(() => {
+        showToast('Could not copy');
+      });
+    }
+
+    // New quote
+    document.getElementById('new-quote-btn').addEventListener('click', () => {
+      state.room = null;
+      state.tile = null;
+      state.sqft = 0;
+      inputLength.value = '';
+      inputWidth.value = '';
+      inputHeight.value = '8';
+      sqftValue.textContent = '0';
+      
+      document.querySelectorAll('.room-option, .tile-option').forEach(b => {
+        b.classList.remove('selected');
+        b.setAttribute('aria-checked', 'false');
+      });
+      
+      measurementsCard.style.display = 'none';
+      tileCard.style.display = 'none';
+      quoteSection.style.display = 'none';
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Tab navigation
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        
+        document.querySelectorAll('.nav-item').forEach(b => {
+          b.classList.remove('active');
+          b.removeAttribute('aria-current');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-current', 'page');
+        
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        
+        // Stop camera when leaving camera tab
+        if (tab !== 'camera' && state.cameraStream) {
+          stopCamera();
+        }
+      });
+    });
+
+    // Camera functionality
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const ctx = canvas.getContext('2d');
+    const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const startCameraBtn = document.getElementById('start-camera-btn');
+    const stopCameraBtn = document.getElementById('stop-camera-btn');
+
+    startCameraBtn.addEventListener('click', startCamera);
+    stopCameraBtn.addEventListener('click', stopCamera);
+
+    async function startCamera() {
+      try {
+        state.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        video.srcObject = state.cameraStream;
+        video.style.display = 'block';
+        cameraPlaceholder.style.display = 'none';
+        stopCameraBtn.style.display = 'block';
+        
+        video.onloadedmetadata = () => {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          drawGrid();
+        };
+      } catch (err) {
+        showToast('Camera access did not work — check your permissions');
+      }
+    }
+
+    function stopCamera() {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(track => track.stop());
+        state.cameraStream = null;
+      }
+      video.style.display = 'none';
+      cameraPlaceholder.style.display = 'flex';
+      stopCameraBtn.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function drawGrid() {
+      if (!state.cameraStream) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const gridSize = Math.min(canvas.width, canvas.height) / 8;
+      
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 2;
+      
+      // Vertical lines
+      for (let x = gridSize; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      
+      // Horizontal lines
+      for (let y = gridSize; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+      
+      // Draw "1 ft" label
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = 'bold 14px Source Sans 3, sans-serif';
+      ctx.fillText('~1 ft', gridSize / 2 - 15, gridSize / 2 + 5);
+      
+      requestAnimationFrame(drawGrid);
+    }
+
+    // Toast
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>

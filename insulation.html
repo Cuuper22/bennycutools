@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JobSign — INTEC Completion Reports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --intec-red: #DB1F26;
+      --intec-red-dark: #b8181e;
+      --intec-navy: #376E8D;
+      --intec-navy-light: #4a8aad;
+      --white: #ffffff;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --success: #059669;
+      --success-bg: #d1fae5;
+      --warning: #d97706;
+      --warning-bg: #fef3c7;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+      --transition-fast: 150ms;
+      --transition-normal: 250ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Roboto', system-ui, -apple-system, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    /* Anti-scrape protection */
+    body {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    input, textarea {
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+
+    /* Auth overlay */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--intec-navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 24px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .auth-overlay.hidden { display: none; }
+
+    .auth-logo {
+      width: 120px;
+      height: 120px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-lg);
+      animation: scaleIn 0.4s ease-out 0.1s both;
+    }
+
+    @keyframes scaleIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .auth-logo span {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--intec-red);
+      letter-spacing: -1px;
+    }
+
+    .auth-title {
+      color: var(--white);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align: center;
+      animation: slideUp 0.4s ease-out 0.2s both;
+    }
+
+    .auth-subtitle {
+      color: rgba(255,255,255,0.7);
+      font-size: 15px;
+      margin-bottom: 32px;
+      text-align: center;
+      animation: slideUp 0.4s ease-out 0.25s both;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .auth-input {
+      width: 100%;
+      max-width: 280px;
+      padding: 16px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: var(--radius);
+      text-align: center;
+      letter-spacing: 2px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      animation: slideUp 0.4s ease-out 0.3s both;
+    }
+
+    .auth-input:focus {
+      outline: 3px solid var(--intec-red);
+      outline-offset: 2px;
+    }
+
+    .auth-btn {
+      width: 100%;
+      max-width: 280px;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--intec-red);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform var(--transition-fast), background var(--transition-fast);
+      animation: slideUp 0.4s ease-out 0.35s both;
+    }
+
+    .auth-btn:hover { background: var(--intec-red-dark); transform: translateY(-1px); }
+    .auth-btn:active { transform: scale(0.97); }
+    .auth-btn:focus-visible { outline: 3px solid var(--white); outline-offset: 2px; }
+
+    .auth-error {
+      color: #fca5a5;
+      font-size: 14px;
+      margin-top: 12px;
+      text-align: center;
+      animation: shake 0.5s ease-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* Header */
+    .header {
+      background: var(--intec-navy);
+      color: var(--white);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-logo {
+      width: 40px;
+      height: 40px;
+      background: var(--white);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-logo span {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--intec-red);
+    }
+
+    .header-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-sub {
+      font-size: 13px;
+      opacity: 0.8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Demo banner */
+    .demo-banner {
+      background: var(--warning-bg);
+      color: var(--gray-700);
+      padding: 12px 48px 12px 16px;
+      font-size: 13px;
+      line-height: 1.4;
+      position: relative;
+    }
+
+    .demo-banner.hidden { display: none; }
+
+    .demo-close {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+    }
+
+    .demo-close:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: 2px; border-radius: 4px; }
+
+    /* Nav tabs */
+    .nav-tabs {
+      display: flex;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      position: sticky;
+      top: 72px;
+      z-index: 99;
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 14px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-500);
+      background: none;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      transition: color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .nav-tab:hover { background: var(--gray-50); }
+    .nav-tab:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: -2px; outline-offset: 2px; }
+    .nav-tab.active { color: var(--intec-navy); }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background: var(--intec-navy);
+      border-radius: 3px 3px 0 0;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .nav-tab.disabled {
+      color: var(--gray-300);
+      cursor: not-allowed;
+    }
+
+    .nav-tab svg { width: 20px; height: 20px; }
+
+    .nav-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      background: var(--intec-red);
+      color: var(--white);
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+      animation: popIn 0.3s ease-out;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    /* Main content */
+    .main { padding: 16px; }
+
+    /* Job cards */
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    .job-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .job-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+      animation: cardSlideIn 0.4s ease-out;
+    }
+
+    @keyframes cardSlideIn {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .job-card:nth-child(2) { animation-delay: 0.1s; }
+    .job-card:nth-child(3) { animation-delay: 0.2s; }
+
+    .job-card:hover { 
+      box-shadow: var(--shadow); 
+      transform: translateY(-2px);
+      border-color: var(--intec-navy-light);
+    }
+    .job-card:active { transform: scale(0.98); }
+    .job-card:focus-visible { outline: 3px solid var(--intec-navy); outline-offset: 2px; }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .job-address {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .job-status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+    }
+
+    .job-status.ready {
+      background: var(--intec-red);
+      color: var(--white);
+    }
+
+    .job-status.in-progress {
+      background: var(--warning-bg);
+      color: var(--warning);
+    }
+
+    .job-status.completed {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .job-customer {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: 4px;
+    }
+
+    .job-type {
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+      font-size: 13px;
+      color: var(--gray-500);
+    }
+
+    .job-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .job-meta-item svg { width: 14px; height: 14px; opacity: 0.7; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--gray-500);
+    }
+
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      stroke: var(--gray-300);
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 8px;
+    }
+
+    .empty-state p { font-size: 14px; }
+
+    /* Capture Screen */
+    .screen {
+      position: fixed;
+      inset: 0;
+      background: var(--gray-900);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      animation: slideUpFull 0.3s ease-out;
+    }
+
+    @keyframes slideUpFull {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .screen.hidden { display: none; }
+
+    .screen-header {
+      background: rgba(0,0,0,0.6);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--white);
+    }
+
+    .screen-back {
+      background: none;
+      border: none;
+      color: var(--white);
+      padding: 8px;
+      margin: -8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform var(--transition-fast);
+    }
+
+    .screen-back:hover { transform: translateX(-2px); }
+    .screen-back:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; border-radius: 4px; }
+    .screen-back svg { width: 24px; height: 24px; }
+
+    .screen-title {
+      flex: 1;
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .screen-step {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* Camera view */
+    .camera-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .camera-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .camera-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 24px;
+    }
+
+    .camera-guide {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80%;
+      max-width: 300px;
+      aspect-ratio: 4/3;
+      border: 2px dashed rgba(255,255,255,0.5);
+      border-radius: 8px;
+      animation: pulse-border 2s infinite;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(255,255,255,0.5); }
+      50% { border-color: rgba(255,255,255,0.8); }
+    }
+
+    .camera-instruction {
+      background: rgba(0,0,0,0.7);
+      color: var(--white);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .camera-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .capture-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 4px solid var(--gray-300);
+      cursor: pointer;
+      transition: transform var(--transition-fast);
+      position: relative;
+    }
+
+    .capture-btn::after {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      background: var(--intec-red);
+      border-radius: 50%;
+      transition: transform var(--transition-fast), background var(--transition-fast);
+    }
+
+    .capture-btn:hover::after { background: var(--intec-red-dark); }
+    .capture-btn:active { transform: scale(0.9); }
+    .capture-btn:focus-visible { 
+      outline: 3px solid var(--intec-red); 
+      outline-offset: 4px; 
+    }
+
+    .skip-btn {
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .skip-btn:hover { background: rgba(255,255,255,0.3); }
+    .skip-btn:focus-visible { outline: 2px solid var(--white); outline-offset: 2px; }
+
+    /* Photo thumbnails */
+    .photo-strip {
+      display: flex;
+      gap: 8px;
+      padding: 16px;
+      background: rgba(0,0,0,0.8);
+      overflow-x: auto;
+    }
+
+    .photo-thumb {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+      transition: transform var(--transition-fast), border-color var(--transition-fast);
+      animation: thumbPop 0.3s ease-out;
+    }
+
+    @keyframes thumbPop {
+      from { transform: scale(0); }
+      to { transform: scale(1); }
+    }
+
+    .photo-thumb.active { border-color: var(--intec-red); }
+    .photo-thumb:hover { transform: scale(1.05); }
+
+    .photo-thumb-add {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      border: 2px dashed var(--gray-500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      background: none;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+    }
+
+    .photo-thumb-add:hover { border-color: var(--white); background: rgba(255,255,255,0.1); }
+    .photo-thumb-add svg { width: 24px; height: 24px; stroke: var(--gray-400); }
+    .photo-thumb-add:focus-visible { border-color: var(--white); outline: none; }
+
+    /* Confirm screen */
+    .confirm-screen {
+      background: var(--gray-50);
+    }
+
+    .confirm-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .confirm-section {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition-fast);
+    }
+
+    .confirm-section:hover { box-shadow: var(--shadow); }
+
+    .confirm-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .location-verified {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--success-bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .location-verified svg {
+      width: 24px;
+      height: 24px;
+      stroke: var(--success);
+      flex-shrink: 0;
+    }
+
+    .location-verified-text {
+      font-size: 14px;
+      color: var(--gray-700);
+    }
+
+    .location-verified-text strong {
+      display: block;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    /* Voice notes */
+    .voice-notes-area {
+      min-height: 100px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 15px;
+      line-height: 1.5;
+      resize: none;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .voice-notes-area:focus { 
+      outline: 2px solid var(--intec-navy); 
+      border-color: transparent; 
+    }
+
+    .voice-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: var(--gray-100);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      color: var(--gray-700);
+      cursor: pointer;
+      width: 100%;
+      transition: background var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .voice-btn:hover { background: var(--gray-200); }
+    .voice-btn:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: 2px; }
+    .voice-btn svg { width: 20px; height: 20px; }
+
+    .voice-btn.recording {
+      background: #fef2f2;
+      border-color: var(--intec-red);
+      color: var(--intec-red);
+      animation: pulse-bg 1s infinite;
+    }
+
+    @keyframes pulse-bg {
+      0%, 100% { background: #fef2f2; }
+      50% { background: #fee2e2; }
+    }
+
+    .voice-btn.recording svg { animation: pulse-icon 1s infinite; }
+
+    @keyframes pulse-icon {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.1); }
+    }
+
+    /* Checklist */
+    .checklist { list-style: none; }
+
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .checklist-item:hover { background: var(--gray-50); }
+    .checklist-item:last-child { border-bottom: none; }
+    .checklist-item:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: 2px; border-radius: 4px; }
+
+    .checklist-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--gray-300);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all var(--transition-fast);
+    }
+
+    .checklist-item:hover .checklist-checkbox { border-color: var(--intec-navy-light); }
+
+    .checklist-item.checked .checklist-checkbox {
+      background: var(--success);
+      border-color: var(--success);
+      animation: checkPop 0.2s ease-out;
+    }
+
+    @keyframes checkPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .checklist-checkbox svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--white);
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .checklist-item.checked .checklist-checkbox svg { opacity: 1; }
+
+    .checklist-label {
+      font-size: 15px;
+      color: var(--gray-700);
+      transition: color var(--transition-fast);
+    }
+
+    .checklist-item.checked .checklist-label {
+      color: var(--gray-500);
+      text-decoration: line-through;
+    }
+
+    /* Photo grid on confirm */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .photo-grid img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      transition: transform var(--transition-fast);
+    }
+
+    .photo-grid img:hover { transform: scale(1.02); }
+
+    /* Signature screen */
+    .signature-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      background: var(--gray-50);
+    }
+
+    .signature-prompt {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .signature-prompt h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+
+    .signature-prompt p {
+      font-size: 14px;
+      color: var(--gray-500);
+    }
+
+    .signature-pad-container {
+      flex: 1;
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      position: relative;
+      min-height: 200px;
+      max-height: 300px;
+      touch-action: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .signature-pad-container:focus-within { border-color: var(--intec-navy); }
+
+    .signature-pad {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    .signature-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--gray-400);
+      font-size: 16px;
+      pointer-events: none;
+      transition: opacity var(--transition-fast);
+    }
+
+    .signature-placeholder.hidden { opacity: 0; }
+
+    .signature-clear {
+      margin-top: 12px;
+      padding: 10px;
+      background: none;
+      border: none;
+      color: var(--gray-500);
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: underline;
+      transition: color var(--transition-fast);
+    }
+
+    .signature-clear:hover { color: var(--intec-red); }
+    .signature-clear:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: 2px; border-radius: 4px; }
+
+    /* Bottom actions */
+    .screen-actions {
+      padding: 16px;
+      background: var(--white);
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      background: var(--intec-red);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .btn-primary:hover { 
+      background: var(--intec-red-dark); 
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(219, 31, 38, 0.3);
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:focus-visible { outline: 3px solid var(--intec-navy); outline-offset: 2px; }
+    .btn-primary:disabled { 
+      background: var(--gray-300); 
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 500;
+      background: var(--white);
+      color: var(--intec-navy);
+      border: 2px solid var(--intec-navy);
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .btn-secondary:hover { 
+      background: var(--gray-50); 
+      transform: translateY(-1px);
+    }
+    .btn-secondary:focus-visible { outline: 3px solid var(--intec-red); outline-offset: 2px; }
+
+    /* Complete screen */
+    .complete-screen {
+      background: var(--gray-50);
+    }
+
+    .complete-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 16px;
+    }
+
+    .complete-header {
+      text-align: center;
+      margin-bottom: 24px;
+      animation: fadeInScale 0.5s ease-out;
+    }
+
+    @keyframes fadeInScale {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .complete-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--success-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      animation: checkmarkPop 0.5s ease-out 0.2s both;
+    }
+
+    @keyframes checkmarkPop {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .complete-icon svg { width: 40px; height: 40px; stroke: var(--success); }
+
+    .complete-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+
+    .complete-header p {
+      font-size: 15px;
+      color: var(--gray-500);
+    }
+
+    /* PDF preview */
+    .pdf-preview {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 24px;
+      animation: slideUp 0.5s ease-out 0.1s both;
+    }
+
+    .pdf-preview-header {
+      background: var(--intec-navy);
+      color: var(--white);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pdf-preview-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--white);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pdf-preview-logo span {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--intec-red);
+    }
+
+    .pdf-preview-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .pdf-preview-body { padding: 16px; }
+
+    .pdf-preview-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 14px;
+    }
+
+    .pdf-preview-row:last-child { border-bottom: none; }
+    .pdf-preview-label { color: var(--gray-500); }
+    .pdf-preview-value { color: var(--gray-800); font-weight: 500; }
+
+    .pdf-photos {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      overflow-x: auto;
+      background: var(--gray-50);
+    }
+
+    .pdf-photos img {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      flex-shrink: 0;
+      transition: transform var(--transition-fast);
+    }
+
+    .pdf-photos img:hover { transform: scale(1.05); }
+
+    .pdf-signature {
+      padding: 16px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    .pdf-signature-label {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+
+    .pdf-signature-img {
+      height: 60px;
+      object-fit: contain;
+    }
+
+    /* Share buttons */
+    .share-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      animation: slideUp 0.5s ease-out 0.2s both;
+    }
+
+    .share-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px;
+      font-size: 15px;
+      font-weight: 500;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      border: none;
+    }
+
+    .share-btn:hover { transform: translateY(-2px); }
+    .share-btn:active { transform: scale(0.98); }
+    .share-btn:focus-visible { outline: 3px solid var(--intec-navy); outline-offset: 2px; }
+    .share-btn svg { width: 20px; height: 20px; }
+
+    .share-btn-primary {
+      background: var(--intec-red);
+      color: var(--white);
+      box-shadow: 0 2px 8px rgba(219, 31, 38, 0.3);
+    }
+
+    .share-btn-primary:hover { box-shadow: 0 4px 12px rgba(219, 31, 38, 0.4); }
+
+    .share-btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+
+    .share-btn-secondary:hover { background: var(--gray-200); }
+
+    /* Review prompt */
+    .review-prompt {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      margin-top: 24px;
+      animation: slideUp 0.5s ease-out 0.3s both;
+    }
+
+    .review-prompt h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 8px;
+    }
+
+    .review-prompt p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+
+    .review-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--white);
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      cursor: pointer;
+      transition: border-color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .review-btn:hover { border-color: var(--intec-navy); transform: translateY(-1px); }
+    .review-btn:focus-visible { outline: 3px solid var(--intec-navy); outline-offset: 2px; }
+    .review-btn svg { width: 18px; height: 18px; }
+
+    /* Completed list */
+    .completed-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 12px;
+      animation: cardSlideIn 0.4s ease-out;
+    }
+
+    .completed-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .completed-date {
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+
+    .completed-photos {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .completed-photos img {
+      width: 60px;
+      height: 45px;
+      object-fit: cover;
+      border-radius: 6px;
+      transition: transform var(--transition-fast);
+    }
+
+    .completed-photos img:hover { transform: scale(1.05); }
+
+    .completed-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .completed-action-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      background: var(--gray-100);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--gray-700);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .completed-action-btn:hover { background: var(--gray-200); transform: translateY(-1px); }
+    .completed-action-btn:focus-visible { outline: 2px solid var(--intec-navy); outline-offset: 2px; }
+    .completed-action-btn svg { width: 16px; height: 16px; }
+
+    /* Upsell card */
+    .upsell-card {
+      background: var(--gray-100);
+      border: 2px dashed var(--gray-300);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      text-align: center;
+      margin-top: 24px;
+      animation: cardSlideIn 0.4s ease-out;
+    }
+
+    .upsell-card svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--gray-400);
+      margin-bottom: 12px;
+    }
+
+    .upsell-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-600);
+      margin-bottom: 8px;
+    }
+
+    .upsell-card p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 16px;
+    }
+
+    .upsell-price {
+      font-size: 13px;
+      color: var(--gray-500);
+      background: var(--white);
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--gray-800);
+      color: var(--white);
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      opacity: 0;
+      transition: transform var(--transition-normal), opacity var(--transition-normal);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Screen visibility */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+
+    /* Demo disclaimer */
+    #bct-demo-disclaimer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #f8f8f8;
+      border-top: 1px solid #ddd;
+      padding: 10px 16px;
+      font-size: 12px;
+      line-height: 1.4;
+      color: #666;
+      z-index: 99999;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 16px;
+      text-align: center;
+    }
+
+    #bct-demo-disclaimer p {
+      margin: 0;
+      max-width: 700px;
+    }
+
+    #bct-demo-disclaimer strong { color: #333; }
+
+    #bct-demo-disclaimer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: #dc3545;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background var(--transition-fast);
+    }
+
+    #bct-demo-disclaimer a:hover { background: #c82333; }
+
+    /* Skip Link */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--intec-navy);
+      color: var(--white);
+      padding: 8px 16px;
+      text-decoration: none;
+      font-weight: 500;
+      z-index: 10000;
+      transition: top 0.2s;
+    }
+    .skip-link:focus {
+      top: 0;
+    }
+
+    /* Screen reader only style */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      border: 0;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ARIA live region for announcements */
+    .aria-live-region {
+      position: absolute;
+      left: -10000px;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+
+    /* Responsive */
+    @media (min-width: 600px) {
+      body { max-width: 500px; margin: 0 auto; }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: more) {
+      .btn-primary { border: 2px solid currentColor; }
+      .job-card { border: 2px solid currentColor; }
+      .capture-btn { border: 4px solid currentColor; }
+    }
+
+    /* Focus visible improvements */
+    *:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    *:focus-visible {
+      outline: 3px solid var(--intec-navy);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- ARIA Live Region for Screen Reader Announcements -->
+  <div class="aria-live-region" aria-live="polite" aria-atomic="true" id="ariaLiveRegion"></div>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="auth-logo" aria-hidden="true"><span>INTEC</span></div>
+    <h1 class="auth-title" id="authTitle">JobSign</h1>
+    <p class="auth-subtitle">Job Completion Reports</p>
+    <input type="text" class="auth-input" id="accessKeyInput" placeholder="Access Key" autocomplete="off" aria-label="Enter your access key" aria-required="true">
+    <button class="auth-btn" id="authBtn">Open Tool</button>
+    <p class="auth-error" id="authError" role="alert" aria-live="assertive"></p>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" class="hidden">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-logo" aria-hidden="true"><span>INTEC</span></div>
+      <div class="header-text">
+        <div class="header-title">JobSign</div>
+        <div class="header-sub">Job Completion Reports</div>
+      </div>
+    </header>
+
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demoBanner" role="status" aria-live="polite">
+      Sample Milwaukee jobs loaded for demo.
+      <button class="demo-close" id="closeDemoBanner" aria-label="Close demo notice">&times;</button>
+    </div>
+
+    <!-- Nav Tabs -->
+    <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
+      <button class="nav-tab active" data-tab="jobs" role="tab" aria-selected="true" aria-controls="jobsPanel" id="jobs-tab" tabindex="0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        Active Jobs
+        <span class="nav-badge" id="activeJobsBadge" aria-label="2 active jobs">2</span>
+      </button>
+      <button class="nav-tab" data-tab="completed" role="tab" aria-selected="false" aria-controls="completedPanel" id="completed-tab" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Completed
+      </button>
+      <button class="nav-tab disabled" data-tab="dashboard" role="tab" aria-selected="false" aria-disabled="true" aria-controls="dashboardPanel" id="dashboard-tab" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Office
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main" id="main-content">
+      <!-- Active Jobs Tab -->
+      <div class="tab-content active" id="jobsPanel" role="tabpanel" aria-labelledby="jobs-tab">
+        <h2 class="section-title">Ready to Complete</h2>
+        <div class="job-list" id="readyJobsList" role="list" aria-label="Jobs ready for completion"></div>
+
+        <h2 class="section-title">In Progress</h2>
+        <div class="job-list" id="inProgressJobsList" role="list" aria-label="Jobs in progress"></div>
+      </div>
+
+      <!-- Completed Tab -->
+      <div class="tab-content" id="completedPanel" role="tabpanel" aria-labelledby="completed-tab">
+        <h2 class="section-title">Completed Jobs</h2>
+        <div id="completedJobsList" role="list" aria-label="Completed jobs"></div>
+
+        <!-- Upsell Card -->
+        <div class="upsell-card" role="region" aria-label="Upgrade option">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <h3>Office Dashboard</h3>
+          <p>See all active jobs, track completion rates, export monthly reports.</p>
+          <span class="upsell-price">Available in full version ($200)</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Tab (Upsell) -->
+      <div class="tab-content" id="dashboardPanel" role="tabpanel" aria-labelledby="dashboard-tab">
+        <div class="upsell-card" style="margin-top: 0;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <h3>Office Dashboard</h3>
+          <p>Track all crew completions, monitor review response rates, and export monthly job reports.</p>
+          <span class="upsell-price">Full version: $200 one-time</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Capture Screen -->
+    <div class="screen hidden" id="captureScreen" role="dialog" aria-modal="true" aria-labelledby="captureTitle">
+      <header class="screen-header">
+        <button class="screen-back" id="captureBack" aria-label="Go back to job list">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="screen-title" id="captureTitle">Take Photos</span>
+        <span class="screen-step" id="captureStep">Photo 1 of 3</span>
+      </header>
+      <div class="camera-container" role="region" aria-label="Camera view">
+        <video class="camera-video" id="cameraVideo" autoplay playsinline aria-label="Live camera preview"></video>
+        <div class="camera-overlay">
+          <div class="camera-guide" aria-hidden="true"></div>
+          <div class="camera-instruction" id="cameraInstruction">Photo of completed attic insulation</div>
+          <div class="camera-controls">
+            <button class="skip-btn" id="skipPhotoBtn">Skip</button>
+            <button class="capture-btn" id="captureBtn" aria-label="Take photo"></button>
+          </div>
+        </div>
+      </div>
+      <div class="photo-strip" id="photoStrip" role="region" aria-label="Photo thumbnails">
+        <button class="photo-thumb-add" id="addPhotoBtn" aria-label="Add another photo">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Confirm Screen -->
+    <div class="screen confirm-screen hidden" id="confirmScreen" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <header class="screen-header" style="background: var(--intec-navy);">
+        <button class="screen-back" id="confirmBack" aria-label="Back to photo capture">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="screen-title" id="confirmTitle">Review & Confirm</span>
+      </header>
+      <div class="confirm-content">
+        <div class="confirm-section">
+          <h3 class="confirm-section-title">Location</h3>
+          <div class="location-verified" id="locationStatus">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <div class="location-verified-text">
+              <strong>Verified</strong>
+              <span id="locationAddress">123 Main St, Milwaukee, WI</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="confirm-section">
+          <h3 class="confirm-section-title">Photos (<span id="photoCount">0</span>)</h3>
+          <div class="photo-grid" id="confirmPhotoGrid"></div>
+        </div>
+
+        <div class="confirm-section">
+          <h3 class="confirm-section-title">Notes</h3>
+          <label for="notesTextarea" class="sr-only">Add notes about the job</label>
+          <textarea class="voice-notes-area" id="notesTextarea" placeholder="Add any notes about the work..." aria-label="Job notes"></textarea>
+          <button class="voice-btn" id="voiceNoteBtn" aria-label="Start voice recording">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+            <span id="voiceBtnText">Tap to speak (hands-free)</span>
+          </button>
+        </div>
+
+        <div class="confirm-section">
+          <h3 class="confirm-section-title">Completion Checklist</h3>
+          <ul class="checklist" id="completionChecklist" role="list" aria-label="Job completion checklist"></ul>
+        </div>
+      </div>
+      <div class="screen-actions">
+        <button class="btn-primary" id="proceedToSignBtn">Get Customer Signature</button>
+      </div>
+    </div>
+
+    <!-- Signature Screen -->
+    <div class="screen confirm-screen hidden" id="signatureScreen" role="dialog" aria-modal="true" aria-labelledby="signatureTitle">
+      <header class="screen-header" style="background: var(--intec-navy);">
+        <button class="screen-back" id="signatureBack" aria-label="Back to job details">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="screen-title" id="signatureTitle">Customer Sign-Off</span>
+      </header>
+      <div class="signature-container">
+        <div class="signature-prompt">
+          <h2>Customer Signature</h2>
+          <p>Have the homeowner sign below to confirm work is complete</p>
+        </div>
+        <div class="signature-pad-container" role="region" aria-label="Signature pad">
+          <canvas class="signature-pad" id="signaturePad" role="img" aria-label="Draw signature here"></canvas>
+          <div class="signature-placeholder" id="sigPlaceholder">Sign here</div>
+        </div>
+        <button class="signature-clear" id="clearSignature">Clear signature</button>
+      </div>
+      <div class="screen-actions">
+        <button class="btn-primary" id="generateReportBtn" disabled>Generate Report</button>
+      </div>
+    </div>
+
+    <!-- Complete Screen -->
+    <div class="screen complete-screen hidden" id="completeScreen" role="dialog" aria-modal="true" aria-labelledby="completeTitle">
+      <header class="screen-header" style="background: var(--intec-navy);">
+        <button class="screen-back" id="completeBack" aria-label="Back to job list">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        </button>
+        <span class="screen-title" id="completeTitle">Job Complete</span>
+      </header>
+      <div class="complete-content">
+        <div class="complete-header">
+          <div class="complete-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <h2>Report Generated</h2>
+          <p>Ready to send to customer</p>
+        </div>
+
+        <!-- PDF Preview -->
+        <div class="pdf-preview" id="pdfPreview" role="region" aria-label="Report preview">
+          <div class="pdf-preview-header">
+            <div class="pdf-preview-logo" aria-hidden="true"><span>INTEC</span></div>
+            <span class="pdf-preview-title">Completion Report</span>
+          </div>
+          <div class="pdf-preview-body">
+            <div class="pdf-preview-row">
+              <span class="pdf-preview-label">Customer</span>
+              <span class="pdf-preview-value" id="previewCustomer">Sarah Johnson</span>
+            </div>
+            <div class="pdf-preview-row">
+              <span class="pdf-preview-label">Address</span>
+              <span class="pdf-preview-value" id="previewAddress">123 Main St</span>
+            </div>
+            <div class="pdf-preview-row">
+              <span class="pdf-preview-label">Work Type</span>
+              <span class="pdf-preview-value" id="previewWorkType">Attic Insulation</span>
+            </div>
+            <div class="pdf-preview-row">
+              <span class="pdf-preview-label">Completed</span>
+              <span class="pdf-preview-value" id="previewDate">Feb 8, 2026</span>
+            </div>
+          </div>
+          <div class="pdf-photos" id="previewPhotos"></div>
+          <div class="pdf-signature">
+            <div class="pdf-signature-label">Customer Signature</div>
+            <img class="pdf-signature-img" id="previewSignature" alt="Customer signature">
+          </div>
+        </div>
+
+        <!-- Share Buttons -->
+        <div class="share-buttons">
+          <button class="share-btn share-btn-primary" id="shareReportBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Send Report to Customer
+          </button>
+          <button class="share-btn share-btn-secondary" id="downloadPdfBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download PDF
+          </button>
+          <button class="share-btn share-btn-secondary" id="copyLinkBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Link
+          </button>
+        </div>
+
+        <!-- Review Prompt -->
+        <div class="review-prompt" role="region" aria-label="Request a review">
+          <h3>Ask for a Review</h3>
+          <p>Happy customers leave great reviews</p>
+          <button class="review-btn" id="googleReviewBtn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Open Google Review Link
+          </button>
+        </div>
+      </div>
+      <div class="screen-actions">
+        <button class="btn-primary" id="finishJobBtn">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Demo Disclaimer -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Legal disclaimer">
+    <p><strong>DEMO:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by INTEC (Insulation Technologies, Inc.) of Milwaukee, WI.</p>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20INTEC%20Insulation">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Request Permanent Deletion
+    </a>
+  </div>
+
+  <script>
+    // Anti-scrape: Block right-click and common dev tools
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+      }
+    });
+
+    // Hash function for access key verification
+    function hashKey(s) {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) {
+        h = ((h << 5) - h) + s.charCodeAt(i);
+        h |= 0;
+      }
+      return h;
+    }
+
+    const VALID_HASH = 546278464;
+
+    // Demo data for Milwaukee-area jobs
+    const DEMO_JOBS = {
+      ready: [
+        {
+          id: 'job-001',
+          address: '2847 N 85th St, Wauwatosa',
+          customer: 'Michael Chen',
+          type: 'Attic Blown-In Insulation',
+          scheduledTime: '9:00 AM',
+          lat: 43.0451,
+          lng: -88.0143,
+          checklist: ['Attic insulation installed', 'Air sealing complete', 'Cleanup done', 'Customer walkthrough']
+        },
+        {
+          id: 'job-002',
+          address: '5621 N Bay Ridge Ave, Whitefish Bay',
+          customer: 'Jennifer Martinez',
+          type: 'Spray Foam - Rim Joist',
+          scheduledTime: '1:30 PM',
+          lat: 43.1128,
+          lng: -87.9001,
+          checklist: ['Spray foam applied', 'Ventilation checked', 'Cleanup done', 'Customer walkthrough']
+        }
+      ],
+      inProgress: [
+        {
+          id: 'job-003',
+          address: 'W156 N9456 Pilgrim Rd, Menomonee Falls',
+          customer: 'Robert Thompson',
+          type: 'Full Attic Package - R-49',
+          scheduledTime: '11:00 AM',
+          progress: 2,
+          photos: [],
+          lat: 43.1722,
+          lng: -88.1256,
+          checklist: ['Old insulation removed', 'Air sealing complete', 'New insulation installed', 'Cleanup done', 'Customer walkthrough']
+        }
+      ],
+      completed: [
+        {
+          id: 'job-004',
+          address: '3215 S Kinnickinnic Ave, Bay View',
+          customer: 'Sarah Johnson',
+          type: 'Attic Insulation R-38',
+          completedDate: 'Feb 7, 2026',
+          photos: ['data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="75" viewBox="0 0 100 75"%3E%3Crect fill="%23e5e7eb" width="100" height="75"/%3E%3Ctext x="50" y="40" text-anchor="middle" fill="%239ca3af" font-size="10"%3EPhoto 1%3C/text%3E%3C/svg%3E', 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="75" viewBox="0 0 100 75"%3E%3Crect fill="%23e5e7eb" width="100" height="75"/%3E%3Ctext x="50" y="40" text-anchor="middle" fill="%239ca3af" font-size="10"%3EPhoto 2%3C/text%3E%3C/svg%3E', 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="75" viewBox="0 0 100 75"%3E%3Crect fill="%23e5e7eb" width="100" height="75"/%3E%3Crect fill="%23DB1F26" x="10" y="25" width="80" height="25"/%3E%3Ctext x="50" y="40" text-anchor="middle" fill="%23fff" font-size="8"%3ECompleted%3C/text%3E%3C/svg%3E'],
+          signature: true,
+          notes: 'All work completed. Customer satisfied with R-38 coverage. No debris left behind.'
+        }
+      ]
+    };
+
+    // App state
+    let state = {
+      jobs: JSON.parse(JSON.stringify(DEMO_JOBS)),
+      currentJob: null,
+      capturedPhotos: [],
+      currentPhotoIndex: 0,
+      signature: null,
+      notes: '',
+      checklist: [],
+      cameraStream: null,
+      isRecording: false,
+      recognition: null
+    };
+
+    const photoInstructions = [
+      'Photo of completed attic insulation',
+      'Show the air sealing work around gaps',
+      'Capture the cleanup - no debris left'
+    ];
+
+    // DOM Elements
+    const $ = id => document.getElementById(id);
+    const authOverlay = $('authOverlay');
+    const accessKeyInput = $('accessKeyInput');
+    const authBtn = $('authBtn');
+    const authError = $('authError');
+    const app = $('app');
+    const demoBanner = $('demoBanner');
+    const closeDemoBanner = $('closeDemoBanner');
+    const toast = $('toast');
+    const ariaLiveRegion = $('ariaLiveRegion');
+
+    // ARIA announcement helper
+    function announce(message) {
+      ariaLiveRegion.textContent = message;
+      setTimeout(() => { ariaLiveRegion.textContent = ''; }, 1000);
+    }
+
+    // Auth
+    function checkAuth() {
+      const params = new URLSearchParams(window.location.search);
+      const keyParam = params.get('key');
+      if (keyParam && hashKey(keyParam) === VALID_HASH) {
+        showApp();
+        return;
+      }
+      const storedKey = localStorage.getItem('intec_jobsign_key');
+      if (storedKey && hashKey(storedKey) === VALID_HASH) {
+        showApp();
+        return;
+      }
+    }
+
+    function showApp() {
+      authOverlay.classList.add('hidden');
+      authOverlay.setAttribute('aria-hidden', 'true');
+      app.classList.remove('hidden');
+      app.setAttribute('aria-hidden', 'false');
+      loadJobs();
+      announce('Welcome to JobSign. 2 active jobs ready.');
+    }
+
+    authBtn.addEventListener('click', () => {
+      const key = accessKeyInput.value.trim();
+      if (hashKey(key) === VALID_HASH) {
+        localStorage.setItem('intec_jobsign_key', key);
+        showApp();
+      } else {
+        authError.textContent = 'Invalid key. Check with your office.';
+        announce('Invalid access key');
+        accessKeyInput.focus();
+      }
+    });
+
+    accessKeyInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter') authBtn.click();
+    });
+
+    // Demo banner
+    closeDemoBanner.addEventListener('click', () => {
+      demoBanner.classList.add('hidden');
+      localStorage.setItem('intec_demo_dismissed', 'true');
+    });
+
+    if (localStorage.getItem('intec_demo_dismissed') === 'true') {
+      demoBanner.classList.add('hidden');
+    }
+
+    // Toast
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Tab navigation with keyboard support
+    document.querySelectorAll('.nav-tab').forEach((tab, index, tabs) => {
+      tab.addEventListener('click', () => {
+        if (tab.classList.contains('disabled')) {
+          showToast('Office Dashboard - Available in full version ($200)');
+          announce('Office dashboard is available in the full version');
+          return;
+        }
+        switchTab(tab);
+      });
+
+      // Keyboard navigation for tabs
+      tab.addEventListener('keydown', (e) => {
+        let newIndex = index;
+        if (e.key === 'ArrowRight') {
+          newIndex = (index + 1) % tabs.length;
+        } else if (e.key === 'ArrowLeft') {
+          newIndex = (index - 1 + tabs.length) % tabs.length;
+        } else if (e.key === 'Home') {
+          newIndex = 0;
+        } else if (e.key === 'End') {
+          newIndex = tabs.length - 1;
+        }
+        
+        if (newIndex !== index) {
+          e.preventDefault();
+          tabs[newIndex].focus();
+          if (!tabs[newIndex].classList.contains('disabled')) {
+            switchTab(tabs[newIndex]);
+          }
+        }
+      });
+    });
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+        t.setAttribute('tabindex', '-1');
+      });
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      tab.setAttribute('tabindex', '0');
+      $(`${tab.dataset.tab}Panel`).classList.add('active');
+      
+      announce(`${tab.textContent.trim()} tab selected`);
+    }
+
+    // Render jobs
+    function loadJobs() {
+      renderReadyJobs();
+      renderInProgressJobs();
+      renderCompletedJobs();
+      updateBadge();
+    }
+
+    function renderReadyJobs() {
+      const container = $('readyJobsList');
+      container.innerHTML = '';
+      state.jobs.ready.forEach(job => {
+        container.appendChild(createJobCard(job, 'ready'));
+      });
+      if (state.jobs.ready.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No jobs ready for completion</p></div>';
+      }
+    }
+
+    function renderInProgressJobs() {
+      const container = $('inProgressJobsList');
+      container.innerHTML = '';
+      state.jobs.inProgress.forEach(job => {
+        container.appendChild(createJobCard(job, 'in-progress'));
+      });
+      if (state.jobs.inProgress.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No jobs in progress</p></div>';
+      }
+    }
+
+    function renderCompletedJobs() {
+      const container = $('completedJobsList');
+      container.innerHTML = '';
+      state.jobs.completed.forEach(job => {
+        container.appendChild(createCompletedCard(job));
+      });
+      if (state.jobs.completed.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>No completed jobs yet</p></div>';
+      }
+    }
+
+    function createJobCard(job, status) {
+      const card = document.createElement('div');
+      card.className = 'job-card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('aria-label', `${job.type} for ${job.customer} at ${job.address}`);
+      
+      const statusLabel = status === 'ready' ? 'Ready' : 'In Progress';
+      
+      card.innerHTML = `
+        <div class="job-header">
+          <div class="job-address">${job.address.split(',')[0]}</div>
+          <span class="job-status ${status}">${statusLabel}</span>
+        </div>
+        <div class="job-customer">${job.customer}</div>
+        <div class="job-type">${job.type}</div>
+        <div class="job-meta">
+          <span class="job-meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${job.scheduledTime}
+          </span>
+          <span class="job-meta-item">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            ${job.address.split(',').slice(-1)[0].trim()}
+          </span>
+        </div>
+      `;
+      
+      card.addEventListener('click', () => startCapture(job));
+      card.addEventListener('keypress', e => { if (e.key === 'Enter' || e.key === ' ') startCapture(job); });
+      return card;
+    }
+
+    function createCompletedCard(job) {
+      const card = document.createElement('div');
+      card.className = 'completed-card';
+      card.setAttribute('role', 'listitem');
+      card.setAttribute('aria-label', `Completed job for ${job.customer}`);
+      card.innerHTML = `
+        <div class="completed-header">
+          <div>
+            <div class="job-address">${job.address.split(',')[0]}</div>
+            <div class="job-customer">${job.customer}</div>
+          </div>
+          <span class="completed-date">${job.completedDate}</span>
+        </div>
+        <div class="completed-photos">
+          ${job.photos.slice(0, 3).map((p, i) => `<img src="${p}" alt="Completion photo ${i + 1}">`).join('')}
+        </div>
+        <div class="completed-actions">
+          <button class="completed-action-btn" aria-label="View report for ${job.customer}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            View Report
+          </button>
+          <button class="completed-action-btn" aria-label="Share report for ${job.customer}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+        </div>
+      `;
+      return card;
+    }
+
+    function updateBadge() {
+      const count = state.jobs.ready.length + state.jobs.inProgress.length;
+      $('activeJobsBadge').textContent = count;
+      $('activeJobsBadge').style.display = count > 0 ? 'block' : 'none';
+    }
+
+    // Capture flow
+    async function startCapture(job) {
+      state.currentJob = job;
+      state.capturedPhotos = job.photos || [];
+      state.currentPhotoIndex = state.capturedPhotos.length;
+      state.checklist = job.checklist.map(item => ({ label: item, checked: false }));
+      state.notes = '';
+      
+      $('captureScreen').classList.remove('hidden');
+      $('captureScreen').setAttribute('aria-hidden', 'false');
+      updateCaptureUI();
+      announce('Photo capture started. Take photos of the completed work.');
+      await initCamera();
+    }
+
+    async function initCamera() {
+      try {
+        if (state.cameraStream) {
+          state.cameraStream.getTracks().forEach(t => t.stop());
+        }
+        state.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+        $('cameraVideo').srcObject = state.cameraStream;
+        announce('Camera ready');
+      } catch (err) {
+        console.log('Camera not available:', err);
+        announce('Camera not available. Using placeholder mode.');
+      }
+    }
+
+    function updateCaptureUI() {
+      const step = state.currentPhotoIndex + 1;
+      const total = Math.max(3, state.capturedPhotos.length + 1);
+      $('captureStep').textContent = `Photo ${step} of ${total}`;
+      $('cameraInstruction').textContent = photoInstructions[Math.min(state.currentPhotoIndex, 2)] || 'Add more photos if needed';
+      
+      // Update photo strip
+      const strip = $('photoStrip');
+      strip.innerHTML = '';
+      state.capturedPhotos.forEach((photo, i) => {
+        const img = document.createElement('img');
+        img.src = photo;
+        img.className = 'photo-thumb';
+        img.alt = `Photo ${i + 1}`;
+        strip.appendChild(img);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.className = 'photo-thumb-add';
+      addBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+      addBtn.setAttribute('aria-label', 'Add another photo');
+      strip.appendChild(addBtn);
+    }
+
+    $('captureBtn').addEventListener('click', () => {
+      const video = $('cameraVideo');
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      
+      if (video.srcObject) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      } else {
+        ctx.fillStyle = '#e5e7eb';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#DB1F26';
+        ctx.font = 'bold 24px Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Photo ${state.capturedPhotos.length + 1}`, canvas.width/2, canvas.height/2 - 10);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '16px Roboto, sans-serif';
+        ctx.fillText(state.currentJob.type, canvas.width/2, canvas.height/2 + 20);
+      }
+      
+      const photoData = canvas.toDataURL('image/jpeg', 0.8);
+      state.capturedPhotos.push(photoData);
+      state.currentPhotoIndex++;
+      
+      showToast('Photo captured');
+      announce(`Photo ${state.capturedPhotos.length} captured`);
+      updateCaptureUI();
+      
+      if (state.capturedPhotos.length >= 3) {
+        setTimeout(() => openConfirmScreen(), 500);
+      }
+    });
+
+    $('skipPhotoBtn').addEventListener('click', () => {
+      if (state.capturedPhotos.length >= 1) {
+        openConfirmScreen();
+      } else {
+        showToast('Take at least one photo');
+        announce('Please take at least one photo before continuing');
+      }
+    });
+
+    $('captureBack').addEventListener('click', () => {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(t => t.stop());
+      }
+      $('captureScreen').classList.add('hidden');
+      $('captureScreen').setAttribute('aria-hidden', 'true');
+      announce('Returned to job list');
+    });
+
+    // Confirm screen
+    function openConfirmScreen() {
+      if (state.cameraStream) {
+        state.cameraStream.getTracks().forEach(t => t.stop());
+      }
+      $('captureScreen').classList.add('hidden');
+      $('captureScreen').setAttribute('aria-hidden', 'true');
+      $('confirmScreen').classList.remove('hidden');
+      $('confirmScreen').setAttribute('aria-hidden', 'false');
+      
+      $('locationAddress').textContent = state.currentJob.address;
+      
+      $('photoCount').textContent = state.capturedPhotos.length;
+      const grid = $('confirmPhotoGrid');
+      grid.innerHTML = state.capturedPhotos.map((p, i) => 
+        `<img src="${p}" alt="Completion photo ${i + 1}">`
+      ).join('');
+      
+      renderChecklist();
+      announce(`Confirm details. ${state.capturedPhotos.length} photos captured.`);
+      
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            console.log('Location verified:', pos.coords);
+            announce('Location verified');
+          },
+          err => console.log('Geolocation not available:', err)
+        );
+      }
+    }
+
+    function renderChecklist() {
+      const list = $('completionChecklist');
+      list.innerHTML = '';
+      state.checklist.forEach((item, i) => {
+        const li = document.createElement('li');
+        li.className = `checklist-item ${item.checked ? 'checked' : ''}`;
+        li.setAttribute('role', 'checkbox');
+        li.setAttribute('aria-checked', item.checked);
+        li.setAttribute('tabindex', '0');
+        li.innerHTML = `
+          <div class="checklist-checkbox">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span class="checklist-label">${item.label}</span>
+        `;
+        li.addEventListener('click', () => toggleChecklistItem(i));
+        li.addEventListener('keypress', e => { if (e.key === 'Enter' || e.key === ' ') toggleChecklistItem(i); });
+        list.appendChild(li);
+      });
+    }
+
+    function toggleChecklistItem(index) {
+      state.checklist[index].checked = !state.checklist[index].checked;
+      renderChecklist();
+      announce(`${state.checklist[index].label} ${state.checklist[index].checked ? 'checked' : 'unchecked'}`);
+    }
+
+    // Voice notes
+    $('voiceNoteBtn').addEventListener('click', () => {
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        showToast('Voice input not supported on this device');
+        announce('Voice input is not supported on this device');
+        return;
+      }
+      
+      if (state.isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    });
+
+    function startRecording() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      state.recognition = new SpeechRecognition();
+      state.recognition.continuous = true;
+      state.recognition.interimResults = true;
+      
+      state.recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        $('notesTextarea').value = transcript;
+      };
+      
+      state.recognition.onerror = () => {
+        stopRecording();
+        showToast('Voice input error');
+        announce('Voice input error occurred');
+      };
+      
+      state.recognition.start();
+      state.isRecording = true;
+      $('voiceNoteBtn').classList.add('recording');
+      $('voiceBtnText').textContent = 'Recording... tap to stop';
+      announce('Recording started. Speak now.');
+    }
+
+    function stopRecording() {
+      if (state.recognition) {
+        state.recognition.stop();
+      }
+      state.isRecording = false;
+      $('voiceNoteBtn').classList.remove('recording');
+      $('voiceBtnText').textContent = 'Tap to speak (hands-free)';
+      announce('Recording stopped');
+    }
+
+    $('confirmBack').addEventListener('click', () => {
+      $('confirmScreen').classList.add('hidden');
+      $('confirmScreen').setAttribute('aria-hidden', 'true');
+      startCapture(state.currentJob);
+    });
+
+    $('proceedToSignBtn').addEventListener('click', () => {
+      state.notes = $('notesTextarea').value;
+      $('confirmScreen').classList.add('hidden');
+      $('confirmScreen').setAttribute('aria-hidden', 'true');
+      openSignatureScreen();
+    });
+
+    // Signature screen
+    let signaturePad, isDrawing = false, lastX, lastY;
+
+    function openSignatureScreen() {
+      $('signatureScreen').classList.remove('hidden');
+      $('signatureScreen').setAttribute('aria-hidden', 'false');
+      initSignaturePad();
+      announce('Signature screen. Have the customer sign in the box below.');
+    }
+
+    function initSignaturePad() {
+      const canvas = $('signaturePad');
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      
+      signaturePad = canvas.getContext('2d');
+      signaturePad.strokeStyle = '#1f2937';
+      signaturePad.lineWidth = 3;
+      signaturePad.lineCap = 'round';
+      signaturePad.lineJoin = 'round';
+      
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+      canvas.addEventListener('touchstart', handleTouch);
+      canvas.addEventListener('touchmove', handleTouch);
+      canvas.addEventListener('touchend', endDraw);
+    }
+
+    function startDraw(e) {
+      isDrawing = true;
+      $('sigPlaceholder').classList.add('hidden');
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+      $('generateReportBtn').disabled = false;
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      signaturePad.beginPath();
+      signaturePad.moveTo(lastX, lastY);
+      signaturePad.lineTo(e.offsetX, e.offsetY);
+      signaturePad.stroke();
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+    }
+
+    function endDraw() {
+      isDrawing = false;
+    }
+
+    function handleTouch(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = e.target.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      if (e.type === 'touchstart') {
+        isDrawing = true;
+        $('sigPlaceholder').classList.add('hidden');
+        [lastX, lastY] = [x, y];
+        $('generateReportBtn').disabled = false;
+      } else if (e.type === 'touchmove' && isDrawing) {
+        signaturePad.beginPath();
+        signaturePad.moveTo(lastX, lastY);
+        signaturePad.lineTo(x, y);
+        signaturePad.stroke();
+        [lastX, lastY] = [x, y];
+      }
+    }
+
+    $('clearSignature').addEventListener('click', () => {
+      const canvas = $('signaturePad');
+      signaturePad.clearRect(0, 0, canvas.width, canvas.height);
+      $('sigPlaceholder').classList.remove('hidden');
+      $('generateReportBtn').disabled = true;
+      announce('Signature cleared');
+    });
+
+    $('signatureBack').addEventListener('click', () => {
+      $('signatureScreen').classList.add('hidden');
+      $('signatureScreen').setAttribute('aria-hidden', 'true');
+      openConfirmScreen();
+    });
+
+    $('generateReportBtn').addEventListener('click', () => {
+      state.signature = $('signaturePad').toDataURL('image/png');
+      $('signatureScreen').classList.add('hidden');
+      $('signatureScreen').setAttribute('aria-hidden', 'true');
+      generateReport();
+    });
+
+    // Generate report and show complete screen
+    function generateReport() {
+      $('completeScreen').classList.remove('hidden');
+      $('completeScreen').setAttribute('aria-hidden', 'false');
+      
+      $('previewCustomer').textContent = state.currentJob.customer;
+      $('previewAddress').textContent = state.currentJob.address.split(',')[0];
+      $('previewWorkType').textContent = state.currentJob.type;
+      $('previewDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      const photosContainer = $('previewPhotos');
+      photosContainer.innerHTML = state.capturedPhotos.map((p, i) => 
+        `<img src="${p}" alt="Photo ${i + 1}">`
+      ).join('');
+      
+      $('previewSignature').src = state.signature;
+      
+      // Move job to completed
+      const jobIndex = state.jobs.ready.findIndex(j => j.id === state.currentJob.id);
+      if (jobIndex >= 0) {
+        state.jobs.ready.splice(jobIndex, 1);
+      }
+      const ipIndex = state.jobs.inProgress.findIndex(j => j.id === state.currentJob.id);
+      if (ipIndex >= 0) {
+        state.jobs.inProgress.splice(ipIndex, 1);
+      }
+      
+      state.jobs.completed.unshift({
+        ...state.currentJob,
+        photos: state.capturedPhotos,
+        signature: true,
+        notes: state.notes,
+        completedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      });
+      
+      saveToIndexedDB();
+      announce('Report generated. Ready to send to customer.');
+    }
+
+    // Share functionality
+    $('shareReportBtn').addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'INTEC Job Completion Report',
+            text: `Job completed at ${state.currentJob.address}`,
+            url: window.location.href
+          });
+          showToast('Report shared');
+          announce('Report shared successfully');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            fallbackShare();
+          }
+        }
+      } else {
+        fallbackShare();
+      }
+    });
+
+    function fallbackShare() {
+      const subject = encodeURIComponent(`INTEC Job Completion - ${state.currentJob.address}`);
+      const body = encodeURIComponent(`Your insulation work at ${state.currentJob.address} has been completed.\n\nWork performed: ${state.currentJob.type}\nDate: ${new Date().toLocaleDateString()}\n\nThank you for choosing INTEC!`);
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      announce('Email client opened');
+    }
+
+    $('downloadPdfBtn').addEventListener('click', () => {
+      generatePDF();
+    });
+
+    function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Header with INTEC branding
+      doc.setFillColor(55, 110, 141);
+      doc.rect(0, 0, 210, 35, 'F');
+      doc.setTextColor(255);
+      doc.setFontSize(22);
+      doc.text('INTEC', 15, 22);
+      doc.setFontSize(12);
+      doc.text('Completion Report', 15, 30);
+      
+      // Content
+      doc.setTextColor(0);
+      doc.setFontSize(11);
+      let y = 50;
+      
+      doc.text('Customer:', 15, y);
+      doc.text(state.currentJob.customer, 60, y);
+      y += 10;
+      
+      doc.text('Address:', 15, y);
+      doc.text(state.currentJob.address, 60, y);
+      y += 10;
+      
+      doc.text('Work Type:', 15, y);
+      doc.text(state.currentJob.type, 60, y);
+      y += 10;
+      
+      doc.text('Date:', 15, y);
+      doc.text(new Date().toLocaleDateString(), 60, y);
+      y += 15;
+      
+      if (state.notes) {
+        doc.text('Notes:', 15, y);
+        y += 7;
+        const lines = doc.splitTextToSize(state.notes, 180);
+        doc.text(lines, 15, y);
+        y += lines.length * 6 + 10;
+      }
+      
+      // Checklist
+      doc.text('Completion Checklist:', 15, y);
+      y += 8;
+      state.checklist.forEach(item => {
+        const check = item.checked ? '[X]' : '[ ]';
+        doc.text(`${check} ${item.label}`, 20, y);
+        y += 6;
+      });
+      y += 10;
+      
+      // Signature
+      if (state.signature) {
+        doc.text('Customer Signature:', 15, y);
+        y += 5;
+        doc.addImage(state.signature, 'PNG', 15, y, 80, 30);
+      }
+      
+      // Footer
+      doc.setFontSize(9);
+      doc.setTextColor(128);
+      doc.text('INTEC - Insulation Technologies, Inc.', 105, 280, { align: 'center' });
+      doc.text('321 N 25th Street, Milwaukee, WI 53233 | (414) 732-2234', 105, 286, { align: 'center' });
+      
+      doc.save(`INTEC-Completion-${state.currentJob.id}.pdf`);
+      showToast('PDF downloaded');
+      announce('PDF downloaded');
+    }
+
+    $('copyLinkBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied');
+        announce('Link copied to clipboard');
+      } catch (err) {
+        showToast('Copy failed');
+        announce('Copy failed');
+      }
+    });
+
+    $('googleReviewBtn').addEventListener('click', () => {
+      window.open('https://g.page/r/CRhm79e_INTEC/review', '_blank');
+    });
+
+    $('completeBack').addEventListener('click', finishJob);
+    $('finishJobBtn').addEventListener('click', finishJob);
+
+    function finishJob() {
+      $('completeScreen').classList.add('hidden');
+      $('completeScreen').setAttribute('aria-hidden', 'true');
+      state.currentJob = null;
+      state.capturedPhotos = [];
+      state.signature = null;
+      loadJobs();
+      showToast('Job marked complete');
+      announce('Job complete. Back to job list.');
+    }
+
+    // IndexedDB for offline storage
+    function saveToIndexedDB() {
+      const request = indexedDB.open('JobSignDB', 1);
+      request.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('jobs')) {
+          db.createObjectStore('jobs', { keyPath: 'id' });
+        }
+      };
+      request.onsuccess = (e) => {
+        const db = e.target.result;
+        const tx = db.transaction('jobs', 'readwrite');
+        const store = tx.objectStore('jobs');
+        state.jobs.completed.forEach(job => store.put(job));
+      };
+    }
+
+    // Init
+    checkAuth();
+  </script>
+</body>
+</html>

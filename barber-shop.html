@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Client Hair Profile | MidWest Barbery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: oklch(0.13 0.01 250);
+      --bg-card: oklch(0.18 0.01 250);
+      --bg-elevated: oklch(0.22 0.01 250);
+      --text-primary: oklch(0.97 0.01 250);
+      --text-secondary: oklch(0.65 0.01 250);
+      --text-muted: oklch(0.50 0.01 250);
+      --accent: oklch(0.65 0.18 25);
+      --accent-hover: oklch(0.72 0.20 25);
+      --border: oklch(0.28 0.01 250);
+      --success: oklch(0.68 0.15 155);
+      --warning: oklch(0.75 0.15 80);
+      --danger: oklch(0.60 0.20 25);
+      --radius-sm: 6px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 4px oklch(0 0 0 / 0.2);
+      --shadow: 0 2px 4px oklch(0 0 0 / 0.3), 0 4px 12px oklch(0 0 0 / 0.25);
+      --shadow-lg: 0 4px 12px oklch(0 0 0 / 0.4), 0 8px 24px oklch(0 0 0 / 0.3);
+      --font-sans: 'DM Sans', system-ui, sans-serif;
+      --font-mono: 'Space Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      touch-action: manipulation;
+    }
+
+    /* Subtle noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.02;
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* Access Gate */
+    #accessGate {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, var(--bg) 0%, oklch(0.10 0.01 250) 100%);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .gate-container {
+      max-width: 340px;
+      width: 100%;
+      text-align: center;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .gate-logo {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .gate-logo svg {
+      width: 36px;
+      height: 36px;
+      color: var(--accent);
+    }
+
+    .gate-barber-strip {
+      height: 6px;
+      width: 100%;
+      max-width: 200px;
+      margin: 0 auto 24px;
+      border-radius: 3px;
+      background: repeating-linear-gradient(
+        45deg,
+        oklch(0.60 0.20 25),
+        oklch(0.60 0.20 25) 10px,
+        oklch(0.95 0.01 250) 10px,
+        oklch(0.95 0.01 250) 20px,
+        oklch(0.50 0.15 250) 20px,
+        oklch(0.50 0.15 250) 30px,
+        oklch(0.95 0.01 250) 30px,
+        oklch(0.95 0.01 250) 40px
+      );
+      animation: barberStripes 20s linear infinite;
+    }
+
+    .gate-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .gate-label {
+      display: block;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .gate-input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-family: var(--font-mono);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    .gate-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(0.65 0.18 25 / 0.2);
+    }
+
+    .gate-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .gate-btn:hover { background: var(--accent-hover); }
+    .gate-btn:active { transform: scale(0.98); }
+    .gate-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .gate-error {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--danger);
+      display: none;
+    }
+
+    /* App Container */
+    #app {
+      display: none;
+      padding-bottom: 100px;
+    }
+
+    .app-visible { display: block !important; }
+    .gate-hidden { display: none !important; }
+
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      background: oklch(0.13 0.01 250 / 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    /* Barber Pole Accent Strip */
+    .barber-strip {
+      height: 4px;
+      background: repeating-linear-gradient(
+        45deg,
+        oklch(0.60 0.20 25),
+        oklch(0.60 0.20 25) 8px,
+        oklch(0.95 0.01 250) 8px,
+        oklch(0.95 0.01 250) 16px,
+        oklch(0.50 0.15 250) 16px,
+        oklch(0.50 0.15 250) 24px,
+        oklch(0.95 0.01 250) 24px,
+        oklch(0.95 0.01 250) 32px
+      );
+      animation: barberStripes 20s linear infinite;
+    }
+
+    @keyframes barberStripes {
+      0% { background-position: 0 0; }
+      100% { background-position: 64px 0; }
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Demo Banner */
+    .demo-banner {
+      background: oklch(0.30 0.06 80);
+      color: oklch(0.95 0.02 80);
+      padding: 10px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .demo-banner button {
+      background: none;
+      border: none;
+      color: inherit;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      opacity: 0.8;
+    }
+
+    .demo-banner button:hover { opacity: 1; }
+    .demo-banner button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 16px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 12px 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .nav-tab:hover { color: var(--text-secondary); }
+    .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .nav-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+    .nav-tab.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      position: relative;
+    }
+
+    .coming-soon {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      font-size: 8px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    /* Tab Content */
+    .tab-content { display: none; padding: 16px; }
+    .tab-content.active { display: block; }
+
+    /* Client List */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-secondary:hover { background: oklch(0.26 0.01 250); }
+    .btn-secondary:active { transform: scale(0.97); }
+    .btn-secondary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+    }
+
+    .btn-icon:hover { background: oklch(0.26 0.01 250); }
+    .btn-icon:active { transform: scale(0.95); }
+    .btn-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-danger {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover { background: oklch(0.55 0.20 25); }
+
+    /* Search */
+    .search-box {
+      margin-bottom: 16px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+      font-family: var(--font-sans);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+    }
+
+    .search-input::placeholder { color: var(--text-muted); }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(0.65 0.18 25 / 0.2);
+    }
+
+    /* Client Cards */
+    .client-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .client-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+      animation: slideInUp 0.4s ease-out backwards;
+    }
+
+    .client-card:nth-child(1) { animation-delay: 0ms; }
+    .client-card:nth-child(2) { animation-delay: 50ms; }
+    .client-card:nth-child(3) { animation-delay: 100ms; }
+    .client-card:nth-child(4) { animation-delay: 150ms; }
+    .client-card:nth-child(5) { animation-delay: 200ms; }
+    .client-card:nth-child(6) { animation-delay: 250ms; }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .client-card:hover {
+      border-color: oklch(0.35 0.01 250);
+      box-shadow: var(--shadow);
+    }
+
+    .client-card:active { transform: scale(0.99); }
+    .client-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .client-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .client-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .client-info { flex: 1; min-width: 0; }
+
+    .client-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .client-meta {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .client-preview {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .preview-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-elevated);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .preview-specs {
+      flex: 1;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      background: var(--bg-elevated);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      line-height: 1.5;
+    }
+
+    /* Profile View */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.15s;
+    }
+
+    .back-btn:hover { background: oklch(0.26 0.01 250); }
+    .back-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .profile-name {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .profile-actions .btn-primary { flex: 1; justify-content: center; }
+    .profile-actions .btn-secondary { flex: 1; justify-content: center; }
+
+    /* Cards Timeline */
+    .cards-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hair-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 16px;
+      animation: slideInUp 0.5s ease-out backwards;
+      box-shadow: var(--shadow);
+    }
+
+    .hair-card:nth-child(1) { animation-delay: 0ms; }
+    .hair-card:nth-child(2) { animation-delay: 100ms; }
+    .hair-card:nth-child(3) { animation-delay: 200ms; }
+    .hair-card:nth-child(4) { animation-delay: 300ms; }
+
+    .card-date {
+      padding: 12px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Before/After Slider */
+    .comparison-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: var(--bg);
+      touch-action: none;
+    }
+
+    .comparison-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .comparison-after {
+      clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+    }
+
+    .comparison-slider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: white;
+      cursor: ew-resize;
+      transform: translateX(-50%);
+      z-index: 10;
+    }
+
+    .slider-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bg);
+    }
+    .slider-handle svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .comparison-label {
+      position: absolute;
+      bottom: 12px;
+      padding: 6px 12px;
+      background: oklch(0 0 0 / 0.7);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 100px;
+    }
+
+    .label-before { left: 12px; }
+    .label-after { right: 12px; }
+
+    /* Specs Grid */
+    .card-specs {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .spec-item {
+      background: var(--bg-elevated);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    .spec-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .spec-value {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+    }
+
+    .spec-full { grid-column: 1 / -1; }
+
+    .card-notes {
+      padding: 0 16px 16px;
+    }
+
+    .notes-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      background: var(--bg-elevated);
+      padding: 12px;
+      border-radius: var(--radius-sm);
+    }
+
+    .card-footer {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .card-footer button { flex: 1; }
+
+    /* New Card Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: oklch(0 0 0 / 0.8);
+      z-index: 1000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: var(--bg);
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-header {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-elevated);
+      border: none;
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 18px;
+    }
+
+    .modal-close:hover { background: oklch(0.26 0.01 250); }
+    .modal-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .modal-body { padding: 16px; }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      font-family: var(--font-sans);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px oklch(0.65 0.18 25 / 0.2);
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Photo Capture */
+    .photo-section {
+      margin-bottom: 20px;
+    }
+
+    .photo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .photo-box {
+      aspect-ratio: 1;
+      background: var(--bg-card);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .photo-box:hover { border-color: var(--accent); }
+    .photo-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .photo-box.has-photo { border-style: solid; }
+
+    .photo-box img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-icon {
+      width: 36px;
+      height: 36px;
+      color: var(--text-muted);
+    }
+
+    .photo-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: oklch(0 0 0 / 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .photo-box.has-photo .photo-overlay { display: flex; }
+
+    .photo-action {
+      width: 36px;
+      height: 36px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: transform 0.1s;
+    }
+
+    .photo-action:hover { transform: scale(1.1); }
+
+    /* Canvas Drawing */
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .drawing-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .canvas-tools {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .tool-btn:hover { background: oklch(0.26 0.01 250); }
+    .tool-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+    .tool-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .color-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.1s, border-color 0.15s;
+    }
+
+    .color-btn:hover { transform: scale(1.1); }
+    .color-btn.active { border-color: white; }
+    .color-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Hidden file input */
+    .hidden { display: none; }
+
+    /* Footer Disclaimer */
+    .disclaimer-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: oklch(0.10 0.01 250);
+      border-top: 3px solid transparent;
+      border-image: repeating-linear-gradient(
+        45deg,
+        oklch(0.60 0.20 25),
+        oklch(0.60 0.20 25) 6px,
+        oklch(0.95 0.01 250) 6px,
+        oklch(0.95 0.01 250) 12px,
+        oklch(0.50 0.15 250) 12px,
+        oklch(0.50 0.15 250) 18px,
+        oklch(0.95 0.01 250) 18px,
+        oklch(0.95 0.01 250) 24px
+      ) 1;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 11px;
+      z-index: 50;
+    }
+
+    .disclaimer-text {
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .disclaimer-btn {
+      padding: 6px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      background: transparent;
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-sm);
+      color: var(--danger);
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .disclaimer-btn:hover { background: oklch(0.60 0.20 25 / 0.1); }
+    .disclaimer-btn:focus-visible { outline: 2px solid var(--danger); outline-offset: 2px; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      opacity: 0.5;
+      color: var(--text-muted);
+    }
+
+    .empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .empty-text {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+      border-radius: 100px;
+      box-shadow: var(--shadow-lg);
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 200;
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-color: var(--success); }
+
+    /* Responsive */
+    @media (min-width: 500px) {
+      .modal-content {
+        border-radius: var(--radius-lg);
+        margin: 20px;
+        max-height: calc(100vh - 40px);
+      }
+    }
+
+    /* Prefers Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Print Styles */
+    @media print {
+      #bct-demo-disclaimer, nav, .bottom-nav, .tab-bar, .demo-banner, button:not(.print-keep) { display: none !important; }
+      body { padding: 0 !important; background: white !important; color: black !important; }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100000;" onfocus="this.style.position='fixed';this.style.left='16px';this.style.top='16px';this.style.width='auto';this.style.height='auto';this.style.overflow='visible';this.style.background='#fff';this.style.padding='8px 16px';this.style.borderRadius='4px';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)';this.style.fontSize='14px';this.style.color='#333';this.style.textDecoration='none';" onblur="this.style.position='absolute';this.style.left='-9999px';this.style.width='1px';this.style.height='1px';this.style.overflow='hidden';">Skip to main content</a>
+  <!-- Access Gate -->
+  <div id="accessGate">
+    <div class="gate-container">
+      <div class="gate-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="6" cy="6" r="3"/>
+          <circle cx="6" cy="18" r="3"/>
+          <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+          <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+          <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+        </svg>
+        MidWest Barbery
+      </div>
+      <div class="gate-barber-strip"></div>
+      <div class="gate-subtitle">Client Hair Profile Tool</div>
+      <label for="accessKey" class="gate-label">Access Key</label>
+      <input type="text" id="accessKey" class="gate-input" placeholder="Enter key" autocomplete="off" autofocus>
+      <button type="button" id="accessBtn" class="gate-btn">Open Tool</button>
+      <div id="gateError" class="gate-error">Wrong key. Check the email we sent you.</div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="app" role="main">
+    <header class="app-header">
+      <div class="barber-strip"></div>
+      <div class="header-row" style="margin-top:12px;">
+        <div class="brand-row">
+          <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="6" cy="6" r="3"/>
+            <circle cx="6" cy="18" r="3"/>
+            <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+            <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+            <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+          </svg>
+          <div>
+            <div class="brand">Client Profiles</div>
+            <div class="brand-sub">MidWest Barbery</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Demo Banner -->
+    <div id="demoBanner" class="demo-banner" style="display:none;">
+      <span>Sample data for Kansas City. Tap x to clear and add your own.</span>
+      <button type="button" id="clearDemo" aria-label="Clear demo data">×</button>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="nav-tab active" data-tab="clients" role="tab" aria-selected="true" aria-controls="clientsTab">Clients</button>
+      <button class="nav-tab disabled" data-tab="team" role="tab" aria-selected="false" disabled>
+        Team Sync
+        <span class="coming-soon">Soon</span>
+      </button>
+    </nav>
+
+    <!-- Clients Tab -->
+    <div id="clientsTab" class="tab-content active" role="tabpanel">
+      <div id="clientListView">
+        <div class="section-header">
+          <h1 class="section-title">Your Clients</h1>
+          <button class="btn-primary" id="addClientBtn" aria-label="Add new client">+ New</button>
+        </div>
+        <div class="search-box">
+          <input type="search" class="search-input" id="searchClients" placeholder="Search clients..." aria-label="Search clients">
+        </div>
+        <div class="client-list" id="clientList" role="list"></div>
+      </div>
+
+      <!-- Profile View -->
+      <div id="profileView" style="display:none;">
+        <div class="profile-header">
+          <button class="back-btn" id="backToList" aria-label="Back to client list">←</button>
+          <h1 class="profile-name" id="profileName">Client Name</h1>
+        </div>
+        
+        <div class="profile-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="statVisits">0</div>
+            <div class="stat-label">Visits</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statLastCut">-</div>
+            <div class="stat-label">Last Cut</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="statAvgWeeks">-</div>
+            <div class="stat-label">Avg Weeks</div>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn-primary" id="newCardBtn">+ New Card</button>
+          <button class="btn-secondary" id="shareProfileBtn">Share</button>
+        </div>
+
+        <h2 class="cards-title">Hair Cards</h2>
+        <div id="cardsTimeline"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Client Modal -->
+  <div class="modal-overlay" id="newClientModal">
+    <div class="modal-content" role="dialog" aria-labelledby="newClientTitle" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="newClientTitle">New Client</h2>
+        <button class="modal-close" id="closeNewClient" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="clientNameInput" class="form-label">Name</label>
+          <input type="text" id="clientNameInput" class="form-input" placeholder="Marcus Johnson">
+        </div>
+        <div class="form-group">
+          <label for="clientPhoneInput" class="form-label">Phone (optional)</label>
+          <input type="tel" id="clientPhoneInput" class="form-input" placeholder="816-555-1234">
+        </div>
+        <button class="btn-primary" id="saveClientBtn" style="width:100%;">Save Client</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Card Modal -->
+  <div class="modal-overlay" id="newCardModal">
+    <div class="modal-content" role="dialog" aria-labelledby="newCardTitle" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="newCardTitle">New Hair Card</h2>
+        <button class="modal-close" id="closeNewCard" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="photo-section">
+          <label class="form-label">Photos</label>
+          <div class="photo-grid">
+            <div class="photo-box" id="beforePhotoBox" tabindex="0" role="button" aria-label="Capture before photo">
+              <svg class="photo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span class="photo-label">Before</span>
+              <div class="photo-overlay">
+                <button class="photo-action" data-action="annotate" aria-label="Annotate photo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#333">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </button>
+                <button class="photo-action" data-action="retake" aria-label="Retake photo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#333">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="photo-box" id="afterPhotoBox" tabindex="0" role="button" aria-label="Capture after photo">
+              <svg class="photo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span class="photo-label">After</span>
+              <div class="photo-overlay">
+                <button class="photo-action" data-action="annotate" aria-label="Annotate photo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#333">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                  </svg>
+                </button>
+                <button class="photo-action" data-action="retake" aria-label="Retake photo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:#333">
+                    <path d="M23 4v6h-6"/>
+                    <path d="M1 20v-6h6"/>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cut Specs</label>
+          <div class="form-row">
+            <div>
+              <label for="specTop" class="form-label" style="font-size:11px;">Top</label>
+              <input type="text" id="specTop" class="form-input" placeholder="#4 scissor">
+            </div>
+            <div>
+              <label for="specSides" class="form-label" style="font-size:11px;">Sides</label>
+              <input type="text" id="specSides" class="form-input" placeholder="#1→#3 fade">
+            </div>
+          </div>
+          <div class="form-row" style="margin-top:12px;">
+            <div>
+              <label for="specBack" class="form-label" style="font-size:11px;">Back</label>
+              <input type="text" id="specBack" class="form-input" placeholder="Taper">
+            </div>
+            <div>
+              <label for="specBeard" class="form-label" style="font-size:11px;">Beard</label>
+              <input type="text" id="specBeard" class="form-input" placeholder="#2 lined">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="specProducts" class="form-label">Products Used</label>
+          <input type="text" id="specProducts" class="form-input" placeholder="Layrite cement, beard oil">
+        </div>
+
+        <div class="form-group">
+          <label for="cardNotes" class="form-label">Notes</label>
+          <textarea id="cardNotes" class="form-input form-textarea" placeholder="Likes it tight on the sides, needs extra time on cowlick..."></textarea>
+        </div>
+
+        <button class="btn-primary" id="saveCardBtn" style="width:100%;">Save Card</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotation Modal -->
+  <div class="modal-overlay" id="annotateModal">
+    <div class="modal-content" role="dialog" aria-labelledby="annotateTitle" aria-modal="true">
+      <div class="modal-header">
+        <h2 class="modal-title" id="annotateTitle">Add Annotations</h2>
+        <button class="modal-close" id="closeAnnotate" aria-label="Close">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="canvas-tools">
+          <button class="tool-btn active" data-tool="draw">Draw</button>
+          <button class="tool-btn" data-tool="text">Text</button>
+          <button class="tool-btn" data-tool="erase">Erase</button>
+          <button class="tool-btn" data-tool="clear">Clear All</button>
+        </div>
+        <div class="canvas-tools">
+          <button class="color-btn active" data-color="#ff4444" style="background:#ff4444;" aria-label="Red"></button>
+          <button class="color-btn" data-color="#44ff44" style="background:#44ff44;" aria-label="Green"></button>
+          <button class="color-btn" data-color="#4488ff" style="background:#4488ff;" aria-label="Blue"></button>
+          <button class="color-btn" data-color="#ffffff" style="background:#ffffff;" aria-label="White"></button>
+          <button class="color-btn" data-color="#ffff44" style="background:#ffff44;" aria-label="Yellow"></button>
+        </div>
+        <div class="canvas-container">
+          <canvas id="annotationCanvas" class="drawing-canvas"></canvas>
+        </div>
+        <button class="btn-primary" id="saveAnnotation" style="width:100%;">Save Annotations</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file inputs -->
+  <input type="file" id="cameraInput" class="hidden" accept="image/*" capture="environment">
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Footer Disclaimer -->
+  <footer class="disclaimer-footer">
+    <span class="disclaimer-text">DEMO: Built for MidWest Barbery. Not affiliated with MidWest Barbery.</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Deletion%20Request%3A%20MidWest%20Barbery%20Tool" class="disclaimer-btn">Request Deletion</a>
+  </footer>
+
+  <script>
+    // Anti-scrape protection
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+      }
+    });
+
+    // Hash function for access key verification
+    function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+    const _V = 6324515;
+
+    // IndexedDB setup
+    const DB_NAME = 'MidwestBarberyProfiles';
+    const DB_VERSION = 1;
+    let db;
+
+    function openDB() {
+      return new Promise((resolve, reject) => {
+        try {
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onerror = () => {
+            useMemoryFallback = true;
+            resolve(null);
+          };
+          request.onsuccess = () => { db = request.result; resolve(db); };
+          request.onupgradeneeded = (e) => {
+            const database = e.target.result;
+            if (!database.objectStoreNames.contains('clients')) {
+              database.createObjectStore('clients', { keyPath: 'id' });
+            }
+            if (!database.objectStoreNames.contains('cards')) {
+              const cardsStore = database.createObjectStore('cards', { keyPath: 'id' });
+              cardsStore.createIndex('clientId', 'clientId', { unique: false });
+            }
+            if (!database.objectStoreNames.contains('meta')) {
+              database.createObjectStore('meta', { keyPath: 'key' });
+            }
+          };
+        } catch (e) {
+          useMemoryFallback = true;
+          resolve(null);
+        }
+      });
+    }
+
+    function dbPut(store, data) {
+      if (useMemoryFallback) {
+        if (store === 'clients') {
+          const idx = memoryClients.findIndex(c => c.id === data.id);
+          if (idx >= 0) memoryClients[idx] = data;
+          else memoryClients.push(data);
+        }
+        if (store === 'cards') {
+          const idx = memoryCards.findIndex(c => c.id === data.id);
+          if (idx >= 0) memoryCards[idx] = data;
+          else memoryCards.push(data);
+        }
+        return Promise.resolve();
+      }
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).put(data);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function dbGet(store, key) {
+      if (useMemoryFallback) {
+        if (store === 'clients') return Promise.resolve(memoryClients.find(c => c.id === key));
+        if (store === 'cards') return Promise.resolve(memoryCards.find(c => c.id === key));
+        if (store === 'meta') return Promise.resolve(null);
+        return Promise.resolve(null);
+      }
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const request = tx.objectStore(store).get(key);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbGetAll(store) {
+      if (useMemoryFallback) {
+        if (store === 'clients') return Promise.resolve([...memoryClients]);
+        if (store === 'cards') return Promise.resolve([...memoryCards]);
+        return Promise.resolve([]);
+      }
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const request = tx.objectStore(store).getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function dbDelete(store, key) {
+      if (useMemoryFallback) {
+        if (store === 'clients') memoryClients = memoryClients.filter(c => c.id !== key);
+        if (store === 'cards') memoryCards = memoryCards.filter(c => c.id !== key);
+        return Promise.resolve();
+      }
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    function dbGetByIndex(store, indexName, value) {
+      if (useMemoryFallback) {
+        if (store === 'cards' && indexName === 'clientId') {
+          return Promise.resolve(memoryCards.filter(c => c.clientId === value));
+        }
+        return Promise.resolve([]);
+      }
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(store, 'readonly');
+        const index = tx.objectStore(store).index(indexName);
+        const request = index.getAll(value);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // Demo data for Kansas City
+    const demoClients = [
+      {
+        id: 'demo-1',
+        name: 'Marcus Thompson',
+        phone: '816-555-0142',
+        created: Date.now() - 60 * 24 * 60 * 60 * 1000
+      },
+      {
+        id: 'demo-2',
+        name: 'DeShawn Williams',
+        phone: '913-555-0298',
+        created: Date.now() - 45 * 24 * 60 * 60 * 1000
+      },
+      {
+        id: 'demo-3',
+        name: 'James Rodriguez',
+        phone: '816-555-0377',
+        created: Date.now() - 30 * 24 * 60 * 60 * 1000
+      },
+      {
+        id: 'demo-4',
+        name: 'Tyler Washington',
+        phone: '',
+        created: Date.now() - 14 * 24 * 60 * 60 * 1000
+      }
+    ];
+
+    // Generate placeholder canvas images
+    function generatePlaceholderImage(type, specs) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 300;
+      const ctx = canvas.getContext('2d');
+      
+      // Dark background
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, 400, 300);
+      
+      // Head silhouette
+      ctx.fillStyle = '#2d2d44';
+      ctx.beginPath();
+      ctx.ellipse(200, 140, 70, 90, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Hair area
+      ctx.fillStyle = type === 'after' ? '#3d3d5c' : '#333355';
+      ctx.beginPath();
+      ctx.ellipse(200, 100, 65, 50, 0, Math.PI, 0);
+      ctx.fill();
+      
+      if (type === 'after' && specs) {
+        // Draw annotation lines
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        
+        // Fade line
+        ctx.beginPath();
+        ctx.moveTo(130, 120);
+        ctx.lineTo(130, 180);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(270, 120);
+        ctx.lineTo(270, 180);
+        ctx.stroke();
+        
+        // Label
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#ff4444';
+        ctx.font = 'bold 12px DM Sans';
+        ctx.fillText(specs.sides || '#1→#3', 275, 150);
+      }
+      
+      return canvas.toDataURL('image/jpeg', 0.8);
+    }
+
+    const demoCards = [
+      {
+        id: 'demo-card-1',
+        clientId: 'demo-1',
+        date: Date.now() - 7 * 24 * 60 * 60 * 1000,
+        beforePhoto: generatePlaceholderImage('before'),
+        afterPhoto: generatePlaceholderImage('after', { sides: '#1→#2' }),
+        specs: {
+          top: '#4 scissor crop',
+          sides: '#1→#2 fade',
+          back: 'Low taper',
+          beard: '#2 lined up',
+          products: 'Layrite cement'
+        },
+        notes: 'Prefers skin fade around ears. Watch the cowlick on crown—blend extra time there.'
+      },
+      {
+        id: 'demo-card-2',
+        clientId: 'demo-1',
+        date: Date.now() - 35 * 24 * 60 * 60 * 1000,
+        beforePhoto: generatePlaceholderImage('before'),
+        afterPhoto: generatePlaceholderImage('after', { sides: '#1→#2' }),
+        specs: {
+          top: '#4 scissor crop',
+          sides: '#1→#2 fade',
+          back: 'Low taper',
+          beard: '#2 shaped',
+          products: 'Layrite cement'
+        },
+        notes: 'First visit. Showed photo of Travis Kelce fade. Very happy with result.'
+      },
+      {
+        id: 'demo-card-3',
+        clientId: 'demo-2',
+        date: Date.now() - 10 * 24 * 60 * 60 * 1000,
+        beforePhoto: generatePlaceholderImage('before'),
+        afterPhoto: generatePlaceholderImage('after', { sides: '0→#1.5' }),
+        specs: {
+          top: 'Textured waves',
+          sides: '0→#1.5 bald fade',
+          back: 'Bald fade',
+          beard: 'Clean shave',
+          products: 'Wave pomade, Bevel shave cream'
+        },
+        notes: 'Works at T-Mobile Park. Needs it extra sharp for game days. Tips well.'
+      },
+      {
+        id: 'demo-card-4',
+        clientId: 'demo-3',
+        date: Date.now() - 21 * 24 * 60 * 60 * 1000,
+        beforePhoto: generatePlaceholderImage('before'),
+        afterPhoto: generatePlaceholderImage('after', { sides: '#2→#4' }),
+        specs: {
+          top: 'Long on top, finger length',
+          sides: '#2→#4 blend',
+          back: 'Tapered',
+          beard: '#3 all around',
+          products: 'American Crew fiber'
+        },
+        notes: 'Says he\'s growing it out for wedding in May. Keep length up top.'
+      }
+    ];
+
+    // In-memory fallback for demo data
+    let memoryClients = [];
+    let memoryCards = [];
+    let useMemoryFallback = false;
+
+    async function loadDemoData() {
+      try {
+        // Always load demo data - don't check meta
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction(['clients', 'cards', 'meta'], 'readwrite');
+          
+          // Clear existing demo data first to avoid duplicates
+          const clientStore = tx.objectStore('clients');
+          const cardStore = tx.objectStore('cards');
+          
+          for (const client of demoClients) {
+            clientStore.put(client);
+          }
+          for (const card of demoCards) {
+            cardStore.put(card);
+          }
+          tx.objectStore('meta').put({ key: 'demoLoaded', value: true });
+          
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+        document.getElementById('demoBanner').style.display = 'flex';
+        return true;
+      } catch (e) {
+        console.log('IndexedDB error, using memory fallback:', e);
+        useMemoryFallback = true;
+        memoryClients = [...demoClients];
+        memoryCards = [...demoCards];
+        document.getElementById('demoBanner').style.display = 'flex';
+        return true;
+      }
+    }
+
+    async function clearDemoData() {
+      const clients = await dbGetAll('clients');
+      const cards = await dbGetAll('cards');
+      
+      for (const c of clients.filter(x => x.id.startsWith('demo-'))) {
+        await dbDelete('clients', c.id);
+      }
+      for (const c of cards.filter(x => x.id.startsWith('demo-'))) {
+        await dbDelete('cards', c.id);
+      }
+      
+      document.getElementById('demoBanner').style.display = 'none';
+      renderClientList();
+      showToast('Demo data cleared');
+    }
+
+    // State
+    let currentClientId = null;
+    let currentPhotoTarget = null;
+    let beforePhotoData = null;
+    let afterPhotoData = null;
+    let annotatingPhoto = null;
+    let canvasTool = 'draw';
+    let canvasColor = '#ff4444';
+    let isDrawing = false;
+    let lastX, lastY;
+
+    // Utils
+    function genId() {
+      return 'id-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function formatDate(ts) {
+      const d = new Date(ts);
+      const now = new Date();
+      const diff = now - d;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return days + ' days ago';
+      if (days < 30) return Math.floor(days / 7) + ' wks ago';
+      
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+
+    function showToast(msg, type = '') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast' + (type ? ' ' + type : '');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Render functions
+    async function renderClientList(filter = '') {
+      const clients = await dbGetAll('clients');
+      const cards = await dbGetAll('cards');
+      const list = document.getElementById('clientList');
+      
+      const filtered = filter 
+        ? clients.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+        : clients;
+      
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="6" cy="6" r="3"/>
+              <circle cx="6" cy="18" r="3"/>
+              <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+              <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+              <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+            </svg>
+            <div class="empty-title">${filter ? 'No matches' : 'No clients yet'}</div>
+            <div class="empty-text">${filter ? 'Try a different search' : 'Tap + New to add your first client'}</div>
+          </div>
+        `;
+        return;
+      }
+      
+      // Sort by most recent card
+      filtered.sort((a, b) => {
+        const aCards = cards.filter(c => c.clientId === a.id);
+        const bCards = cards.filter(c => c.clientId === b.id);
+        const aLast = aCards.length ? Math.max(...aCards.map(c => c.date)) : a.created;
+        const bLast = bCards.length ? Math.max(...bCards.map(c => c.date)) : b.created;
+        return bLast - aLast;
+      });
+      
+      list.innerHTML = filtered.map(client => {
+        const clientCards = cards.filter(c => c.clientId === client.id).sort((a, b) => b.date - a.date);
+        const lastCard = clientCards[0];
+        
+        return `
+          <article class="client-card" data-id="${client.id}" tabindex="0" role="listitem">
+            <div class="client-header">
+              <div class="client-avatar">${getInitials(client.name)}</div>
+              <div class="client-info">
+                <div class="client-name">${client.name}</div>
+                <div class="client-meta">${clientCards.length} visit${clientCards.length !== 1 ? 's' : ''} · Last: ${lastCard ? formatDate(lastCard.date) : 'Never'}</div>
+              </div>
+            </div>
+            ${lastCard ? `
+              <div class="client-preview">
+                <img src="${lastCard.afterPhoto}" alt="Last haircut" class="preview-thumb">
+                <div class="preview-specs">
+                  Top: ${lastCard.specs.top || '-'}<br>
+                  Sides: ${lastCard.specs.sides || '-'}
+                </div>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      }).join('');
+      
+      // Add click handlers
+      list.querySelectorAll('.client-card').forEach(card => {
+        card.addEventListener('click', () => openProfile(card.dataset.id));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openProfile(card.dataset.id);
+          }
+        });
+      });
+    }
+
+    async function openProfile(clientId) {
+      currentClientId = clientId;
+      const client = await dbGet('clients', clientId);
+      const cards = (await dbGetByIndex('cards', 'clientId', clientId)).sort((a, b) => b.date - a.date);
+      
+      document.getElementById('clientListView').style.display = 'none';
+      document.getElementById('profileView').style.display = 'block';
+      
+      document.getElementById('profileName').textContent = client.name;
+      document.getElementById('statVisits').textContent = cards.length;
+      
+      if (cards.length > 0) {
+        document.getElementById('statLastCut').textContent = formatDate(cards[0].date);
+        
+        if (cards.length > 1) {
+          let totalDays = 0;
+          for (let i = 0; i < cards.length - 1; i++) {
+            totalDays += (cards[i].date - cards[i + 1].date) / (1000 * 60 * 60 * 24);
+          }
+          const avgDays = Math.round(totalDays / (cards.length - 1));
+          const avgWeeks = Math.round(avgDays / 7);
+          document.getElementById('statAvgWeeks').textContent = avgWeeks;
+        } else {
+          document.getElementById('statAvgWeeks').textContent = '-';
+        }
+      } else {
+        document.getElementById('statLastCut').textContent = '-';
+        document.getElementById('statAvgWeeks').textContent = '-';
+      }
+      
+      renderCards(cards);
+    }
+
+    function renderCards(cards) {
+      const timeline = document.getElementById('cardsTimeline');
+      
+      if (cards.length === 0) {
+        timeline.innerHTML = `
+          <div class="empty-state">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            <div class="empty-title">No cards yet</div>
+            <div class="empty-text">Tap + New Card after their next cut</div>
+          </div>
+        `;
+        return;
+      }
+      
+      timeline.innerHTML = cards.map(card => `
+        <article class="hair-card" data-id="${card.id}">
+          <div class="card-date">${new Date(card.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div>
+          <div class="comparison-container" data-before="${card.beforePhoto}" data-after="${card.afterPhoto}">
+            <img src="${card.beforePhoto}" alt="Before haircut" class="comparison-img comparison-before">
+            <img src="${card.afterPhoto}" alt="After haircut" class="comparison-img comparison-after">
+            <div class="comparison-slider">
+              <div class="slider-handle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              </div>
+            </div>
+            <span class="comparison-label label-before">Before</span>
+            <span class="comparison-label label-after">After</span>
+          </div>
+          <div class="card-specs">
+            <div class="spec-item">
+              <div class="spec-label">Top</div>
+              <div class="spec-value">${card.specs.top || '-'}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Sides</div>
+              <div class="spec-value">${card.specs.sides || '-'}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Back</div>
+              <div class="spec-value">${card.specs.back || '-'}</div>
+            </div>
+            <div class="spec-item">
+              <div class="spec-label">Beard</div>
+              <div class="spec-value">${card.specs.beard || '-'}</div>
+            </div>
+            <div class="spec-item spec-full">
+              <div class="spec-label">Products</div>
+              <div class="spec-value">${card.specs.products || '-'}</div>
+            </div>
+          </div>
+          ${card.notes ? `
+            <div class="card-notes">
+              <div class="notes-text">${card.notes}</div>
+            </div>
+          ` : ''}
+          <div class="card-footer">
+            <button class="btn-secondary card-share-btn" aria-label="Share this card">Share Card</button>
+            <button class="btn-secondary card-copy-btn" aria-label="Copy as new card">Use as Template</button>
+          </div>
+        </article>
+      `).join('');
+      
+      // Init sliders
+      timeline.querySelectorAll('.comparison-container').forEach(initSlider);
+      
+      // Share buttons
+      timeline.querySelectorAll('.card-share-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const card = cards.find(c => c.id === btn.closest('.hair-card').dataset.id);
+          await shareCard(card);
+        });
+      });
+      
+      // Copy template buttons
+      timeline.querySelectorAll('.card-copy-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const card = cards.find(c => c.id === btn.closest('.hair-card').dataset.id);
+          openNewCardWithTemplate(card);
+        });
+      });
+    }
+
+    function initSlider(container) {
+      const slider = container.querySelector('.comparison-slider');
+      const afterImg = container.querySelector('.comparison-after');
+      let isDragging = false;
+      
+      function updatePosition(x) {
+        const rect = container.getBoundingClientRect();
+        let percent = ((x - rect.left) / rect.width) * 100;
+        percent = Math.max(0, Math.min(100, percent));
+        slider.style.left = percent + '%';
+        afterImg.style.clipPath = `polygon(${percent}% 0, 100% 0, 100% 100%, ${percent}% 100%)`;
+      }
+      
+      slider.addEventListener('mousedown', () => isDragging = true);
+      slider.addEventListener('touchstart', () => isDragging = true);
+      
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) updatePosition(e.clientX);
+      });
+      
+      document.addEventListener('touchmove', (e) => {
+        if (isDragging && e.touches[0]) updatePosition(e.touches[0].clientX);
+      });
+      
+      document.addEventListener('mouseup', () => isDragging = false);
+      document.addEventListener('touchend', () => isDragging = false);
+    }
+
+    async function shareCard(card) {
+      const client = await dbGet('clients', card.clientId);
+      const date = new Date(card.date).toLocaleDateString();
+      
+      const text = `Your Hair Profile from ${date}
+
+Top: ${card.specs.top || '-'}
+Sides: ${card.specs.sides || '-'}
+Back: ${card.specs.back || '-'}
+Beard: ${card.specs.beard || '-'}
+Products: ${card.specs.products || '-'}
+
+${card.notes ? 'Notes: ' + card.notes : ''}
+
+— MidWest Barbery`;
+
+      if (navigator.share) {
+        try {
+          // Try to share with image
+          const response = await fetch(card.afterPhoto);
+          const blob = await response.blob();
+          const file = new File([blob], 'haircut.jpg', { type: 'image/jpeg' });
+          
+          await navigator.share({
+            title: `Hair Profile - ${client.name}`,
+            text: text,
+            files: [file]
+          });
+        } catch (err) {
+          // Fallback to text only
+          try {
+            await navigator.share({
+              title: `Hair Profile - ${client.name}`,
+              text: text
+            });
+          } catch (e) {
+            // User cancelled or error
+            copyToClipboard(text);
+          }
+        }
+      } else {
+        copyToClipboard(text);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard', 'success');
+      }).catch(() => {
+        showToast('Could not copy');
+      });
+    }
+
+    function openNewCardWithTemplate(template) {
+      document.getElementById('specTop').value = template.specs.top || '';
+      document.getElementById('specSides').value = template.specs.sides || '';
+      document.getElementById('specBack').value = template.specs.back || '';
+      document.getElementById('specBeard').value = template.specs.beard || '';
+      document.getElementById('specProducts').value = template.specs.products || '';
+      document.getElementById('cardNotes').value = '';
+      
+      // Use previous after as new before
+      beforePhotoData = template.afterPhoto;
+      afterPhotoData = null;
+      
+      updatePhotoBox('before', beforePhotoData);
+      updatePhotoBox('after', null);
+      
+      document.getElementById('newCardModal').classList.add('active');
+    }
+
+    function updatePhotoBox(type, dataUrl) {
+      const box = document.getElementById(type + 'PhotoBox');
+      if (dataUrl) {
+        box.classList.add('has-photo');
+        let img = box.querySelector('img');
+        if (!img) {
+          img = document.createElement('img');
+          box.insertBefore(img, box.firstChild);
+        }
+        img.src = dataUrl;
+        img.alt = type + ' photo';
+      } else {
+        box.classList.remove('has-photo');
+        const img = box.querySelector('img');
+        if (img) img.remove();
+      }
+    }
+
+    // Camera handling
+    async function capturePhoto(type) {
+      currentPhotoTarget = type;
+      
+      // Try to use camera API directly
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } } 
+          });
+          
+          // Create video element
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.setAttribute('playsinline', '');
+          await video.play();
+          
+          // Wait for video to load
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Capture frame
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          
+          // Stop stream
+          stream.getTracks().forEach(t => t.stop());
+          
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          
+          if (type === 'before') {
+            beforePhotoData = dataUrl;
+          } else {
+            afterPhotoData = dataUrl;
+          }
+          
+          updatePhotoBox(type, dataUrl);
+          return;
+        } catch (err) {
+          console.log('Camera API failed, falling back to file input');
+        }
+      }
+      
+      // Fallback to file input
+      document.getElementById('cameraInput').click();
+    }
+
+    document.getElementById('cameraInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target.result;
+        if (currentPhotoTarget === 'before') {
+          beforePhotoData = dataUrl;
+        } else {
+          afterPhotoData = dataUrl;
+        }
+        updatePhotoBox(currentPhotoTarget, dataUrl);
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+
+    // Canvas annotation
+    function openAnnotation(type) {
+      annotatingPhoto = type;
+      const photoData = type === 'before' ? beforePhotoData : afterPhotoData;
+      if (!photoData) return;
+      
+      const canvas = document.getElementById('annotationCanvas');
+      const ctx = canvas.getContext('2d');
+      const container = canvas.parentElement;
+      
+      const img = new Image();
+      img.onload = () => {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = photoData;
+      
+      document.getElementById('annotateModal').classList.add('active');
+    }
+
+    function initCanvas() {
+      const canvas = document.getElementById('annotationCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+        return { x, y };
+      }
+      
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('touchstart', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('touchmove', draw);
+      canvas.addEventListener('mouseup', endDraw);
+      canvas.addEventListener('touchend', endDraw);
+      canvas.addEventListener('mouseleave', endDraw);
+      
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing = true;
+        const pos = getPos(e);
+        lastX = pos.x;
+        lastY = pos.y;
+        
+        if (canvasTool === 'text') {
+          const text = prompt('Enter text:');
+          if (text) {
+            ctx.font = 'bold 16px DM Sans';
+            ctx.fillStyle = canvasColor;
+            ctx.fillText(text, pos.x, pos.y);
+          }
+          isDrawing = false;
+        }
+      }
+      
+      function draw(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = canvasTool === 'erase' ? '#1a1a2e' : canvasColor;
+        ctx.lineWidth = canvasTool === 'erase' ? 20 : 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+        
+        lastX = pos.x;
+        lastY = pos.y;
+      }
+      
+      function endDraw() {
+        isDrawing = false;
+      }
+    }
+
+    function saveAnnotation() {
+      const canvas = document.getElementById('annotationCanvas');
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      
+      if (annotatingPhoto === 'before') {
+        beforePhotoData = dataUrl;
+      } else {
+        afterPhotoData = dataUrl;
+      }
+      
+      updatePhotoBox(annotatingPhoto, dataUrl);
+      document.getElementById('annotateModal').classList.remove('active');
+      showToast('Annotations saved', 'success');
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check URL param for auto-auth
+      const params = new URLSearchParams(window.location.search);
+      const keyParam = params.get('key');
+      
+      if (keyParam && _h(keyParam) === _V) {
+        document.getElementById('accessGate').classList.add('gate-hidden');
+        document.getElementById('app').classList.add('app-visible');
+        await init();
+        return;
+      }
+      
+      // Manual auth
+      document.getElementById('accessBtn').addEventListener('click', checkAccess);
+      document.getElementById('accessKey').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') checkAccess();
+      });
+    });
+
+    async function checkAccess() {
+      const key = document.getElementById('accessKey').value.trim();
+      if (_h(key) === _V) {
+        document.getElementById('accessGate').classList.add('gate-hidden');
+        document.getElementById('app').classList.add('app-visible');
+        await init();
+      } else {
+        document.getElementById('gateError').style.display = 'block';
+        document.getElementById('accessKey').focus();
+      }
+    }
+
+    async function init() {
+      // First-visit detection for demo data
+      if (!localStorage.getItem('midwest-barbery-visited')) {
+        localStorage.setItem('midwest-barbery-visited', 'true');
+        // Always use memory fallback for instant demo data
+        useMemoryFallback = true;
+        memoryClients = JSON.parse(JSON.stringify(demoClients));
+        memoryCards = JSON.parse(JSON.stringify(demoCards));
+        document.getElementById('demoBanner').style.display = 'flex';
+        
+        // Try to init IndexedDB in background (non-blocking)
+        openDB().then(() => loadDemoData()).catch(() => {});
+      }
+      
+      await renderClientList();
+      initCanvas();
+      bindEvents();
+    }
+
+    function bindEvents() {
+      // Clear demo
+      document.getElementById('clearDemo').addEventListener('click', clearDemoData);
+      
+      // Search
+      document.getElementById('searchClients').addEventListener('input', (e) => {
+        renderClientList(e.target.value);
+      });
+      
+      // Add client
+      document.getElementById('addClientBtn').addEventListener('click', () => {
+        document.getElementById('clientNameInput').value = '';
+        document.getElementById('clientPhoneInput').value = '';
+        document.getElementById('newClientModal').classList.add('active');
+        document.getElementById('clientNameInput').focus();
+      });
+      
+      document.getElementById('closeNewClient').addEventListener('click', () => {
+        document.getElementById('newClientModal').classList.remove('active');
+      });
+      
+      document.getElementById('saveClientBtn').addEventListener('click', async () => {
+        const name = document.getElementById('clientNameInput').value.trim();
+        if (!name) {
+          showToast('Name is required');
+          return;
+        }
+        
+        const client = {
+          id: genId(),
+          name: name,
+          phone: document.getElementById('clientPhoneInput').value.trim(),
+          created: Date.now()
+        };
+        
+        await dbPut('clients', client);
+        document.getElementById('newClientModal').classList.remove('active');
+        await renderClientList();
+        showToast('Client added', 'success');
+      });
+      
+      // Back to list
+      document.getElementById('backToList').addEventListener('click', () => {
+        document.getElementById('profileView').style.display = 'none';
+        document.getElementById('clientListView').style.display = 'block';
+        currentClientId = null;
+        renderClientList();
+      });
+      
+      // New card
+      document.getElementById('newCardBtn').addEventListener('click', () => {
+        beforePhotoData = null;
+        afterPhotoData = null;
+        document.getElementById('specTop').value = '';
+        document.getElementById('specSides').value = '';
+        document.getElementById('specBack').value = '';
+        document.getElementById('specBeard').value = '';
+        document.getElementById('specProducts').value = '';
+        document.getElementById('cardNotes').value = '';
+        updatePhotoBox('before', null);
+        updatePhotoBox('after', null);
+        document.getElementById('newCardModal').classList.add('active');
+      });
+      
+      document.getElementById('closeNewCard').addEventListener('click', () => {
+        document.getElementById('newCardModal').classList.remove('active');
+      });
+      
+      // Photo boxes
+      document.getElementById('beforePhotoBox').addEventListener('click', (e) => {
+        if (e.target.closest('.photo-action')) {
+          const action = e.target.closest('.photo-action').dataset.action;
+          if (action === 'annotate') openAnnotation('before');
+          else if (action === 'retake') capturePhoto('before');
+        } else if (!beforePhotoData) {
+          capturePhoto('before');
+        }
+      });
+      
+      document.getElementById('afterPhotoBox').addEventListener('click', (e) => {
+        if (e.target.closest('.photo-action')) {
+          const action = e.target.closest('.photo-action').dataset.action;
+          if (action === 'annotate') openAnnotation('after');
+          else if (action === 'retake') capturePhoto('after');
+        } else if (!afterPhotoData) {
+          capturePhoto('after');
+        }
+      });
+      
+      // Save card
+      document.getElementById('saveCardBtn').addEventListener('click', async () => {
+        if (!beforePhotoData && !afterPhotoData) {
+          showToast('Take at least one photo');
+          return;
+        }
+        
+        const card = {
+          id: genId(),
+          clientId: currentClientId,
+          date: Date.now(),
+          beforePhoto: beforePhotoData || generatePlaceholderImage('before'),
+          afterPhoto: afterPhotoData || generatePlaceholderImage('after'),
+          specs: {
+            top: document.getElementById('specTop').value.trim(),
+            sides: document.getElementById('specSides').value.trim(),
+            back: document.getElementById('specBack').value.trim(),
+            beard: document.getElementById('specBeard').value.trim(),
+            products: document.getElementById('specProducts').value.trim()
+          },
+          notes: document.getElementById('cardNotes').value.trim()
+        };
+        
+        await dbPut('cards', card);
+        document.getElementById('newCardModal').classList.remove('active');
+        openProfile(currentClientId);
+        showToast('Card saved', 'success');
+      });
+      
+      // Share profile
+      document.getElementById('shareProfileBtn').addEventListener('click', async () => {
+        const client = await dbGet('clients', currentClientId);
+        const cards = await dbGetByIndex('cards', 'clientId', currentClientId);
+        const latest = cards.sort((a, b) => b.date - a.date)[0];
+        
+        if (latest) {
+          await shareCard(latest);
+        } else {
+          showToast('No cards to share');
+        }
+      });
+      
+      // Annotation modal
+      document.getElementById('closeAnnotate').addEventListener('click', () => {
+        document.getElementById('annotateModal').classList.remove('active');
+      });
+      
+      document.getElementById('saveAnnotation').addEventListener('click', saveAnnotation);
+      
+      // Canvas tools
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tool = btn.dataset.tool;
+          if (tool === 'clear') {
+            const canvas = document.getElementById('annotationCanvas');
+            const ctx = canvas.getContext('2d');
+            const photoData = annotatingPhoto === 'before' ? beforePhotoData : afterPhotoData;
+            const img = new Image();
+            img.onload = () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            };
+            img.src = photoData;
+            return;
+          }
+          
+          canvasTool = tool;
+          document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+      
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          canvasColor = btn.dataset.color;
+          document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+      
+      // Close modals on overlay click
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) {
+            overlay.classList.remove('active');
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FloorView — Epoxy Visualizer | Top Coat Epoxy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Skip Link - Accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--primary);
+      color: var(--white);
+      padding: 8px 16px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      z-index: 10001;
+      border-radius: 0 0 var(--radius) 0;
+      transition: top 0.2s ease;
+    }
+    .skip-link:focus {
+      top: 0;
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    :root {
+      --primary: oklch(0.25 0.04 250);
+      --primary-light: oklch(0.35 0.05 250);
+      --accent: oklch(0.60 0.15 250);
+      --accent-dark: oklch(0.50 0.15 250);
+      --surface: oklch(0.96 0.005 250);
+      --surface-dark: oklch(0.92 0.01 250);
+      --text: oklch(0.20 0.02 250);
+      --text-muted: oklch(0.45 0.02 250);
+      --success: oklch(0.55 0.15 145);
+      --warning: oklch(0.70 0.15 70);
+      --white: #ffffff;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Inter', system-ui, sans-serif;
+    }
+    
+    html { font-size: 16px; }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+      padding-bottom: 140px !important;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Auth Gate */
+    #auth-gate {
+      position: fixed;
+      inset: 0;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+
+    @keyframes authSlideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .auth-box {
+      background: var(--white);
+      padding: 32px;
+      border-radius: var(--radius);
+      text-align: center;
+      max-width: 320px;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .auth-box h1 {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: 0.02em;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+    
+    .auth-box p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+    
+    .auth-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--surface-dark);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      margin-bottom: 16px;
+      transition: border-color 0.15s;
+    }
+    
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .auth-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    
+    .auth-btn:hover { background: var(--primary-light); }
+    .auth-btn:active { transform: scale(0.98); }
+    .auth-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    
+    .auth-error {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    /* Main App */
+    #app { display: none; }
+    #app.visible { display: block; }
+    
+    /* Header */
+    .header {
+      background: var(--primary);
+      color: var(--white);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .logo {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: 0.03em;
+    }
+    
+    .header-tag {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    /* Tab Navigation */
+    .tab-nav {
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--surface-dark);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      position: relative;
+    }
+    
+    .tab-btn:focus-visible {
+      outline: none;
+      background: var(--surface);
+    }
+    
+    .tab-btn.active {
+      color: var(--accent);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 0 0 3px 3px;
+    }
+    
+    .tab-btn svg {
+      width: 22px;
+      height: 22px;
+    }
+    
+    .tab-btn.locked {
+      opacity: 0.5;
+    }
+    
+    .tab-btn.locked .lock-badge {
+      position: absolute;
+      top: 8px;
+      right: calc(50% - 18px);
+      background: var(--warning);
+      color: var(--text);
+      font-size: 0.5rem;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+    
+    /* Tab Panels */
+    .tab-panel {
+      display: none;
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+      min-height: calc(100vh - 180px);
+    }
+    
+    .tab-panel.active { display: block; }
+    
+    /* Section Headers */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    
+    .section-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    
+    /* Visualizer Tab */
+    .camera-container {
+      background: var(--text);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 4/3;
+      margin-bottom: 20px;
+    }
+    
+    #camera-video, #camera-canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    
+    #camera-canvas { display: none; }
+    
+    .camera-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      text-align: center;
+      padding: 24px;
+    }
+    
+    .camera-placeholder svg {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+    
+    .camera-placeholder p {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .camera-controls {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+    }
+    
+    .camera-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 3px solid var(--white);
+      background: rgba(255,255,255,0.2);
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      backdrop-filter: blur(4px);
+    }
+    
+    .camera-btn:hover { background: rgba(255,255,255,0.3); }
+    .camera-btn:active { transform: scale(0.95); }
+    .camera-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    
+    .camera-btn svg { width: 24px; height: 24px; }
+    
+    .camera-btn.primary-capture {
+      width: 68px;
+      height: 68px;
+      background: var(--white);
+      color: var(--primary);
+    }
+    
+    .camera-btn.primary-capture:hover { background: var(--surface); }
+    
+    /* Coating Picker */
+    .coating-section {
+      margin-bottom: 24px;
+    }
+    
+    .coating-label {
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    
+    .coating-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    
+    .coating-swatch {
+      aspect-ratio: 1;
+      border-radius: var(--radius-sm);
+      border: 3px solid transparent;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    
+    .coating-swatch:hover { transform: scale(1.05); }
+    .coating-swatch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .coating-swatch.active { border-color: var(--accent); }
+    
+    .coating-swatch.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    
+    .coating-swatch.locked::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(45deg, transparent, transparent 4px, rgba(0,0,0,0.1) 4px, rgba(0,0,0,0.1) 8px);
+    }
+    
+    .swatch-name {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      line-height: 1.2;
+    }
+    
+    /* Opacity Slider */
+    .opacity-control {
+      margin-bottom: 24px;
+    }
+    
+    .opacity-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--surface-dark);
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .opacity-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 3px solid var(--white);
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+    }
+    
+    .opacity-slider:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    
+    .opacity-value {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    
+    /* Before/After Slider */
+    .compare-container {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+      touch-action: none;
+    }
+    
+    .compare-container img {
+      width: 100%;
+      display: block;
+    }
+    
+    .compare-overlay {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    
+    .compare-overlay img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .compare-slider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--white);
+      cursor: ew-resize;
+      z-index: 10;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    
+    .compare-handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      background: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .compare-handle svg { width: 20px; height: 20px; color: var(--primary); }
+    
+    .compare-labels {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    
+    .compare-label {
+      background: rgba(0,0,0,0.6);
+      color: var(--white);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    /* Action Buttons */
+    .action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 14px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+    }
+    
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .btn:active { transform: scale(0.98); }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: var(--white);
+    }
+    
+    .btn-primary:hover { background: var(--accent-dark); }
+    
+    .btn-secondary {
+      background: var(--surface-dark);
+      color: var(--text);
+    }
+    
+    .btn-secondary:hover { background: oklch(0.88 0.01 250); }
+    
+    .btn svg { width: 18px; height: 18px; }
+    
+    /* Quote Tab */
+    .quote-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    
+    .quote-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .form-group.full { grid-column: 1 / -1; }
+    
+    .form-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    
+    .form-input, .form-select {
+      padding: 12px 14px;
+      border: 2px solid var(--surface-dark);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-family: var(--font-body);
+      background: var(--white);
+      transition: border-color 0.15s;
+    }
+    
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .form-suffix {
+      display: flex;
+      align-items: center;
+    }
+    
+    .form-suffix input {
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      border-right: none;
+    }
+    
+    .form-suffix span {
+      padding: 12px 14px;
+      background: var(--surface-dark);
+      border: 2px solid var(--surface-dark);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    
+    /* Quote Result */
+    .quote-result {
+      background: var(--primary);
+      color: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    .quote-result-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    
+    .quote-result-total {
+      font-family: var(--font-display);
+      font-size: 3.5rem;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    
+    .quote-result-range {
+      font-size: 0.9rem;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+    
+    .quote-breakdown {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--surface);
+    }
+    
+    .breakdown-row:last-child { border-bottom: none; }
+    
+    .breakdown-label { color: var(--text-muted); }
+    .breakdown-value { font-weight: 600; }
+    
+    /* Gallery Tab */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .gallery-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .gallery-img {
+      aspect-ratio: 4/3;
+      background: var(--surface-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    .gallery-info {
+      padding: 12px;
+    }
+    
+    .gallery-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    
+    .gallery-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    
+    .empty-gallery {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    
+    .empty-gallery svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.4;
+      margin-bottom: 12px;
+    }
+    
+    /* Demo Data Cards */
+    .demo-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .demo-info h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .demo-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    
+    .demo-price {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      color: var(--success);
+    }
+    
+    /* Blends Tab (Locked) */
+    .locked-panel {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    
+    .locked-icon {
+      width: 80px;
+      height: 80px;
+      background: var(--surface-dark);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+    
+    .locked-icon svg {
+      width: 36px;
+      height: 36px;
+      color: var(--text-muted);
+    }
+    
+    .locked-title {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    
+    .locked-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto 24px;
+    }
+    
+    .upgrade-features {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: left;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .upgrade-features h4 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    
+    .upgrade-features ul {
+      list-style: none;
+    }
+    
+    .upgrade-features li {
+      padding: 8px 0;
+      padding-left: 28px;
+      position: relative;
+      font-size: 0.9rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--surface);
+    }
+    
+    .upgrade-features li:last-child { border-bottom: none; }
+    
+    .upgrade-features li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      background: var(--success);
+      border-radius: 50%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+    
+    .upgrade-price {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 4px;
+    }
+    
+    .upgrade-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--text);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-weight: 500;
+      z-index: 1000;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .toast.visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    /* Hidden */
+    .hidden { display: none !important; }
+    
+    /* Grain Texture Overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9998;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    }
+
+    /* Entrance Animations */
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: fadeSlideUp 0.35s ease-out;
+    }
+
+    .quote-card, .demo-card, .gallery-item, .upgrade-features {
+      animation: scaleIn 0.3s ease-out;
+    }
+
+    /* Enhanced Focus States */
+    *:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 3px;
+      border-radius: 2px;
+    }
+
+    .coating-swatch:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: var(--radius-sm);
+    }
+
+    .camera-btn:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    /* Micro-interactions */
+    .btn {
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .coating-swatch {
+      transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .coating-swatch:hover {
+      transform: scale(1.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .coating-swatch.active {
+      box-shadow: 0 0 0 3px var(--white), 0 0 0 6px var(--accent);
+    }
+
+    .tab-btn {
+      transition: color 0.15s ease, background 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) scaleX(0);
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      transition: transform 0.25s ease;
+    }
+
+    .tab-btn.active::after {
+      transform: translateX(-50%) scaleX(1);
+    }
+
+    .demo-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .demo-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .gallery-item {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .quote-result {
+      transition: transform 0.2s ease;
+    }
+
+    .quote-result:hover {
+      transform: scale(1.02);
+    }
+
+    .camera-btn {
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    .camera-btn:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    }
+
+    /* Anti-scrape protection */
+    .section-title, .logo {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* prefers-reduced-motion support */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .tab-panel.active {
+        animation: none;
+      }
+
+      .quote-card, .demo-card, .gallery-item, .upgrade-features {
+        animation: none;
+      }
+
+      .auth-box {
+        animation: none !important;
+      }
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      body { padding-bottom: 80px !important; }
+      
+      .tab-nav { bottom: 60px; }
+      
+      .tab-panel { padding: 32px; }
+      
+      .coating-grid { grid-template-columns: repeat(6, 1fr); }
+      
+      .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <!-- Auth Gate -->
+  <div id="auth-gate">
+    <div class="auth-box" style="animation: authSlideIn 0.4s ease-out;">
+      <h1>FloorView</h1>
+      <p>Made for Top Coat Epoxy — San Antonio</p>
+      <input type="text" id="auth-key" class="auth-input" placeholder="Your access key" autocomplete="off" aria-label="Access key">
+      <button type="button" id="auth-submit" class="auth-btn">Get Started</button>
+      <p id="auth-error" class="auth-error" role="alert">Key doesn't match. Check your email or text.</p>
+    </div>
+  </div>
+  
+  <!-- Main App -->
+  <div id="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div>
+          <div class="logo">FloorView</div>
+          <div class="header-tag">Top Coat Epoxy</div>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Tab Panels -->
+    <main>
+      <!-- Visualize Tab -->
+      <section id="tab-visualize" class="tab-panel active" role="tabpanel" aria-labelledby="btn-visualize">
+        <h2 class="section-title">See What Your Floor Could Look Like</h2>
+        <p class="section-subtitle">Take a picture, pick a color, show the customer right there on your phone.</p>
+        
+        <div class="camera-container" id="camera-container">
+          <video id="camera-video" autoplay playsinline aria-label="Camera preview"></video>
+          <canvas id="camera-canvas" aria-label="Captured floor with coating overlay"></canvas>
+          <div class="camera-placeholder" id="camera-placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <p>Tap the camera button to get started</p>
+          </div>
+          <div class="camera-controls" id="camera-controls">
+            <button type="button" class="camera-btn" id="btn-start-camera" aria-label="Start camera">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            <button type="button" class="camera-btn primary-capture hidden" id="btn-capture" aria-label="Take photo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/></svg>
+            </button>
+            <button type="button" class="camera-btn hidden" id="btn-retake" aria-label="Retake photo">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Coating Selection -->
+        <div class="coating-section" id="coating-section">
+          <div class="coating-label">Solid Colors</div>
+          <div class="coating-grid" role="listbox" aria-label="Solid color options">
+            <div>
+              <button type="button" class="coating-swatch active" data-type="solid" data-color="battleship" style="background: linear-gradient(135deg, #5a5a5a 0%, #7a7a7a 50%, #5a5a5a 100%);" role="option" aria-selected="true" aria-label="Battleship Gray"></button>
+              <div class="swatch-name">Battleship</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="solid" data-color="saddle" style="background: linear-gradient(135deg, #8b6914 0%, #a67c28 50%, #8b6914 100%);" role="option" aria-selected="false" aria-label="Saddle Tan"></button>
+              <div class="swatch-name">Saddle Tan</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="solid" data-color="midnight" style="background: linear-gradient(135deg, #1a1a1a 0%, #333 50%, #1a1a1a 100%);" role="option" aria-selected="false" aria-label="Midnight Black"></button>
+              <div class="swatch-name">Midnight</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="solid" data-color="desert" style="background: linear-gradient(135deg, #c4a35a 0%, #d4b76a 50%, #c4a35a 100%);" role="option" aria-selected="false" aria-label="Desert Sand"></button>
+              <div class="swatch-name">Desert Sand</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="solid" data-color="slate" style="background: linear-gradient(135deg, #4a5568 0%, #5a6578 50%, #4a5568 100%);" role="option" aria-selected="false" aria-label="Slate Blue"></button>
+              <div class="swatch-name">Slate Blue</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="coating-section">
+          <div class="coating-label">Flake Blends</div>
+          <div class="coating-grid" role="listbox" aria-label="Flake blend options">
+            <div>
+              <button type="button" class="coating-swatch" data-type="flake" data-color="domino" style="background: repeating-conic-gradient(#222 0% 25%, #eee 0% 50%) 50% / 8px 8px;" role="option" aria-selected="false" aria-label="Domino flake blend"></button>
+              <div class="swatch-name">Domino</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="flake" data-color="outback" style="background: repeating-conic-gradient(#8b6914 0% 25%, #5c4a14 0% 50%) 50% / 8px 8px;" role="option" aria-selected="false" aria-label="Outback flake blend"></button>
+              <div class="swatch-name">Outback</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="flake" data-color="shoreline" style="background: repeating-conic-gradient(#4a6a8a 0% 25%, #7a8a9a 0% 50%) 50% / 8px 8px;" role="option" aria-selected="false" aria-label="Shoreline flake blend"></button>
+              <div class="swatch-name">Shoreline</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="flake" data-color="copperhead" style="background: repeating-conic-gradient(#8b4513 0% 25%, #cd7f32 0% 50%) 50% / 8px 8px;" role="option" aria-selected="false" aria-label="Copperhead flake blend"></button>
+              <div class="swatch-name">Copperhead</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch locked" data-type="flake" data-color="locked" aria-disabled="true" style="background: #ccc;" role="option" aria-selected="false" aria-label="More blends - upgrade to unlock"></button>
+              <div class="swatch-name">+ More</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="coating-section">
+          <div class="coating-label">Metallic</div>
+          <div class="coating-grid" role="listbox" aria-label="Metallic options">
+            <div>
+              <button type="button" class="coating-swatch" data-type="metallic" data-color="silver" style="background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 25%, #a0a0a0 50%, #c8c8c8 75%, #c0c0c0 100%);" role="option" aria-selected="false" aria-label="Metallic Silver"></button>
+              <div class="swatch-name">Silver</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="metallic" data-color="graphite" style="background: linear-gradient(135deg, #3a3a3a 0%, #5a5a5a 25%, #2a2a2a 50%, #4a4a4a 75%, #3a3a3a 100%);" role="option" aria-selected="false" aria-label="Metallic Graphite"></button>
+              <div class="swatch-name">Graphite</div>
+            </div>
+            <div>
+              <button type="button" class="coating-swatch" data-type="metallic" data-color="copper" style="background: linear-gradient(135deg, #b87333 0%, #da9a5b 25%, #8b5a2b 50%, #cd7f32 75%, #b87333 100%);" role="option" aria-selected="false" aria-label="Metallic Copper"></button>
+              <div class="swatch-name">Copper</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="opacity-control" id="opacity-control">
+          <div class="coating-label">Blend Opacity</div>
+          <input type="range" class="opacity-slider" id="opacity-slider" min="30" max="90" value="65" aria-label="Coating opacity">
+          <div class="opacity-value"><span id="opacity-value">65</span>%</div>
+        </div>
+        
+        <!-- Before/After Comparison -->
+        <div id="compare-section" class="hidden">
+          <div class="coating-label">Before / After</div>
+          <div class="compare-container" id="compare-container">
+            <img id="compare-before" src="" alt="Original floor before coating">
+            <div class="compare-overlay" id="compare-overlay">
+              <img id="compare-after" src="" alt="Floor with coating applied">
+            </div>
+            <div class="compare-slider" id="compare-slider">
+              <div class="compare-handle">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 15 12 9 6" transform="translate(6,0)"/></svg>
+              </div>
+            </div>
+            <div class="compare-labels">
+              <span class="compare-label">Before</span>
+              <span class="compare-label">After</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="action-row" id="action-row">
+          <button type="button" class="btn btn-secondary" id="btn-save" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-share" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share
+          </button>
+        </div>
+      </section>
+      
+      <!-- Quote Tab -->
+      <section id="tab-quote" class="tab-panel" role="tabpanel" aria-labelledby="btn-quote">
+        <h2 class="section-title">Price It Out</h2>
+        <p class="section-subtitle">Enter the garage size and coating type. Gives you a solid starting number for the customer.</p>
+        
+        <div class="quote-card">
+          <div class="quote-row">
+            <div class="form-group">
+              <label for="quote-length" class="form-label">Length</label>
+              <div class="form-suffix">
+                <input type="number" id="quote-length" class="form-input" value="20" min="1" max="100" aria-describedby="length-unit">
+                <span id="length-unit">ft</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="quote-width" class="form-label">Width</label>
+              <div class="form-suffix">
+                <input type="number" id="quote-width" class="form-input" value="24" min="1" max="100" aria-describedby="width-unit">
+                <span id="width-unit">ft</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label for="quote-type" class="form-label">Coating Type</label>
+            <select id="quote-type" class="form-select">
+              <option value="standard">Standard Epoxy ($4-7/sqft)</option>
+              <option value="premium">Premium Flake ($7-10/sqft)</option>
+              <option value="metallic">Metallic Epoxy ($10-15/sqft)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="quote-result" id="quote-result">
+          <div class="quote-result-label">Estimated Total</div>
+          <div class="quote-result-total" id="quote-total">$2,640</div>
+          <div class="quote-result-range" id="quote-range">Range: $1,920 - $3,360</div>
+        </div>
+        
+        <div class="quote-breakdown" id="quote-breakdown">
+          <div class="breakdown-row">
+            <span class="breakdown-label">Square Footage</span>
+            <span class="breakdown-value" id="breakdown-sqft">480 sqft</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">Coating Type</span>
+            <span class="breakdown-value" id="breakdown-type">Standard Epoxy</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">Price Range</span>
+            <span class="breakdown-value" id="breakdown-rate">$4 - $7 /sqft</span>
+          </div>
+        </div>
+        
+        <div class="action-row">
+          <button type="button" class="btn btn-secondary" id="btn-copy-quote">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Quote
+          </button>
+          <button type="button" class="btn btn-primary" id="btn-share-quote">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Text Quote
+          </button>
+        </div>
+        
+        <div class="coating-label" style="margin-top: 32px;">Recent Estimates</div>
+        <div id="demo-estimates">
+          <div class="demo-card">
+            <div class="demo-info">
+              <h3>Alamo Heights 2-Car</h3>
+              <p>480 sqft, Domino Flake</p>
+            </div>
+            <div class="demo-price">$3,360</div>
+          </div>
+          <div class="demo-card">
+            <div class="demo-info">
+              <h3>Stone Oak 3-Car</h3>
+              <p>720 sqft, Metallic Silver</p>
+            </div>
+            <div class="demo-price">$8,640</div>
+          </div>
+          <div class="demo-card">
+            <div class="demo-info">
+              <h3>Helotes Workshop</h3>
+              <p>600 sqft, Saddle Tan Solid</p>
+            </div>
+            <div class="demo-price">$3,000</div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Gallery Tab -->
+      <section id="tab-gallery" class="tab-panel" role="tabpanel" aria-labelledby="btn-gallery">
+        <h2 class="section-title">Your Saved Jobs</h2>
+        <p class="section-subtitle">Visualizations you've saved — easy to pull up and show again.</p>
+        
+        <div id="gallery-content">
+          <div class="empty-gallery">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p>No saved projects yet.<br>Take a photo and save your visualization.</p>
+          </div>
+        </div>
+        
+        <div class="gallery-grid hidden" id="gallery-grid"></div>
+      </section>
+      
+      <!-- Blends Tab (Locked) -->
+      <section id="tab-blends" class="tab-panel" role="tabpanel" aria-labelledby="btn-blends">
+        <div class="locked-panel">
+          <div class="locked-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <h2 class="locked-title">Custom Blends</h2>
+          <p class="locked-desc">Create your own flake blends and metallic swirls. Mix colors, adjust ratios, save your signature finishes.</p>
+          
+          <div class="upgrade-features">
+            <h4>Full Version Includes</h4>
+            <ul>
+              <li>All 24 standard colors + metallics</li>
+              <li>Custom flake blend builder</li>
+              <li>Branded PDF proposals</li>
+              <li>Customer contact database</li>
+              <li>Project timeline tracker</li>
+              <li>Material calculator</li>
+            </ul>
+          </div>
+          
+          <div class="upgrade-price">$200</div>
+          <div class="upgrade-note">One-time payment, lifetime updates</div>
+          
+          <button type="button" class="btn btn-primary" style="max-width: 280px; margin: 0 auto;">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Get Full Version
+          </button>
+        </div>
+      </section>
+    </main>
+    
+    <!-- Tab Navigation -->
+    <nav class="tab-nav" role="tablist" aria-label="Main navigation">
+      <button type="button" class="tab-btn active" id="btn-visualize" role="tab" aria-selected="true" aria-controls="tab-visualize">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Visualize
+      </button>
+      <button type="button" class="tab-btn" id="btn-quote" role="tab" aria-selected="false" aria-controls="tab-quote">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Quote
+      </button>
+      <button type="button" class="tab-btn" id="btn-gallery" role="tab" aria-selected="false" aria-controls="tab-gallery">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Gallery
+      </button>
+      <button type="button" class="tab-btn locked" id="btn-blends" role="tab" aria-selected="false" aria-controls="tab-blends">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="13.5" cy="6.5" r="0.5"/><circle cx="17.5" cy="10.5" r="0.5"/><circle cx="8.5" cy="7.5" r="0.5"/><circle cx="6.5" cy="12.5" r="0.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.555C21.965 6.012 17.461 2 12 2z"/></svg>
+        <span class="lock-badge">PRO</span>
+        Blends
+      </button>
+    </nav>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+  
+  <!-- Demo Disclaimer - Compact -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo" style="position:fixed;bottom:0;left:0;right:0;background:#1a1a1a;padding:6px 12px;font-size:11px;color:#999;z-index:99999;display:flex;align-items:center;justify-content:center;gap:12px;">
+    <span>Demo for <strong style="color:#ccc;">Top Coat Epoxy &amp; Staining of San Antonio, TX</strong> — not affiliated</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Top%20Coat%20Epoxy" style="color:#ff6b6b;text-decoration:none;white-space:nowrap;">Delete →</a>
+  </div>
+
+  <script src="tool.js"></script>
+</body>
+</html>
+        initCompareSlider();
+      };
+      img.src = state.originalImage;
+    }
+    
+    // Before/After Slider
+    function initCompareSlider() {
+      let isDragging = false;
+      const container = $('compare-container');
+      
+      function updateSlider(x) {
+        const rect = container.getBoundingClientRect();
+        let pos = ((x - rect.left) / rect.width) * 100;
+        pos = Math.max(0, Math.min(100, pos));
+        compareSlider.style.left = pos + '%';
+        compareOverlay.style.clipPath = `inset(0 0 0 ${pos}%)`;
+      }
+      
+      compareSlider.addEventListener('mousedown', () => isDragging = true);
+      compareSlider.addEventListener('touchstart', () => isDragging = true);
+      
+      document.addEventListener('mouseup', () => isDragging = false);
+      document.addEventListener('touchend', () => isDragging = false);
+      
+      container.addEventListener('mousemove', e => {
+        if (isDragging) updateSlider(e.clientX);
+      });
+      
+      container.addEventListener('touchmove', e => {
+        if (isDragging) updateSlider(e.touches[0].clientX);
+      });
+      
+      container.addEventListener('click', e => updateSlider(e.clientX));
+      
+      // Initialize at 50%
+      updateSlider(container.getBoundingClientRect().left + container.offsetWidth / 2);
+    }
+    
+    // Save & Share
+    btnSave.addEventListener('click', () => {
+      if (!state.coatedImage) return;
+      
+      const project = {
+        id: Date.now(),
+        before: state.originalImage,
+        after: state.coatedImage,
+        coating: state.selectedCoating,
+        date: new Date().toLocaleDateString()
+      };
+      
+      state.savedProjects.push(project);
+      localStorage.setItem('floorview_projects', JSON.stringify(state.savedProjects));
+      renderGallery();
+      showToast('Saved to gallery');
+    });
+    
+    btnShare.addEventListener('click', async () => {
+      if (!state.coatedImage) return;
+      
+      if (navigator.share && navigator.canShare) {
+        try {
+          const blob = await fetch(state.coatedImage).then(r => r.blob());
+          const file = new File([blob], 'floor-visualization.jpg', { type: 'image/jpeg' });
+          
+          await navigator.share({
+            title: 'Floor Visualization - Top Coat Epoxy',
+            text: 'Check out this epoxy floor visualization!',
+            files: [file]
+          });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            fallbackShare();
+          }
+        }
+      } else {
+        fallbackShare();
+      }
+    });
+    
+    function fallbackShare() {
+      // Copy image data URL to clipboard
+      navigator.clipboard.writeText(state.coatedImage).then(() => {
+        showToast('Image copied to clipboard');
+      }).catch(() => {
+        showToast('Share not available');
+      });
+    }
+    
+    // Quote Calculator
+    const quoteLength = $('quote-length');
+    const quoteWidth = $('quote-width');
+    const quoteType = $('quote-type');
+    const quoteTotal = $('quote-total');
+    const quoteRange = $('quote-range');
+    const breakdownSqft = $('breakdown-sqft');
+    const breakdownType = $('breakdown-type');
+    const breakdownRate = $('breakdown-rate');
+    
+    function calculateQuote() {
+      const length = parseFloat(quoteLength.value) || 0;
+      const width = parseFloat(quoteWidth.value) || 0;
+      const sqft = length * width;
+      const type = quoteType.value;
+      const price = pricing[type];
+      
+      const low = sqft * price.low;
+      const high = sqft * price.high;
+      const mid = Math.round((low + high) / 2);
+      
+      quoteTotal.textContent = '$' + mid.toLocaleString();
+      quoteRange.textContent = `Range: $${low.toLocaleString()} - $${high.toLocaleString()}`;
+      breakdownSqft.textContent = sqft + ' sqft';
+      breakdownType.textContent = price.name;
+      breakdownRate.textContent = `$${price.low} - $${price.high} /sqft`;
+      
+      // Animate the number
+      animateNumber(quoteTotal, mid);
+    }
+    
+    function animateNumber(el, target) {
+      const duration = 400;
+      const start = parseInt(el.textContent.replace(/\D/g, '')) || 0;
+      const startTime = performance.now();
+      
+      function update(time) {
+        const elapsed = time - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = Math.round(start + (target - start) * eased);
+        el.textContent = '$' + current.toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+    
+    quoteLength.addEventListener('input', calculateQuote);
+    quoteWidth.addEventListener('input', calculateQuote);
+    quoteType.addEventListener('change', calculateQuote);
+    
+    // Copy & Share Quote
+    $('btn-copy-quote').addEventListener('click', () => {
+      const length = quoteLength.value;
+      const width = quoteWidth.value;
+      const sqft = parseFloat(length) * parseFloat(width);
+      const type = pricing[quoteType.value];
+      const low = sqft * type.low;
+      const high = sqft * type.high;
+      
+      const text = `Floor Coating Estimate
+${sqft} sqft (${length}' x ${width}')
+${type.name}
+$${low.toLocaleString()} - $${high.toLocaleString()}
+
+Top Coat Epoxy & Staining
+San Antonio, TX
+844-248-2628`;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Quote copied');
+      });
+    });
+    
+    $('btn-share-quote').addEventListener('click', async () => {
+      const length = quoteLength.value;
+      const width = quoteWidth.value;
+      const sqft = parseFloat(length) * parseFloat(width);
+      const type = pricing[quoteType.value];
+      const low = sqft * type.low;
+      const high = sqft * type.high;
+      
+      const text = `Floor Coating Estimate: ${sqft} sqft, ${type.name}, $${low.toLocaleString()}-$${high.toLocaleString()}. Top Coat Epoxy San Antonio 844-248-2628`;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({ text });
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            window.location.href = 'sms:?body=' + encodeURIComponent(text);
+          }
+        }
+      } else {
+        window.location.href = 'sms:?body=' + encodeURIComponent(text);
+      }
+    });
+    
+    // Gallery
+    function loadSavedProjects() {
+      try {
+        state.savedProjects = JSON.parse(localStorage.getItem('floorview_projects') || '[]');
+        renderGallery();
+      } catch (e) {
+        state.savedProjects = [];
+      }
+    }
+    
+    function renderGallery() {
+      const content = $('gallery-content');
+      const grid = $('gallery-grid');
+      
+      if (state.savedProjects.length === 0) {
+        content.classList.remove('hidden');
+        grid.classList.add('hidden');
+        return;
+      }
+      
+      content.classList.add('hidden');
+      grid.classList.remove('hidden');
+      grid.innerHTML = '';
+      
+      state.savedProjects.forEach(project => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.innerHTML = `
+          <div class="gallery-img" style="background-image: url(${project.after}); background-size: cover;"></div>
+          <div class="gallery-info">
+            <div class="gallery-title">${project.coating.color} ${project.coating.type}</div>
+            <div class="gallery-meta">${project.date}</div>
+          </div>
+        `;
+        grid.appendChild(item);
+      });
+    }
+    
+    // Toast
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+    
+    // Init
+    checkAuth();
+    calculateQuote();
+  </script>
+</body>
+</html>
