@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TintView - Sun Tint Quote Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Source+Sans+3:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0d0d0f;--surface:#16161a;--card:#1e1e24;--border:#2a2a32;
+--text:#f0eeeb;--muted:#9a9aa8;--gold:#d4a832;--gold-dim:#9a7a1f;--gold-bright:#e8c44a;
+--safe:#2d6a4f;--danger:#c0392b;--warning:#b8860b;--info:#2563eb;
+--primary:#d4a832;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);
+--radius-sm:6px;--radius-md:10px;--radius-lg:14px;
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html{font-size:16px;background:var(--bg);color:var(--text)}
+body{font-family:'Source Sans 3',-apple-system,BlinkMacSystemFont,sans-serif;min-height:100vh;padding-bottom:140px!important;background:var(--bg);overflow-x:hidden;line-height:1.5}
+a{color:var(--gold);text-underline-offset:2px}
+
+/* Skip link */
+.skip-link{position:absolute;top:-40px;left:12px;background:var(--gold);color:#111;padding:10px 18px;z-index:10000;border-radius:var(--radius-sm);font-weight:600;text-decoration:none;font-size:.9rem;transition:top .15s}
+.skip-link:focus{top:12px}
+
+/* Header */
+.app-header{background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 100%);border-bottom:1px solid var(--border);padding:18px 16px;text-align:center;position:sticky;top:0;z-index:100}
+.app-header h1{font-size:2rem;color:var(--gold);margin-bottom:2px;font-family:'Bebas Neue',sans-serif;letter-spacing:.04em}
+.app-header .tagline{font-size:.75rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+
+/* Demo banner */
+.demo-banner{background:linear-gradient(135deg,#2a2318 0%,#1f1a12 100%);border:1px solid var(--gold-dim);padding:12px 16px;margin:12px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.demo-banner p{font-size:.85rem;color:var(--gold-bright);font-weight:500}
+.demo-banner button{background:none;border:1.5px solid var(--gold-dim);color:var(--gold);padding:6px 14px;border-radius:var(--radius-sm);cursor:pointer;font-size:.8rem;font-weight:600;white-space:nowrap;transition:all .15s}
+.demo-banner button:hover{background:rgba(212,168,50,.1);border-color:var(--gold)}
+.demo-banner button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Toast container */
+.toast-container{position:fixed;top:88px;right:16px;z-index:9000;pointer-events:none}
+.toast{background:var(--safe);color:#fff;padding:14px 22px;border-radius:var(--radius-md);font-size:.9rem;font-weight:500;opacity:0;transform:translateX(20px);transition:all .3s ease;box-shadow:var(--shadow-md);max-width:320px;pointer-events:auto;display:flex;align-items:center;gap:10px}
+.toast.error{background:var(--danger)}
+.toast.warning{background:var(--warning);color:#1a1508}
+.toast.info{background:var(--info)}
+.toast.show{opacity:1;transform:translateX(0)}
+.toast::before{content:'✓';font-weight:700;font-size:1.1rem}
+.toast.error::before{content:'✕'}
+.toast.warning::before{content:'!'}
+.toast.info::before{content:'ⓘ'}
+
+/* Loading overlay */
+.loading-overlay{position:fixed;inset:0;background:rgba(13,13,15,.9);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-overlay.active{opacity:1;pointer-events:auto}
+.loading-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Main content */
+main{padding:0 12px 24px;max-width:640px;margin:0 auto}
+
+/* Section cards */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.section-title{font-size:1.35rem;margin-bottom:16px;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:.03em;display:flex;align-items:center;gap:10px}
+.section-title .icon{width:24px;height:24px;color:var(--gold-dim)}
+
+/* Form elements */
+.form-row{display:flex;gap:12px;margin-bottom:14px}
+.form-group{flex:1;min-width:0}
+.form-group label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.form-group label .required{color:var(--danger);margin-left:2px}
+.form-group input,.form-group select{width:100%;padding:12px 14px;background:var(--card);border:1.5px solid var(--border);color:var(--text);border-radius:var(--radius-md);font-size:.95rem;font-family:inherit;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+.form-group input:hover,.form-group select:hover{border-color:#3a3a44}
+.form-group input:focus,.form-group select:focus{border-color:var(--gold);outline:none;box-shadow:0 0 0 3px rgba(212,168,50,.12)}
+.form-group input.error,.form-group select.error{border-color:var(--danger);background:rgba(192,57,43,.05)}
+.form-group input.error:focus,.form-group select.error:focus{box-shadow:0 0 0 3px rgba(192,57,43,.15)}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239a9aa8' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.form-group input::placeholder{color:#5a5a66}
+.form-error{color:var(--danger);font-size:.78rem;margin-top:6px;display:none;align-items:center;gap:4px}
+.form-error::before{content:'⚠';font-size:.9rem}
+.form-error.visible{display:flex}
+
+/* Helper text */
+.helper-text{font-size:.78rem;color:var(--muted);margin-top:6px;line-height:1.4}
+
+/* Vehicle preview */
+.preview-area{background:linear-gradient(180deg,var(--surface) 0%,#121216 100%);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:24px 20px;margin-bottom:16px;text-align:center;position:relative;overflow:hidden}
+.preview-area::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold-dim),var(--gold),var(--gold-dim))}
+.preview-header{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px}
+.preview-header h2{font-size:1.4rem;color:var(--gold);font-family:'Bebas Neue',sans-serif;letter-spacing:.03em}
+.vehicle-visual{position:relative;width:100%;max-width:400px;margin:0 auto 24px;aspect-ratio:16/9;background:radial-gradient(ellipse at center bottom,rgba(212,168,50,.08) 0%,transparent 70%);border-radius:var(--radius-md)}
+.vehicle-svg{width:100%;height:100%;filter:drop-shadow(0 8px 24px rgba(0,0,0,.4))}
+.window-tint{transition:fill .2s ease}
+
+/* Tint slider */
+.slider-container{margin:0 auto;max-width:340px;padding:0 8px}
+.slider-labels{display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.tint-level-display{font-size:2.6rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);text-align:center;margin-bottom:4px;line-height:1}
+.tint-level-label{font-size:.85rem;color:var(--text);text-align:center;margin-bottom:16px;font-weight:500;min-height:24px}
+.tint-slider-wrap{position:relative;padding:8px 0}
+input[type=range]{width:100%;height:8px;-webkit-appearance:none;appearance:none;background:linear-gradient(to right,#1a1a1f 0%,var(--gold-dim) 50%,#e8e8e8 100%);border-radius:4px;outline:none;cursor:pointer;position:relative}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:32px;height:32px;background:var(--gold);border-radius:50%;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.5),0 0 0 4px rgba(212,168,50,.15);border:2px solid var(--gold-bright);transition:transform .1s,box-shadow .15s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.08);box-shadow:0 3px 16px rgba(0,0,0,.5),0 0 0 6px rgba(212,168,50,.2)}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(.95)}
+input[type=range]:focus-visible{outline:2px solid var(--gold);outline-offset:6px}
+
+/* Tint info cards */
+.tint-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:20px}
+@media(min-width:400px){.tint-stats{grid-template-columns:repeat(4,1fr)}}
+.tint-stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 10px;text-align:center;transition:transform .15s,border-color .15s}
+.tint-stat-card:hover{transform:translateY(-2px);border-color:var(--gold-dim)}
+.tint-stat-card .value{font-size:1.5rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);line-height:1}
+.tint-stat-card .label{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:4px;font-weight:600}
+
+/* Film options */
+.film-options{display:flex;flex-direction:column;gap:10px}
+.film-option{background:var(--card);border:2px solid var(--border);border-radius:var(--radius-md);padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.film-option:hover{border-color:#40404a;background:#222228}
+.film-option.selected{border-color:var(--gold);background:linear-gradient(135deg,rgba(212,168,50,.08) 0%,var(--card) 100%);box-shadow:0 0 0 1px var(--gold),var(--shadow-md)}
+.film-option.selected::after{content:'✓';position:absolute;top:12px;right:12px;width:22px;height:22px;background:var(--gold);color:#111;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.film-option:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.film-option-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:12px}
+.film-option h3{font-size:1.05rem;font-family:'Source Sans 3',sans-serif;font-weight:700;color:var(--text);margin:0}
+.film-option p{font-size:.82rem;color:var(--muted);line-height:1.5;margin:0}
+.film-price{font-size:1.5rem;font-family:'Bebas Neue',sans-serif;color:var(--gold);white-space:nowrap}
+.film-option.selected .film-price{color:var(--gold-bright)}
+.film-badges{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.film-badge{font-size:.65rem;padding:3px 10px;border-radius:20px;background:rgba(212,168,50,.12);color:var(--gold);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+
+/* Quote summary */
+.quote-summary{background:linear-gradient(135deg,var(--surface) 0%,#1a1a20 100%);border:2px solid var(--gold-dim);border-radius:var(--radius-lg);padding:24px;position:relative;overflow:hidden}
+.quote-summary::before{content:'';position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle at top right,rgba(212,168,50,.1) 0%,transparent 70%);pointer-events:none}
+.quote-summary h2{font-size:1.5rem;color:var(--gold);margin-bottom:18px;font-family:'Bebas Neue',sans-serif;letter-spacing:.03em}
+.quote-line{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:.9rem;align-items:center}
+.quote-line:last-of-type{border-bottom:none}
+.quote-line .label{color:var(--muted)}
+.quote-line .value{font-weight:600;color:var(--text)}
+.quote-line .value.highlight{color:var(--gold)}
+.quote-total{display:flex;justify-content:space-between;padding:18px 0 0;margin-top:12px;border-top:2px solid var(--gold-dim);align-items:center}
+.quote-total .label{font-size:1.1rem;font-weight:700;color:var(--text)}
+.quote-total .price{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;color:var(--gold-bright);text-shadow:0 2px 8px rgba(212,168,50,.2)}
+.quote-empty{text-align:center;padding:32px 20px;color:var(--muted)}
+.quote-empty-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
+
+/* Action buttons */
+.actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:16px;border:none;border-radius:var(--radius-md);font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.04em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s;font-weight:600;position:relative;overflow:hidden}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--gold);color:#111;box-shadow:0 4px 16px rgba(212,168,50,.25)}
+.btn-primary:hover:not(:disabled){background:var(--gold-bright);transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,50,.35)}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-secondary{background:var(--card);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover:not(:disabled){border-color:var(--gold);background:#26262c}
+.btn svg{width:22px;height:22px;flex-shrink:0}
+
+/* History section */
+.history-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.history-empty-icon{font-size:3.5rem;margin-bottom:16px;opacity:.4}
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:14px;transition:all .15s;cursor:pointer}
+.history-item:hover{border-color:var(--gold-dim);background:#222228;transform:translateX(4px)}
+.history-item:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.history-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:12px}
+.history-item-name{font-weight:700;font-size:.95rem;color:var(--text)}
+.history-item-price{font-family:'Bebas Neue',sans-serif;color:var(--gold);font-size:1.25rem}
+.history-item-details{font-size:.78rem;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap}
+.history-item-details span{display:flex;align-items:center;gap:4px}
+.history-item-date{font-size:.72rem;color:var(--muted);margin-top:6px}
+
+/* Upsell */
+.upsell-card{background:linear-gradient(135deg,var(--surface) 0%,#1a1a20 100%);border:1.5px dashed var(--border);border-radius:var(--radius-lg);padding:22px;margin-top:16px;opacity:.75;position:relative}
+.upsell-card:hover{opacity:.9;border-color:var(--gold-dim)}
+.upsell-card h3{font-size:1.15rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.upsell-card p{font-size:.85rem;color:var(--muted);line-height:1.6}
+.coming-soon-badge{display:inline-flex;align-items:center;gap:4px;background:var(--gold-dim);color:var(--bg);padding:3px 12px;border-radius:20px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.upsell-features{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.upsell-feature{font-size:.75rem;color:var(--muted);display:flex;align-items:center;gap:6px}
+.upsell-feature::before{content:'→';color:var(--gold-dim);font-weight:700}
+
+/* Settings */
+.settings-section{margin-bottom:24px}
+.settings-section:last-child{margin-bottom:0}
+.settings-title{font-size:1.1rem;color:var(--text);margin-bottom:12px;font-weight:700}
+.pricing-note{font-size:.8rem;color:var(--muted);margin-top:12px;padding:12px;background:rgba(212,168,50,.05);border-radius:var(--radius-sm);border-left:3px solid var(--gold-dim)}
+
+/* Data actions */
+.data-actions{display:flex;gap:10px;flex-wrap:wrap}
+.data-actions .btn{flex:1;min-width:140px;font-size:1rem}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:linear-gradient(0deg,var(--surface) 0%,rgba(22,22,26,.95) 100%);backdrop-filter:blur(10px);border-top:1px solid var(--border);display:flex;z-index:100;padding:6px 0}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);padding:10px 6px;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Source Sans 3',sans-serif;font-weight:600;transition:all .15s;border-radius:var(--radius-sm);margin:0 4px}
+.bottom-nav button:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.bottom-nav button.active{color:var(--gold);background:rgba(212,168,50,.08)}
+.bottom-nav button:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+.bottom-nav svg{width:24px;height:24px}
+
+/* Sections */
+.section{display:none}
+.section.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Print styles */
+@media print{
+.bottom-nav,.app-header,.demo-banner,.actions,.upsell-card,.toast-container,#bct-demo-disclaimer,.loading-overlay{display:none!important}
+body{background:#fff;color:#111;padding:20px}
+.section-card,.quote-summary{background:#fff;border:1px solid #ccc;color:#111;box-shadow:none}
+.quote-summary{border:2px solid #333}
+h1,h2,h3,.tint-level-display,.quote-total .price,.film-price{color:#111!important}
+.tint-stat-card .value{color:#222!important}
+.preview-area{background:#f5f5f5!important}
+}
+
+/* Desktop adjustments */
+@media(min-width:768px){
+main{padding:0 20px 40px;max-width:680px}
+.bottom-nav{display:none}
+body{padding-bottom:40px!important}
+.section-card{padding:28px}
+.film-options{flex-direction:row;gap:12px}
+.film-option{flex:1}
+}
+
+/* Focus visible only for keyboard */
+*:focus{outline:none}
+*:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+.toast{transition:none}
+.history-item:hover{transform:none}
+.film-option:hover,.tint-stat-card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="app-header">
+<h1>TintView</h1>
+<p class="tagline">Sun Tint — Louisville, KY</p>
+</header>
+
+<div class="demo-banner" id="demoBanner" role="status" aria-live="polite">
+<p>Sample data loaded. Tap "Clear" to start fresh.</p>
+<button onclick="clearDemo()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay" aria-hidden="true">
+<div class="loading-spinner" role="status"><span class="visually-hidden" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Loading...</span></div>
+</div>
+
+<div class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<main id="main-content">
+
+<!-- QUOTE TAB -->
+<section class="section active" id="sec-quote">
+
+<!-- Customer Info -->
+<div class="section-card" id="customerCard">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+Customer
+</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="custName">Name <span class="required" aria-hidden="true">*</span></label>
+<input type="text" id="custName" placeholder="e.g., Mike Johnson" autocomplete="name" aria-required="true">
+<div class="form-error" id="custNameError">Please enter a customer name</div>
+</div>
+<div class="form-group">
+<label for="custPhone">Phone</label>
+<input type="tel" id="custPhone" placeholder="(502) 555-0123" autocomplete="tel" inputmode="tel">
+<div class="form-error" id="custPhoneError">Please enter a valid phone number</div>
+</div>
+</div>
+</div>
+
+<!-- Vehicle Info -->
+<div class="section-card" id="vehicleCard">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>
+Vehicle
+</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="vehYear">Year</label>
+<select id="vehYear" aria-label="Vehicle year">
+<option value="">Select year</option>
+</select>
+</div>
+<div class="form-group">
+<label for="vehMake">Make</label>
+<select id="vehMake" aria-label="Vehicle make">
+<option value="">Select make</option>
+<option>Toyota</option><option>Honda</option><option>Ford</option><option>Chevrolet</option>
+<option>Nissan</option><option>Hyundai</option><option>Kia</option><option>Jeep</option>
+<option>Ram</option><option>Subaru</option><option>BMW</option><option>Mercedes-Benz</option>
+<option>Tesla</option><option>GMC</option><option>Dodge</option><option>Mazda</option>
+<option>Volkswagen</option><option>Lexus</option><option>Audi</option><option>Other</option>
+</select>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="vehType">Type <span class="required" aria-hidden="true">*</span></label>
+<select id="vehType" aria-label="Vehicle type" aria-required="true">
+<option value="sedan">Sedan / Coupe</option>
+<option value="suv">SUV / Crossover</option>
+<option value="truck">Truck</option>
+<option value="van">Van / Minivan</option>
+</select>
+</div>
+<div class="form-group">
+<label for="vehModel">Model</label>
+<input type="text" id="vehModel" placeholder="e.g., Camry" autocomplete="off">
+</div>
+</div>
+</div>
+
+<!-- Tint Preview -->
+<div class="preview-area" id="previewCard">
+<div class="preview-header">
+<h2>Tint Preview</h2>
+</div>
+<div class="vehicle-visual" id="vehicleVisual" role="img" aria-label="Vehicle tint preview visualization">
+<svg class="vehicle-svg" viewBox="0 0 400 200">
+<!-- Sedan -->
+<g id="svgSedan">
+<path d="M30,160 L30,130 Q30,120 40,115 L80,100 Q100,80 140,70 L260,70 Q300,80 320,100 L360,115 Q370,120 370,130 L370,160" fill="#2a2a30" stroke="#444" stroke-width="1.5"/>
+<circle cx="100" cy="165" r="22" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="100" cy="165" r="12" fill="#2a2a30"/>
+<circle cx="300" cy="165" r="22" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="300" cy="165" r="12" fill="#2a2a30"/>
+<path class="window-tint" id="winFront" d="M150,72 L130,100 L180,100 Z" fill="rgba(140,180,220,.4)"/>
+<rect class="window-tint" id="winSide1" x="155" y="72" width="60" height="28" rx="2" fill="rgba(140,180,220,.4)"/>
+<rect class="window-tint" id="winSide2" x="220" y="72" width="55" height="28" rx="2" fill="rgba(140,180,220,.4)"/>
+<path class="window-tint" id="winRear" d="M280,72 L310,100 L275,100 Z" fill="rgba(140,180,220,.4)"/>
+</g>
+<!-- SUV -->
+<g id="svgSuv" style="display:none">
+<path d="M30,160 L30,120 Q30,110 40,105 L70,95 Q90,65 130,55 L270,55 Q310,65 330,95 L360,105 Q370,110 370,120 L370,160" fill="#2a2a30" stroke="#444" stroke-width="1.5"/>
+<circle cx="95" cy="165" r="24" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="95" cy="165" r="13" fill="#2a2a30"/>
+<circle cx="305" cy="165" r="24" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="305" cy="165" r="13" fill="#2a2a30"/>
+<rect class="window-tint" id="winSuvF" x="135" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)"/>
+<rect class="window-tint" id="winSuvM" x="190" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)"/>
+<rect class="window-tint" id="winSuvR" x="245" y="57" width="50" height="38" rx="3" fill="rgba(140,180,220,.4)"/>
+</g>
+<!-- Truck -->
+<g id="svgTruck" style="display:none">
+<path d="M30,160 L30,130 Q30,120 40,115 L60,105 Q80,70 120,60 L200,60 Q210,60 210,70 L210,115 L350,115 Q370,115 370,130 L370,160" fill="#2a2a30" stroke="#444" stroke-width="1.5"/>
+<circle cx="90" cy="165" r="23" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="90" cy="165" r="12" fill="#2a2a30"/>
+<circle cx="320" cy="165" r="23" fill="#1a1a1f" stroke="#333" stroke-width="2"/>
+<circle cx="320" cy="165" r="12" fill="#2a2a30"/>
+<rect class="window-tint" id="winTrkF" x="125" y="62" width="40" height="35" rx="3" fill="rgba(140,180,220,.4)"/>
+<rect class="window-tint" id="winTrkR" x="170" y="62" width="35" height="35" rx="3" fill="rgba(140,180,220,.4)"/>
+</g>
+</svg>
+</div>
+<div class="slider-container">
+<div class="tint-level-display" id="tintDisplay" aria-live="polite">35%</div>
+<div class="tint-level-label" id="tintLabel">Medium — Good privacy, some visibility</div>
+<div class="tint-slider-wrap">
+<div class="slider-labels"><span>Dark</span><span>Light</span></div>
+<input type="range" id="tintSlider" min="5" max="70" value="35" step="5" aria-label="Tint darkness percentage" aria-valuemin="5" aria-valuemax="70" aria-valuenow="35">
+</div>
+</div>
+<div class="tint-stats">
+<div class="tint-stat-card">
+<div class="value" id="uvBlock">99%</div>
+<div class="label">UV Blocked</div>
+</div>
+<div class="tint-stat-card">
+<div class="value" id="heatReject">45%</div>
+<div class="label">Heat Rejected</div>
+</div>
+<div class="tint-stat-card">
+<div class="value" id="glareReduce">65%</div>
+<div class="label">Glare Cut</div>
+</div>
+<div class="tint-stat-card">
+<div class="value" id="privacyLevel">High</div>
+<div class="label">Privacy</div>
+</div>
+</div>
+</div>
+
+<!-- Film Selection -->
+<div class="section-card">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+Film Type
+</h2>
+<div class="film-options" role="radiogroup" aria-label="Select film type">
+<div class="film-option selected" tabindex="0" role="radio" aria-checked="true" data-film="ceramic" onclick="selectFilm(this)" onkeydown="handleFilmKey(event,this)">
+<div class="film-option-header">
+<div>
+<h3>Ceramic Film</h3>
+<p>Best heat rejection. No signal interference. Stays color-true for 10+ years.</p>
+<div class="film-badges"><span class="film-badge">Best seller</span><span class="film-badge">Lifetime warranty</span></div>
+</div>
+<div class="film-price" id="ceramicPrice">$270</div>
+</div>
+</div>
+<div class="film-option" tabindex="0" role="radio" aria-checked="false" data-film="carbon" onclick="selectFilm(this)" onkeydown="handleFilmKey(event,this)">
+<div class="film-option-header">
+<div>
+<h3>Carbon Film</h3>
+<p>Solid heat rejection. Matte black finish. Will not fade over time.</p>
+<div class="film-badges"><span class="film-badge">5-year warranty</span></div>
+</div>
+<div class="film-price" id="carbonPrice">$200</div>
+</div>
+</div>
+<div class="film-option" tabindex="0" role="radio" aria-checked="false" data-film="dyed" onclick="selectFilm(this)" onkeydown="handleFilmKey(event,this)">
+<div class="film-option-header">
+<div>
+<h3>Dyed Film</h3>
+<p>Entry-level option. Good privacy. May show some fade after 3–5 years.</p>
+<div class="film-badges"><span class="film-badge">3-year warranty</span><span class="film-badge">Budget pick</span></div>
+</div>
+<div class="film-price" id="dyedPrice">$130</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Quote Summary -->
+<div class="quote-summary" id="quoteCard">
+<h2>Quote Summary</h2>
+<div class="quote-line">
+<span class="label">Vehicle</span>
+<span class="value" id="qVehicle">—</span>
+</div>
+<div class="quote-line">
+<span class="label">Tint Level</span>
+<span class="value highlight" id="qTint">35% VLT</span>
+</div>
+<div class="quote-line">
+<span class="label">Film Type</span>
+<span class="value" id="qFilm">Ceramic</span>
+</div>
+<div class="quote-line">
+<span class="label">Coverage</span>
+<span class="value" id="qWindows">All sides + rear</span>
+</div>
+<div class="quote-total">
+<span class="label">Total</span>
+<span class="price" id="qTotal">$270</span>
+</div>
+</div>
+
+<!-- Actions -->
+<div class="actions">
+<button class="btn btn-primary" id="shareBtn" onclick="shareQuote()" aria-label="Share quote with customer">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+Share Quote
+</button>
+<button class="btn btn-secondary" id="saveBtn" onclick="saveQuote()" aria-label="Save quote to history">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+Save
+</button>
+</div>
+</section>
+
+<!-- HISTORY TAB -->
+<section class="section" id="sec-history">
+<div class="section-card">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+Saved Quotes
+</h2>
+<div id="historyList">
+<div class="history-empty">
+<div class="history-empty-icon">📋</div>
+<p>No quotes saved yet.</p>
+<p style="font-size:.85rem;margin-top:8px">Build a quote and tap Save to store it here.</p>
+</div>
+</div>
+</div>
+
+<div class="upsell-card">
+<h3>
+Monthly Reports
+<span class="coming-soon-badge">Coming soon</span>
+</h3>
+<p>Track which tint levels and film types sell best. See your conversion rates, revenue trends, and seasonal patterns across all locations.</p>
+<div class="upsell-features">
+<div class="upsell-feature">Sales analytics</div>
+<div class="upsell-feature">Film performance</div>
+<div class="upsell-feature">Location comparison</div>
+<div class="upsell-feature">Export to Excel</div>
+</div>
+</div>
+</section>
+
+<!-- SETTINGS TAB -->
+<section class="section" id="sec-settings">
+<div class="section-card">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v4m0 12v4m8-10h-4M8 12H4m13.657-5.657L16.95 8.05M7.05 15.95l-2.707 2.707m0-11.314L7.05 8.05m9.9 9.9l2.707 2.707"/><circle cx="12" cy="12" r="3"/></svg>
+Pricing Setup
+</h2>
+<p class="helper-text" style="margin-bottom:16px">Set your base ceramic prices. Carbon and dyed prices calculate automatically.</p>
+<div class="settings-section">
+<div class="form-row">
+<div class="form-group">
+<label for="priceSedanCeramic">Sedan — Ceramic</label>
+<input type="number" id="priceSedanCeramic" value="270" min="0" step="10" aria-describedby="priceHelp">
+</div>
+<div class="form-group">
+<label for="priceSuvCeramic">SUV — Ceramic</label>
+<input type="number" id="priceSuvCeramic" value="320" min="0" step="10">
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="priceTruckCeramic">Truck — Ceramic</label>
+<input type="number" id="priceTruckCeramic" value="300" min="0" step="10">
+</div>
+<div class="form-group">
+<label for="priceVanCeramic">Van — Ceramic</label>
+<input type="number" id="priceVanCeramic" value="350" min="0" step="10">
+</div>
+</div>
+<p class="pricing-note" id="priceHelp">Carbon = 74% of ceramic price. Dyed = 48% of ceramic price. These ratios follow industry standards.</p>
+<button class="btn btn-primary" onclick="savePricing()" style="margin-top:16px;width:100%">Save Pricing</button>
+</div>
+</div>
+
+<div class="section-card">
+<h2 class="section-title">
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+Data Management
+</h2>
+<p class="helper-text" style="margin-bottom:16px">Backup or restore your quotes and pricing data.</p>
+<div class="data-actions">
+<button class="btn btn-secondary" onclick="exportData()">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Export
+</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+Import
+</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav" aria-label="Main navigation">
+<button class="active" data-tab="sec-quote" onclick="switchTab(this)" aria-label="Build quote" aria-current="page">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+Quote
+</button>
+<button data-tab="sec-history" onclick="switchTab(this)" aria-label="View saved quotes">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+History
+</button>
+<button data-tab="sec-settings" onclick="switchTab(this)" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:12px 16px;font-size:12px;line-height:1.5;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO:</strong> This tool was created by BennyCuTools as a demonstration. Not affiliated with or endorsed by Sun Tint.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Sun%20Tint" style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Deletion
+</a>
+</div>
+
+<script>
+// Access key validation
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-1000700727;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#0d0d0f;color:#f0eeeb;text-align:center;padding:20px"><div><h1 style="font-size:2.5rem;margin-bottom:1rem;font-family:Bebas Neue,sans-serif;color:#d4a832">Access Required</h1><p style="color:#9a9aa8;font-size:1.1rem">This tool requires a valid access key.</p><p style="margin-top:1.5rem"><a href="mailto:ben@bennycutools.com" style="color:#d4a832;text-decoration:none;font-weight:600">ben@bennycutools.com</a></p></div></div>';
+throw new Error('Invalid access key');
+}
+
+// Disable right-click
+if(!window.location.hostname.includes('localhost')){
+document.addEventListener('contextmenu',e=>e.preventDefault());
+}
+
+// ============================================
+// DATABASE
+// ============================================
+let db;
+const DB_NAME='TintViewDB_v2';
+const DB_VERSION=1;
+const STORE_QUOTES='quotes';
+const STORE_PRICING='pricing';
+
+function openDB(){
+return new Promise((resolve,reject)=>{
+const request=indexedDB.open(DB_NAME,DB_VERSION);
+request.onupgradeneeded=(e)=>{
+const database=e.target.result;
+if(!database.objectStoreNames.contains(STORE_QUOTES)){
+database.createObjectStore(STORE_QUOTES,{keyPath:'id',autoIncrement:true});
+}
+if(!database.objectStoreNames.contains(STORE_PRICING)){
+database.createObjectStore(STORE_PRICING,{keyPath:'key'});
+}
+};
+request.onsuccess=(e)=>{db=e.target.result;resolve(db);};
+request.onerror=(e)=>{reject(new Error('Failed to open database'));showToast('Database error. Some features may not work.','error');};
+});
+}
+
+function dbPut(store,data){
+return new Promise((resolve,reject)=>{
+if(!db){reject(new Error('Database not available'));return;}
+const tx=db.transaction(store,'readwrite');
+const request=tx.objectStore(store).put(data);
+request.onsuccess=()=>resolve();
+request.onerror=(e)=>reject(e);
+});
+}
+
+function dbGetAll(store){
+return new Promise((resolve,reject)=>{
+if(!db){resolve([]);return;}
+const tx=db.transaction(store,'readonly');
+const request=tx.objectStore(store).getAll();
+request.onsuccess=()=>resolve(request.result);
+request.onerror=(e)=>reject(e);
+});
+}
+
+function dbClear(store){
+return new Promise((resolve,reject)=>{
+if(!db){resolve();return;}
+const tx=db.transaction(store,'readwrite');
+const request=tx.objectStore(store).clear();
+request.onsuccess=()=>resolve();
+request.onerror=(e)=>reject(e);
+});
+}
+
+// ============================================
+// STATE
+// ============================================
+let selectedFilm='ceramic';
+let pricing={sedan:{ceramic:270},suv:{ceramic:320},truck:{ceramic:300},van:{ceramic:350}};
+let isLoading=false;
+
+const tintData={
+5:{label:'Limo — Nearly opaque, maximum privacy',uv:99,heat:60,glare:95,privacy:'Maximum'},
+10:{label:'Very Dark — Hard to see inside',uv:99,heat:55,glare:90,privacy:'Maximum'},
+15:{label:'Dark — Strong privacy day and night',uv:99,heat:52,glare:85,privacy:'Very High'},
+20:{label:'Medium Dark — Popular for SUVs and trucks',uv:99,heat:48,glare:78,privacy:'High'},
+25:{label:'Medium — Good balance of privacy and visibility',uv:99,heat:46,glare:72,privacy:'High'},
+30:{label:'Medium — Subtle but effective tint',uv:99,heat:44,glare:68,privacy:'Medium'},
+35:{label:'Medium — Good privacy, some outside visibility',uv:99,heat:42,glare:65,privacy:'Medium'},
+40:{label:'Light Medium — Visible from outside',uv:98,heat:38,glare:58,privacy:'Low'},
+45:{label:'Light — UV and heat protection focus',uv:98,heat:35,glare:50,privacy:'Low'},
+50:{label:'Very Light — Barely noticeable tint',uv:97,heat:30,glare:42,privacy:'Minimal'},
+55:{label:'Almost Clear — UV protection only',uv:95,heat:25,glare:35,privacy:'Minimal'},
+60:{label:'Near Clear — Factory look with UV block',uv:92,heat:22,glare:28,privacy:'None'},
+65:{label:'Barely Tinted — Legal everywhere',uv:88,heat:18,glare:22,privacy:'None'},
+70:{label:'Factory Tint — Lightest option',uv:85,heat:15,glare:18,privacy:'None'}
+};
+
+// ============================================
+// INITIALIZATION
+// ============================================
+(async function init(){
+try{
+showLoading(true);
+await openDB();
+populateYears();
+await loadPricing();
+const isFirst=!localStorage.getItem('tintview_visited_v2');
+if(isFirst){
+await loadDemoData();
+localStorage.setItem('tintview_visited_v2','1');
+}
+updateTintPreview();
+updatePrices();
+loadHistory();
+setupEventListeners();
+showLoading(false);
+}catch(err){
+console.error('Initialization error:',err);
+showToast('Failed to initialize. Please refresh.','error');
+showLoading(false);
+}
+})();
+
+function populateYears(){
+const select=document.getElementById('vehYear');
+const currentYear=new Date().getFullYear();
+let html='<option value="">Select year</option>';
+for(let y=currentYear+1;y>=2000;y--){
+html+=`<option value="${y}">${y}</option>`;
+}
+select.innerHTML=html;
+}
+
+function setupEventListeners(){
+// Slider
+const slider=document.getElementById('tintSlider');
+slider.addEventListener('input',updateTintPreview);
+
+// Vehicle type changes
+const vehType=document.getElementById('vehType');
+vehType.addEventListener('change',()=>{
+updateVehicleSvg();
+updatePrices();
+});
+
+// Input validation
+const custName=document.getElementById('custName');
+custName.addEventListener('blur',()=>validateField('custName'));
+custName.addEventListener('input',()=>clearError('custName'));
+
+const custPhone=document.getElementById('custPhone');
+custPhone.addEventListener('blur',()=>formatPhone());
+
+// Year/Make/Model updates quote
+['vehYear','vehMake','vehModel'].forEach(id=>{
+document.getElementById(id).addEventListener('change',updateQuoteSummary);
+document.getElementById(id).addEventListener('input',updateQuoteSummary);
+});
+}
+
+// ============================================
+// PRICING
+// ============================================
+async function loadPricing(){
+try{
+const saved=await dbGetAll(STORE_PRICING);
+const pricingRecord=saved.find(p=>p.key==='pricing');
+if(pricingRecord?.data){
+Object.assign(pricing,pricingRecord.data);
+}
+updatePricingInputs();
+}catch(err){
+console.error('Failed to load pricing:',err);
+}
+}
+
+function updatePricingInputs(){
+document.getElementById('priceSedanCeramic').value=pricing.sedan.ceramic;
+document.getElementById('priceSuvCeramic').value=pricing.suv.ceramic;
+document.getElementById('priceTruckCeramic').value=pricing.truck.ceramic;
+document.getElementById('priceVanCeramic').value=pricing.van.ceramic;
+}
+
+async function savePricing(){
+if(isLoading)return;
+showLoading(true);
+try{
+pricing.sedan.ceramic=parseInt(document.getElementById('priceSedanCeramic').value)||270;
+pricing.suv.ceramic=parseInt(document.getElementById('priceSuvCeramic').value)||320;
+pricing.truck.ceramic=parseInt(document.getElementById('priceTruckCeramic').value)||300;
+pricing.van.ceramic=parseInt(document.getElementById('priceVanCeramic').value)||350;
+await dbPut(STORE_PRICING,{key:'pricing',data:pricing});
+updatePrices();
+showToast('Pricing saved successfully');
+}catch(err){
+console.error('Failed to save pricing:',err);
+showToast('Failed to save pricing','error');
+}finally{
+showLoading(false);
+}
+}
+
+function getPrice(vehType,filmType){
+const base=pricing[vehType]?.ceramic||270;
+const multipliers={ceramic:1,carbon:0.74,dyed:0.48};
+return Math.round(base*(multipliers[filmType]||1));
+}
+
+function updatePrices(){
+const vehType=document.getElementById('vehType').value;
+document.getElementById('ceramicPrice').textContent='$'+getPrice(vehType,'ceramic');
+document.getElementById('carbonPrice').textContent='$'+getPrice(vehType,'carbon');
+document.getElementById('dyedPrice').textContent='$'+getPrice(vehType,'dyed');
+updateQuoteSummary();
+}
+
+// ============================================
+// TINT PREVIEW
+// ============================================
+function updateTintPreview(){
+const slider=document.getElementById('tintSlider');
+const val=parseInt(slider.value);
+const data=tintData[val]||tintData[35];
+
+// Update text displays
+document.getElementById('tintDisplay').textContent=val+'%';
+document.getElementById('tintLabel').textContent=data.label;
+document.getElementById('uvBlock').textContent=data.uv+'%';
+document.getElementById('heatReject').textContent=data.heat+'%';
+document.getElementById('glareReduce').textContent=data.glare+'%';
+document.getElementById('privacyLevel').textContent=data.privacy;
+
+// Update ARIA
+slider.setAttribute('aria-valuenow',val);
+
+// Apply tint to windows (opacity based on VLT — lower % = darker)
+const opacity=Math.max(0.15,1-(val/100));
+document.querySelectorAll('.window-tint').forEach(w=>{
+w.setAttribute('fill',`rgba(10,15,25,${opacity})`);
+});
+
+updateQuoteSummary();
+}
+
+function updateVehicleSvg(){
+const vehType=document.getElementById('vehType').value;
+document.getElementById('svgSedan').style.display=vehType==='sedan'?'block':'none';
+document.getElementById('svgSuv').style.display=(vehType==='suv'||vehType==='van')?'block':'none';
+document.getElementById('svgTruck').style.display=vehType==='truck'?'block':'none';
+updateTintPreview();
+}
+
+// ============================================
+// FILM SELECTION
+// ============================================
+function selectFilm(el){
+document.querySelectorAll('.film-option').forEach(f=>{
+f.classList.remove('selected');
+f.setAttribute('aria-checked','false');
+f.setAttribute('tabindex','-1');
+});
+el.classList.add('selected');
+el.setAttribute('aria-checked','true');
+el.setAttribute('tabindex','0');
+selectedFilm=el.dataset.film;
+updateQuoteSummary();
+}
+
+function handleFilmKey(e,el){
+const options=Array.from(document.querySelectorAll('.film-option'));
+const currentIndex=options.indexOf(el);
+
+if(e.key==='ArrowDown'||e.key==='ArrowRight'){
+e.preventDefault();
+const next=options[currentIndex+1]||options[0];
+next.focus();
+selectFilm(next);
+}else if(e.key==='ArrowUp'||e.key==='ArrowLeft'){
+e.preventDefault();
+const prev=options[currentIndex-1]||options[options.length-1];
+prev.focus();
+selectFilm(prev);
+}else if(e.key==='Enter'||e.key===' '){
+e.preventDefault();
+selectFilm(el);
+}
+}
+
+// ============================================
+// QUOTE SUMMARY
+// ============================================
+function updateQuoteSummary(){
+const year=document.getElementById('vehYear').value;
+const make=document.getElementById('vehMake').value;
+const model=document.getElementById('vehModel').value;
+const vehType=document.getElementById('vehType').value;
+const tint=document.getElementById('tintSlider').value;
+
+const filmNames={ceramic:'Ceramic',carbon:'Carbon',dyed:'Dyed'};
+const vehicleParts=[year,make,model].filter(Boolean);
+
+const vehicleText=vehicleParts.length>0?vehicleParts.join(' '):'—';
+const windowsText=vehType==='truck'?'Crew cab windows':'All sides + rear window';
+
+const vehicleEl=document.getElementById('qVehicle');
+const tintEl=document.getElementById('qTint');
+const filmEl=document.getElementById('qFilm');
+const windowsEl=document.getElementById('qWindows');
+const totalEl=document.getElementById('qTotal');
+
+vehicleEl.textContent=vehicleText;
+tintEl.textContent=tint+'% VLT';
+filmEl.textContent=filmNames[selectedFilm];
+windowsEl.textContent=windowsText;
+totalEl.textContent='$'+getPrice(vehType,selectedFilm);
+}
+
+// ============================================
+// VALIDATION
+// ============================================
+function validateField(fieldId){
+const field=document.getElementById(fieldId);
+const errorEl=document.getElementById(fieldId+'Error');
+
+if(fieldId==='custName'){
+if(!field.value.trim()){
+field.classList.add('error');
+if(errorEl)errorEl.classList.add('visible');
+return false;
+}
+}
+
+field.classList.remove('error');
+if(errorEl)errorEl.classList.remove('visible');
+return true;
+}
+
+function clearError(fieldId){
+const field=document.getElementById(fieldId);
+const errorEl=document.getElementById(fieldId+'Error');
+field.classList.remove('error');
+if(errorEl)errorEl.classList.remove('visible');
+}
+
+function formatPhone(){
+const field=document.getElementById('custPhone');
+let val=field.value.replace(/\D/g,'');
+if(val.length===10){
+field.value='('+val.slice(0,3)+') '+val.slice(3,6)+'-'+val.slice(6);
+}
+}
+
+// ============================================
+// SHARE & SAVE
+// ============================================
+async function shareQuote(){
+if(!validateField('custName')){
+showToast('Please enter a customer name','error');
+document.getElementById('custName').focus();
+return;
+}
+
+const text=buildQuoteText();
+
+try{
+if(navigator.share){
+await navigator.share({title:'Sun Tint Quote',text:text});
+showToast('Quote shared');
+}else if(navigator.clipboard){
+await navigator.clipboard.writeText(text);
+showToast('Quote copied to clipboard');
+}else{
+// Fallback
+const textarea=document.createElement('textarea');
+textarea.value=text;
+textarea.style.position='fixed';
+textarea.style.opacity='0';
+document.body.appendChild(textarea);
+textarea.select();
+document.execCommand('copy');
+document.body.removeChild(textarea);
+showToast('Quote copied to clipboard');
+}
+}catch(err){
+console.error('Share failed:',err);
+if(err.name!=='AbortError'){
+showToast('Could not share quote','error');
+}
+}
+}
+
+function buildQuoteText(){
+const name=document.getElementById('custName').value.trim()||'Customer';
+const year=document.getElementById('vehYear').value;
+const make=document.getElementById('vehMake').value;
+const model=document.getElementById('vehModel').value;
+const vehType=document.getElementById('vehType').value;
+const tint=document.getElementById('tintSlider').value;
+
+const filmNames={ceramic:'Ceramic Film',carbon:'Carbon Film',dyed:'Dyed Film'};
+const price=getPrice(vehType,selectedFilm);
+const vehicleDesc=[year,make,model].filter(Boolean).join(' ')||'Your vehicle';
+
+return `Hi ${name}, here's your window tint quote from Sun Tint:
+
+${vehicleDesc}
+Tint: ${tint}% VLT
+Film: ${filmNames[selectedFilm]}
+Coverage: ${vehType==='truck'?'Crew cab windows':'All sides + rear'}
+
+Total: $${price}
+
+Questions? Call us at (502) 254-0001
+sun-tint.com`;
+}
+
+async function saveQuote(){
+if(isLoading)return;
+
+if(!validateField('custName')){
+showToast('Please enter a customer name','error');
+document.getElementById('custName').focus();
+return;
+}
+
+showLoading(true);
+try{
+const year=document.getElementById('vehYear').value;
+const make=document.getElementById('vehMake').value;
+const model=document.getElementById('vehModel').value;
+const vehType=document.getElementById('vehType').value;
+const tint=document.getElementById('tintSlider').value;
+
+const quote={
+name:document.getElementById('custName').value.trim()||'Walk-in',
+phone:document.getElementById('custPhone').value.trim(),
+vehicle:[year,make,model].filter(Boolean).join(' '),
+type:vehType,
+tint:tint+'%',
+film:selectedFilm,
+price:getPrice(vehType,selectedFilm),
+date:new Date().toISOString(),
+isDemo:false
+};
+
+await dbPut(STORE_QUOTES,quote);
+showToast('Quote saved');
+loadHistory();
+}catch(err){
+console.error('Save failed:',err);
+showToast('Failed to save quote','error');
+}finally{
+showLoading(false);
+}
+}
+
+// ============================================
+// HISTORY
+// ============================================
+async function loadHistory(){
+try{
+const quotes=await dbGetAll(STORE_QUOTES);
+const container=document.getElementById('historyList');
+
+if(!quotes.length){
+container.innerHTML=`
+<div class="history-empty">
+<div class="history-empty-icon">📋</div>
+<p>No quotes saved yet.</p>
+<p style="font-size:.85rem;margin-top:8px">Build a quote and tap Save to store it here.</p>
+</div>`;
+return;
+}
+
+quotes.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+container.innerHTML=quotes.map(q=>{
+const date=new Date(q.date);
+const dateStr=date.toLocaleDateString();
+const timeStr=date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+return `
+<div class="history-item" tabindex="0" role="button" aria-label="Quote for ${esc(q.name)}, $${q.price}">
+<div class="history-item-header">
+<span class="history-item-name">${esc(q.name)}</span>
+<span class="history-item-price">$${q.price}</span>
+</div>
+<div class="history-item-details">
+<span>${esc(q.vehicle||'Unknown vehicle')}</span>
+<span>${q.tint} ${q.film}</span>
+</div>
+<div class="history-item-date">${dateStr} at ${timeStr}</div>
+</div>`;
+}).join('');
+}catch(err){
+console.error('Failed to load history:',err);
+}
+}
+
+// ============================================
+// DEMO DATA
+// ============================================
+async function loadDemoData(){
+const demoQuotes=[
+{name:'Mike Johnson',phone:'(502) 555-0147',vehicle:'2023 Toyota Camry',type:'sedan',tint:'35%',film:'ceramic',price:270,date:new Date(Date.now()-3600000).toISOString(),isDemo:true},
+{name:'Sarah Chen',phone:'(502) 555-0293',vehicle:'2024 Honda CR-V',type:'suv',tint:'20%',film:'ceramic',price:320,date:new Date(Date.now()-86400000).toISOString(),isDemo:true},
+{name:'Daryl Watson',phone:'(502) 555-0518',vehicle:'2022 Ford F-150',type:'truck',tint:'5%',film:'carbon',price:222,date:new Date(Date.now()-172800000).toISOString(),isDemo:true},
+{name:'Lisa Park',phone:'(502) 555-0681',vehicle:'2025 Tesla Model Y',type:'suv',tint:'25%',film:'ceramic',price:320,date:new Date(Date.now()-259200000).toISOString(),isDemo:true}
+];
+
+for(const q of demoQuotes){
+await dbPut(STORE_QUOTES,q);
+}
+
+// Set default vehicle values
+document.getElementById('vehYear').value='2023';
+document.getElementById('vehMake').value='Toyota';
+document.getElementById('vehModel').value='Camry';
+document.getElementById('vehType').value='sedan';
+document.getElementById('tintSlider').value=35;
+document.getElementById('custName').value='Mike Johnson';
+document.getElementById('custPhone').value='(502) 555-0147';
+
+updateVehicleSvg();
+updateTintPreview();
+updatePrices();
+}
+
+async function clearDemo(){
+if(!confirm('Clear all demo data? This will not affect quotes you have saved.'))return;
+
+showLoading(true);
+try{
+const all=await dbGetAll(STORE_QUOTES);
+const keep=all.filter(q=>!q.isDemo);
+await dbClear(STORE_QUOTES);
+for(const q of keep){
+await dbPut(STORE_QUOTES,q);
+}
+document.getElementById('demoBanner').style.display='none';
+document.getElementById('custName').value='';
+document.getElementById('custPhone').value='';
+loadHistory();
+showToast('Demo data cleared');
+}catch(err){
+console.error('Failed to clear demo:',err);
+showToast('Failed to clear demo','error');
+}finally{
+showLoading(false);
+}
+}
+
+// ============================================
+// EXPORT / IMPORT
+// ============================================
+async function exportData(){
+showLoading(true);
+try{
+const quotes=await dbGetAll(STORE_QUOTES);
+const data={quotes,pricing,exportedAt:new Date().toISOString(),app:'TintView'};
+const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;
+a.download=`tintview-backup-${new Date().toISOString().split('T')[0]}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+showToast('Data exported');
+}catch(err){
+console.error('Export failed:',err);
+showToast('Export failed','error');
+}finally{
+showLoading(false);
+}
+}
+
+async function importData(e){
+const file=e.target.files[0];
+if(!file)return;
+
+if(!confirm('This will replace all existing data. Continue?')){
+e.target.value='';
+return;
+}
+
+showLoading(true);
+try{
+const text=await file.text();
+const data=JSON.parse(text);
+
+if(data.quotes){
+await dbClear(STORE_QUOTES);
+for(const q of data.quotes){
+await dbPut(STORE_QUOTES,q);
+}
+}
+
+if(data.pricing){
+Object.assign(pricing,data.pricing);
+await dbPut(STORE_PRICING,{key:'pricing',data:pricing});
+updatePricingInputs();
+updatePrices();
+}
+
+loadHistory();
+showToast('Data imported successfully');
+}catch(err){
+console.error('Import failed:',err);
+showToast('Import failed — check file format','error');
+}finally{
+showLoading(false);
+e.target.value='';
+}
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+function switchTab(btn){
+document.querySelectorAll('.bottom-nav button').forEach(b=>{
+b.classList.remove('active');
+b.removeAttribute('aria-current');
+});
+btn.classList.add('active');
+btn.setAttribute('aria-current','page');
+
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+const tabId=btn.dataset.tab;
+document.getElementById(tabId).classList.add('active');
+
+if(tabId==='sec-history'){
+loadHistory();
+}
+
+// Update skip link
+const skipLink=document.querySelector('.skip-link');
+if(skipLink){
+skipLink.href='#'+tabId;
+}
+}
+
+// ============================================
+// UI HELPERS
+// ============================================
+function showLoading(show){
+isLoading=show;
+const overlay=document.getElementById('loadingOverlay');
+if(show){
+overlay.classList.add('active');
+overlay.setAttribute('aria-hidden','false');
+}else{
+overlay.classList.remove('active');
+overlay.setAttribute('aria-hidden','true');
+}
+
+// Disable buttons during loading
+document.querySelectorAll('.btn').forEach(btn=>{
+btn.disabled=show;
+});
+}
+
+function showToast(message,type='success'){
+const container=document.querySelector('.toast-container');
+const toast=document.createElement('div');
+toast.className='toast '+type;
+toast.textContent=message;
+toast.setAttribute('role',type==='error'?'alert':'status');
+
+container.appendChild(toast);
+
+// Force reflow
+toast.offsetHeight;
+
+requestAnimationFrame(()=>{
+toast.classList.add('show');
+});
+
+setTimeout(()=>{
+toast.classList.remove('show');
+setTimeout(()=>{
+if(toast.parentNode){
+toast.parentNode.removeChild(toast);
+}
+},300);
+},3000);
+}
+
+function esc(str){
+const div=document.createElement('div');
+div.textContent=str;
+return div.innerHTML;
+}
+
+// Handle keyboard shortcuts
+document.addEventListener('keydown',(e)=>{
+// Ctrl/Cmd + S to save
+if((e.ctrlKey||e.metaKey)&&e.key==='s'){
+e.preventDefault();
+saveQuote();
+}
+});
+</script>
+</body>
+</html>

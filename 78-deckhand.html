@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>DockQuote - Deckhand Detailing Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#f7f9fc;--surface:#ffffff;--card:#f0f4f8;--border:#d0d8e4;
+--text:#1b3a5c;--muted:#6b7f96;--navy:#1b3a5c;--gold:#e8a838;--gold-dark:#c8882a;
+--safe:#2d8a6e;--danger:#c0392b;--wave:#e1eaf4;--error-bg:#fdf2f2;--error-border:#f5c6cb;
+--success-bg:#d4edda;--warning-bg:#fff3cd;
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+html{font-size:16px;background:var(--bg);color:var(--text)}
+body{font-family:'Work Sans',sans-serif;min-height:100vh;padding-bottom:120px!important;background:var(--bg);overflow-x:hidden}
+a{color:var(--navy)}
+h1,h2,h3{font-family:'Playfair Display',serif;color:var(--navy)}
+
+.skip-link{position:absolute;top:-40px;left:8px;background:var(--gold);color:#111;padding:8px 16px;z-index:10000;border-radius:4px;font-weight:600;text-decoration:none}
+.skip-link:focus{top:8px}
+
+/* Header */
+.app-header{background:linear-gradient(135deg,#1b3a5c 0%,#274d73 100%);padding:24px 16px 20px;text-align:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(27,58,92,.2)}
+.app-header h1{font-size:1.9rem;color:#fff;margin-bottom:4px;letter-spacing:-0.02em}
+.app-header p{font-size:.8rem;color:rgba(255,255,255,.75);letter-spacing:.08em;text-transform:uppercase;font-family:'Work Sans',sans-serif;font-weight:500}
+.wave-divider{height:24px;background:var(--bg);margin-top:-1px;position:relative}
+.wave-divider::before{content:'';position:absolute;top:-23px;left:0;right:0;height:24px;background:var(--bg);border-radius:50% 50% 0 0 / 100% 100% 0 0}
+
+/* Demo banner */
+.demo-banner{background:linear-gradient(135deg,#fef9e7 0%,#fcf3d6 100%);border:1px solid #f5dca0;padding:12px 16px;margin:12px 12px 16px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 2px 8px rgba(245,220,160,.3)}
+.demo-banner p{font-size:.85rem;color:#7a5c0e;line-height:1.4}
+.demo-banner button{background:var(--gold);border:none;color:#1b3a5c;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;white-space:nowrap;transition:transform .15s,box-shadow .2s}
+.demo-banner button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(232,168,56,.4)}
+.demo-banner button:active{transform:scale(.97)}
+.demo-banner button:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+
+main{padding:0 12px 24px}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;box-shadow:0 2px 8px rgba(27,58,92,.06);transition:box-shadow .2s}
+.card:hover{box-shadow:0 4px 12px rgba(27,58,92,.1)}
+.card h2{font-size:1.25rem;margin-bottom:14px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.card h2 .icon{width:24px;height:24px;color:var(--gold)}
+
+/* Form elements */
+.form-row{display:flex;gap:12px;margin-bottom:14px}
+.form-group{flex:1}
+.form-group label{display:block;font-size:.72rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.form-group label .required{color:var(--danger);margin-left:2px}
+.form-group .error-message{font-size:.75rem;color:var(--danger);margin-top:4px;display:none}
+.form-group.has-error input,.form-group.has-error select{border-color:var(--danger);background:var(--error-bg)}
+.form-group.has-error .error-message{display:block}
+.form-group select,.form-group input{width:100%;padding:12px 14px;background:var(--card);border:2px solid var(--border);color:var(--text);border-radius:10px;font-size:.95rem;font-family:inherit;-webkit-appearance:none;appearance:none;transition:border-color .2s,box-shadow .2s}
+.form-group select:focus,.form-group input:focus{border-color:var(--navy);outline:none;box-shadow:0 0 0 4px rgba(27,58,92,.1)}
+.form-group input::placeholder{color:var(--muted);opacity:.6}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7f96' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+/* Service checklist */
+.service-intro{font-size:.85rem;color:var(--muted);margin-bottom:14px;line-height:1.5;background:var(--card);padding:12px 14px;border-radius:8px;border-left:3px solid var(--gold)}
+.service-list{display:flex;flex-direction:column;gap:8px}
+.service-item{display:flex;align-items:center;gap:14px;background:var(--card);border:2px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .2s,background .2s,transform .15s}
+.service-item:hover{border-color:var(--navy);transform:translateX(2px)}
+.service-item.checked{border-color:var(--navy);background:rgba(27,58,92,.06)}
+.service-item:focus-within{outline:2px solid var(--navy);outline-offset:2px}
+.service-item input[type=checkbox]{width:22px;height:22px;accent-color:var(--navy);cursor:pointer;flex-shrink:0}
+.service-item .svc-info{flex:1}
+.service-item .svc-name{font-weight:600;font-size:.92rem;margin-bottom:2px}
+.service-item .svc-desc{font-size:.79rem;color:var(--muted);line-height:1.35}
+.service-item .svc-price{font-weight:700;color:var(--gold-dark);font-size:1.05rem;white-space:nowrap;font-family:'Playfair Display',serif}
+
+/* Voice notes */
+.voice-area{margin-top:14px}
+.voice-btn{display:flex;align-items:center;gap:10px;background:var(--card);border:2px dashed var(--border);border-radius:10px;padding:14px;width:100%;cursor:pointer;font-family:inherit;font-size:.88rem;color:var(--muted);transition:border-color .2s,background .2s;position:relative}
+.voice-btn:hover{border-color:var(--navy);background:rgba(27,58,92,.03)}
+.voice-btn.recording{border-color:var(--danger);background:rgba(192,57,43,.08);color:var(--danger);animation:pulse-record 1.5s ease-in-out infinite}
+@keyframes pulse-record{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,.2)}50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}}
+.voice-btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.voice-btn svg{width:22px;height:22px;flex-shrink:0}
+.voice-btn .recording-indicator{display:none;width:10px;height:10px;background:var(--danger);border-radius:50%;animation:blink 1s ease-in-out infinite}
+.voice-btn.recording .recording-indicator{display:block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.voice-result{margin-top:10px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:10px;font-size:.88rem;min-height:56px;line-height:1.5;color:var(--text)}
+.voice-result:empty::before{content:'Your dictated notes will appear here...';color:var(--muted);font-style:italic}
+.voice-result:focus{outline:2px solid var(--navy);outline-offset:2px;border-color:var(--navy)}
+
+/* Photo area */
+.photo-intro{font-size:.72rem;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.photo-slot{aspect-ratio:4/3;background:var(--card);border:2px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:border-color .2s,background .2s;overflow:hidden;position:relative}
+.photo-slot:hover{border-color:var(--navy);background:rgba(27,58,92,.03)}
+.photo-slot:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.photo-slot.has-image{border-style:solid;border-color:var(--navy)}
+.photo-slot svg{width:32px;height:32px;color:var(--muted);margin-bottom:6px}
+.photo-slot span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:8px}
+.photo-slot .remove-photo{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:1rem;display:none;align-items:center;justify-content:center;transition:background .2s,transform .15s}
+.photo-slot .remove-photo:hover{background:rgba(192,57,43,.9);transform:scale(1.1)}
+.photo-slot .remove-photo:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.photo-slot:hover .remove-photo,.photo-slot.has-image .remove-photo{display:flex}
+.photo-slot .loading-spinner{position:absolute;inset:0;background:rgba(255,255,255,.9);display:none;align-items:center;justify-content:center}
+.photo-slot.loading .loading-spinner{display:flex}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Estimate summary */
+.estimate-summary{background:linear-gradient(135deg,#1b3a5c 0%,#274d73 100%);border:none;border-radius:14px;padding:26px 24px;margin-bottom:18px;color:#fff;box-shadow:0 8px 24px rgba(27,58,92,.25)}
+.estimate-summary h2{color:var(--gold);margin-bottom:18px;font-size:1.3rem;display:flex;align-items:center;gap:10px}
+.est-line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);font-size:.9rem}
+.est-line:last-of-type{border-bottom:none}
+.est-line .price{font-family:'Playfair Display',serif}
+.est-total{display:flex;justify-content:space-between;align-items:center;padding:16px 0 4px;margin-top:8px;font-size:1.15rem;font-weight:600;border-top:2px solid var(--gold)}
+.est-total .label{text-transform:uppercase;letter-spacing:.08em;font-size:.85rem}
+.est-total .price{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--gold);font-weight:700}
+.est-note{font-size:.8rem;color:rgba(255,255,255,.65);margin-top:12px;font-style:italic;line-height:1.4}
+.est-empty{text-align:center;padding:30px 20px;color:rgba(255,255,255,.7)}
+.est-empty svg{width:48px;height:48px;margin-bottom:12px;opacity:.5}
+.est-empty p{font-size:.9rem}
+
+/* Buttons */
+.actions{display:flex;gap:12px;margin-bottom:18px}
+.btn{flex:1;padding:16px 20px;border:none;border-radius:12px;font-weight:600;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s,box-shadow .2s,background .2s;font-family:'Work Sans',sans-serif;position:relative}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-primary{background:var(--gold);color:#1b3a5c}
+.btn-primary:hover:not(:disabled){box-shadow:0 6px 20px rgba(232,168,56,.4);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface);color:var(--text);border:2px solid var(--border)}
+.btn-secondary:hover:not(:disabled){border-color:var(--navy);background:var(--card)}
+.btn .spinner{display:none;width:18px;height:18px;border:2px solid currentColor;border-top-color:transparent}
+.btn.loading .spinner{display:block}
+.btn.loading .btn-text{opacity:.7}
+
+/* History */
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.history-count{font-size:.8rem;color:var(--muted);background:var(--card);padding:4px 12px;border-radius:20px;font-weight:500}
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;transition:transform .15s,box-shadow .2s;cursor:pointer}
+.history-item:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(27,58,92,.1)}
+.history-item .hi-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:12px}
+.history-item .hi-name{font-weight:600;font-size:.95rem;line-height:1.3}
+.history-item .hi-price{font-family:'Playfair Display',serif;color:var(--gold-dark);font-size:1.2rem;white-space:nowrap}
+.history-item .hi-detail{font-size:.78rem;color:var(--muted);line-height:1.4;display:flex;gap:8px;flex-wrap:wrap}
+.history-item .hi-detail span{display:flex;align-items:center;gap:4px}
+.history-empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.history-empty svg{width:64px;height:64px;margin-bottom:16px;opacity:.3}
+.history-empty h3{font-size:1.1rem;margin-bottom:8px;color:var(--text)}
+.history-empty p{font-size:.85rem;line-height:1.5;max-width:280px;margin:0 auto}
+
+/* Upsell */
+.upsell-tab{background:linear-gradient(135deg,var(--surface) 0%,var(--card) 100%);border:2px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;opacity:.75;position:relative}
+.upsell-tab h2{font-size:1.15rem;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.upsell-tab p{font-size:.87rem;color:var(--muted);line-height:1.6}
+.coming-soon-badge{display:inline-block;background:var(--gold);color:#1b3a5c;padding:3px 12px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.upsell-features{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.upsell-features span{font-size:.75rem;color:var(--muted);background:rgba(232,168,56,.15);padding:4px 10px;border-radius:20px}
+
+/* Toast */
+.toast-container{position:fixed;top:90px;right:16px;z-index:9000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--safe);color:#fff;padding:14px 22px;border-radius:10px;font-size:.88rem;opacity:0;transform:translateX(20px);transition:opacity .3s,transform .3s;box-shadow:0 6px 24px rgba(0,0,0,.2);pointer-events:auto;max-width:320px;line-height:1.4}
+.toast.show{opacity:1;transform:translateX(0)}
+.toast.error{background:var(--danger)}
+.toast.warning{background:#d97706}
+
+/* Confirmation modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(27,58,92,.6);display:none;align-items:center;justify-content:center;z-index:10000;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:modal-in .3s ease-out}
+@keyframes modal-in{from{opacity:0;transform:scale(.9) translateY(20px)}}
+.modal h3{font-size:1.2rem;margin-bottom:12px;color:var(--navy)}
+.modal p{font-size:.9rem;color:var(--muted);line-height:1.5;margin-bottom:20px}
+.modal-actions{display:flex;gap:12px}
+.modal-actions .btn{flex:1}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:60px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding:6px 0;box-shadow:0 -4px 16px rgba(27,58,92,.08)}
+.bottom-nav button{flex:1;background:none;border:none;color:var(--muted);padding:10px 4px;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:'Work Sans',sans-serif;font-weight:600;transition:color .2s;position:relative}
+.bottom-nav button.active{color:var(--navy)}
+.bottom-nav button.active::after{content:'';position:absolute;bottom:0;left:25%;right:25%;height:3px;background:var(--gold);border-radius:3px 3px 0 0}
+.bottom-nav button:focus-visible{outline:2px solid var(--navy);outline-offset:-2px}
+.bottom-nav svg{width:24px;height:24px}
+
+.section{display:none}
+.section.active{display:block}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeUp .5s ease-out both}
+.animate-in:nth-child(2){animation-delay:80ms}
+.animate-in:nth-child(3){animation-delay:160ms}
+.animate-in:nth-child(4){animation-delay:240ms}
+
+/* Print */
+@media print{
+.bottom-nav,.app-header,.wave-divider,.demo-banner,.actions,.upsell-tab,.toast-container,.voice-area,#bct-demo-disclaimer,.photo-slot .remove-photo{display:none!important}
+body{background:#fff;padding:20px}
+.card,.estimate-summary{box-shadow:none;border:1px solid #ccc}
+.estimate-summary{background:#1b3a5c;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+@media(min-width:768px){
+main{max-width:640px;margin:0 auto}
+.bottom-nav{display:none}
+body{padding-bottom:40px!important}
+}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+.animate-in{animation:none;opacity:1;transform:none}
+.btn,.service-item,.photo-slot,.history-item{transition:none}
+}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="app-header">
+<h1>DockQuote</h1>
+<p>Deckhand Detailing — Fort Lauderdale, FL</p>
+</header>
+<div class="wave-divider"></div>
+
+<div class="demo-banner" id="demoBanner" role="status" aria-live="polite">
+<p><strong>Demo Mode:</strong> Sample data loaded for Fort Lauderdale marinas. Clear to start fresh.</p>
+<button onclick="confirmClearDemo()" aria-label="Clear demo data and start fresh">Clear Demo</button>
+</div>
+
+<div class="toast-container" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+<main id="main-content">
+
+<!-- ESTIMATE TAB -->
+<section class="section active" id="sec-estimate" aria-label="Create new estimate">
+
+<div class="card animate-in">
+<h2>
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+Boat & Owner Info
+</h2>
+<div class="form-row">
+<div class="form-group">
+<label for="ownerName">Owner Name <span class="required">*</span></label>
+<input type="text" id="ownerName" placeholder="e.g. David Thompson" autocomplete="name" aria-required="true">
+<span class="error-message">Please enter the owner's name</span>
+</div>
+<div class="form-group">
+<label for="ownerPhone">Phone Number</label>
+<input type="tel" id="ownerPhone" placeholder="(954) 555-0123" autocomplete="tel" inputmode="tel">
+<span class="error-message">Please enter a valid phone number</span>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="boatLength">Length (ft) <span class="required">*</span></label>
+<input type="number" id="boatLength" min="10" max="200" value="40" placeholder="40" aria-required="true">
+<span class="error-message">Enter a length between 10 and 200 feet</span>
+</div>
+<div class="form-group">
+<label for="boatType">Boat Type <span class="required">*</span></label>
+<select id="boatType" aria-required="true">
+<option value="yacht">Yacht (60ft+)</option>
+<option value="sportfisher">Sportfisher</option>
+<option value="powerboat" selected>Powerboat / Cruiser</option>
+<option value="sailboat">Sailboat</option>
+<option value="center_console">Center Console</option>
+<option value="pontoon">Pontoon</option>
+<option value="other">Other</option>
+</select>
+<span class="error-message">Please select a boat type</span>
+</div>
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="marina">Marina</label>
+<select id="marina" aria-label="Select marina">
+<option value="lauderdale_marina">Lauderdale Marina</option>
+<option value="las_olas">Las Olas Marina</option>
+<option value="15th_street">15th Street Fisheries</option>
+<option value="hall_of_fame">Hall of Fame Marina</option>
+<option value="bahia_mar">Bahia Mar</option>
+<option value="pier_66">Pier 66 Marina</option>
+<option value="other">Other / Dockside</option>
+</select>
+</div>
+<div class="form-group">
+<label for="slipNum">Slip #</label>
+<input type="text" id="slipNum" placeholder="e.g. A-12" aria-label="Slip number">
+</div>
+</div>
+<div class="form-group">
+<label for="boatName">Boat Name</label>
+<input type="text" id="boatName" placeholder='e.g. "Sea Breeze"' autocomplete="off">
+</div>
+</div>
+
+<div class="card animate-in">
+<h2>
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+Select Services
+</h2>
+<p class="service-intro">Prices update automatically based on boat length. Select the services your customer needs.</p>
+<div class="service-list" id="serviceList" role="group" aria-label="Available detailing services"></div>
+</div>
+
+<div class="card animate-in">
+<h2>
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+Notes & Photos
+</h2>
+<div class="voice-area">
+<button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" aria-label="Start voice recording">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+<span class="btn-text">Tap to dictate notes — hands-free on the dock</span>
+<span class="recording-indicator"></span>
+</button>
+<div class="voice-result" id="voiceResult" contenteditable="true" role="textbox" aria-label="Condition notes" aria-multiline="true"></div>
+</div>
+<p class="photo-intro">Condition Photos</p>
+<div class="photo-grid" id="photoGrid">
+<div class="photo-slot" tabindex="0" role="button" aria-label="Add hull photo, press to capture" onclick="takePhoto(0)" data-slot="0">
+<div class="loading-spinner"><div class="spinner"></div></div>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 16l4-4 4 4 4-4 5 5"/></svg>
+<span>Hull</span>
+</div>
+<div class="photo-slot" tabindex="0" role="button" aria-label="Add interior photo, press to capture" onclick="takePhoto(1)" data-slot="1">
+<div class="loading-spinner"><div class="spinner"></div></div>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 16l4-4 4 4 4-4 5 5"/></svg>
+<span>Interior</span>
+</div>
+<div class="photo-slot" tabindex="0" role="button" aria-label="Add teak photo, press to capture" onclick="takePhoto(2)" data-slot="2">
+<div class="loading-spinner"><div class="spinner"></div></div>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 16l4-4 4 4 4-4 5 5"/></svg>
+<span>Teak / Deck</span>
+</div>
+<div class="photo-slot" tabindex="0" role="button" aria-label="Add extra photo, press to capture" onclick="takePhoto(3)" data-slot="3">
+<div class="loading-spinner"><div class="spinner"></div></div>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 16l4-4 4 4 4-4 5 5"/></svg>
+<span>Other</span>
+</div>
+</div>
+<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)" aria-label="Photo upload">
+</div>
+
+<div class="estimate-summary animate-in" id="estimateSummary">
+<h2>
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+Estimate Summary
+</h2>
+<div id="estContent">
+<div id="estLines"></div>
+<div class="est-total"><span class="label">Total Estimate</span><span class="price" id="estTotal">$0</span></div>
+<div class="est-note">Based on <span id="estLength">40</span>-ft <span id="estType">Powerboat</span> at <span id="estMarina">Lauderdale Marina</span></div>
+</div>
+</div>
+
+<div class="actions animate-in">
+<button class="btn btn-primary" id="shareBtn" onclick="shareEstimate()" aria-label="Share estimate with customer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+<span class="btn-text">Share with Customer</span>
+<div class="spinner"></div>
+</button>
+<button class="btn btn-secondary" id="saveBtn" onclick="saveEstimate()" aria-label="Save this estimate">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+<span class="btn-text">Save Estimate</span>
+<div class="spinner"></div>
+</button>
+</div>
+</section>
+
+<!-- HISTORY TAB -->
+<section class="section" id="sec-history" aria-label="Saved estimates history">
+<div class="card">
+<div class="history-header">
+<h2>Saved Estimates</h2>
+<span class="history-count" id="historyCount">0 estimates</span>
+</div>
+<div class="history-list" id="historyList" role="list" aria-label="List of saved estimates"></div>
+</div>
+
+<div class="upsell-tab" aria-disabled="true">
+<h2>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gold)"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+Business Reports & Analytics
+<span class="coming-soon-badge">Pro Feature</span>
+</h2>
+<p>Track your completed jobs, revenue by marina, and spot your best customers. See which services are your money-makers and when your busy season hits.</p>
+<div class="upsell-features">
+<span>Monthly Revenue</span>
+<span>Customer Retention</span>
+<span>Service Mix</span>
+<span>Peak Season Trends</span>
+</div>
+</div>
+</section>
+
+<!-- SETTINGS TAB -->
+<section class="section" id="sec-settings" aria-label="Settings and pricing">
+<div class="card">
+<h2>
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+Your Pricing
+</h2>
+<p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Set your per-foot rates. The app automatically calculates total prices based on boat length.</p>
+<div id="pricingInputs"></div>
+<button class="btn btn-primary" id="pricingSaveBtn" onclick="savePricing()" style="margin-top:16px;width:100%">
+<span class="btn-text">Save Pricing</span>
+<div class="spinner"></div>
+</button>
+</div>
+
+<div class="card" style="margin-top:16px">
+<h2>
+<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Backup & Restore
+</h2>
+<p style="font-size:.85rem;color:var(--muted);margin-bottom:16px;line-height:1.5">Export your estimates and pricing to a file. Import it back if you switch devices or need to restore.</p>
+<div class="actions" style="margin-bottom:0">
+<button class="btn btn-secondary" onclick="exportData()" aria-label="Export all data">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+Export Data
+</button>
+<button class="btn btn-secondary" onclick="document.getElementById('importFile').click()" aria-label="Import data from file">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+Import Data
+</button>
+<input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importData(event)" aria-label="Import file">
+</div>
+</div>
+</section>
+
+</main>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav" aria-label="Main navigation">
+<button class="active" data-tab="sec-estimate" onclick="switchTab(this)" aria-label="Create estimate" aria-current="page">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+Estimate
+</button>
+<button data-tab="sec-history" onclick="switchTab(this)" aria-label="View saved estimates">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+History
+</button>
+<button data-tab="sec-settings" onclick="switchTab(this)" aria-label="Settings and pricing">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- Confirmation Modal -->
+<div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalDesc">
+<div class="modal">
+<h3 id="modalTitle">Clear Demo Data?</h3>
+<p id="modalDesc">This will remove all sample estimates and reset the form. Your own saved estimates will be kept.</p>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+<button class="btn btn-primary" onclick="executeClearDemo()" id="confirmBtn">Clear Demo</button>
+</div>
+</div>
+</div>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Deckhand Detailing. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Deckhand%20Detailing&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// Access key gate
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=816097690;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#f7f9fc;color:#1b3a5c;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:Playfair Display,serif">Access Required</h1><p style="color:#6b7f96">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#1b3a5c">ben@bennycutools.com</a></p></div></div><div id="bct-demo-disclaimer" role="contentinfo" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;color:#666;z-index:99999;text-align:center"><p style="margin:0"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. Not affiliated with Deckhand Detailing.</p></div>';
+throw new Error('Invalid key');
+}
+
+// Services config - Fort Lauderdale focused pricing
+const defaultServices=[
+{id:'hull',name:'Hull Wash & Polish',desc:'Full wash, compound, and polish. Removes waterline stains and oxidation from sun exposure.',perFt:7.50,checked:true},
+{id:'interior',name:'Interior Deep Clean',desc:'Cabin, galley, heads. All surfaces wiped, vacuumed, and deodorized. Mold prevention treatment.',perFt:5.50,checked:true},
+{id:'teak',name:'Teak Restoration',desc:'Sand, clean, and seal all teak decking and trim. Critical for Florida sun protection.',perFt:9.00,checked:false},
+{id:'canvas',name:'Canvas & Cushion Care',desc:'Clean, waterproof, and UV-protect all canvas and cushions. Mold/mildew treatment included.',perFt:4.00,checked:false},
+{id:'brightwork',name:'Brightwork Polish',desc:'Chrome, stainless, and aluminum polished to mirror finish.',perFt:4.50,checked:false},
+{id:'bottom',name:'Bottom Paint Prep',desc:'Scrape, sand, and prep hull bottom for new anti-fouling paint.',perFt:8.00,checked:false},
+{id:'metal',name:'Metal Polishing',desc:'Railings, cleats, and fixtures. Salt removal and protective coating.',perFt:3.50,checked:false},
+];
+
+let services=[...defaultServices.map(s=>({...s}))];
+let photos=[null,null,null,null];
+let currentPhotoSlot=0;
+let pricing={};
+
+// DB
+let db;
+const DB_NAME='DockQuoteDB_FL';const DB_VER=1;const STORE='estimates';const PRICING_STORE='pricing';
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains(STORE))d.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});if(!d.objectStoreNames.contains(PRICING_STORE))d.createObjectStore(PRICING_STORE,{keyPath:'key'});};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=e=>rej(e)})}
+function dbPut(store,data){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbGetAll(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readonly');const r=tx.objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=e=>rej(e)})}
+function dbClear(store){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+function dbDelete(store,id){return new Promise((res,rej)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e)})}
+
+// Init
+(async function(){
+try{
+await openDB();
+await loadPricing();
+buildServiceList();
+buildPricingInputs();
+const isFirst=!localStorage.getItem('dockquote_visited_fl');
+if(isFirst){loadDemoData();localStorage.setItem('dockquote_visited_fl','1')}
+updateEstimate();
+loadHistory();
+
+// Auto-detect marina via geolocation for Fort Lauderdale
+if(navigator.geolocation){
+navigator.geolocation.getCurrentPosition(pos=>{
+const lat=pos.coords.latitude,lon=pos.coords.longitude;
+// Lauderdale Marina area
+if(lat>26.1&&lat<26.12&&lon>-80.11&&lon<-80.09)document.getElementById('marina').value='lauderdale_marina';
+// Bahia Mar area
+else if(lat>26.1&&lat<26.12&&lon>-80.105&&lon<-80.095)document.getElementById('marina').value='bahia_mar';
+// Pier 66 area
+else if(lat>26.09&&lat<26.11&&lon>-80.115&&lon<-80.105)document.getElementById('marina').value='pier_66';
+},()=>{},{timeout:5000,maximumAge:60000});
+}
+}catch(err){
+console.error('Init error:',err);
+showToast('Something went wrong loading the app','error');
+}
+})();
+
+async function loadPricing(){try{const p=await dbGetAll(PRICING_STORE);if(p.length){p.forEach(r=>{if(r.key==='svcPricing')pricing=r.data})}
+services.forEach(s=>{if(pricing[s.id]!==undefined)s.perFt=pricing[s.id]})}catch(e){console.error('Pricing load error:',e);}}
+
+function buildServiceList(){
+const el=document.getElementById('serviceList');
+el.innerHTML=services.map(s=>`
+<label class="service-item ${s.checked?'checked':''}" for="svc_${s.id}">
+<input type="checkbox" id="svc_${s.id}" ${s.checked?'checked':''} onchange="toggleService('${s.id}',this)" aria-label="${s.name}">
+<div class="svc-info"><div class="svc-name">${s.name}</div><div class="svc-desc">${s.desc}</div></div>
+<div class="svc-price" id="price_${s.id}">$${calcSvcPrice(s)}</div>
+</label>`).join('');
+}
+
+function calcSvcPrice(svc){const len=+document.getElementById('boatLength').value||40;return Math.round(svc.perFt*len)}
+
+function toggleService(id,cb){
+const svc=services.find(s=>s.id===id);if(svc)svc.checked=cb.checked;
+cb.closest('.service-item').classList.toggle('checked',cb.checked);
+updateEstimate();
+}
+
+function updateEstimate(){
+const len=+document.getElementById('boatLength').value||40;
+const checked=services.filter(s=>s.checked);
+const el=document.getElementById('estLines');
+let total=0;
+
+if(checked.length===0){
+el.innerHTML='<div class="est-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><p>Select services above to see your estimate</p></div>';
+}else{
+el.innerHTML=checked.map(s=>{const p=calcSvcPrice(s);total+=p;return`<div class="est-line"><span>${s.name}</span><span class="price">$${p}</span></div>`}).join('');
+}
+
+document.getElementById('estTotal').textContent='$'+total;
+document.getElementById('estLength').textContent=len;
+const typeNames={yacht:'Yacht',sportfisher:'Sportfisher',powerboat:'Powerboat',sailboat:'Sailboat',center_console:'Center Console',pontoon:'Pontoon',other:'Boat'};
+document.getElementById('estType').textContent=typeNames[document.getElementById('boatType').value]||'Boat';
+const marinaNames={lauderdale_marina:'Lauderdale Marina',las_olas:'Las Olas Marina','15th_street':'15th Street Fisheries',hall_of_fame:'Hall of Fame Marina',bahia_mar:'Bahia Mar',pier_66:'Pier 66 Marina',other:'Location'};
+document.getElementById('estMarina').textContent=marinaNames[document.getElementById('marina').value]||'Location';
+services.forEach(s=>{const pe=document.getElementById('price_'+s.id);if(pe)pe.textContent='$'+calcSvcPrice(s)});
+}
+
+// Listeners for live price updates
+['boatLength','boatType','marina'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('change',updateEstimate);el.addEventListener('input',updateEstimate);}});
+
+// Validation
+function validateField(id,validator,errorMsg){const el=document.getElementById(id);const group=el.closest('.form-group');const isValid=validator(el.value);group.classList.toggle('has-error',!isValid);return isValid;}
+function validateForm(){const name=document.getElementById('ownerName').value.trim();const len=+document.getElementById('boatLength').value;let isValid=true;if(!name){isValid=false;document.getElementById('ownerName').closest('.form-group').classList.add('has-error');}else{document.getElementById('ownerName').closest('.form-group').classList.remove('has-error');}if(!len||len<10||len>200){isValid=false;document.getElementById('boatLength').closest('.form-group').classList.add('has-error');}else{document.getElementById('boatLength').closest('.form-group').classList.remove('has-error');}return isValid;}
+
+// Clear validation on input
+['ownerName','boatLength'].forEach(id=>{const el=document.getElementById(id);if(el){el.addEventListener('input',()=>el.closest('.form-group').classList.remove('has-error'));}});
+
+// Voice notes
+let recognition=null;let isRecording=false;
+function toggleVoice(){
+if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+showToast('Voice notes are not supported in this browser. Try Chrome or Safari.','warning');return;
+}
+const btn=document.getElementById('voiceBtn');
+if(isRecording){recognition.stop();isRecording=false;btn.classList.remove('recording');btn.querySelector('.btn-text').textContent='Tap to dictate notes — hands-free on the dock';return}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+recognition=new SR();recognition.continuous=true;recognition.interimResults=true;recognition.lang='en-US';
+const result=document.getElementById('voiceResult');
+recognition.onresult=e=>{let t='';for(let i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;result.textContent=t;};
+recognition.onerror=(e)=>{isRecording=false;btn.classList.remove('recording');btn.querySelector('.btn-text').textContent='Tap to dictate notes — hands-free on the dock';if(e.error==='not-allowed'){showToast('Microphone access denied. Check your browser settings.','error');}else if(e.error==='no-speech'){showToast('No speech detected. Try again.','warning');}};
+recognition.onend=()=>{if(isRecording){isRecording=false;btn.classList.remove('recording');btn.querySelector('.btn-text').textContent='Tap to dictate notes — hands-free on the dock';}};
+try{recognition.start();isRecording=true;btn.classList.add('recording');btn.querySelector('.btn-text').textContent='Recording... tap to stop';}catch(e){showToast('Could not start recording. Try again.','error');}
+}
+
+// Photos
+function takePhoto(slot){currentPhotoSlot=slot;document.getElementById('photoInput').click();}
+function handlePhoto(e){
+const file=e.target.files[0];if(!file)return;
+const slot=document.querySelector(`.photo-slot[data-slot="${currentPhotoSlot}"]`);
+slot.classList.add('loading');
+const reader=new FileReader();
+reader.onload=function(ev){
+photos[currentPhotoSlot]=ev.target.result;
+slot.classList.remove('loading');
+renderPhotos();
+showToast('Photo added');
+};
+reader.onerror=()=>{slot.classList.remove('loading');showToast('Could not load photo','error');};
+reader.readAsDataURL(file);
+e.target.value='';
+}
+function renderPhotos(){
+const labels=['Hull','Interior','Teak / Deck','Other'];
+const grid=document.getElementById('photoGrid');
+grid.innerHTML=photos.map((p,i)=>{
+if(p)return`<div class="photo-slot has-image" tabindex="0" role="button" aria-label="${labels[i]} photo, tap to change" onclick="takePhoto(${i})" data-slot="${i}"><div class="loading-spinner"><div class="spinner"></div></div><img src="${p}" alt="${labels[i]} condition photo"><button class="remove-photo" onclick="event.stopPropagation();removePhoto(${i})" aria-label="Remove ${labels[i]} photo">×</button></div>`;
+return`<div class="photo-slot" tabindex="0" role="button" aria-label="Add ${labels[i]} photo, press to capture" onclick="takePhoto(${i})" data-slot="${i}"><div class="loading-spinner"><div class="spinner"></div></div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M3 16l4-4 4 4 4-4 5 5"/></svg><span>${labels[i]}</span></div>`;
+}).join('');
+}
+function removePhoto(i){photos[i]=null;renderPhotos();showToast('Photo removed');}
+
+// Share
+async function shareEstimate(){
+if(!validateForm()){showToast('Please fix the errors above','error');return;}
+const btn=document.getElementById('shareBtn');btn.classList.add('loading');btn.disabled=true;
+const text=buildEstimateText();
+if(navigator.share){try{await navigator.share({title:'Deckhand Detailing Estimate',text});showToast('Estimate shared successfully');}catch(e){if(e.name!=='AbortError'){try{await navigator.clipboard.writeText(text);showToast('Estimate copied to clipboard');}catch(e2){showToast('Could not share or copy','error');}}}finally{btn.classList.remove('loading');btn.disabled=false;}}
+else{try{await navigator.clipboard.writeText(text);showToast('Estimate copied to clipboard');}catch(e){showToast('Could not copy to clipboard','error');}finally{btn.classList.remove('loading');btn.disabled=false;}}
+}
+
+function buildEstimateText(){
+const name=document.getElementById('ownerName').value||'Customer';
+const len=document.getElementById('boatLength').value;
+const type=document.getElementById('boatType').selectedOptions[0].text;
+const marina=document.getElementById('marina').selectedOptions[0].text;
+const slip=document.getElementById('slipNum').value;
+const boat=document.getElementById('boatName').value;
+const phone=document.getElementById('ownerPhone').value;
+const checked=services.filter(s=>s.checked);
+let total=0;
+const lines=checked.map(s=>{const p=calcSvcPrice(s);total+=p;return`  • ${s.name}: $${p}`}).join('\n');
+const notes=document.getElementById('voiceResult').textContent.trim();
+return`DECKHAND DETAILING — ESTIMATE\n================================\n\nPrepared for: ${name}${phone?'\nPhone: '+phone:''}\n${boat?'Vessel: '+boat:''}\n${len}ft ${type}\nLocation: ${marina}${slip?' (Slip '+slip+')':''}\n\nSERVICES:\n${lines}\n\nTOTAL: $${total}\n${notes?'\nNOTES:\n'+notes:''}\n\n---\nDeckhand Detailing\nFort Lauderdale, FL\nGet a free quote anytime`;
+}
+
+// Save
+async function saveEstimate(){
+if(!validateForm()){showToast('Please fill in the required fields','error');return;}
+const btn=document.getElementById('saveBtn');btn.classList.add('loading');btn.disabled=true;
+const checked=services.filter(s=>s.checked);
+const est={
+name:document.getElementById('ownerName').value.trim(),
+phone:document.getElementById('ownerPhone').value,
+boatName:document.getElementById('boatName').value,
+length:+document.getElementById('boatLength').value,
+type:document.getElementById('boatType').value,
+marina:document.getElementById('marina').value,
+slip:document.getElementById('slipNum').value,
+services:checked.map(s=>({id:s.id,name:s.name,price:calcSvcPrice(s)})),
+total:checked.reduce((sum,s)=>sum+calcSvcPrice(s),0),
+notes:document.getElementById('voiceResult').textContent.trim(),
+date:new Date().toISOString(),
+isDemo:false,
+photos:[...photos]
+};
+try{
+await dbPut(STORE,est);
+showToast('Estimate saved');
+loadHistory();
+}catch(e){showToast('Could not save estimate','error');console.error(e);}finally{btn.classList.remove('loading');btn.disabled=false;}
+}
+
+async function loadHistory(){
+try{
+const ests=await dbGetAll(STORE);
+const el=document.getElementById('historyList');
+const countEl=document.getElementById('historyCount');
+countEl.textContent=ests.length+' estimate'+(ests.length!==1?'s':'');
+if(!ests.length){
+el.innerHTML=`<div class="history-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><h3>No estimates yet</h3><p>Create your first estimate and it will appear here. All your saved quotes are stored locally on your device.</p></div>`;
+return;
+}
+ests.sort((a,b)=>new Date(b.date)-new Date(a.date));
+const marinaNames={lauderdale_marina:'Lauderdale Marina',las_olas:'Las Olas','15th_street':'15th St',hall_of_fame:'Hall of Fame',bahia_mar:'Bahia Mar',pier_66:'Pier 66',other:'Other'};
+const typeNames={yacht:'Yacht',sportfisher:'Sportfisher',powerboat:'Powerboat',sailboat:'Sailboat',center_console:'Center Console',pontoon:'Pontoon',other:'Boat'};
+el.innerHTML=ests.map(e=>`<div class="history-item" role="listitem" tabindex="0" aria-label="Estimate for ${esc(e.name)}, $${e.total}"><div class="hi-top"><span class="hi-name">${esc(e.name)}${e.boatName?'<br><small style="color:var(--muted)">'+esc(e.boatName)+'</small>':''}</span><span class="hi-price">$${e.total}</span></div><div class="hi-detail"><span>${e.length}ft ${typeNames[e.type]||e.type}</span><span>•</span><span>${marinaNames[e.marina]||e.marina}</span><span>•</span><span>${e.services.length} service${e.services.length!==1?'s':''}</span><span>•</span><span>${new Date(e.date).toLocaleDateString()}</span></div></div>`).join('');
+}catch(e){console.error('History load error:',e);}
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+// Demo data - Fort Lauderdale focused
+function loadDemoData(){
+document.getElementById('ownerName').value='Michael Rodriguez';
+document.getElementById('ownerPhone').value='(954) 555-0187';
+document.getElementById('boatLength').value='42';
+document.getElementById('boatType').value='sportfisher';
+document.getElementById('marina').value='lauderdale_marina';
+document.getElementById('slipNum').value='B-14';
+document.getElementById('boatName').value='Reel Therapy';
+document.getElementById('voiceResult').textContent='Heavy salt buildup on the tower and outriggers. Teak cockpit needs sanding and fresh sealer — sun damage is noticeable. Canvas has some mildew spots that need treatment.';
+services[0].checked=true;services[1].checked=true;services[2].checked=true;services[5].checked=false;
+buildServiceList();updateEstimate();
+
+const demos=[
+{name:'Michael Rodriguez',boatName:'Reel Therapy',length:42,type:'sportfisher',marina:'lauderdale_marina',slip:'B-14',services:[{id:'hull',name:'Hull Wash & Polish',price:315},{id:'interior',name:'Interior Deep Clean',price:231},{id:'teak',name:'Teak Restoration',price:378}],total:924,notes:'Heavy salt on tower, teak needs work.',date:new Date(Date.now()-86400000).toISOString(),isDemo:true},
+{name:'Jennifer Walsh',boatName:'Sea La Vie',length:55,type:'yacht',marina:'bahia_mar',slip:'A-7',services:[{id:'hull',name:'Hull Wash & Polish',price:413},{id:'interior',name:'Interior Deep Clean',price:303},{id:'teak',name:'Teak Restoration',price:495},{id:'canvas',name:'Canvas & Cushion Care',price:220},{id:'brightwork',name:'Brightwork Polish',price:248}],total:1679,notes:'Monthly maintenance, full detail before charter season.',date:new Date(Date.now()-432000000).toISOString(),isDemo:true},
+{name:'Robert Chen',boatName:'Tail Chaser',length:38,type:'center_console',marina:'pier_66',slip:'C-22',services:[{id:'hull',name:'Hull Wash & Polish',price:285},{id:'metal',name:'Metal Polishing',price:133}],total:418,notes:'Post-fishing trip cleanup, tackle box organization.',date:new Date(Date.now()-691200000).toISOString(),isDemo:true}
+];
+(async()=>{for(const d of demos)await dbPut(STORE,d);loadHistory();})();
+}
+
+// Modal handling
+function confirmClearDemo(){document.getElementById('confirmModal').classList.add('active');}
+function closeModal(){document.getElementById('confirmModal').classList.remove('active');}
+async function executeClearDemo(){
+closeModal();
+const btn=document.querySelector('.demo-banner button');btn.disabled=true;btn.textContent='Clearing...';
+try{
+const all=await dbGetAll(STORE);const keep=all.filter(e=>!e.isDemo);
+await dbClear(STORE);for(const e of keep)await dbPut(STORE,e);
+document.getElementById('demoBanner').style.display='none';
+document.getElementById('ownerName').value='';document.getElementById('ownerPhone').value='';
+document.getElementById('boatName').value='';document.getElementById('slipNum').value='';
+document.getElementById('voiceResult').textContent='';
+services.forEach(s=>s.checked=false);services[0].checked=true;
+buildServiceList();updateEstimate();loadHistory();
+showToast('Demo data cleared — start fresh!');
+}catch(e){showToast('Could not clear demo data','error');btn.disabled=false;btn.textContent='Clear Demo';}
+}
+
+// Pricing settings
+function buildPricingInputs(){
+const el=document.getElementById('pricingInputs');
+el.innerHTML=services.map(s=>`<div class="form-row"><div class="form-group"><label for="pp_${s.id}">${s.name} ($ per foot)</label><input type="number" id="pp_${s.id}" value="${s.perFt}" min="0" step="0.25" aria-label="${s.name} price per foot"></div></div>`).join('');
+}
+async function savePricing(){
+const btn=document.getElementById('pricingSaveBtn');btn.classList.add('loading');btn.disabled=true;
+const data={};services.forEach(s=>{const v=+document.getElementById('pp_'+s.id).value;if(v>=0){s.perFt=v;data[s.id]=v}});
+try{
+await dbPut(PRICING_STORE,{key:'svcPricing',data});
+buildServiceList();updateEstimate();
+showToast('Pricing saved');
+}catch(e){showToast('Could not save pricing','error');console.error(e);}finally{btn.classList.remove('loading');btn.disabled=false;}
+}
+
+// Tab switching
+function switchTab(btn){
+document.querySelectorAll('.bottom-nav button').forEach(b=>{b.classList.remove('active');b.removeAttribute('aria-current');});
+btn.classList.add('active');btn.setAttribute('aria-current','page');
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(btn.dataset.tab).classList.add('active');
+if(btn.dataset.tab==='sec-history')loadHistory();
+}
+
+// Export/Import
+async function exportData(){
+try{
+const estimates=await dbGetAll(STORE);
+const blob=new Blob([JSON.stringify({estimates,services:services.map(s=>({id:s.id,perFt:s.perFt})),exported:new Date().toISOString()},null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='deckhand-estimates-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
+showToast('Data exported successfully');
+}catch(e){showToast('Could not export data','error');console.error(e);}
+}
+async function importData(e){
+const file=e.target.files[0];if(!file)return;
+try{
+const text=await file.text();const data=JSON.parse(text);
+if(data.estimates){await dbClear(STORE);for(const est of data.estimates)await dbPut(STORE,est);}
+if(data.services){data.services.forEach(s=>{const svc=services.find(x=>x.id===s.id);if(svc)svc.perFt=s.perFt;});}
+buildServiceList();updateEstimate();loadHistory();
+showToast('Data imported successfully');
+}catch(err){showToast('Import failed — check file format','error');console.error(err);}
+e.target.value='';
+}
+
+// Toast notification system
+function showToast(msg,type='success'){
+const container=document.querySelector('.toast-container');
+const toast=document.createElement('div');
+toast.className='toast '+type;
+toast.textContent=msg;
+toast.setAttribute('role','status');
+container.appendChild(toast);
+requestAnimationFrame(()=>toast.classList.add('show'));
+setTimeout(()=>{toast.classList.remove('show');setTimeout(()=>toast.remove(),300);},3000);
+}
+
+// Keyboard accessibility for photo slots
+document.addEventListener('DOMContentLoaded',()=>{
+document.getElementById('photoGrid').addEventListener('keydown',e=>{
+if(e.key==='Enter'||e.key===' '){const slot=e.target.closest('.photo-slot');if(slot){e.preventDefault();slot.click();}};
+});
+});
+</script>
+</body>
+</html>

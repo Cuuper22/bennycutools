@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>MailboxQuote - Mailbox Doctor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;600;700;800&family=Roboto:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#3a5ba0;--primary-light:#4a6db8;--primary-dark:#2c4a82;
+--accent:#006183;--accent-light:#0080a8;
+--cta:#5d8c2a;--cta-hover:#4a7020;
+--bg:#f4f6fa;--surface:#fff;--surface-alt:#eef1f7;
+--text:#1e293b;--text-muted:#64748b;--text-light:#94a3b8;
+--border:#e2e8f0;--border-focus:#3a5ba0;
+--success:#16a34a;--warning:#d97706;--error:#dc2626;
+--shadow-sm:0 1px 2px rgba(0,0,0,.05);
+--shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06);
+--shadow-md:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);
+--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+--radius:8px;--radius-lg:12px;
+--font-heading:'Raleway',sans-serif;--font-body:'Roboto',sans-serif;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:120px!important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+a{color:var(--primary);text-decoration:none}
+button,input,select,textarea{font-family:var(--font-body);font-size:1rem}
+h1,h2,h3,h4{font-family:var(--font-heading);font-weight:700;line-height:1.2}
+h1{font-size:1.5rem}h2{font-size:1.25rem}h3{font-size:1.1rem}
+*:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Skip link */
+.skip-link{position:absolute;top:-100px;left:0;background:var(--primary);color:#fff;padding:8px 16px;z-index:100000;border-radius:0 0 var(--radius) 0;font-weight:500}
+.skip-link:focus{top:0}
+
+/* App shell */
+#app{display:none;min-height:100vh;position:relative;z-index:1}
+.app-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;padding:16px 20px 14px;position:sticky;top:0;z-index:900}
+.app-header h1{font-size:1.25rem;font-weight:700;letter-spacing:-.02em}
+.app-header p{font-size:.8rem;opacity:.75;margin-top:2px;font-weight:300}
+
+/* Demo banner */
+.demo-banner{background:#fef3c7;border-bottom:1px solid #fde68a;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.82rem;color:#92400e}
+.demo-banner button{background:none;border:1px solid #d97706;color:#92400e;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.78rem;font-weight:500}
+.demo-banner button:hover{background:#fde68a}
+
+/* Views / pages */
+.view{display:none;padding:16px;animation:fadeUp .35s ease-out}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.card.status-draft::before{background:var(--text-light)}
+.card.status-sent::before{background:var(--primary)}
+.card.status-accepted::before{background:var(--success)}
+.card.status-declined::before{background:var(--error)}
+
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.card-name{font-family:var(--font-heading);font-weight:600;font-size:1rem;color:var(--text)}
+.card-amount{font-family:var(--font-heading);font-weight:700;font-size:1.1rem;color:var(--cta)}
+.card-addr{font-size:.82rem;color:var(--text-muted);margin-bottom:6px}
+.card-meta{display:flex;gap:12px;font-size:.78rem;color:var(--text-light)}
+.card-status{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.card-status.draft{background:#f1f5f9;color:#64748b}
+.card-status.sent{background:#dbeafe;color:#1d4ed8}
+.card-status.accepted{background:#dcfce7;color:#16a34a}
+.card-status.declined{background:#fee2e2;color:#dc2626}
+
+/* Quote form */
+.form-section{margin-bottom:20px}
+.form-section-title{font-family:var(--font-heading);font-weight:600;font-size:.9rem;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.82rem;font-weight:500;color:var(--text-muted);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:1rem;background:var(--surface);color:var(--text);transition:border-color .15s,box-shadow .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(58,91,160,.12)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Service items */
+.service-list{display:flex;flex-direction:column;gap:8px}
+.service-item{display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--surface-alt);border-radius:var(--radius);border:1.5px solid transparent;cursor:pointer;transition:border-color .15s,background .15s}
+.service-item.selected{border-color:var(--primary);background:#eef2fb}
+.service-item:active{transform:scale(.98)}
+.service-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.service-item.selected .service-check{border-color:var(--primary);background:var(--primary)}
+.service-info{flex:1;margin:0 12px}
+.service-info strong{font-size:.9rem;display:block}
+.service-info span{font-size:.78rem;color:var(--text-muted)}
+.service-price{font-family:var(--font-heading);font-weight:700;color:var(--cta);white-space:nowrap}
+
+/* Photo section */
+.photo-area{position:relative;border:2px dashed var(--border);border-radius:var(--radius-lg);padding:24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface-alt);min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.photo-area:hover{border-color:var(--primary);background:#eef2fb}
+.photo-area:focus-visible{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(58,91,160,.12)}
+.photo-area svg{margin-bottom:8px;color:var(--text-light)}
+.photo-area p{font-size:.85rem;color:var(--text-muted)}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:12px}
+.photo-thumb{position:relative;aspect-ratio:1;border-radius:var(--radius);overflow:hidden;cursor:pointer}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb .delete-photo{position:absolute;top:4px;right:4px;width:22px;height:22px;background:rgba(0,0,0,.6);border:none;border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.photo-thumb .delete-photo:hover{background:rgba(220,38,38,.9)}
+.photo-thumb .delete-photo:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+
+/* Camera overlay */
+#cameraOverlay{display:none;position:fixed;inset:0;background:#000;z-index:5000;flex-direction:column}
+#cameraOverlay.active{display:flex}
+#cameraVideo{flex:1;object-fit:cover;width:100%}
+.camera-controls{position:absolute;bottom:0;left:0;right:0;padding:20px;display:flex;justify-content:center;gap:20px;background:linear-gradient(transparent,rgba(0,0,0,.7))}
+.camera-btn{width:64px;height:64px;border-radius:50%;border:3px solid #fff;background:rgba(255,255,255,.2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.camera-btn:active{transform:scale(.9)}
+.camera-btn.capture{background:#fff}
+.camera-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.camera-close{position:absolute;top:16px;right:16px;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.camera-close:hover{background:rgba(0,0,0,.7)}
+.camera-close:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* Canvas annotation */
+#annotateOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:5001;flex-direction:column}
+#annotateOverlay.active{display:flex}
+.annotate-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;background:#111}
+.annotate-header h3{color:#fff;font-size:.95rem}
+.annotate-tools{display:flex;gap:8px}
+.annotate-tools button{padding:6px 12px;border:1px solid #555;border-radius:var(--radius);background:#333;color:#fff;font-size:.8rem;cursor:pointer}
+.annotate-tools button.active{border-color:var(--primary);background:var(--primary)}
+.annotate-tools button:hover{background:#444}
+.annotate-tools button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+#annotateCanvas{flex:1;touch-action:none;cursor:crosshair}
+
+/* Totals */
+.quote-total{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;border-radius:var(--radius-lg);padding:20px;margin-top:16px}
+.quote-total .line{display:flex;justify-content:space-between;padding:4px 0;font-size:.9rem;opacity:.85}
+.quote-total .total-line{display:flex;justify-content:space-between;padding:12px 0 0;margin-top:8px;border-top:1px solid rgba(255,255,255,.3);font-size:1.2rem;font-weight:700;font-family:var(--font-heading)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--radius);font-size:.9rem;font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .15s,background .15s}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.btn-primary{background:var(--cta);color:#fff;box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--cta-hover);box-shadow:var(--shadow-md)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{background:var(--surface-alt)}
+.btn-sm{padding:8px 14px;font-size:.82rem}
+.btn-block{width:100%}
+.btn-danger{background:#fee2e2;color:var(--error)}
+.btn-danger:hover{background:#fecaca}
+
+/* Upsell */
+.upsell-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:#f0fdf4;border:1px solid #86efac;border-radius:20px;font-size:.7rem;font-weight:600;color:#16a34a;letter-spacing:.03em;text-transform:uppercase}
+.upsell-locked{opacity:.5;pointer-events:none;position:relative}
+.upsell-locked::after{content:'Full Version';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--primary);color:#fff;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:600;white-space:nowrap}
+
+/* Bottom nav */
+.bottom-nav{position:fixed;bottom:40px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:800;box-shadow:0 -2px 10px rgba(0,0,0,.06)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 0;cursor:pointer;color:var(--text-light);transition:color .15s;border:none;background:none;font-size:.68rem;font-weight:500;gap:2px}
+.nav-item.active{color:var(--primary)}
+.nav-item:focus-visible{outline:none;color:var(--primary)}
+.nav-item:focus-visible svg{outline:2px solid var(--primary);outline-offset:4px;border-radius:2px}
+.nav-item svg{width:22px;height:22px}
+
+/* Toast */
+.toast-container{position:fixed;top:80px;right:16px;z-index:6000}
+.toast{background:#1e293b;color:#fff;padding:12px 16px;border-radius:var(--radius);font-size:.85rem;margin-bottom:8px;animation:slideIn .3s ease-out;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;max-width:320px}
+.toast.success{border-left:3px solid var(--success)}
+.toast.error{border-left:3px solid var(--error)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Empty state */
+.empty-state{text-align:center;padding:48px 24px}
+.empty-state svg{margin-bottom:16px;color:var(--text-light)}
+.empty-state h3{margin-bottom:8px;color:var(--text)}
+.empty-state p{color:var(--text-muted);font-size:.9rem;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto}
+
+/* Quote detail/preview */
+.quote-preview{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden}
+.quote-preview-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:24px 20px;text-align:center}
+.quote-preview-header h2{font-size:1.3rem;margin-bottom:4px}
+.quote-preview-header p{opacity:.8;font-size:.85rem}
+.quote-preview-body{padding:20px}
+.quote-preview-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:.9rem}
+.quote-preview-row:last-child{border-bottom:none}
+.quote-preview-total{font-size:1.3rem;font-weight:700;color:var(--cta);border-top:2px solid var(--text);padding-top:12px;margin-top:8px}
+.quote-preview-photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0}
+.quote-preview-photos img{width:100%;border-radius:var(--radius);aspect-ratio:4/3;object-fit:cover}
+
+/* Settings */
+.setting-group{padding:16px;background:var(--surface);border-radius:var(--radius-lg);margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.setting-group h3{font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--primary)}
+
+/* Print */
+@media print{
+.bottom-nav,.app-header,.demo-banner,.toast-container,#bct-demo-disclaimer,.btn,.upsell-locked{display:none!important}
+body{background:#fff;padding:0!important}
+.view{display:block!important;padding:0}
+.quote-preview{box-shadow:none;border:1px solid #ddd}
+}
+
+/* Desktop */
+@media(min-width:1024px){
+.bottom-nav{display:none}
+#app{max-width:480px;margin:0 auto;position:relative}
+.desktop-nav{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:var(--radius);margin:16px;box-shadow:var(--shadow)}
+.desktop-nav button{flex:1;padding:10px;border:none;background:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:.85rem;color:var(--text-muted);transition:all .15s}
+.desktop-nav button.active{background:var(--primary);color:#fff}
+.desktop-nav button:hover:not(.active){background:var(--surface-alt)}
+.desktop-nav button:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+}
+@media(max-width:1023px){.desktop-nav{display:none}}
+
+/* Noise texture overlay */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Screen reader only */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Access gate -->
+<div id="gate" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--font-body);background:#111;color:#fff;text-align:center;padding:20px">
+<div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:var(--font-heading)">Access Required</h1><p style="color:#999;margin-bottom:20px">This tool needs a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div>
+</div>
+
+<div id="app" role="application" aria-label="MailboxQuote application">
+<!-- Header -->
+<header class="app-header">
+<h1>MailboxQuote</h1>
+<p>Mailbox Doctor -- Field Quotes</p>
+</header>
+
+<!-- Demo banner -->
+<div class="demo-banner" id="demoBanner" role="alert" aria-live="polite">
+<span>Sample quotes loaded for Kingwood, TX. Tap Clear to start fresh.</span>
+<button onclick="clearDemoData()" aria-label="Clear demo data">Clear</button>
+</div>
+
+<!-- Desktop nav -->
+<nav class="desktop-nav" aria-label="Main navigation">
+<button class="active" onclick="showView('quotes')" data-view="quotes">Quotes</button>
+<button onclick="showView('newQuote')" data-view="newQuote">New Quote</button>
+<button onclick="showView('catalog')" data-view="catalog">Pricing</button>
+<button onclick="showView('settings')" data-view="settings">Settings</button>
+</nav>
+
+<main id="main-content">
+
+<!-- QUOTES LIST VIEW -->
+<section class="view active" id="quotesView" aria-label="Quotes list">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2>Your Quotes</h2>
+<button class="btn btn-primary btn-sm" onclick="showView('newQuote')" aria-label="Create new quote">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+New Quote
+</button>
+</div>
+<div id="quotesList"></div>
+</section>
+
+<!-- NEW/EDIT QUOTE VIEW -->
+<section class="view" id="newQuoteView" aria-label="Create quote">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 id="quoteFormTitle">New Quote</h2>
+<button class="btn btn-secondary btn-sm" onclick="showView('quotes')" aria-label="Back to quotes">Back</button>
+</div>
+
+<!-- Customer info -->
+<div class="form-section">
+<div class="form-section-title">Customer</div>
+<div class="form-group">
+<label for="custName">Name</label>
+<input type="text" id="custName" placeholder="Jane Smith" autocomplete="name" aria-required="true">
+</div>
+<div class="form-group">
+<label for="custAddr">Address</label>
+<input type="text" id="custAddr" placeholder="1234 Rustic Woods Drive, Kingwood, TX" autocomplete="street-address">
+</div>
+<div class="form-row">
+<div class="form-group">
+<label for="custPhone">Phone</label>
+<input type="tel" id="custPhone" placeholder="(713) 555-0100" autocomplete="tel">
+</div>
+<div class="form-group">
+<label for="custEmail">Email</label>
+<input type="email" id="custEmail" placeholder="jane@email.com" autocomplete="email">
+</div>
+</div>
+</div>
+
+<!-- Photo documentation -->
+<div class="form-section">
+<div class="form-section-title">Photo Documentation</div>
+<div class="photo-area" id="photoArea" onclick="openCamera()" role="button" tabindex="0" aria-label="Take photo of mailbox" onkeydown="if(event.key==='Enter'||event.key===' ')openCamera()">
+<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+<p>Tap to photograph the mailbox</p>
+<p style="font-size:.75rem;color:var(--text-light)">Document the current condition</p>
+</div>
+<div class="photo-grid" id="photoGrid" role="region" aria-label="Captured photos"></div>
+</div>
+
+<!-- Services -->
+<div class="form-section">
+<div class="form-section-title">Services</div>
+<div class="service-list" id="serviceList" role="group" aria-label="Select services"></div>
+</div>
+
+<!-- Notes -->
+<div class="form-section">
+<div class="form-group">
+<label for="quoteNotes">Notes for Customer</label>
+<textarea id="quoteNotes" rows="3" placeholder="Any special requests or details about the job..."></textarea>
+</div>
+</div>
+
+<!-- Totals -->
+<div class="quote-total" id="quoteTotalSection" aria-live="polite" aria-atomic="true">
+<div id="selectedServicesDisplay"></div>
+<div class="total-line"><span>Total</span><span id="totalAmount">$0</span></div>
+</div>
+
+<!-- Actions -->
+<div style="display:flex;gap:10px;margin-top:16px">
+<button class="btn btn-primary btn-block" onclick="saveQuote()" aria-label="Save quote">Save Quote</button>
+</div>
+<div style="display:flex;gap:10px;margin-top:8px">
+<button class="btn btn-secondary btn-block" onclick="previewQuote()" aria-label="Preview quote">Preview</button>
+<button class="btn btn-secondary btn-block upsell-locked" aria-label="Email quote to customer - available in full version" disabled>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+Email Quote
+</button>
+</div>
+</section>
+
+<!-- QUOTE DETAIL VIEW -->
+<section class="view" id="detailView" aria-label="Quote details">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<button class="btn btn-secondary btn-sm" onclick="showView('quotes')">Back</button>
+<div style="display:flex;gap:8px">
+<button class="btn btn-sm btn-secondary" onclick="shareQuote()" aria-label="Share this quote">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+Share
+</button>
+<button class="btn btn-sm btn-primary" onclick="editCurrentQuote()" aria-label="Edit this quote">Edit</button>
+</div>
+</div>
+<div id="quoteDetail"></div>
+</section>
+
+<!-- PRICING CATALOG VIEW -->
+<section class="view" id="catalogView" aria-label="Pricing catalog">
+<h2 style="margin-bottom:16px">Pricing Catalog</h2>
+<p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px">Update prices to match your current rates. Changes save automatically.</p>
+<div id="catalogList"></div>
+</section>
+
+<!-- SETTINGS VIEW -->
+<section class="view" id="settingsView" aria-label="Settings">
+<h2 style="margin-bottom:16px">Settings</h2>
+<div class="setting-group">
+<h3>Business Info</h3>
+<div class="form-group"><label for="bizName">Business Name</label><input type="text" id="bizName" value="Mailbox Doctor"></div>
+<div class="form-group"><label for="bizPhone">Phone</label><input type="tel" id="bizPhone" value="(281) 555-0142"></div>
+<div class="form-group"><label for="bizLicense">License Number</label><input type="text" id="bizLicense" placeholder="Optional"></div>
+</div>
+<div class="setting-group">
+<h3>Data</h3>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-secondary btn-sm" onclick="exportData()" aria-label="Export all data as JSON">Export JSON</button>
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()" aria-label="Import data from JSON file">Import JSON</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" aria-label="Import file">
+<button class="btn btn-danger btn-sm" onclick="clearAllData()" aria-label="Delete all data">Reset All Data</button>
+</div>
+</div>
+<div class="setting-group">
+<h3 style="display:flex;align-items:center;gap:8px">Monthly Reports <span class="upsell-badge">Full Version</span></h3>
+<p style="font-size:.85rem;color:var(--text-muted)">Track quote conversions, average ticket size, and your busiest days. Available in the full version.</p>
+</div>
+</section>
+
+</main>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav" aria-label="Mobile navigation">
+<button class="nav-item active" onclick="showView('quotes')" data-view="quotes" aria-label="Quotes list" aria-current="page">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+Quotes
+</button>
+<button class="nav-item" onclick="showView('newQuote')" data-view="newQuote" aria-label="New quote">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+New
+</button>
+<button class="nav-item" onclick="showView('catalog')" data-view="catalog" aria-label="Pricing catalog">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+Pricing
+</button>
+<button class="nav-item" onclick="showView('settings')" data-view="settings" aria-label="Settings">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+Settings
+</button>
+</nav>
+
+<!-- Camera overlay -->
+<div id="cameraOverlay" role="dialog" aria-modal="true" aria-label="Camera">
+<video id="cameraVideo" autoplay playsinline></video>
+<button class="camera-close" onclick="closeCamera()" aria-label="Close camera">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+<div class="camera-controls">
+<button class="camera-btn capture" onclick="capturePhoto()" aria-label="Take photo">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="#333" stroke="none" aria-hidden="true"><circle cx="12" cy="12" r="8"/></svg>
+</button>
+</div>
+</div>
+
+<!-- Annotation overlay -->
+<div id="annotateOverlay" role="dialog" aria-modal="true" aria-label="Annotate photo">
+<div class="annotate-header">
+<h3>Mark problem areas</h3>
+<div class="annotate-tools">
+<button class="active" onclick="setAnnotateTool('draw')" aria-label="Draw tool">Draw</button>
+<button onclick="setAnnotateTool('circle')" aria-label="Circle tool">Circle</button>
+<button onclick="undoAnnotation()" aria-label="Undo last annotation">Undo</button>
+<button class="btn btn-primary btn-sm" onclick="saveAnnotation()" aria-label="Save annotation">Done</button>
+</div>
+</div>
+<canvas id="annotateCanvas"></canvas>
+</div>
+
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+<!-- DEMO DISCLAIMER -->
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Mailbox Doctor. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Mailbox%20Doctor&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+Request Permanent Deletion
+</a>
+</div>
+
+<script>
+// Access key gate
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=51811925;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){localStorage.setItem('mq_auth','1');document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+else if(localStorage.getItem('mq_auth')==='1'){document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+else{document.getElementById('gate').style.display='flex';document.getElementById('app').style.display='none';}
+
+// Anti-scrape
+if(window.location.hostname!=='localhost'&&window.location.hostname!=='127.0.0.1'){document.addEventListener('contextmenu',e=>e.preventDefault());}
+
+// DB
+let db;const DB_NAME='MailboxQuoteDB';const DB_VER=1;
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,DB_VER);req.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('quotes'))d.createObjectStore('quotes',{keyPath:'id'});if(!d.objectStoreNames.contains('catalog'))d.createObjectStore('catalog',{keyPath:'id'});if(!d.objectStoreNames.contains('settings'))d.createObjectStore('settings',{keyPath:'key'});};req.onsuccess=e=>{db=e.target.result;resolve(db);};req.onerror=e=>reject(e);});}
+
+function dbPut(store,data){return new Promise((r,j)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(data);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+function dbGetAll(store){return new Promise((r,j)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>r(req.result);req.onerror=e=>j(e);});}
+function dbGet(store,key){return new Promise((r,j)=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).get(key);req.onsuccess=()=>r(req.result);req.onerror=e=>j(e);});}
+function dbDelete(store,key){return new Promise((r,j)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+function dbClear(store){return new Promise((r,j)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).clear();tx.oncomplete=()=>r();tx.onerror=e=>j(e);});}
+
+// State
+let currentView='quotes';
+let editingQuoteId=null;
+let quotePhotos=[];
+let currentStream=null;
+let annotateTool='draw';
+let annotateHistory=[];
+let annotatingPhotoIndex=-1;
+let selectedServices=new Set();
+let catalog=[];
+
+const DEFAULT_CATALOG=[
+{id:'post-wood',name:'Wood Post Replacement',desc:'4x4 treated post, concrete set',price:85,category:'Posts'},
+{id:'post-vinyl',name:'Vinyl Sleeve Post',desc:'White vinyl over 4x4, concrete set',price:125,category:'Posts'},
+{id:'post-aluminum',name:'Aluminum Decorative Post',desc:'Powder-coated aluminum, in-ground mount',price:195,category:'Posts'},
+{id:'post-granite',name:'Granite Post',desc:'Natural granite post, professional install',price:350,category:'Posts'},
+{id:'box-standard',name:'Standard Mailbox',desc:'USPS-approved, black or white',price:45,category:'Mailboxes'},
+{id:'box-locking',name:'Locking Mailbox',desc:'Anti-theft locking door, key included',price:95,category:'Mailboxes'},
+{id:'box-decorative',name:'Decorative Mailbox',desc:'Cast aluminum, choice of finish',price:165,category:'Mailboxes'},
+{id:'box-column',name:'Column Mailbox System',desc:'Brick/stone column with built-in box',price:450,category:'Mailboxes'},
+{id:'acc-numbers',name:'Address Numbers',desc:'Reflective or brass house numbers',price:25,category:'Accessories'},
+{id:'acc-planter',name:'Mailbox Planter',desc:'Decorative planter base',price:55,category:'Accessories'},
+{id:'acc-solar',name:'Solar Light Cap',desc:'Solar-powered post light',price:40,category:'Accessories'},
+{id:'labor-basic',name:'Basic Install Labor',desc:'Standard removal and install, 1-2 hours',price:120,category:'Labor'},
+{id:'labor-concrete',name:'Concrete Work',desc:'Post hole, concrete pour, set time',price:75,category:'Labor'},
+{id:'labor-hoa',name:'HOA Compliance Setup',desc:'Match HOA specs, documentation',price:50,category:'Labor'},
+];
+
+// Demo quotes updated for Kingwood, TX
+const DEMO_QUOTES=[
+{id:'demo-1',customer:{name:'Mrs. Patricia Johnson',address:'1847 Rustic Woods Drive, Kingwood, TX',phone:'(713) 555-0147',email:'pjohnson@email.com'},services:['post-vinyl','box-locking','acc-numbers','labor-basic','labor-concrete'],notes:'Existing post rotted at base. HOA approved vinyl replacement. Customer wants locking box after recent package theft.',photos:[],total:445,status:'accepted',date:Date.now()-86400000*3,isDemo:true},
+{id:'demo-2',customer:{name:'Tom and Rita Marchetti',address:'2201 Northpark Drive, Kingwood, TX',phone:'(713) 555-0283',email:''},services:['post-aluminum','box-decorative','acc-solar','labor-basic','labor-concrete'],notes:'Upgrading from basic to decorative. Want brushed nickel finish to match front door hardware. Solar cap for visibility at night.',photos:[],total:555,status:'sent',date:Date.now()-86400000,isDemo:true},
+{id:'demo-3',customer:{name:'Kings Point Village HOA',address:'Kings Point Village, Kingwood, TX',phone:'(281) 555-0400',email:'manager@kingspointvillage.com'},services:['post-vinyl','box-standard','acc-numbers','labor-basic','labor-concrete','labor-hoa'],notes:'Phase 1: Replace 12 mailboxes in Section C. Quote is per-unit. Full community (48 units) to follow if approved.',photos:[],total:400,status:'draft',date:Date.now()-86400000*7,isDemo:true},
+];
+
+async function init(){
+await openDB();
+catalog=await dbGetAll('catalog');
+if(!catalog.length){
+for(const item of DEFAULT_CATALOG)await dbPut('catalog',item);
+catalog=DEFAULT_CATALOG.slice();
+}
+const quotes=await dbGetAll('quotes');
+const isFirst=localStorage.getItem('mq_visited');
+if(!isFirst&&!quotes.length){
+for(const q of DEMO_QUOTES)await dbPut('quotes',q);
+localStorage.setItem('mq_visited','1');
+}
+renderQuotesList();
+renderCatalog();
+renderServiceList();
+}
+
+// Navigation
+function showView(view){
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+const el=document.getElementById(view+'View');
+if(el)el.classList.add('active');
+currentView=view;
+document.querySelectorAll('.nav-item,.desktop-nav button').forEach(b=>{
+b.classList.toggle('active',b.getAttribute('data-view')===view);
+if(b.classList.contains('nav-item')){
+b.setAttribute('aria-current',b.getAttribute('data-view')===view?'page':'false');
+}
+});
+if(view==='quotes'){renderQuotesList();editingQuoteId=null;}
+if(view==='newQuote'&&!editingQuoteId){resetQuoteForm();}
+if(view==='catalog'){renderCatalog();}
+}
+
+// Render quotes list
+async function renderQuotesList(){
+const quotes=(await dbGetAll('quotes')).sort((a,b)=>b.date-a.date);
+const el=document.getElementById('quotesList');
+const banner=document.getElementById('demoBanner');
+const hasDemo=quotes.some(q=>q.isDemo);
+banner.style.display=hasDemo?'flex':'none';
+
+if(!quotes.length){
+el.innerHTML=`<div class="empty-state">
+<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+<h3>No quotes yet</h3>
+<p>Tap New Quote to build your first estimate from the job site.</p>
+<button class="btn btn-primary" onclick="showView('newQuote')">Create First Quote</button>
+</div>`;
+return;
+}
+el.innerHTML=quotes.map(q=>{
+const d=new Date(q.date);
+const dateStr=d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const svcCount=q.services?q.services.length:0;
+return `<div class="card status-${q.status}" onclick="viewQuote('${q.id}')" role="button" tabindex="0" aria-label="View quote for ${q.customer.name}, $${q.total||0}" onkeydown="if(event.key==='Enter'||event.key===' ')viewQuote('${q.id}')">
+<div class="card-top"><span class="card-name">${q.customer.name}</span><span class="card-amount">$${q.total||0}</span></div>
+<div class="card-addr">${q.customer.address||'No address'}</div>
+<div class="card-meta"><span>${dateStr}</span><span>${svcCount} item${svcCount!==1?'s':''}</span><span class="card-status ${q.status}">${q.status}</span></div>
+</div>`;
+}).join('');
+}
+
+// View quote detail
+async function viewQuote(id){
+const q=await dbGet('quotes',id);
+if(!q)return;
+editingQuoteId=id;
+const el=document.getElementById('quoteDetail');
+const d=new Date(q.date);
+const svcItems=(q.services||[]).map(sid=>catalog.find(c=>c.id===sid)).filter(Boolean);
+el.innerHTML=`<div class="quote-preview">
+<div class="quote-preview-header"><h2>Mailbox Doctor</h2><p>Quote for ${q.customer.name}</p></div>
+<div class="quote-preview-body">
+<div style="margin-bottom:16px"><strong style="font-size:.85rem;color:var(--text-muted)">Customer</strong>
+<p>${q.customer.name}</p><p style="font-size:.85rem;color:var(--text-muted)">${q.customer.address||''}</p>
+${q.customer.phone?`<p style="font-size:.85rem">${q.customer.phone}</p>`:''}
+</div>
+${q.photos&&q.photos.length?`<div class="quote-preview-photos">${q.photos.map((p,i)=>`<img src="${p}" alt="Mailbox condition photo ${i+1}">`).join('')}</div>`:''}
+<div style="margin-bottom:12px"><strong style="font-size:.85rem;color:var(--text-muted)">Services</strong></div>
+${svcItems.map(s=>`<div class="quote-preview-row"><span>${s.name}</span><span>$${s.price}</span></div>`).join('')}
+<div class="quote-preview-row quote-preview-total"><span>Total</span><span>$${q.total||0}</span></div>
+${q.notes?`<div style="margin-top:16px;padding:12px;background:var(--surface-alt);border-radius:var(--radius);font-size:.85rem"><strong>Notes:</strong> ${q.notes}</div>`:''}
+<p style="font-size:.78rem;color:var(--text-light);margin-top:16px;text-align:center">Quote date: ${d.toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</p>
+</div></div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<select id="statusSelect" class="form-group" style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface)" onchange="updateStatus('${id}',this.value)" aria-label="Update quote status">
+<option value="draft" ${q.status==='draft'?'selected':''}>Draft</option>
+<option value="sent" ${q.status==='sent'?'selected':''}>Sent</option>
+<option value="accepted" ${q.status==='accepted'?'selected':''}>Accepted</option>
+<option value="declined" ${q.status==='declined'?'selected':''}>Declined</option>
+</select>
+<button class="btn btn-danger btn-sm" onclick="deleteQuote('${id}')" aria-label="Delete this quote">Delete</button>
+</div>`;
+showView('detail');
+}
+
+async function updateStatus(id,status){
+const q=await dbGet('quotes',id);
+if(q){q.status=status;await dbPut('quotes',q);toast('Status updated','success');}
+}
+
+async function deleteQuote(id){
+if(!confirm('Delete this quote?'))return;
+await dbDelete('quotes',id);
+toast('Quote deleted','success');
+showView('quotes');
+}
+
+function editCurrentQuote(){
+if(!editingQuoteId)return;
+dbGet('quotes',editingQuoteId).then(q=>{
+if(!q)return;
+document.getElementById('custName').value=q.customer.name;
+document.getElementById('custAddr').value=q.customer.address||'';
+document.getElementById('custPhone').value=q.customer.phone||'';
+document.getElementById('custEmail').value=q.customer.email||'';
+document.getElementById('quoteNotes').value=q.notes||'';
+quotePhotos=q.photos?q.photos.slice():[];
+selectedServices=new Set(q.services||[]);
+renderPhotoGrid();
+renderServiceList();
+updateTotal();
+document.getElementById('quoteFormTitle').textContent='Edit Quote';
+showView('newQuote');
+});
+}
+
+// Service list
+function renderServiceList(){
+const el=document.getElementById('serviceList');
+const grouped={};
+catalog.forEach(item=>{
+if(!grouped[item.category])grouped[item.category]=[];
+grouped[item.category].push(item);
+});
+let html='';
+for(const cat of Object.keys(grouped)){
+html+=`<div style="font-size:.78rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 4px;padding-left:4px">${cat}</div>`;
+grouped[cat].forEach(item=>{
+const sel=selectedServices.has(item.id)?'selected':'';
+html+=`<div class="service-item ${sel}" onclick="toggleService('${item.id}')" role="checkbox" aria-checked="${sel?'true':'false'}" tabindex="0" aria-label="${item.name}, $${item.price}" onkeydown="if(event.key==='Enter'||event.key===' ')toggleService('${item.id}')">
+<div class="service-check">${sel?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+<div class="service-info"><strong>${item.name}</strong><span>${item.desc}</span></div>
+<div class="service-price">$${item.price}</div>
+</div>`;
+});
+}
+el.innerHTML=html;
+}
+
+function toggleService(id){
+if(selectedServices.has(id))selectedServices.delete(id);
+else selectedServices.add(id);
+renderServiceList();
+updateTotal();
+}
+
+function updateTotal(){
+let total=0;
+const lines=[];
+selectedServices.forEach(id=>{
+const item=catalog.find(c=>c.id===id);
+if(item){total+=item.price;lines.push(item);}
+});
+document.getElementById('selectedServicesDisplay').innerHTML=lines.map(l=>`<div class="line"><span>${l.name}</span><span>$${l.price}</span></div>`).join('');
+document.getElementById('totalAmount').textContent='$'+total;
+}
+
+// Save quote
+async function saveQuote(){
+const name=document.getElementById('custName').value.trim();
+if(!name){toast('Enter a customer name','error');return;}
+const quote={
+id:editingQuoteId||'q-'+Date.now(),
+customer:{name,address:document.getElementById('custAddr').value.trim(),phone:document.getElementById('custPhone').value.trim(),email:document.getElementById('custEmail').value.trim()},
+services:Array.from(selectedServices),
+notes:document.getElementById('quoteNotes').value.trim(),
+photos:quotePhotos.slice(),
+total:0,
+status:editingQuoteId?(await dbGet('quotes',editingQuoteId))?.status||'draft':'draft',
+date:editingQuoteId?(await dbGet('quotes',editingQuoteId))?.date||Date.now():Date.now(),
+isDemo:false,
+};
+selectedServices.forEach(id=>{const item=catalog.find(c=>c.id===id);if(item)quote.total+=item.price;});
+await dbPut('quotes',quote);
+toast(editingQuoteId?'Quote updated':'Quote saved','success');
+editingQuoteId=null;
+showView('quotes');
+}
+
+function resetQuoteForm(){
+document.getElementById('custName').value='';
+document.getElementById('custAddr').value='';
+document.getElementById('custPhone').value='';
+document.getElementById('custEmail').value='';
+document.getElementById('quoteNotes').value='';
+quotePhotos=[];
+selectedServices.clear();
+renderPhotoGrid();
+renderServiceList();
+updateTotal();
+document.getElementById('quoteFormTitle').textContent='New Quote';
+}
+
+// Camera
+async function openCamera(){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:960}}});
+currentStream=stream;
+const video=document.getElementById('cameraVideo');
+video.srcObject=stream;
+document.getElementById('cameraOverlay').classList.add('active');
+}catch(e){
+// Fallback to file input
+const input=document.createElement('input');
+input.type='file';input.accept='image/*';input.capture='environment';
+input.onchange=ev=>{
+const file=ev.target.files[0];if(!file)return;
+const reader=new FileReader();
+reader.onload=re=>{
+quotePhotos.push(re.target.result);
+renderPhotoGrid();
+toast('Photo added','success');
+};
+reader.readAsDataURL(file);
+};
+input.click();
+}
+}
+
+function closeCamera(){
+if(currentStream){currentStream.getTracks().forEach(t=>t.stop());currentStream=null;}
+document.getElementById('cameraOverlay').classList.remove('active');
+}
+
+function capturePhoto(){
+const video=document.getElementById('cameraVideo');
+const canvas=document.createElement('canvas');
+canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+canvas.getContext('2d').drawImage(video,0,0);
+const dataUrl=canvas.toDataURL('image/jpeg',0.8);
+quotePhotos.push(dataUrl);
+renderPhotoGrid();
+closeCamera();
+toast('Photo captured. Tap it to mark any issues.','success');
+}
+
+function renderPhotoGrid(){
+const el=document.getElementById('photoGrid');
+if(quotePhotos.length===0){
+el.innerHTML='';
+return;
+}
+el.innerHTML=quotePhotos.map((p,i)=>`<div class="photo-thumb" onclick="openAnnotate(${i})" tabindex="0" role="button" aria-label="Photo ${i+1}, tap to annotate" onkeydown="if(event.key==='Enter'||event.key===' ')openAnnotate(${i})">
+<img src="${p}" alt="Mailbox photo ${i+1}">
+<button class="delete-photo" onclick="event.stopPropagation();removePhoto(${i})" aria-label="Remove photo ${i+1}">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+</div>`).join('');
+}
+
+function removePhoto(i){quotePhotos.splice(i,1);renderPhotoGrid();}
+
+// Annotation
+function openAnnotate(index){
+annotatingPhotoIndex=index;
+annotateHistory=[];
+const overlay=document.getElementById('annotateOverlay');
+const canvas=document.getElementById('annotateCanvas');
+overlay.classList.add('active');
+const img=new Image();
+img.onload=()=>{
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight-52;
+const ctx=canvas.getContext('2d');
+const scale=Math.min(canvas.width/img.width,canvas.height/img.height);
+const w=img.width*scale,h=img.height*scale;
+const x=(canvas.width-w)/2,y=(canvas.height-h)/2;
+ctx.drawImage(img,x,y,w,h);
+annotateHistory.push(ctx.getImageData(0,0,canvas.width,canvas.height));
+};
+img.src=quotePhotos[index];
+setupAnnotateListeners(canvas);
+}
+
+function setupAnnotateListeners(canvas){
+const ctx=canvas.getContext('2d');
+let drawing=false;let startX,startY;
+const getPos=e=>{
+const rect=canvas.getBoundingClientRect();
+const t=e.touches?e.touches[0]:e;
+return{x:t.clientX-rect.left,y:t.clientY-rect.top};
+};
+const onStart=e=>{e.preventDefault();drawing=true;const p=getPos(e);startX=p.x;startY=p.y;if(annotateTool==='draw'){ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.strokeStyle='#ff3333';ctx.lineWidth=3;ctx.lineCap='round';}};
+const onMove=e=>{if(!drawing)return;e.preventDefault();const p=getPos(e);if(annotateTool==='draw'){ctx.lineTo(p.x,p.y);ctx.stroke();}};
+const onEnd=e=>{if(!drawing)return;drawing=false;if(annotateTool==='circle'){const p=getPos(e);const rx=Math.abs(p.x-startX)/2,ry=Math.abs(p.y-startY)/2;const cx=startX+(p.x-startX)/2,cy=startY+(p.y-startY)/2;ctx.beginPath();ctx.ellipse(cx,cy,Math.max(rx,10),Math.max(ry,10),0,0,Math.PI*2);ctx.strokeStyle='#ff3333';ctx.lineWidth=3;ctx.stroke();}annotateHistory.push(ctx.getImageData(0,0,canvas.width,canvas.height));};
+canvas.onmousedown=onStart;canvas.onmousemove=onMove;canvas.onmouseup=onEnd;
+canvas.ontouchstart=onStart;canvas.ontouchmove=onMove;canvas.ontouchend=onEnd;
+}
+
+function setAnnotateTool(tool){
+annotateTool=tool;
+document.querySelectorAll('.annotate-tools button').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
+}
+
+function undoAnnotation(){
+if(annotateHistory.length>1){
+annotateHistory.pop();
+const canvas=document.getElementById('annotateCanvas');
+canvas.getContext('2d').putImageData(annotateHistory[annotateHistory.length-1],0,0);
+}
+}
+
+function saveAnnotation(){
+const canvas=document.getElementById('annotateCanvas');
+quotePhotos[annotatingPhotoIndex]=canvas.toDataURL('image/jpeg',0.85);
+renderPhotoGrid();
+document.getElementById('annotateOverlay').classList.remove('active');
+toast('Annotation saved','success');
+}
+
+// Share
+async function shareQuote(){
+if(!editingQuoteId)return;
+const q=await dbGet('quotes',editingQuoteId);
+if(!q)return;
+const svcItems=(q.services||[]).map(sid=>catalog.find(c=>c.id===sid)).filter(Boolean);
+const text=`Mailbox Doctor -- Quote for ${q.customer.name}\n${q.customer.address}\n\n${svcItems.map(s=>s.name+': $'+s.price).join('\n')}\n\nTotal: $${q.total}\n${q.notes?'\nNotes: '+q.notes:''}`;
+if(navigator.share){
+try{await navigator.share({title:'Mailbox Doctor Quote',text});toast('Shared','success');}catch(e){}
+}else{
+try{await navigator.clipboard.writeText(text);toast('Quote copied to clipboard','success');}catch(e){toast('Could not copy','error');}
+}
+}
+
+function previewQuote(){
+const name=document.getElementById('custName').value.trim();
+if(!name){toast('Enter customer name to preview','error');return;}
+// Quick save first, then show detail
+saveQuote().then(()=>{
+dbGetAll('quotes').then(qs=>{
+const latest=qs.sort((a,b)=>b.date-a.date)[0];
+if(latest)viewQuote(latest.id);
+});
+});
+}
+
+// Catalog
+function renderCatalog(){
+const el=document.getElementById('catalogList');
+const grouped={};
+catalog.forEach(item=>{
+if(!grouped[item.category])grouped[item.category]=[];
+grouped[item.category].push(item);
+});
+let html='';
+for(const cat of Object.keys(grouped)){
+html+=`<div style="font-size:.82rem;font-weight:600;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px">${cat}</div>`;
+grouped[cat].forEach(item=>{
+html+=`<div class="card" style="display:flex;justify-content:space-between;align-items:center">
+<div><strong style="font-size:.9rem">${item.name}</strong><p style="font-size:.78rem;color:var(--text-muted)">${item.desc}</p></div>
+<div style="display:flex;align-items:center;gap:4px">
+<span style="font-size:.85rem;color:var(--text-muted)">$</span>
+<input type="number" value="${item.price}" style="width:70px;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.9rem;font-weight:600;text-align:right" onchange="updateCatalogPrice('${item.id}',this.value)" aria-label="Price for ${item.name}">
+</div></div>`;
+});
+}
+el.innerHTML=html;
+}
+
+async function updateCatalogPrice(id,val){
+const item=catalog.find(c=>c.id===id);
+if(item){item.price=parseInt(val)||0;await dbPut('catalog',item);toast('Price updated','success');}
+}
+
+// Data export/import
+async function exportData(){
+const quotes=await dbGetAll('quotes');
+const cat=await dbGetAll('catalog');
+const blob=new Blob([JSON.stringify({quotes,catalog:cat},null,2)],{type:'application/json'});
+const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mailboxquote-backup.json';a.click();
+}
+
+async function importData(e){
+const file=e.target.files[0];if(!file)return;
+try{
+const text=await file.text();const data=JSON.parse(text);
+if(data.quotes)for(const q of data.quotes)await dbPut('quotes',q);
+if(data.catalog)for(const c of data.catalog){await dbPut('catalog',c);}
+catalog=await dbGetAll('catalog');
+renderQuotesList();renderCatalog();renderServiceList();
+toast('Data imported','success');
+}catch(err){toast('Invalid file','error');}
+}
+
+// Demo data
+async function clearDemoData(){
+const quotes=await dbGetAll('quotes');
+for(const q of quotes){if(q.isDemo)await dbDelete('quotes',q.id);}
+document.getElementById('demoBanner').style.display='none';
+renderQuotesList();
+toast('Demo data cleared','success');
+}
+
+async function clearAllData(){
+if(!confirm('This will delete all quotes and reset pricing. Continue?'))return;
+await dbClear('quotes');await dbClear('catalog');
+for(const item of DEFAULT_CATALOG)await dbPut('catalog',item);
+catalog=DEFAULT_CATALOG.slice();
+selectedServices.clear();quotePhotos=[];
+renderQuotesList();renderCatalog();renderServiceList();updateTotal();
+toast('All data reset','success');
+}
+
+// Toast
+function toast(msg,type='success'){
+const el=document.createElement('div');
+el.className='toast '+type;
+el.setAttribute('role',type==='error'?'alert':'status');
+el.innerHTML=`${type==='success'?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'}${msg}`;
+document.getElementById('toastContainer').appendChild(el);
+setTimeout(()=>el.remove(),3000);
+}
+</script>
+</body>
+</html>

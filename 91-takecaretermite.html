@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TermiteLog - Take Care Termite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--pri:#2e7d32;--pri-light:#43a047;--pri-dark:#1b5e20;
+--accent:#37474f;--accent-light:#546e7a;
+--s1:#c62828;--s1-bg:#ffebee;--s2:#e65100;--s2-bg:#fff3e0;
+--bg:#f1f3f2;--surf:#fff;--surf-alt:#f5f7f6;
+--text:#1a2e1e;--text-m:#5a6e5e;--text-l:#8a9a8e;
+--bdr:#d8e0d9;--bdr-f:#2e7d32;
+--ok:#2e7d32;--warn:#e65100;--err:#c62828;
+--sh-sm:0 1px 2px rgba(0,0,0,.05);--sh:0 2px 4px rgba(0,0,0,.08);--sh-md:0 4px 8px rgba(0,0,0,.1);--sh-lg:0 10px 20px rgba(0,0,0,.12);
+--r:8px;--rl:12px;
+--fh:'Montserrat',sans-serif;--fb:'Open Sans',sans-serif;
+}
+html{font-size:16px}
+body{font-family:var(--fb);background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:120px!important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--fh);font-weight:700;line-height:1.2}
+*:focus-visible{outline:3px solid var(--pri);outline-offset:3px;border-radius:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.skip{position:absolute;top:-100px;left:0;background:var(--pri);color:#fff;padding:10px 18px;z-index:100000;border-radius:0 0 var(--r) 0;font-weight:600;text-decoration:none}.skip:focus{top:0}
+
+#app{display:none;min-height:100vh}
+.hdr{background:linear-gradient(135deg,var(--pri-dark),var(--pri));color:#fff;padding:16px 20px 14px;position:sticky;top:0;z-index:900}
+.hdr h1{font-size:1.25rem;letter-spacing:-.01em}.hdr p{font-size:.8rem;opacity:.75;margin-top:3px;font-weight:400}
+
+.demo-b{background:#e8f5e9;border-bottom:1px solid #c8e6c9;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.85rem;color:#1b5e20}
+.demo-b button{background:none;border:1.5px solid #4caf50;color:#1b5e20;padding:5px 12px;border-radius:4px;cursor:pointer;font-size:.8rem;font-weight:500;transition:all .15s}
+.demo-b button:hover{background:#4caf50;color:#fff}
+
+.view{display:none;padding:16px;animation:fu .35s ease-out}.view.active{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--surf);border-radius:var(--rl);box-shadow:var(--sh);padding:16px;margin-bottom:12px;cursor:pointer;transition:all .15s ease;position:relative;overflow:hidden;border:1px solid transparent}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh-md);border-color:var(--bdr)}
+.card:active{transform:translateY(0)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:12px}
+.card-addr{font-family:var(--fh);font-weight:600;font-size:.95rem;line-height:1.3;flex:1}
+.card-cost{font-family:var(--fh);font-weight:700;font-size:1.1rem;color:var(--pri);white-space:nowrap}
+.card-sub{font-size:.82rem;color:var(--text-m);margin-bottom:6px}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;padding:3px 10px;border-radius:16px;font-size:.72rem;font-weight:600}
+.tag-s1{background:var(--s1-bg);color:var(--s1)}.tag-s2{background:var(--s2-bg);color:var(--s2)}
+.tag-status{background:#e0f2f1;color:#00695c}
+
+.fsec{margin-bottom:18px}
+.fsec-t{font-family:var(--fh);font-weight:600;font-size:.85rem;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--bdr)}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin-bottom:5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px 14px;border:2px solid var(--bdr);border-radius:var(--r);font-size:1rem;background:var(--surf);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bdr-f);box-shadow:0 0 0 4px rgba(46,125,50,.12)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--text-l);font-weight:400}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Finding cards */
+.finding{background:var(--surf);border-radius:var(--r);border-left:4px solid var(--text-l);padding:14px;margin-bottom:10px;position:relative;box-shadow:var(--sh-sm)}
+.finding.s1{border-left-color:var(--s1);background:var(--s1-bg)}
+.finding.s2{border-left-color:var(--s2);background:var(--s2-bg)}
+.finding-type{font-weight:600;font-size:.9rem;margin-bottom:3px;color:var(--text)}
+.finding-loc{font-size:.8rem;color:var(--text-m);font-weight:500}
+.finding-cost{font-family:var(--fh);font-weight:700;position:absolute;top:14px;right:14px;color:var(--pri);font-size:1rem}
+.finding-photo{width:64px;height:64px;border-radius:6px;object-fit:cover;margin-top:8px;border:1px solid var(--bdr)}
+.finding-del{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.9);border:1px solid var(--bdr);color:var(--err);cursor:pointer;font-size:.75rem;padding:5px 10px;border-radius:4px;font-weight:500;transition:all .15s}
+.finding-del:hover{background:var(--err);color:#fff}
+
+/* Section summary */
+.section-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.ss-card{padding:16px;border-radius:var(--r);text-align:center;transition:transform .15s}
+.ss-card:hover{transform:scale(1.02)}
+.ss-card.s1{background:var(--s1-bg);border:1.5px solid #ef9a9a}
+.ss-card.s2{background:var(--s2-bg);border:1.5px solid #ffcc80}
+.ss-card .ss-label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ss-card .ss-count{font-family:var(--fh);font-size:1.6rem;font-weight:800}
+.ss-card .ss-cost{font-size:.85rem;font-weight:600;margin-top:4px}
+
+/* Quick picks */
+.qp-grid{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.qp{padding:8px 14px;background:var(--surf-alt);border:2px solid var(--bdr);border-radius:20px;font-size:.8rem;cursor:pointer;transition:all .15s;font-weight:500;color:var(--text)}
+.qp:hover{border-color:var(--pri-light);background:#e8f5e9}
+.qp.selected{background:var(--pri);color:#fff;border-color:var(--pri)}
+.qp:active{transform:scale(.96)}
+
+/* Photo area */
+.photo-btn{display:flex;align-items:center;gap:10px;padding:14px;background:var(--surf-alt);border:2px dashed var(--bdr);border-radius:var(--r);cursor:pointer;font-size:.88rem;color:var(--text-m);transition:all .15s;font-weight:500}
+.photo-btn:hover{border-color:var(--pri);background:#e8f5e9;color:var(--pri-dark)}
+.photo-btn:focus-visible{border-color:var(--pri)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--r);font-size:.9rem;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--fb)}
+.btn:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
+.btn:active{transform:translateY(0);box-shadow:var(--sh)}
+.btn-pri{background:var(--pri);color:#fff;box-shadow:var(--sh)}.btn-pri:hover{background:var(--pri-dark)}
+.btn-sec{background:var(--surf);color:var(--text);border:2px solid var(--bdr)}
+.btn-sec:hover{border-color:var(--pri);color:var(--pri)}
+.btn-sm{padding:8px 14px;font-size:.82rem}
+.btn-block{width:100%}
+.btn-danger{background:#ffebee;color:var(--err);border:2px solid #ffcdd2}
+.btn-danger:hover{background:var(--err);color:#fff;border-color:var(--err)}
+.upsell-lock{opacity:.5;pointer-events:none;position:relative}
+.upsell-lock::after{content:'Full Version';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--accent);color:#fff;padding:4px 12px;border-radius:16px;font-size:.75rem;font-weight:600;box-shadow:var(--sh)}
+
+.bnav{position:fixed;bottom:40px;left:0;right:0;background:var(--surf);border-top:1.5px solid var(--bdr);display:flex;z-index:800;box-shadow:0 -4px 12px rgba(0,0,0,.06)}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0;cursor:pointer;color:var(--text-l);transition:all .15s;border:none;background:none;font-size:.7rem;font-weight:600;gap:4px}
+.ni:hover{color:var(--text-m)}
+.ni.active{color:var(--pri)}
+.ni svg{width:24px;height:24px;transition:transform .15s}
+.ni:active svg{transform:scale(0.9)}
+
+.toast-c{position:fixed;top:80px;right:16px;z-index:6000;max-width:280px}
+.toast{background:#1a2e1e;color:#fff;padding:12px 18px;border-radius:var(--r);font-size:.88rem;margin-bottom:8px;animation:si .3s ease-out;box-shadow:var(--sh-lg);font-weight:500}
+.toast.error{background:var(--err)}
+.toast.success{background:var(--ok)}
+@keyframes si{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+
+.empty{text-align:center;padding:48px 24px}
+.empty svg{margin-bottom:16px;color:var(--text-l);opacity:.7}
+.empty h3{margin-bottom:8px;font-size:1.1rem}.empty p{color:var(--text-m);font-size:.9rem;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto;line-height:1.6}
+.empty .btn{margin-top:4px}
+
+.sbox{padding:18px;background:var(--surf);border-radius:var(--rl);margin-bottom:12px;box-shadow:var(--sh-sm)}
+.sbox h3{font-size:.95rem;font-weight:700;margin-bottom:12px;color:var(--pri)}
+
+/* Camera */
+#camOv{display:none;position:fixed;inset:0;background:#000;z-index:5000;flex-direction:column}
+#camOv.active{display:flex}
+#camVid{flex:1;object-fit:cover;width:100%}
+.cam-bar{position:absolute;bottom:0;left:0;right:0;padding:24px;display:flex;justify-content:center;background:linear-gradient(transparent,rgba(0,0,0,.8))}
+.cam-snap{width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cam-snap:hover{transform:scale(1.05);background:rgba(255,255,255,.35)}
+.cam-snap:active{transform:scale(0.95)}
+.cam-x{position:absolute;top:20px;right:20px;width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cam-x:hover{background:rgba(0,0,0,.8);transform:rotate(90deg)}
+
+/* Status badges */
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:.8rem;font-weight:600}
+.status-pending{background:#fff8e1;color:#e65100;border:1.5px solid #ffcc80}
+.status-completed{background:#e8f5e9;color:#2e7d32;border:1.5px solid #a5d6a7}
+.status-sent{background:#e3f2fd;color:#1565c0;border:1.5px solid #90caf9}
+
+@media print{.bnav,.hdr,.demo-b,.toast-c,#bct-demo-disclaimer,.btn,.upsell-lock,.cam-x,.cam-bar{display:none!important}body{background:#fff;padding:0!important}.view{display:block!important;padding:0}.finding{page-break-inside:avoid}}
+@media(min-width:1024px){.bnav{display:none}#app{max-width:520px;margin:0 auto}.dnav{display:flex;gap:4px;background:var(--surf);padding:4px;border-radius:var(--r);margin:16px;box-shadow:var(--sh)}.dnav button{flex:1;padding:10px;border:none;background:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;color:var(--text-m);transition:all .15s}.dnav button:hover{background:var(--surf-alt)}.dnav button.active{background:var(--pri);color:#fff}.dnav button.active:hover{background:var(--pri-dark)}}
+@media(max-width:1023px){.dnav{display:none}}
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to main content</a>
+<div id="gate" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--fb);background:#1a1a1a;color:#fff;text-align:center;padding:24px"><div><h1 style="font-size:1.8rem;margin-bottom:1rem;font-family:var(--fh);font-weight:700">Access Required</h1><p style="color:#999;margin-bottom:24px;font-size:1rem">This tool requires a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#4caf50;text-decoration:none;font-weight:500">ben@bennycutools.com</a></p></div></div>
+
+<div id="app" role="application" aria-label="TermiteLog Inspection App">
+<header class="hdr"><h1>TermiteLog</h1><p>Take Care Termite — Field Reports</p></header>
+<div class="demo-b" id="demoB" role="alert" aria-live="polite"><span>Sample inspections loaded for testing</span><button onclick="clearDemo()" aria-label="Clear sample data">Clear Samples</button></div>
+<nav class="dnav" aria-label="Main navigation"><button class="active" onclick="go('list')" data-v="list">Inspections</button><button onclick="go('new')" data-v="new">New Report</button><button onclick="go('settings')" data-v="settings">Settings</button></nav>
+<main id="main">
+
+<!-- LIST -->
+<section class="view active" id="listView" aria-label="Inspection List">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 style="font-size:1.15rem">Your Inspections</h2>
+<button class="btn btn-pri btn-sm" onclick="go('new')" aria-label="Create new inspection report"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Report</button>
+</div>
+<div id="listEl"></div>
+</section>
+
+<!-- NEW/EDIT -->
+<section class="view" id="newView" aria-label="New Inspection Form">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 id="fTitle" style="font-size:1.1rem">New Inspection</h2>
+<button class="btn btn-sec btn-sm" onclick="go('list')" aria-label="Back to inspection list">Back</button>
+</div>
+
+<div class="fsec"><div class="fsec-t">Property Details</div>
+<div class="fg"><label for="pAddr">Street Address</label><input type="text" id="pAddr" placeholder="e.g. 1428 W 11th St, Tracy, CA 95376" autocomplete="street-address" aria-required="true"></div>
+<div class="fr">
+<div class="fg"><label for="pType">Property Type</label><select id="pType" aria-label="Property type"><option value="single">Single Family Home</option><option value="multi">Multi-Family (2-4 units)</option><option value="commercial">Commercial Building</option><option value="condo">Condo or Townhome</option></select></div>
+<div class="fg"><label for="pYear">Year Built</label><input type="number" id="pYear" placeholder="1972" min="1800" max="2030" aria-label="Year property was built"></div>
+</div>
+</div>
+
+<div class="fsec"><div class="fsec-t">Client Information</div>
+<div class="fr">
+<div class="fg"><label for="cName">Client Name</label><input type="text" id="cName" placeholder="e.g. Sandra Mitchell" autocomplete="name"></div>
+<div class="fg"><label for="cPhone">Phone Number</label><input type="tel" id="cPhone" placeholder="(209) 555-0100" autocomplete="tel"></div>
+</div>
+<div class="fg"><label for="cAgent">Real Estate Agent (if applicable)</label><input type="text" id="cAgent" placeholder="e.g. Mike Torres, Century 21"></div>
+</div>
+
+<div class="fsec"><div class="fsec-t">Inspection Findings</div>
+<div class="section-summary" role="region" aria-label="Finding summary">
+<div class="ss-card s1"><div class="ss-label">Section 1 Findings</div><div class="ss-count" id="s1Count">0</div><div class="ss-cost" id="s1Cost">$0</div></div>
+<div class="ss-card s2"><div class="ss-label">Section 2 Findings</div><div class="ss-count" id="s2Count">0</div><div class="ss-cost" id="s2Cost">$0</div></div>
+</div>
+<div id="findingsEl" role="list" aria-label="Current findings"></div>
+<button class="btn btn-sec btn-block" onclick="addFinding()" style="margin-top:10px" aria-label="Add new finding"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Add Finding</button>
+</div>
+
+<div class="fsec"><div class="fg"><label for="notes">Additional Notes</label><textarea id="notes" rows="3" placeholder="Any extra observations, recommendations, or special instructions for this property..."></textarea></div></div>
+
+<div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-pri btn-block" onclick="saveInsp()">Save Inspection</button></div>
+<div style="display:flex;gap:10px;margin-top:8px">
+<button class="btn btn-sec btn-block" onclick="shareInsp()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Summary</button>
+<button class="btn btn-sec btn-block upsell-lock" disabled aria-label="PDF export available in full version"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> PDF Report</button>
+</div>
+</section>
+
+<!-- DETAIL -->
+<section class="view" id="detailView" aria-label="Inspection Details">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<button class="btn btn-sec btn-sm" onclick="go('list')" aria-label="Back to list">Back</button>
+<div style="display:flex;gap:8px">
+<button class="btn btn-pri btn-sm" onclick="shareInsp()">Share</button>
+<button class="btn btn-sec btn-sm" onclick="editInsp()">Edit</button>
+</div>
+</div>
+<div id="detailEl"></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="settingsView" aria-label="App Settings">
+<h2 style="margin-bottom:16px;font-size:1.1rem">Settings</h2>
+<div class="sbox"><h3>Inspector Information</h3>
+<div class="fg"><label for="iName">Your Name</label><input type="text" id="iName" value="Ray Carrier" aria-label="Inspector name"></div>
+<div class="fg"><label for="iLic">SPCB License Number</label><input type="text" id="iLic" placeholder="Enter your license number" aria-label="State Pest Control Board license number"></div>
+</div>
+<div class="sbox"><h3>Data Management</h3>
+<div style="display:flex;gap:10px;flex-wrap:wrap">
+<button class="btn btn-sec btn-sm" onclick="expData()">Export Data</button>
+<button class="btn btn-sec btn-sm" onclick="document.getElementById('impF').click()">Import Data</button>
+<input type="file" id="impF" accept=".json" style="display:none" onchange="impData(event)" aria-label="Import data file">
+<button class="btn btn-danger btn-sm" onclick="resetAll()">Reset All Data</button>
+</div></div>
+<div class="sbox"><h3 style="display:flex;align-items:center;gap:10px">Professional PDF Reports <span style="display:inline-block;padding:3px 10px;background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:16px;font-size:.72rem;font-weight:600;color:#2e7d32;text-transform:uppercase">Full Version</span></h3>
+<p style="font-size:.88rem;color:var(--text-m);line-height:1.6">Generate branded PDF reports with your letterhead, digital signature, company logo, and direct email delivery to real estate agents. One-time $200 upgrade.</p>
+<button class="btn btn-pri btn-sm" style="margin-top:12px" onclick="window.location.href='mailto:ben@bennycutools.com?subject=Upgrade%20Request%20-%20Take%20Care%20Termite'">Request Upgrade</button>
+</div>
+</section>
+
+<!-- FINDING FORM (modal-like) -->
+<section class="view" id="findingView" aria-label="Add Finding Form">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 style="font-size:1.1rem">Record a Finding</h2>
+<button class="btn btn-sec btn-sm" onclick="cancelFinding()" aria-label="Cancel and return">Cancel</button>
+</div>
+<div class="fsec"><div class="fsec-t">What did you find?</div>
+<div class="qp-grid" id="typeGrid" role="radiogroup" aria-label="Finding type"></div>
+</div>
+<div class="fsec"><div class="fsec-t">Where was it located?</div>
+<div class="qp-grid" id="locGrid" role="radiogroup" aria-label="Finding location"></div>
+</div>
+<div class="fsec"><div class="fsec-t">Classification</div>
+<div style="display:flex;gap:10px">
+<button class="qp" id="secBtn1" onclick="setSec(1)" style="flex:1;text-align:center;padding:14px" aria-pressed="true" role="button"><strong>Section 1</strong><br><span style="font-size:.75rem;color:inherit;opacity:.8">Active infestation or damage</span></button>
+<button class="qp" id="secBtn2" onclick="setSec(2)" style="flex:1;text-align:center;padding:14px" aria-pressed="false" role="button"><strong>Section 2</strong><br><span style="font-size:.75rem;color:inherit;opacity:.8">Conditions conducive to infestation</span></button>
+</div>
+</div>
+<div class="fsec">
+<div class="fg"><label for="fCost">Estimated Repair Cost ($)</label><input type="number" id="fCost" placeholder="e.g. 850" min="0" step="50" aria-label="Estimated repair cost in dollars"></div>
+<div class="fg"><label for="fNotes">Finding Details</label><textarea id="fNotes" rows="3" placeholder="Describe what you found, severity, and recommended action..."></textarea></div>
+</div>
+<div class="fsec">
+<div class="fsec-t">Photo Evidence</div>
+<div class="photo-btn" onclick="openCam()" role="button" tabindex="0" aria-label="Take a photo of this finding">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+<span id="photoStatus">Tap to add a photo</span>
+</div>
+<div id="photoPreview" style="margin-top:10px"></div>
+</div>
+<button class="btn btn-pri btn-block" onclick="saveFinding()" style="margin-top:8px">Save Finding</button>
+</section>
+
+</main>
+
+<nav class="bnav" aria-label="Main navigation">
+<button class="ni active" onclick="go('list')" data-v="list" aria-label="View inspections"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>Inspections</button>
+<button class="ni" onclick="go('new')" data-v="new" aria-label="Create new report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>New Report</button>
+<button class="ni" onclick="go('settings')" data-v="settings" aria-label="App settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+</nav>
+</div>
+
+<!-- Camera -->
+<div id="camOv" role="dialog" aria-label="Camera" aria-modal="true">
+<video id="camVid" autoplay playsinline></video>
+<button class="cam-x" onclick="closeCam()" aria-label="Close camera"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+<div class="cam-bar"><button class="cam-snap" onclick="snap()" aria-label="Capture photo"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" stroke="none"><circle cx="12" cy="12" r="9"/></svg></button></div>
+</div>
+
+<div class="toast-c" id="toastC" role="region" aria-live="polite" aria-atomic="true"></div>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:12px 16px;font-size:12px;line-height:1.5;color:#555;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:750px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Take Care Termite & Pest Control. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Take%20Care%20Termite&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;transition:opacity .15s"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-1907013736;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){localStorage.setItem('tl_a','1');document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+else if(localStorage.getItem('tl_a')==='1'){document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let db;
+function odb(){return new Promise((r,j)=>{const q=indexedDB.open('TermiteLogDB',1);q.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('inspections'))d.createObjectStore('inspections',{keyPath:'id'});};q.onsuccess=e=>{db=e.target.result;r();};q.onerror=e=>j(e);});}
+function pt(d){return new Promise((r,j)=>{const t=db.transaction('inspections','readwrite');t.objectStore('inspections').put(d);t.oncomplete=()=>r();});}
+function ga(){return new Promise((r,j)=>{const t=db.transaction('inspections','readonly');const q=t.objectStore('inspections').getAll();q.onsuccess=()=>r(q.result);});}
+function gt(k){return new Promise((r,j)=>{const t=db.transaction('inspections','readonly');const q=t.objectStore('inspections').get(k);q.onsuccess=()=>r(q.result);});}
+function dl(k){return new Promise((r,j)=>{const t=db.transaction('inspections','readwrite');t.objectStore('inspections').delete(k);t.oncomplete=()=>r();});}
+function cl(){return new Promise((r,j)=>{const t=db.transaction('inspections','readwrite');t.objectStore('inspections').clear();t.oncomplete=()=>r();});}
+
+let editId=null;let findings=[];let curFinding={};let curPhoto=null;let curSec=1;let selType='';let selLoc='';let camStream=null;
+
+const TYPES=['Subterranean termite evidence','Drywood termite evidence','Dampwood termite evidence','Wood-boring beetle damage','Fungus damage (dry rot)','Fungus damage (wet rot)','Water damage to wood','Earth-to-wood contact','Faulty grade (soil above sill)','Cellulose debris','Insufficient ventilation','Shower or tub leak','Plumbing leak','Inaccessible area noted'];
+const LOCS=['Crawl space','Attic','Garage','Exterior - North','Exterior - South','Exterior - East','Exterior - West','Bathroom','Kitchen','Laundry room','Living room','Bedroom','Foundation','Roof eaves','Fence line','Deck or patio'];
+
+const DEMOS=[
+{id:'d1',addr:'1428 W 11th St, Tracy, CA 95376',ptype:'single',year:'1972',client:'Sandra Mitchell (buyer)',phone:'(209) 555-0147',agent:'Mike Torres, Century 21',findings:[
+{type:'Subterranean termite evidence',loc:'Crawl space',sec:1,cost:1200,notes:'Shelter tubes along east foundation wall, approximately 8 linear feet. Active colony.',photo:null},
+{type:'Fungus damage (dry rot)',loc:'Crawl space',sec:1,cost:900,notes:'Floor joists above termite activity show significant fungus damage. 3 joists need sistering.',photo:null},
+{type:'Earth-to-wood contact',loc:'Exterior - South',sec:2,cost:350,notes:'Soil grade against wood siding at rear patio. Need to cut back soil 6 inches.',photo:null},
+{type:'Insufficient ventilation',loc:'Crawl space',sec:2,cost:450,notes:'Only 4 foundation vents for 1,600 sq ft. Code requires 8. Add 4 vents.',photo:null}
+],notes:'Overall structure shows deferred maintenance. Recommend full treatment before close of escrow.',total:2900,status:'completed',date:Date.now()-86400000*4,isDemo:true},
+{id:'d2',addr:'3210 Corral Hollow Rd, Tracy, CA 95377',ptype:'single',year:'1985',client:'James and Pam Nguyen (buyer)',phone:'(209) 555-0289',agent:'Lisa Kwan, Coldwell Banker',findings:[
+{type:'Drywood termite evidence',loc:'Attic',sec:1,cost:2800,notes:'Drywood termite pellets found under rafters. Recommend full-structure fumigation.',photo:null},
+{type:'Water damage to wood',loc:'Bathroom',sec:2,cost:600,notes:'Master bathroom window frame shows water intrusion damage. Recaulk and treat.',photo:null}
+],notes:'Attic findings significant. Buyer should budget for fumigation.',total:3400,status:'pending',date:Date.now()-86400000,isDemo:true},
+];
+
+async function init(){
+await odb();
+const insps=await ga();
+if(!localStorage.getItem('tl_v')&&!insps.length){
+for(const d of DEMOS)await pt(d);localStorage.setItem('tl_v','1');
+}
+renderList();renderTypeGrid();renderLocGrid();
+}
+
+function go(v){
+document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+const el=document.getElementById(v+'View');if(el)el.classList.add('active');
+document.querySelectorAll('.ni,.dnav button').forEach(b=>b.classList.toggle('active',b.getAttribute('data-v')===v));
+if(v==='list'){renderList();editId=null;}
+if(v==='new'&&!editId)resetForm();
+}
+
+async function renderList(){
+const insps=(await ga()).sort((a,b)=>b.date-a.date);
+const el=document.getElementById('listEl');
+document.getElementById('demoB').style.display=insps.some(i=>i.isDemo)?'flex':'none';
+if(!insps.length){el.innerHTML=`<div class="empty"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg><h3>No inspections yet</h3><p>Your completed inspection reports will appear here. Start your first one now.</p><button class="btn btn-pri" onclick="go('new')">Start First Inspection</button></div>`;return;}
+el.innerHTML=insps.map(i=>{
+const d=new Date(i.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const s1=i.findings.filter(f=>f.sec===1).length;
+const s2=i.findings.filter(f=>f.sec===2).length;
+return `<div class="card" onclick="viewInsp('${i.id}')" tabindex="0" role="button" aria-label="View inspection for ${i.addr}"><div class="card-top"><span class="card-addr">${i.addr}</span><span class="card-cost">$${i.total||0}</span></div><div class="card-sub">${i.client||'No client listed'}${i.agent?' — '+i.agent:''}</div><div class="card-tags"><span class="tag tag-s1">${s1} Section 1</span><span class="tag tag-s2">${s2} Section 2</span><span class="status-badge status-${i.status||'pending'}">${i.status==='sent'?'Sent to Agent':i.status==='completed'?'Completed':'Draft'}</span><span style="font-size:.75rem;color:var(--text-l);font-weight:500">${d}</span></div></div>`;
+}).join('');
+}
+
+async function viewInsp(id){
+const i=await gt(id);if(!i)return;editId=id;
+const s1f=i.findings.filter(f=>f.sec===1),s2f=i.findings.filter(f=>f.sec===2);
+const s1t=s1f.reduce((a,f)=>a+(f.cost||0),0),s2t=s2f.reduce((a,f)=>a+(f.cost||0),0);
+document.getElementById('detailEl').innerHTML=`
+<div style="background:var(--surf);border-radius:var(--rl);box-shadow:var(--sh-lg);overflow:hidden">
+<div style="background:linear-gradient(135deg,var(--pri-dark),var(--pri));color:#fff;padding:24px 20px;text-align:center"><h2 style="font-size:1.2rem;margin-bottom:4px">Take Care Termite</h2><p style="opacity:.85;font-size:.88rem">WDO Inspection Report Summary</p></div>
+<div style="padding:20px">
+<div style="margin-bottom:16px"><strong style="font-size:.8rem;color:var(--text-m);text-transform:uppercase;letter-spacing:.03em">Property</strong><p style="font-size:1rem;font-weight:600;margin-top:4px">${i.addr}</p><p style="font-size:.85rem;color:var(--text-m)">${i.ptype==='single'?'Single Family Home':i.ptype==='multi'?'Multi-Family':i.ptype==='commercial'?'Commercial':i.ptype==='condo'?'Condo/Townhome':'Property'}${i.year?' • Built '+i.year:''}</p></div>
+<div style="margin-bottom:16px"><strong style="font-size:.8rem;color:var(--text-m);text-transform:uppercase;letter-spacing:.03em">Client</strong><p style="font-size:.9rem;margin-top:4px">${i.client||'No client on file'}${i.agent?'<br><span style="font-size:.85rem;color:var(--text-m)">Agent: '+i.agent+'</span>':''}</p></div>
+<div class="section-summary"><div class="ss-card s1"><div class="ss-label">Section 1</div><div class="ss-count">${s1f.length}</div><div class="ss-cost">$${s1t}</div></div><div class="ss-card s2"><div class="ss-label">Section 2</div><div class="ss-count">${s2f.length}</div><div class="ss-cost">$${s2t}</div></div></div>
+${i.findings.length?i.findings.map(f=>`<div class="finding ${f.sec===1?'s1':'s2'}" role="listitem"><div class="finding-type">${f.type}</div><div class="finding-loc">${f.loc} — Section ${f.sec}</div><div class="finding-cost">$${f.cost||0}</div>${f.notes?'<p style="font-size:.82rem;color:var(--text-m);margin-top:6px;line-height:1.5">'+f.notes+'</p>':''}${f.photo?'<img class="finding-photo" src="'+f.photo+'" alt="Photo of '+f.type+' at '+f.loc+'">':''}</div>`).join(''):'<p style="text-align:center;color:var(--text-m);padding:20px;font-size:.9rem">No findings recorded for this inspection.</p>'}
+<div style="display:flex;justify-content:space-between;font-size:1.15rem;font-weight:700;padding:16px 0;margin-top:12px;border-top:2px solid var(--text);color:var(--pri)"><span>Total Estimated Repairs</span><span>$${i.total||0}</span></div>
+${i.notes?'<div style="margin-top:12px;padding:14px;background:var(--surf-alt);border-radius:var(--r);font-size:.88rem;line-height:1.6"><strong style="color:var(--text)">Inspector Notes:</strong> '+i.notes+'</div>':''}
+</div></div>
+<div style="display:flex;gap:10px;margin-top:16px">
+<select style="flex:1;padding:10px 12px;border:2px solid var(--bdr);border-radius:var(--r);font-size:.9rem;font-weight:500" onchange="updStat('${id}',this.value)" aria-label="Update report status"><option value="pending" ${i.status==='pending'?'selected':''}>Draft / Pending</option><option value="completed" ${i.status==='completed'?'selected':''}>Completed</option><option value="sent" ${i.status==='sent'?'selected':''}>Sent to Agent</option></select>
+<button class="btn btn-danger btn-sm" onclick="delInsp('${id}')">Delete Report</button>
+</div>`;
+go('detail');
+}
+
+async function updStat(id,s){const i=await gt(id);if(i){i.status=s;await pt(i);toast('Status updated');}}
+async function delInsp(id){if(!confirm('Delete this inspection report? This cannot be undone.'))return;await dl(id);toast('Report deleted');go('list');}
+function editInsp(){if(!editId)return;gt(editId).then(i=>{if(!i)return;document.getElementById('pAddr').value=i.addr||'';document.getElementById('pType').value=i.ptype||'single';document.getElementById('pYear').value=i.year||'';document.getElementById('cName').value=i.client||'';document.getElementById('cPhone').value=i.phone||'';document.getElementById('cAgent').value=i.agent||'';document.getElementById('notes').value=i.notes||'';findings=i.findings?i.findings.slice():[];renderFindings();document.getElementById('fTitle').textContent='Edit Inspection';go('new');});}
+
+function resetForm(){
+['pAddr','pYear','cName','cPhone','cAgent','notes'].forEach(id=>document.getElementById(id).value='');
+document.getElementById('pType').value='single';
+findings=[];renderFindings();
+document.getElementById('fTitle').textContent='New Inspection';
+}
+
+function renderFindings(){
+const el=document.getElementById('findingsEl');
+if(!findings.length){el.innerHTML='<p style="text-align:center;color:var(--text-l);padding:20px;font-size:.88rem;font-style:italic">No findings added yet. Tap the button below to record your first finding.</p>';}
+else{el.innerHTML=findings.map((f,i)=>`<div class="finding ${f.sec===1?'s1':'s2'}" role="listitem"><div class="finding-type">${f.type}</div><div class="finding-loc">${f.loc} — Section ${f.sec}</div><div class="finding-cost">$${f.cost||0}</div>${f.photo?'<img class="finding-photo" src="'+f.photo+'" alt="Photo of finding">':''}<button class="finding-del" onclick="rmFinding(${i})" aria-label="Remove ${f.type} finding">Remove</button></div>`).join('');}
+const s1=findings.filter(f=>f.sec===1),s2=findings.filter(f=>f.sec===2);
+document.getElementById('s1Count').textContent=s1.length;
+document.getElementById('s2Count').textContent=s2.length;
+document.getElementById('s1Cost').textContent='$'+s1.reduce((a,f)=>a+(f.cost||0),0);
+document.getElementById('s2Cost').textContent='$'+s2.reduce((a,f)=>a+(f.cost||0),0);
+}
+
+function rmFinding(i){findings.splice(i,1);renderFindings();}
+
+function addFinding(){
+curFinding={};curPhoto=null;curSec=1;selType='';selLoc='';
+document.getElementById('fCost').value='';document.getElementById('fNotes').value='';
+document.getElementById('photoPreview').innerHTML='';
+document.getElementById('photoStatus').textContent='Tap to add a photo';
+renderTypeGrid();renderLocGrid();setSec(1);
+go('finding');
+}
+
+function renderTypeGrid(){
+document.getElementById('typeGrid').innerHTML=TYPES.map(t=>`<button type="button" class="qp ${selType===t?'selected':''}" onclick="selType='${t}';renderTypeGrid()" role="radio" aria-checked="${selType===t?'true':'false'}">${t}</button>`).join('');
+}
+function renderLocGrid(){
+document.getElementById('locGrid').innerHTML=LOCS.map(l=>`<button type="button" class="qp ${selLoc===l?'selected':''}" onclick="selLoc='${l}';renderLocGrid()" role="radio" aria-checked="${selLoc===l?'true':'false'}">${l}</button>`).join('');
+}
+function setSec(n){curSec=n;const b1=document.getElementById('secBtn1'),b2=document.getElementById('secBtn2');b1.className='qp'+(n===1?' selected':'');b1.setAttribute('aria-pressed',n===1?'true':'false');b2.className='qp'+(n===2?' selected':'');b2.setAttribute('aria-pressed',n===2?'true':'false');}
+
+function saveFinding(){
+if(!selType){toast('Select a finding type first','error');return;}
+if(!selLoc){toast('Select where you found it','error');return;}
+findings.push({type:selType,loc:selLoc,sec:curSec,cost:parseInt(document.getElementById('fCost').value)||0,notes:document.getElementById('fNotes').value.trim(),photo:curPhoto});
+renderFindings();toast('Finding saved','success');go('new');
+}
+function cancelFinding(){go('new');}
+
+async function saveInsp(){
+const addr=document.getElementById('pAddr').value.trim();
+if(!addr){toast('Enter the property address','error');document.getElementById('pAddr').focus();return;}
+const total=findings.reduce((a,f)=>a+(f.cost||0),0);
+const insp={id:editId||'i-'+Date.now(),addr,ptype:document.getElementById('pType').value,year:document.getElementById('pYear').value,client:document.getElementById('cName').value.trim(),phone:document.getElementById('cPhone').value.trim(),agent:document.getElementById('cAgent').value.trim(),findings:findings.slice(),notes:document.getElementById('notes').value.trim(),total,status:editId?(await gt(editId))?.status||'pending':'pending',date:editId?(await gt(editId))?.date||Date.now():Date.now(),isDemo:false};
+await pt(insp);toast(editId?'Inspection updated':'Inspection saved','success');editId=null;go('list');
+}
+
+async function shareInsp(){
+const addr=document.getElementById('pAddr').value.trim()||'(unsaved)';
+const s1=findings.filter(f=>f.sec===1),s2=findings.filter(f=>f.sec===2);
+const total=findings.reduce((a,f)=>a+(f.cost||0),0);
+const text=`Take Care Termite — WDO Inspection Summary\n${addr}\n\nSection 1 Findings (${s1.length}): $${s1.reduce((a,f)=>a+(f.cost||0),0)}\n${s1.map(f=>'  • '+f.type+' at '+f.loc+': $'+f.cost).join('\n')}\n\nSection 2 Findings (${s2.length}): $${s2.reduce((a,f)=>a+(f.cost||0),0)}\n${s2.map(f=>'  • '+f.type+' at '+f.loc+': $'+f.cost).join('\n')}\n\nTotal Estimated Repairs: $${total}`;
+if(navigator.share){try{await navigator.share({title:'WDO Inspection',text});}catch(e){}}
+else{try{await navigator.clipboard.writeText(text);toast('Summary copied to clipboard','success');}catch(e){toast('Could not copy to clipboard','error');}}
+}
+
+async function openCam(){
+try{
+const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280}}});
+camStream=stream;document.getElementById('camVid').srcObject=stream;
+document.getElementById('camOv').classList.add('active');
+}catch(e){
+const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.capture='environment';
+inp.onchange=ev=>{const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=re=>{curPhoto=re.target.result;document.getElementById('photoPreview').innerHTML=`<img src="${curPhoto}" style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--r)" alt="Photo of finding">`;document.getElementById('photoStatus').textContent='Photo added';toast('Photo captured','success');};r.readAsDataURL(f);};inp.click();
+}
+}
+function closeCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}document.getElementById('camOv').classList.remove('active');}
+function snap(){
+const v=document.getElementById('camVid');const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+curPhoto=c.toDataURL('image/jpeg',0.85);
+document.getElementById('photoPreview').innerHTML=`<img src="${curPhoto}" style="width:100%;max-height:220px;object-fit:cover;border-radius:var(--r)" alt="Photo of finding">`;
+document.getElementById('photoStatus').textContent='Photo added';closeCam();toast('Photo captured','success');
+}
+
+async function clearDemo(){const all=await ga();for(const i of all){if(i.isDemo)await dl(i.id);}document.getElementById('demoB').style.display='none';renderList();toast('Sample data cleared','success');}
+async function resetAll(){if(!confirm('This will permanently delete ALL inspection data. This cannot be undone. Continue?'))return;await cl();findings=[];renderList();renderFindings();toast('All data reset','success');}
+async function expData(){const d=await ga();const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='termitelog-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();toast('Data exported','success');}
+async function impData(e){const f=e.target.files[0];if(!f)return;try{const t=await f.text();const d=JSON.parse(t);if(Array.isArray(d)){for(const i of d)await pt(i);renderList();toast('Data imported successfully','success');}else{toast('Invalid file format','error');}}catch(err){toast('Could not import file','error');}}
+
+function toast(m,type='info'){const el=document.createElement('div');el.className='toast '+type;el.textContent=m;document.getElementById('toastC').appendChild(el);setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(24px)';setTimeout(()=>el.remove(),200);},3000);}
+</script>
+</body>
+</html>

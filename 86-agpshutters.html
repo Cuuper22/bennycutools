@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ShutterBid - Storm Protection Estimates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--navy:#1e3a5f;--navy-light:#2a4a73;--navy-dark:#152a45;
+--blue:#1a56db;--blue-glow:rgba(26,86,219,.12);
+--white:#FFFFFF;--offwhite:#f8f9fa;--light:#e9ecef;
+--dark:#1a1a2e;--mid:#5a6270;--border:#d1d5db;
+--green:#047857;--green-bg:#d1fae5;
+--orange:#b45309;--orange-bg:#fef3c7;
+--red:#dc2626;--red-bg:#fee2e2;
+--shadow-sm:0 1px 2px rgba(0,0,0,.05);
+--shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.04);
+--shadow-lg:0 10px 24px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.05);
+--radius:12px;--radius-sm:8px;
+}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Roboto',sans-serif;color:var(--dark);background:var(--offwhite);min-height:100vh;padding-bottom:120px;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'Inter',sans-serif;line-height:1.25}
+h1{font-size:1.5rem;font-weight:700}h2{font-size:1.25rem;font-weight:700}h3{font-size:1.05rem;font-weight:600}
+button{font-family:inherit;cursor:pointer;border:none;background:none;font-size:inherit}
+input,select,textarea{font-family:inherit;font-size:1rem}
+.skip-link{position:absolute;top:-40px;left:0;background:var(--navy);color:#fff;padding:8px 16px;z-index:10000;font-size:.875rem;font-weight:500;border-radius:0 0 4px 0;transition:top .15s ease}
+.skip-link:focus{top:0;outline:2px solid #fff;outline-offset:-2px}
+
+/* Header */
+.header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header .shield{width:30px;height:30px;flex-shrink:0}
+.header h1{font-size:1.1rem;flex:1}
+
+/* Views */
+.view{display:none;padding:16px;animation:fadeUp .3s ease-out both}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:20px;margin-bottom:16px;border:1px solid var(--light);transition:box-shadow .2s ease}
+.card:focus-within{box-shadow:var(--shadow-md)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius-sm);font-weight:600;font-size:.9rem;transition:transform .12s ease,box-shadow .2s ease,background .15s ease;min-height:48px;font-family:'Inter',sans-serif}
+.btn:active{transform:scale(.98)}
+.btn svg{width:18px;height:18px;flex-shrink:0}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:var(--shadow-sm)}
+.btn-primary:hover{background:var(--navy-light);box-shadow:var(--shadow-md)}
+.btn-primary:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn-accent{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,86,219,.25)}
+.btn-accent:hover{background:#1e40af;box-shadow:0 4px 12px rgba(26,86,219,.35)}
+.btn-accent:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.btn-outline{border:2px solid var(--navy);color:var(--navy);background:transparent}
+.btn-outline:hover{background:var(--navy);color:#fff}
+.btn-outline:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn-ghost{color:var(--mid);padding:8px;border-radius:var(--radius-sm)}
+.btn-ghost:hover{color:var(--dark);background:rgba(0,0,0,.05)}
+.btn-ghost:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn-full{width:100%}
+.btn-sm{padding:8px 14px;font-size:.8rem;min-height:40px}
+.btn-disabled{opacity:.5;pointer-events:none;background:#9ca3af;color:#fff;cursor:not-allowed}
+
+/* Focus styles */
+*:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+*:focus:not(:focus-visible){outline:none}
+
+/* Forms */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.75rem;font-weight:600;color:var(--mid);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-family:'Inter',sans-serif}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:.95rem;background:var(--white);transition:border-color .15s ease,box-shadow .15s ease}
+.form-group input:hover,.form-group select:hover{border-color:#9ca3af}
+.form-group input:focus,.form-group select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.form-group select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235a6270' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.form-group input[type="number"]{font-variant-numeric:tabular-nums}
+
+/* Opening Rows */
+.opening-row{padding:16px 0;border-bottom:1px solid var(--light);display:flex;gap:12px;align-items:flex-start}
+.opening-row:last-child{border-bottom:none}
+.opening-row:focus-within{background:rgba(26,86,219,.02)}
+.opening-icon{width:44px;height:44px;border-radius:10px;background:var(--offwhite);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opening-icon svg{width:22px;height:22px;stroke:var(--navy);fill:none;stroke-width:1.5}
+.opening-details{flex:1;min-width:0}
+.opening-details h4{font-size:.9rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--dark)}
+.opening-details .meta{font-size:.8rem;color:var(--mid);margin-top:3px}
+.opening-details .shutter-badge{display:inline-block;font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:4px;background:var(--navy);color:#fff;margin-top:6px;font-family:'Inter',sans-serif}
+.opening-price{font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;white-space:nowrap;text-align:right;color:var(--dark);min-width:70px}
+.opening-actions{display:flex;gap:6px}
+.opening-actions button{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s ease}
+.opening-actions button:hover{background:rgba(0,0,0,.06)}
+.opening-actions button:focus-visible{outline:2px solid var(--blue);outline-offset:0}
+.opening-actions svg{width:18px;height:18px;stroke:var(--mid);fill:none;stroke-width:2;stroke-linecap:round}
+.opening-actions button:hover svg{stroke:var(--dark)}
+
+/* Summary */
+.total-bar{background:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%);color:#fff;padding:20px 22px;border-radius:var(--radius);display:flex;align-items:center;justify-content:space-between;margin:16px 0;box-shadow:var(--shadow-md)}
+.total-bar .amount{font-family:'Inter',sans-serif;font-size:2rem;font-weight:800;letter-spacing:-0.02em}
+.total-bar .label{font-size:.75rem;opacity:.8;text-transform:uppercase;letter-spacing:.5px}
+
+/* Grant callout */
+.grant-box{background:var(--green-bg);border:1px solid #86efac;border-radius:var(--radius-sm);padding:16px 18px;margin:12px 0;display:flex;align-items:flex-start;gap:12px}
+.grant-box svg{width:22px;height:22px;stroke:var(--green);flex-shrink:0;fill:none;stroke-width:2;margin-top:1px}
+.grant-box .text{font-size:.87rem;color:#065F46;line-height:1.5}
+.grant-box .text strong{color:var(--green)}
+
+/* Project cards */
+.project-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--light);padding:18px;margin-bottom:12px;cursor:pointer;transition:box-shadow .2s ease,transform .15s ease,border-color .15s ease;text-align:left;width:100%}
+.project-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);border-color:#c9cdd4}
+.project-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px;box-shadow:var(--shadow-md)}
+.project-card h4{font-size:.95rem;font-weight:600;color:var(--dark)}
+.project-card .meta{font-size:.82rem;color:var(--mid);margin-top:4px}
+.project-card .bottom{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.project-card .price{font-family:'Inter',sans-serif;font-weight:700;font-size:1.1rem;color:var(--navy)}
+.status-badge{font-size:.72rem;font-weight:600;padding:4px 12px;border-radius:20px;font-family:'Inter',sans-serif;text-transform:capitalize}
+.status-estimated{background:var(--orange-bg);color:var(--orange)}
+.status-sold{background:var(--green-bg);color:var(--green)}
+.status-installed{background:#e5e7eb;color:#4b5563}
+
+/* Upsell */
+.upsell{background:var(--offwhite);border:2px dashed var(--border);border-radius:var(--radius);padding:24px 20px;text-align:center;margin:16px 0}
+.upsell h4{color:var(--mid);margin-bottom:8px;font-weight:600}
+.upsell p{font-size:.85rem;color:#9CA3AF;margin-bottom:14px;line-height:1.5}
+
+/* Empty states */
+.empty-state{text-align:center;padding:48px 20px;color:var(--mid)}
+.empty-state-icon{width:64px;height:64px;margin:0 auto 16px;stroke:#D1D5DB;fill:none;stroke-width:1}
+.empty-state h3{color:var(--dark);margin-bottom:6px;font-size:1.1rem}
+.empty-state p{font-size:.88rem;line-height:1.5;max-width:280px;margin:0 auto}
+
+/* Toast */
+.toast-wrap{position:fixed;top:70px;right:16px;z-index:9999;pointer-events:none}
+.toast{background:var(--dark);color:#fff;padding:14px 18px;border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);font-size:.88rem;display:flex;align-items:center;gap:10px;animation:slideIn .25s ease-out;margin-bottom:8px;pointer-events:auto;max-width:320px;line-height:1.4}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Bottom nav */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--light);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.03)}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 8px;font-size:.65rem;font-weight:600;color:var(--mid);transition:color .15s ease;min-height:56px;gap:4px;font-family:'Inter',sans-serif;background:transparent}
+nav.tabs button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button:hover{color:#4b5563}
+nav.tabs button:focus-visible{color:var(--navy);outline:none;box-shadow:inset 0 -2px 0 var(--blue)}
+nav.tabs button.active{color:var(--navy)}
+nav.tabs button.active svg{stroke:var(--navy)}
+
+/* Demo banner */
+.demo-banner{background:#fef3c7;border-bottom:1px solid #fde68a;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.85rem;color:#92400e;gap:12px}
+.demo-banner button{font-size:1.2rem;color:#92400e;padding:6px 10px;border-radius:6px;transition:background .15s ease;flex-shrink:0}
+.demo-banner button:hover{background:rgba(0,0,0,.08)}
+.demo-banner button:focus-visible{outline:2px solid #92400e;outline-offset:2px}
+
+/* Preview box */
+.preview-box{background:var(--offwhite);border-radius:10px;padding:16px;margin-top:12px;text-align:center;border:1px solid var(--light)}
+.preview-label{font-size:.72rem;color:var(--mid);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:6px}
+.preview-amount{font-family:'Inter',sans-serif;font-size:1.6rem;font-weight:800;color:var(--navy)}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* High contrast mode */
+@media(prefers-contrast:high){:root{--border:#000;--mid:#000}.btn-primary,.btn-accent{outline:2px solid transparent}.card{border-width:2px}}
+
+/* Print styles */
+@media print{
+nav.tabs,.header,.demo-banner,#bct-demo-disclaimer,.btn,.upsell,.toast-wrap,nav{display:none!important}
+body{padding:0;background:#fff;color:#000}
+.view{display:block!important;animation:none}
+.card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+.total-bar{background:#1a1a2e!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grant-box{background:#d1fae5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.status-badge{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.project-card{cursor:default;break-inside:avoid}
+}
+
+/* Desktop */
+@media(min-width:768px){.view{max-width:640px;margin:0 auto}nav.tabs{max-width:640px;left:50%;transform:translateX(-50%);border-radius:12px 12px 0 0}}
+
+/* Touch device optimizations */
+@media(hover:none){.btn:hover{transform:none}.project-card:hover{transform:none}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<div class="demo-banner" id="demoBanner" role="status" aria-live="polite" style="display:none">
+  <span>Showing sample data for Melbourne, FL. Tap X to clear and add your own projects.</span>
+  <button onclick="clearDemo()" aria-label="Clear demo data">×</button>
+</div>
+
+<header class="header" role="banner">
+  <svg class="shield" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+  <h1>ShutterBid</h1>
+</header>
+
+<div class="toast-wrap" id="toastWrap" role="status" aria-live="polite"></div>
+
+<main id="main-content" tabindex="-1">
+
+<!-- VIEW: Projects List -->
+<section class="view active" id="viewProjects" aria-labelledby="projects-heading">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px">
+    <h2 id="projects-heading">Your Projects</h2>
+    <button class="btn btn-primary btn-sm" onclick="newProject()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Project
+    </button>
+  </div>
+  <div id="projectsList"></div>
+</section>
+
+<!-- VIEW: Project Builder -->
+<section class="view" id="viewBuilder" aria-labelledby="builder-heading">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+    <button class="btn-ghost" onclick="backToProjects()" aria-label="Back to projects">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 id="builder-heading">New Project</h2>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-bottom:14px;font-weight:600">Customer Info</h3>
+    <div class="form-group">
+      <label for="pName">Customer Name</label>
+      <input type="text" id="pName" placeholder="Maria Rodriguez" autocomplete="name">
+    </div>
+    <div class="form-group">
+      <label for="pAddr">Property Address</label>
+      <input type="text" id="pAddr" placeholder="4820 Croton Dr, Melbourne, FL" autocomplete="street-address">
+    </div>
+    <div class="form-group">
+      <label for="pPhone">Phone Number</label>
+      <input type="tel" id="pPhone" placeholder="(321) 555-0142" autocomplete="tel" inputmode="tel">
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <h3 style="font-weight:600">Windows & Doors</h3>
+      <button class="btn btn-sm btn-accent" onclick="showAddOpening()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Opening
+      </button>
+    </div>
+    <div id="openingsList"></div>
+    <div id="noOpenings" class="empty-state">
+      <svg class="empty-state-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      <h3>No openings added yet</h3>
+      <p>Tap "Add Opening" to start building your estimate with windows, doors, and other openings.</p>
+    </div>
+  </div>
+
+  <div class="grant-box" id="grantBox" style="display:none">
+    <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="text">
+      <strong>My Safe Florida Home Grant Eligible</strong><br>
+      This project may qualify for up to $10,000 in state grants. Customer's estimated out-of-pocket: <strong id="grantNet">$0</strong>.
+    </div>
+  </div>
+
+  <div class="total-bar">
+    <div>
+      <div class="label">Project Total</div>
+      <div class="amount" id="totalAmt">$0</div>
+    </div>
+    <div style="text-align:right">
+      <div class="label">Openings</div>
+      <div id="openingCount" style="font-size:1.1rem;font-weight:600">0</div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary btn-full" onclick="saveProject()" style="margin-bottom:10px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+    Save Project
+  </button>
+  <button class="btn btn-accent btn-full" onclick="shareProject()" style="margin-bottom:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    Share Proposal
+  </button>
+  
+  <div class="upsell">
+    <h4>Insurance Savings Report</h4>
+    <p>Show customers their estimated annual insurance savings and ROI timeline with professional PDF reports.</p>
+    <button class="btn btn-sm btn-disabled" disabled aria-disabled="true">Available in Full Version</button>
+  </div>
+</section>
+
+<!-- VIEW: Add Opening -->
+<section class="view" id="viewAddOpening" aria-labelledby="opening-heading">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+    <button class="btn-ghost" onclick="cancelOpening()" aria-label="Cancel and go back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 id="opening-heading">Add Opening</h2>
+  </div>
+  
+  <div class="card">
+    <div class="form-group">
+      <label for="oType">Opening Type</label>
+      <select id="oType">
+        <option value="window">Window</option>
+        <option value="slider">Sliding Glass Door</option>
+        <option value="entry">Entry Door</option>
+        <option value="french">French Doors</option>
+        <option value="garage">Garage Door</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="oLocation">Location or Label</label>
+      <input type="text" id="oLocation" placeholder="Master bedroom, south wall">
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="form-group" style="flex:1">
+        <label for="oWidth">Width (inches)</label>
+        <input type="number" id="oWidth" placeholder="48" min="1" max="360" inputmode="decimal">
+      </div>
+      <div class="form-group" style="flex:1">
+        <label for="oHeight">Height (inches)</label>
+        <input type="number" id="oHeight" placeholder="60" min="1" max="240" inputmode="decimal">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="oShutter">Shutter Type</label>
+      <select id="oShutter" onchange="updateOpeningPreview()">
+        <option value="accordion">Accordion Shutters</option>
+        <option value="rolldown">Roll-Down Shutters</option>
+        <option value="panel">Storm Panels (Aluminum)</option>
+        <option value="colonial">Colonial Shutters</option>
+        <option value="bahama">Bahama Shutters</option>
+        <option value="impact">Impact Window (Replacement)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="oNotes">Installation Notes</label>
+      <input type="text" id="oNotes" placeholder="Header clearance 6 in, spigot below window">
+    </div>
+    <div class="preview-box">
+      <div class="preview-label">Estimated Cost</div>
+      <div class="preview-amount" id="openingPreview">$0</div>
+    </div>
+  </div>
+  
+  <button class="btn btn-primary btn-full" onclick="confirmOpening()" style="margin-top:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span id="confirmOpeningText">Add Opening</span>
+  </button>
+</section>
+
+<!-- VIEW: Settings -->
+<section class="view" id="viewSettings" aria-labelledby="settings-heading">
+  <h2 id="settings-heading" style="margin-bottom:16px">Pricing Setup</h2>
+  
+  <div class="card">
+    <h3 style="margin-bottom:14px;font-weight:600">Per Square Foot (Installed)</h3>
+    <div id="shutterPrices"></div>
+  </div>
+  
+  <div class="card">
+    <h3 style="margin-bottom:14px;font-weight:600">Data Backup</h3>
+    <button class="btn btn-outline btn-full" onclick="doExport()" style="margin-bottom:10px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export All Projects
+    </button>
+    <button class="btn btn-outline btn-full" onclick="document.getElementById('impFile').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="width:18px;height:18px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import from File
+    </button>
+    <input type="file" id="impFile" accept=".json" style="display:none" aria-label="Import JSON file">
+  </div>
+</section>
+
+</main>
+
+<nav class="tabs" aria-label="Main navigation">
+  <button class="active" onclick="switchTab('viewProjects',this)" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Projects
+  </button>
+  <button onclick="newProject();switchTab('viewBuilder',this)" aria-label="Create new project">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    New
+  </button>
+  <button onclick="switchTab('viewSettings',this)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Pricing
+  </button>
+</nav>
+
+<footer id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:56px;left:0;right:0;background:#f8f9fa;border-top:1px solid #e5e7eb;padding:10px 16px;font-size:11px;line-height:1.5;color:#4b5563;z-index:9999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;text-align:center;">
+  <p style="margin:0;max-width:600px;"><strong style="color:#1f2937;">DEMO:</strong> Created by BennyCuTools as a free demonstration. Not affiliated with Affordable Glass Protection Inc. Brand references are for demonstration only.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Affordable%20Glass%20Protection&amp;body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc2626;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:10px;font-weight:500;white-space:nowrap;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Deletion
+  </a>
+</footer>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=-976399822;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(!_k||_h(_k)!==_V){document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111827;color:#fff;text-align:center;padding:24px"><div><h1 style="font-size:1.75rem;margin-bottom:1rem">Access Required</h1><p style="color:#9ca3af;margin-bottom:1.5rem">This tool needs a valid access key to open.</p><p><a href="mailto:ben@bennycutools.com" style="color:#60a5fa;text-decoration:none">ben@bennycutools.com</a></p></div></div>';throw new Error('No key');}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+// IndexedDB setup
+let db;
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('ShutterBidDB',1);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('projects'))d.createObjectStore('projects',{keyPath:'id'})};r.onsuccess=e=>{db=e.target.result;res()};r.onerror=rej})}
+function dbPut(d){return new Promise((res,rej)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').put(d);tx.oncomplete=res;tx.onerror=rej})}
+function dbAll(){return new Promise((res,rej)=>{const tx=db.transaction('projects','readonly');const r=tx.objectStore('projects').getAll();r.onsuccess=()=>res(r.result);r.onerror=rej})}
+function dbDel(id){return new Promise((res,rej)=>{const tx=db.transaction('projects','readwrite');tx.objectStore('projects').delete(id);tx.oncomplete=res;tx.onerror=rej})}
+
+// Pricing
+const SHUTTER_TYPES={accordion:'Accordion',rolldown:'Roll-Down',panel:'Storm Panels',colonial:'Colonial',bahama:'Bahama',impact:'Impact Window'};
+const DEF_PRICES={accordion:18,rolldown:32,panel:8,colonial:24,bahama:22,impact:45};
+function getPrices(){try{return JSON.parse(localStorage.getItem('sb_prices'))||{...DEF_PRICES}}catch(e){return{...DEF_PRICES}}}
+function savePrices(){const p={};document.querySelectorAll('[data-sp]').forEach(el=>{p[el.dataset.sp]=parseFloat(el.value)||0});localStorage.setItem('sb_prices',JSON.stringify(p));toast('Pricing saved','success')}
+function loadSettings(){const p=getPrices();let h='';for(const[k,name]of Object.entries(SHUTTER_TYPES)){h+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--light)"><span style="font-size:.9rem">${name}</span><input type="number" data-sp="${k}" value="${p[k]||0}" style="width:90px;text-align:right;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px" step="0.5" min="0" onchange="savePrices()"></div>`}document.getElementById('shutterPrices').innerHTML=h}
+
+function calcOpeningCost(o){const p=getPrices();const sqft=(o.w*o.h)/144;return sqft*(p[o.shutter]||0)}
+
+// State
+let curProject=null;
+let curOpenings=[];
+let editIdx=-1;
+
+// Views
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));const v=document.getElementById(id);v.classList.add('active');window.scrollTo(0,0)}
+function switchTab(v,btn){document.querySelectorAll('nav.tabs button').forEach(b=>{b.classList.remove('active');b.removeAttribute('aria-current')});if(btn){btn.classList.add('active');btn.setAttribute('aria-current','page')}if(v==='viewProjects')loadProjects();if(v==='viewSettings')loadSettings();showView(v)}
+function backToProjects(){switchTab('viewProjects',document.querySelector('nav.tabs button:first-child'))}
+
+// Skip link handler
+document.querySelector('.skip-link')?.addEventListener('click',function(e){e.preventDefault();const main=document.getElementById('main-content');main.focus();main.scrollIntoView()});
+
+// Projects list
+async function loadProjects(){const all=await dbAll();const c=document.getElementById('projectsList');if(!all.length){c.innerHTML='<div class="empty-state"><svg class="empty-state-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h3>No projects yet</h3><p>Tap "New Project" above to create your first storm protection estimate.</p></div>';return}
+all.sort((a,b)=>b.created-a.created);
+c.innerHTML=all.map(p=>{const d=new Date(p.created).toLocaleDateString('en-US',{month:'short',day:'numeric'});const st=p.status||'estimated';return`<button class="project-card" onclick="openProject('${p.id}')" aria-label="Open project for ${p.name||'unnamed'}, ${p.address||'no address'}, total $${(p.total||0).toLocaleString()}"><h4>${p.name||'Unnamed Project'}</h4><div class="meta">${p.address||'No address'} • ${d}</div><div class="bottom"><div class="price">$${(p.total||0).toLocaleString()}</div><span class="status-badge status-${st}">${st}</span></div></button>`}).join('')}
+
+function newProject(){curProject={id:crypto.randomUUID(),created:Date.now(),status:'estimated'};curOpenings=[];document.getElementById('pName').value='';document.getElementById('pAddr').value='';document.getElementById('pPhone').value='';document.getElementById('builder-heading').textContent='New Project';renderOpenings();recalc();showView('viewBuilder')}
+
+async function openProject(id){const all=await dbAll();const p=all.find(x=>x.id===id);if(!p)return;curProject=p;curOpenings=p.openings||[];document.getElementById('pName').value=p.name||'';document.getElementById('pAddr').value=p.address||'';document.getElementById('pPhone').value=p.phone||'';document.getElementById('builder-heading').textContent='Edit Project';renderOpenings();recalc();showView('viewBuilder')}
+
+// Openings
+function showAddOpening(){editIdx=-1;document.getElementById('oType').value='window';document.getElementById('oLocation').value='';document.getElementById('oWidth').value='';document.getElementById('oHeight').value='';document.getElementById('oShutter').value='accordion';document.getElementById('oNotes').value='';document.getElementById('opening-heading').textContent='Add Opening';document.getElementById('confirmOpeningText').textContent='Add Opening';updateOpeningPreview();showView('viewAddOpening')}
+
+function cancelOpening(){showView('viewBuilder')}
+
+function updateOpeningPreview(){const w=parseFloat(document.getElementById('oWidth').value)||0;const h=parseFloat(document.getElementById('oHeight').value)||0;const sh=document.getElementById('oShutter').value;const cost=calcOpeningCost({w,h,shutter:sh});document.getElementById('openingPreview').textContent='$'+Math.round(cost).toLocaleString()}
+document.getElementById('oWidth')?.addEventListener('input',updateOpeningPreview);
+document.getElementById('oHeight')?.addEventListener('input',updateOpeningPreview);
+
+function confirmOpening(){const w=parseFloat(document.getElementById('oWidth').value);const h=parseFloat(document.getElementById('oHeight').value);if(!w||!h||w<=0||h<=0){toast('Enter valid width and height','error');document.getElementById('oWidth').focus();return}
+const o={type:document.getElementById('oType').value,location:document.getElementById('oLocation').value.trim(),w,h,shutter:document.getElementById('oShutter').value,notes:document.getElementById('oNotes').value.trim()};
+if(editIdx>=0){curOpenings[editIdx]=o}else{curOpenings.push(o)}
+renderOpenings();recalc();showView('viewBuilder');toast(editIdx>=0?'Opening updated':'Opening added','success')}
+
+function editOpening(i){editIdx=i;const o=curOpenings[i];document.getElementById('oType').value=o.type;document.getElementById('oLocation').value=o.location||'';document.getElementById('oWidth').value=o.w;document.getElementById('oHeight').value=o.h;document.getElementById('oShutter').value=o.shutter;document.getElementById('oNotes').value=o.notes||'';document.getElementById('opening-heading').textContent='Edit Opening';document.getElementById('confirmOpeningText').textContent='Update Opening';updateOpeningPreview();showView('viewAddOpening')}
+
+function removeOpening(i){curOpenings.splice(i,1);renderOpenings();recalc();toast('Opening removed','success')}
+
+const OPENING_ICONS={window:'<rect x="5" y="3" width="14" height="18" rx="1"/><line x1="12" y1="3" x2="12" y2="21"/><line x1="5" y1="12" x2="19" y2="12"/>',slider:'<rect x="2" y="4" width="20" height="16" rx="1"/><line x1="12" y1="4" x2="12" y2="20"/><path d="M8 12h4"/>',entry:'<rect x="6" y="2" width="12" height="20" rx="1"/><circle cx="15" cy="12" r="1"/>',french:'<rect x="2" y="2" width="20" height="20" rx="1"/><line x1="12" y1="2" x2="12" y2="22"/><circle cx="10" cy="12" r=".8"/><circle cx="14" cy="12" r=".8"/>',garage:'<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" y1="8" x2="22" y2="8"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="16" x2="22" y2="16"/>',other:'<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/>'};
+
+function renderOpenings(){const c=document.getElementById('openingsList');const no=document.getElementById('noOpenings');if(!curOpenings.length){c.innerHTML='';no.style.display='block';return}no.style.display='none';
+c.innerHTML=curOpenings.map((o,i)=>{const cost=calcOpeningCost(o);const icon=OPENING_ICONS[o.type]||OPENING_ICONS.other;const dims=`${o.w}"×${o.h}"`;return`<div class="opening-row"><div class="opening-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg></div><div class="opening-details"><h4>${o.location||o.type}</h4><div class="meta">${dims} • ${(o.w*o.h/144).toFixed(1)} sq ft</div><span class="shutter-badge">${SHUTTER_TYPES[o.shutter]||o.shutter}</span></div><div class="opening-price">$${Math.round(cost).toLocaleString()}</div><div class="opening-actions"><button onclick="editOpening(${i})" aria-label="Edit ${o.location||o.type}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button onclick="removeOpening(${i})" aria-label="Remove ${o.location||o.type}"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button></div></div>`}).join('')}
+
+function recalc(){let total=0;curOpenings.forEach(o=>{total+=calcOpeningCost(o)});document.getElementById('totalAmt').textContent='$'+Math.round(total).toLocaleString();document.getElementById('openingCount').textContent=curOpenings.length;
+const gb=document.getElementById('grantBox');if(total>=2000){gb.style.display='flex';const net=Math.max(0,total-10000);document.getElementById('grantNet').textContent='$'+Math.round(net).toLocaleString()}else{gb.style.display='none'}}
+
+async function saveProject(){const name=document.getElementById('pName').value.trim();if(!name){toast('Enter customer name','error');document.getElementById('pName').focus();return}
+curProject.name=name;curProject.address=document.getElementById('pAddr').value.trim();curProject.phone=document.getElementById('pPhone').value.trim();curProject.openings=[...curOpenings];let t=0;curOpenings.forEach(o=>{t+=calcOpeningCost(o)});curProject.total=Math.round(t);curProject.updated=Date.now();await dbPut(curProject);toast('Project saved','success');loadProjects()}
+
+async function shareProject(){const name=document.getElementById('pName').value.trim();if(!name){toast('Save the project first','error');return}await saveProject();
+let text=`PROPOSAL - Affordable Glass Protection\n${curProject.name}\n${curProject.address}\n\n`;
+curOpenings.forEach((o,i)=>{const cost=Math.round(calcOpeningCost(o));text+=`${i+1}. ${o.location||o.type} (${o.w}"x${o.h}") - ${SHUTTER_TYPES[o.shutter]} - $${cost.toLocaleString()}\n`});
+text+=`\nProject Total: $${curProject.total.toLocaleString()}\n`;
+if(curProject.total>=2000)text+=`My Safe FL Home eligible - up to $10,000 grant\nEst. out-of-pocket: $${Math.max(0,curProject.total-10000).toLocaleString()}\n`;
+text+=`\nAffordable Glass Protection Inc\n(321) 878-8879\nServing Florida since 1992`;
+if(navigator.share){try{await navigator.share({title:`Proposal for ${curProject.name}`,text});curProject.shared=true;await dbPut(curProject);toast('Shared successfully','success')}catch(e){if(e.name!=='AbortError')clipCopy(text)}}else{clipCopy(text)}}
+
+async function clipCopy(t){try{await navigator.clipboard.writeText(t);toast('Copied to clipboard','success')}catch(e){toast('Could not copy to clipboard','error')}}
+
+// Export/Import
+async function doExport(){const all=await dbAll();const d=JSON.stringify({projects:all,prices:getPrices(),exported:new Date().toISOString()},null,2);const b=new Blob([d],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='shutterbid-backup-'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(u);toast('Projects exported','success')}
+document.getElementById('impFile')?.addEventListener('change',async function(e){const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.projects)for(const p of d.projects)await dbPut(p);if(d.prices)localStorage.setItem('sb_prices',JSON.stringify(d.prices));toast('Projects imported','success');loadProjects();loadSettings()}catch(er){toast('Invalid file format','error')}e.target.value=''});
+
+// Demo data
+const DEMO=[
+  {id:'demo-1',created:Date.now()-3600000,name:'Rodriguez Residence',address:'4820 Croton Dr, Melbourne, FL',phone:'(321) 555-0189',status:'estimated',openings:[
+    {type:'window',location:'Living room front',w:60,h:48,shutter:'accordion',notes:''},
+    {type:'window',location:'Master bedroom',w:48,h:36,shutter:'accordion',notes:''},
+    {type:'window',location:'Guest bedroom',w:36,h:48,shutter:'accordion',notes:''},
+    {type:'slider',location:'Lanai slider',w:96,h:80,shutter:'rolldown',notes:''},
+    {type:'slider',location:'Family room slider',w:72,h:80,shutter:'rolldown',notes:''},
+    {type:'entry',location:'Front door',w:36,h:80,shutter:'colonial',notes:'Decorative preference'},
+    {type:'window',location:'Kitchen window',w:48,h:36,shutter:'accordion',notes:'Above sink'},
+    {type:'garage',location:'Garage door',w:192,h:96,shutter:'panel',notes:''}
+  ],total:0,isDemo:true},
+  {id:'demo-2',created:Date.now()-86400000,name:'Patel Investment Property',address:'1190 Malabar Rd SE, Palm Bay, FL',phone:'(321) 555-0244',status:'sold',openings:[
+    {type:'window',location:'Front windows (3)',w:108,h:48,shutter:'panel',notes:''},
+    {type:'window',location:'Side windows (2)',w:96,h:36,shutter:'panel',notes:''},
+    {type:'slider',location:'Back slider',w:72,h:80,shutter:'panel',notes:''},
+    {type:'entry',location:'Front door',w:36,h:80,shutter:'panel',notes:''}
+  ],total:0,isDemo:true}
+];
+
+async function loadDemo(){const all=await dbAll();if(all.length>0||localStorage.getItem('sb_demoCleared'))return;
+for(const p of DEMO){let t=0;p.openings.forEach(o=>{t+=calcOpeningCost(o)});p.total=Math.round(t);await dbPut(p)}
+document.getElementById('demoBanner').style.display='flex';loadProjects()}
+
+async function clearDemo(){const all=await dbAll();for(const p of all){if(p.isDemo)await dbDel(p.id)}document.getElementById('demoBanner').style.display='none';localStorage.setItem('sb_demoCleared','1');loadProjects();toast('Demo data cleared','success')}
+
+// Toast notifications
+function toast(msg,type='success'){const w=document.getElementById('toastWrap');const t=document.createElement('div');t.className='toast '+type;const icon=type==='error'?'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';t.innerHTML=icon+'<span>'+msg+'</span>';w.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='opacity .2s,transform .2s';setTimeout(()=>t.remove(),200)},2800)}
+
+// Initialize
+async function init(){await openDB();await loadDemo();const all=await dbAll();if(all.some(x=>x.isDemo))document.getElementById('demoBanner').style.display='flex';await loadProjects();loadSettings()}
+init();
+</script>
+</body>
+</html>

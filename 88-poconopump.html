@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PumpLog - Pocono Well & Pump</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Source+Sans+3:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Design tokens - consistent 8px scale */
+  --bg:#0F1117;
+  --card:#1A1D27;
+  --card-hover:#22252F;
+  --border:#2A2D3A;
+  --text:#E4E4E7;
+  --text-secondary:#A1A1AA;
+  --muted:#71717A;
+  --blue:#3B82F6;
+  --blue-dim:rgba(59,130,246,.12);
+  --blue-glow:rgba(59,130,246,.25);
+  --green:#22C55E;
+  --green-dim:rgba(34,197,94,.12);
+  --amber:#F59E0B;
+  --amber-dim:rgba(245,158,11,.12);
+  --red:#EF4444;
+  --red-dim:rgba(239,68,68,.12);
+  --purple:#A855F7;
+  --purple-dim:rgba(168,85,247,.12);
+  --white:#FFF;
+  
+  /* Spacing scale (8px base) */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+  
+  /* Border radius */
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-full:9999px;
+  
+  /* Shadows */
+  --shadow:0 4px 12px rgba(0,0,0,.3);
+  --shadow-lg:0 8px 24px rgba(0,0,0,.4);
+  --shadow-glow:0 0 20px var(--blue-glow);
+}
+
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{font-family:'Source Sans 3',sans-serif;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:120px;overflow-x:hidden;-webkit-font-smoothing:antialiased;line-height:1.5}
+
+/* Typography scale */
+h1,h2,h3,h4{font-family:'DM Sans',sans-serif;line-height:1.2;color:var(--white);font-weight:700}
+h2{font-size:1.25rem}
+h3{font-size:1rem}
+
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:1rem;color:var(--text)}
+
+/* Skip link */
+.skip{position:absolute;top:-40px;left:0;background:var(--blue);color:#fff;padding:var(--space-2) var(--space-4);z-index:10000;font-size:.875rem;text-decoration:none;font-weight:500;border-radius:0 0 var(--radius-sm) 0;transition:top .2s}
+.skip:focus{top:0}
+
+/* Header */
+.hdr{background:var(--card);border-bottom:1px solid var(--border);padding:var(--space-3) var(--space-4);display:flex;align-items:center;gap:var(--space-2);position:sticky;top:0;z-index:100}
+.hdr h1{font-size:1.1rem;flex:1;font-weight:700}
+
+/* Views */
+.view{display:none;padding:var(--space-4);animation:fadeUp .3s ease-out both}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:var(--space-4);margin-bottom:var(--space-3);transition:border-color .15s,box-shadow .15s}
+.card:focus-within{border-color:var(--blue);box-shadow:var(--shadow-glow)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);padding:12px 20px;border-radius:var(--radius-sm);font-weight:600;font-size:.88rem;transition:all .15s;min-height:48px;font-family:'DM Sans',sans-serif}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97) translateY(0)}
+.btn svg{width:18px;height:18px;flex-shrink:0}
+
+.btn-blue{background:var(--blue);color:#fff;box-shadow:0 4px 12px rgba(59,130,246,.3)}
+.btn-blue:hover{background:#4B92F6;box-shadow:0 6px 16px rgba(59,130,246,.4)}
+.btn-blue:focus-visible{outline:2px solid var(--blue);outline-offset:2px;box-shadow:0 0 0 3px var(--blue-dim),0 4px 12px rgba(59,130,246,.3)}
+
+.btn-green{background:var(--green);color:#fff;box-shadow:0 4px 12px rgba(34,197,94,.3)}
+.btn-green:hover{background:#32D55E;box-shadow:0 6px 16px rgba(34,197,94,.4)}
+
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:transparent}
+.btn-outline:hover{background:var(--card-hover);border-color:var(--text-secondary)}
+.btn-outline:focus-visible{border-color:var(--blue);outline:2px solid var(--blue);outline-offset:2px}
+
+.btn-ghost{color:var(--muted);padding:var(--space-2);border-radius:var(--radius-sm)}
+.btn-ghost:hover{color:var(--text);background:var(--card-hover)}
+.btn-ghost:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.btn-f{width:100%}
+.btn-sm{padding:var(--space-2) 14px;font-size:.8rem;min-height:36px}
+.btn-dis{opacity:.4;pointer-events:none;background:var(--border);color:var(--muted);cursor:not-allowed}
+
+/* Focus styles */
+*:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+*:focus:not(:focus-visible){outline:none}
+
+/* Form groups */
+.fg{margin-bottom:var(--space-4)}
+.fg label{display:block;font-size:.72rem;font-weight:600;color:var(--muted);margin-bottom:var(--space-1);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Sans',sans-serif}
+.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);transition:border-color .2s,box-shadow .2s}
+.fg input:hover,.fg select:hover,.fg textarea:hover{border-color:var(--text-secondary)}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--blue);outline:none;box-shadow:0 0 0 3px var(--blue-dim)}
+.fg select{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%2371717A' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.fg textarea{min-height:90px;resize:vertical}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--muted);opacity:.7}
+
+/* Job cards */
+.job-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:var(--space-3);margin-bottom:var(--space-2);cursor:pointer;transition:all .15s;position:relative}
+.job-card:hover{background:var(--card-hover);border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow)}
+.job-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-glow)}
+.job-card .top{display:flex;align-items:flex-start;gap:var(--space-2)}
+.job-card .dot{width:10px;height:10px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot-scheduled{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot-enroute{background:var(--purple);box-shadow:0 0 6px var(--purple)}
+.dot-progress{background:var(--blue);box-shadow:0 0 6px var(--blue)}
+.dot-done{background:var(--green);box-shadow:0 0 6px var(--green)}
+.job-card .info{flex:1;min-width:0}
+.job-card .info h4{font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.job-card .info .sub{font-size:.8rem;color:var(--muted);margin-top:2px;line-height:1.4}
+.job-card .cost{font-family:'DM Sans',sans-serif;font-weight:700;font-size:1rem;white-space:nowrap;color:var(--white)}
+.job-card .sts{font-size:.68rem;font-weight:600;padding:3px 10px;border-radius:var(--radius-full);margin-top:var(--space-2);display:inline-block;font-family:'DM Sans',sans-serif;letter-spacing:.3px}
+.sts-scheduled{background:var(--amber-dim);color:var(--amber)}
+.sts-enroute{background:var(--purple-dim);color:var(--purple)}
+.sts-progress{background:var(--blue-dim);color:var(--blue)}
+.sts-done{background:var(--green-dim);color:var(--green)}
+
+/* Status buttons */
+.status-bar{display:flex;gap:var(--space-1);margin:var(--space-2) 0;flex-wrap:wrap}
+.status-bar button{padding:8px 14px;border-radius:var(--radius-full);font-size:.78rem;font-weight:600;border:1.5px solid var(--border);font-family:'DM Sans',sans-serif;transition:all .15s;background:transparent;color:var(--text-secondary)}
+.status-bar button:hover:not(.active){border-color:var(--text-secondary);color:var(--text)}
+.status-bar button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.status-bar button.active{color:#fff;border-color:transparent}
+.status-bar button[data-s="scheduled"].active{background:var(--amber);box-shadow:0 2px 8px rgba(245,158,11,.3)}
+.status-bar button[data-s="enroute"].active{background:var(--purple);box-shadow:0 2px 8px rgba(168,85,247,.3)}
+.status-bar button[data-s="progress"].active{background:var(--blue);box-shadow:0 2px 8px rgba(59,130,246,.3)}
+.status-bar button[data-s="done"].active{background:var(--green);box-shadow:0 2px 8px rgba(34,197,94,.3)}
+
+/* Day tabs */
+.day-tabs{display:flex;gap:var(--space-1);margin-bottom:var(--space-4);overflow-x:auto;padding-bottom:var(--space-1);scrollbar-width:none}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tab{padding:var(--space-2) var(--space-4);border-radius:var(--radius-full);font-size:.8rem;font-weight:600;background:var(--card);border:1px solid var(--border);white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all .15s;color:var(--text-secondary);cursor:pointer}
+.day-tab:hover:not(.active){border-color:var(--text-secondary);color:var(--text)}
+.day-tab:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.day-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(59,130,246,.3)}
+
+/* GPS badge */
+.gps-badge{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;color:var(--green);padding:3px 8px;background:var(--green-dim);border-radius:var(--radius-full);font-family:'DM Sans',sans-serif;margin-top:var(--space-1)}
+.gps-badge svg{width:12px;height:12px;stroke:var(--green);fill:none;stroke-width:2}
+
+/* Service presets */
+.preset-grid{display:flex;flex-wrap:wrap;gap:var(--space-1);margin:var(--space-2) 0}
+.preset{padding:6px 12px;border-radius:var(--radius-full);font-size:.75rem;font-weight:500;border:1.5px solid var(--border);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .12s;color:var(--text-secondary);background:transparent}
+.preset:hover{border-color:var(--blue);color:var(--blue)}
+.preset:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.preset.sel{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* Upsell */
+.upsell{background:linear-gradient(135deg, var(--card) 0%, rgba(59,130,246,.05) 100%);border:2px dashed var(--border);border-radius:var(--radius);padding:var(--space-5);text-align:center;margin:var(--space-4) 0}
+.upsell h4{color:var(--text-secondary);margin-bottom:var(--space-1);font-family:'DM Sans',sans-serif;font-size:.95rem}
+.upsell p{font-size:.82rem;color:var(--muted);margin-bottom:var(--space-3);line-height:1.5}
+
+/* Demo banner */
+.demo-ban{background:#422006;border-bottom:1px solid #713F12;padding:10px var(--space-4);display:flex;align-items:center;justify-content:space-between;font-size:.83rem;color:#FBBF24;gap:var(--space-3)}
+.demo-ban button{font-size:1.2rem;color:#FBBF24;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);line-height:1}
+.demo-ban button:hover{background:rgba(251,191,36,.1)}
+.demo-ban button:focus-visible{outline:2px solid #FBBF24;outline-offset:2px}
+
+/* Toast notifications */
+.toast-w{position:fixed;top:65px;right:var(--space-4);z-index:9999;max-width:min(320px,90vw)}
+.toast{background:var(--card);color:var(--text);padding:12px var(--space-4);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);border:1px solid var(--border);font-size:.85rem;display:flex;align-items:center;gap:var(--space-2);animation:slideIn .3s ease-out;margin-bottom:var(--space-2)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.success{border-left:3px solid var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* Bottom navigation */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--space-2) 0 6px;font-size:.6rem;font-weight:600;color:var(--muted);min-height:56px;gap:3px;font-family:'DM Sans',sans-serif;transition:color .15s;position:relative}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
+nav.tabs button:hover{color:var(--text-secondary)}
+nav.tabs button:hover svg{transform:translateY(-1px)}
+nav.tabs button.act{color:var(--blue)}
+nav.tabs button.act svg{stroke:var(--blue);transform:translateY(-1px)}
+nav.tabs button.act::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:20px;height:3px;background:var(--blue);border-radius:0 0 3px 3px}
+nav.tabs button:focus-visible{outline:2px solid var(--blue);outline-offset:-4px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:var(--space-8) var(--space-4);color:var(--muted)}
+.empty-state svg{display:block;margin:0 auto var(--space-3)}
+.empty-state h3{margin-bottom:var(--space-1);color:var(--text-secondary);font-size:1.05rem}
+.empty-state p{font-size:.88rem;line-height:1.5;max-width:260px;margin:0 auto}
+.empty-state .btn{margin-top:var(--space-4)}
+
+/* Demo disclaimer */
+.demo-disclaimer{position:fixed;bottom:56px;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:10px var(--space-4);font-size:11px;line-height:1.5;color:var(--muted);z-index:999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--space-2) var(--space-3);text-align:center}
+.demo-disclaimer strong{color:var(--text-secondary)}
+.demo-disclaimer a{display:inline-flex;align-items:center;gap:4px;background:var(--red-dim);color:var(--red);padding:4px 10px;border-radius:var(--radius-sm);text-decoration:none;font-size:10px;font-weight:500;transition:background .15s}
+.demo-disclaimer a:hover{background:var(--red-dim);filter:brightness(1.2)}
+.demo-disclaimer a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+
+/* Loading state */
+.skeleton{animation:skeleton-pulse 1.5s ease-in-out infinite;background:linear-gradient(90deg,var(--card) 25%,var(--card-hover) 50%,var(--card) 75%);background-size:200% 100%;border-radius:var(--radius-sm)}
+@keyframes skeleton-pulse{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Responsive */
+@media print{nav.tabs,.hdr,.demo-ban,.demo-disclaimer,.btn,.upsell{display:none!important}body{padding:0;background:#fff;color:#000}.view{display:block!important}.card{background:#fff;border:1px solid #ddd;color:#000}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(min-width:768px){.view{max-width:600px;margin:0 auto}nav.tabs,.demo-disclaimer{max-width:600px;left:50%;transform:translateX(-50%)}nav.tabs{transform:translateX(-50%)}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip">Skip to main content</a>
+
+<div class="demo-ban" id="demoBanner" role="alert" style="display:none">
+  <span>Sample jobs loaded for demo. Tap X when you're ready to start fresh.</span>
+  <button onclick="clearDemo()" aria-label="Clear demo data">X</button>
+</div>
+
+<header class="hdr" role="banner">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a7 7 0 007-7c0-2-1-3.9-3-5.5s-3-4-3-6.5a7 7 0 00-7 7c0 2 1 3.9 3 5.5s3 4 3 6.5z"/></svg>
+  <h1 id="site-title">PumpLog</h1>
+</header>
+
+<div class="toast-w" id="toastWrapper" aria-live="polite" aria-atomic="true"></div>
+
+<main id="main-content">
+
+<!-- Job Board -->
+<section class="view active" id="viewBoard" aria-labelledby="board-heading">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-3)">
+    <h2 id="board-heading">Job Board</h2>
+    <button class="btn btn-blue btn-sm" onclick="newJob()" aria-label="Create new job log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Log Job
+    </button>
+  </div>
+  
+  <div class="day-tabs" id="dayTabs" role="tablist" aria-label="Select day"></div>
+  
+  <div id="jobList"></div>
+</section>
+
+<!-- Job Form -->
+<section class="view" id="viewForm" aria-labelledby="form-heading">
+  <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-4)">
+    <button class="btn-ghost" onclick="toBoard()" aria-label="Back to job board">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <h2 id="form-heading">Log Job</h2>
+  </div>
+  
+  <article class="card">
+    <h3 style="margin-bottom:var(--space-3)">Customer Info</h3>
+    <div class="fg">
+      <label for="jobName">Customer Name</label>
+      <input type="text" id="jobName" placeholder="e.g. Anderson Family" autocomplete="name" aria-required="true">
+    </div>
+    <div class="fg">
+      <label for="jobAddress">Service Address</label>
+      <input type="text" id="jobAddress" placeholder="1420 Main St, Stroudsburg, PA" autocomplete="street-address">
+    </div>
+    <div class="fg">
+      <label for="jobPhone">Phone Number</label>
+      <input type="tel" id="jobPhone" placeholder="(570) 555-0123" autocomplete="tel">
+    </div>
+  </article>
+  
+  <article class="card">
+    <h3 style="margin-bottom:var(--space-3)">Service Details</h3>
+    <div class="fg">
+      <label>Quick Select (tap to auto-fill)</label>
+    </div>
+    <div class="preset-grid" id="presets" role="list" aria-label="Service type presets"></div>
+    <div class="fg" style="margin-top:var(--space-3)">
+      <label for="jobService">What service was performed?</label>
+      <input type="text" id="jobService" placeholder="Describe the work done..." aria-required="true">
+    </div>
+    <div style="display:flex;gap:var(--space-3)">
+      <div class="fg" style="flex:1">
+        <label for="jobCost">Cost ($)</label>
+        <input type="number" id="jobCost" placeholder="4200" min="0" step="50" inputmode="decimal">
+      </div>
+      <div class="fg" style="flex:1">
+        <label for="jobDate">Service Date</label>
+        <input type="date" id="jobDate" aria-required="true">
+      </div>
+    </div>
+  </article>
+  
+  <article class="card">
+    <h3 style="margin-bottom:var(--space-3)">Job Status</h3>
+    <div class="status-bar" role="radiogroup" aria-label="Job status">
+      <button type="button" data-s="scheduled" onclick="setStatus(this)" class="active" role="radio" aria-checked="true">Scheduled</button>
+      <button type="button" data-s="enroute" onclick="setStatus(this)" role="radio" aria-checked="false">En Route</button>
+      <button type="button" data-s="progress" onclick="setStatus(this)" role="radio" aria-checked="false">In Progress</button>
+      <button type="button" data-s="done" onclick="setStatus(this)" role="radio" aria-checked="false">Done</button>
+    </div>
+    <div id="gpsSection" style="display:none;margin-top:var(--space-3)">
+      <button type="button" class="btn btn-green btn-f" onclick="captureGPS()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Stamp Location
+      </button>
+      <div id="gpsResult" style="margin-top:var(--space-2)"></div>
+    </div>
+  </article>
+  
+  <article class="card">
+    <div class="fg">
+      <label for="jobNotes">Job Notes</label>
+      <textarea id="jobNotes" placeholder="Any details worth remembering: parts used, customer requests, follow-up needed..."></textarea>
+    </div>
+  </article>
+  
+  <button type="button" class="btn btn-blue btn-f" onclick="saveJob()" style="margin-bottom:var(--space-2)" aria-label="Save job record">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+    Save Job
+  </button>
+  
+  <button type="button" class="btn btn-outline btn-f" onclick="shareJob()" style="margin-bottom:var(--space-3)" aria-label="Share job details with customer">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+    Share with Customer
+  </button>
+  
+  <aside class="upsell" aria-label="Premium feature preview">
+    <h4>Want automatic customer updates?</h4>
+    <p>The full version sends texts automatically: "Your tech is on the way" and "Job's done" — no extra work.</p>
+    <button type="button" class="btn btn-sm btn-dis" disabled aria-disabled="true">Available in Full Version</button>
+  </aside>
+</section>
+
+<!-- Settings -->
+<section class="view" id="viewSettings" aria-labelledby="settings-heading">
+  <h2 id="settings-heading" style="margin-bottom:var(--space-4)">Settings</h2>
+  
+  <article class="card">
+    <h3 style="margin-bottom:var(--space-2)">Service Presets</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:var(--space-3);line-height:1.5">These buttons appear when logging a job. Tap one to auto-fill the service name and typical cost.</p>
+    <div id="presetSettings"></div>
+  </article>
+  
+  <article class="card">
+    <h3 style="margin-bottom:var(--space-2)">Data Backup</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:var(--space-3);line-height:1.5">Export your job records to a file, or restore from a previous backup.</p>
+    <button type="button" class="btn btn-outline btn-f" onclick="doExport()" style="margin-bottom:var(--space-2)" aria-label="Export data as JSON file">Export (JSON)</button>
+    <button type="button" class="btn btn-outline btn-f" onclick="document.getElementById('importFile').click()" aria-label="Import data from JSON file">Import (JSON)</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" aria-label="Select backup file to import">
+  </article>
+</section>
+</main>
+
+<nav class="tabs" role="navigation" aria-label="Main navigation">
+  <button class="act" onclick="switchTab('viewBoard',this)" aria-label="Job Board" aria-current="page">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Board
+  </button>
+  <button onclick="newJob();switchTab('viewForm',this)" aria-label="Log a new job">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Log
+  </button>
+  <button onclick="switchTab('viewSettings',this)" aria-label="Settings">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
+  </button>
+</nav>
+
+<footer class="demo-disclaimer" role="contentinfo" aria-label="Demo notice">
+  <p style="margin:0;max-width:600px"><strong>DEMO:</strong> This tool was built by BennyCuTools as a free demo. Not affiliated with Pocono Well & Pump Service.</p>
+  <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Pocono%20Well%20Pump&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." aria-label="Request deletion of this demo">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+    Request Removal
+  </a>
+</footer>
+
+<script>
+// Access key validation
+function hashKey(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const VALID_KEY=1710090518;
+const urlKey=new URLSearchParams(window.location.search).get('key');
+if(!urlKey||hashKey(urlKey)!==VALID_KEY){
+  document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem">Access Required</h1><p style="color:#999">This tool requires a valid access key.</p><p style="margin-top:1rem"><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>';
+  throw new Error('Access key required');
+}
+
+// Prevent context menu on long press
+let touchTimer;
+document.addEventListener('touchstart',()=>{touchTimer=setTimeout(()=>{},500)});
+document.addEventListener('touchend',()=>clearTimeout(touchTimer));
+
+// Database setup
+let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const request=indexedDB.open('PumpLogDB',1);
+    request.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('jobs')){
+        db.createObjectStore('jobs',{keyPath:'id'});
+      }
+    };
+    request.onsuccess=e=>{db=e.target.result;resolve()};
+    request.onerror=reject;
+  });
+}
+
+function dbPut(data){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('jobs','readwrite');
+    tx.objectStore('jobs').put(data);
+    tx.oncomplete=resolve;
+    tx.onerror=reject;
+  });
+}
+
+function dbGetAll(){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('jobs','readonly');
+    const query=tx.objectStore('jobs').getAll();
+    query.onsuccess=()=>resolve(query.result);
+    query.onerror=reject;
+  });
+}
+
+function dbDelete(id){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction('jobs','readwrite');
+    tx.objectStore('jobs').delete(id);
+    tx.oncomplete=resolve;
+    tx.onerror=reject;
+  });
+}
+
+// Service presets with realistic pricing
+const SERVICE_PRESETS=[
+  {name:'Pump Replacement',cost:4200},
+  {name:'Pressure Tank',cost:1800},
+  {name:'Water Test',cost:0},
+  {name:'Well Drilling',cost:12000},
+  {name:'Water Softener',cost:3500},
+  {name:'Grinder Pump',cost:3800},
+  {name:'Septic Pump',cost:2500},
+  {name:'Water Heater',cost:2200},
+  {name:'Service Call',cost:150}
+];
+
+// App state
+let currentJob=null;
+let currentStatus='scheduled';
+let currentGPS=null;
+let selectedDayOffset=0;
+
+// View management
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function switchTab(viewId,btn){
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.classList.remove('act');
+    b.removeAttribute('aria-current');
+  });
+  if(btn){
+    btn.classList.add('act');
+    btn.setAttribute('aria-current','page');
+  }
+  if(viewId==='viewBoard'){
+    buildDayTabs();
+    loadBoard();
+  }
+  showView(viewId);
+}
+
+function toBoard(){
+  switchTab('viewBoard',document.querySelector('nav.tabs button'));
+}
+
+// Date helpers
+function formatDateKey(date){
+  return date.toISOString().slice(0,10);
+}
+
+function getDayLabel(offset){
+  const d=new Date();
+  d.setDate(d.getDate()+offset);
+  if(offset===0)return'Today';
+  if(offset===1)return'Tomorrow';
+  if(offset===-1)return'Yesterday';
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+
+// Day tabs
+function buildDayTabs(){
+  const container=document.getElementById('dayTabs');
+  let html='';
+  for(let i=-1;i<=5;i++){
+    const isActive=i===selectedDayOffset;
+    html+=`<button type="button" class="day-tab ${isActive?'active':''}" onclick="selectDay(${i})" role="tab" aria-selected="${isActive}" aria-controls="jobList">${getDayLabel(i)}</button>`;
+  }
+  container.innerHTML=html;
+}
+
+function selectDay(offset){
+  selectedDayOffset=offset;
+  buildDayTabs();
+  loadBoard();
+}
+
+// Job board
+async function loadBoard(){
+  const allJobs=await dbGetAll();
+  const container=document.getElementById('jobList');
+  const targetDate=new Date();
+  targetDate.setDate(targetDate.getDate()+selectedDayOffset);
+  const dateKey=formatDateKey(targetDate);
+  
+  const daysJobs=allJobs
+    .filter(j=>j.date===dateKey)
+    .sort((a,b)=>{
+      const order={scheduled:0,enroute:1,progress:2,done:3};
+      return(order[a.status]||0)-(order[b.status]||0);
+    });
+  
+  if(!daysJobs.length){
+    container.innerHTML=`
+      <div class="empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#2A2D3A" stroke-width="1" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <h3>No jobs ${selectedDayOffset===0?'today':getDayLabel(selectedDayOffset).toLowerCase()}</h3>
+        <p>Tap "Log Job" to record your first service call for this day.</p>
+        <button type="button" class="btn btn-blue btn-sm" onclick="newJob()" style="margin-top:16px">Log Your First Job</button>
+      </div>`;
+    return;
+  }
+  
+  container.innerHTML=daysJobs.map(job=>{
+    const gpsBadge=job.gps?`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${job.gps.lat.toFixed(4)}, ${job.gps.lng.toFixed(4)}</div>`:'';
+    const completedTime=job.completedAt?new Date(job.completedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'';
+    const statusText=job.status==='progress'?'In Progress':job.status==='enroute'?'En Route':job.status.charAt(0).toUpperCase()+job.status.slice(1);
+    
+    return`<article class="job-card" tabindex="0" role="button" onclick="openJob('${job.id}')" onkeydown="if(event.key==='Enter'||event.key===' ')openJob('${job.id}')" aria-label="View job for ${job.name||'Unnamed customer'}">
+      <div class="top">
+        <div class="dot dot-${job.status}" aria-hidden="true"></div>
+        <div class="info">
+          <h4>${job.name||'No name'}</h4>
+          <div class="sub">${job.service||'No service description'}${completedTime?' — Completed '+completedTime:''}</div>
+          <span class="sts sts-${job.status}">${statusText}</span>
+          ${gpsBadge}
+        </div>
+        <div class="cost">${job.cost?'$'+job.cost.toLocaleString():''}</div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+// Job form
+function newJob(){
+  currentJob={id:crypto.randomUUID(),created:Date.now()};
+  currentStatus='scheduled';
+  currentGPS=null;
+  
+  document.getElementById('jobName').value='';
+  document.getElementById('jobAddress').value='';
+  document.getElementById('jobPhone').value='';
+  document.getElementById('jobService').value='';
+  document.getElementById('jobCost').value='';
+  document.getElementById('jobDate').value=formatDateKey(new Date());
+  document.getElementById('jobNotes').value='';
+  
+  document.getElementById('form-heading').textContent='Log Job';
+  document.getElementById('gpsResult').innerHTML='';
+  
+  renderPresets();
+  renderStatusBar();
+  showView('viewForm');
+  
+  // Focus first input for accessibility
+  setTimeout(()=>document.getElementById('jobName').focus(),100);
+}
+
+async function openJob(id){
+  const allJobs=await dbGetAll();
+  const job=allJobs.find(j=>j.id===id);
+  if(!job)return;
+  
+  currentJob=job;
+  currentStatus=job.status||'scheduled';
+  currentGPS=job.gps||null;
+  
+  document.getElementById('jobName').value=job.name||'';
+  document.getElementById('jobAddress').value=job.address||'';
+  document.getElementById('jobPhone').value=job.phone||'';
+  document.getElementById('jobService').value=job.service||'';
+  document.getElementById('jobCost').value=job.cost||'';
+  document.getElementById('jobDate').value=job.date||'';
+  document.getElementById('jobNotes').value=job.notes||'';
+  document.getElementById('form-heading').textContent='Edit Job';
+  
+  if(currentGPS){
+    document.getElementById('gpsResult').innerHTML=`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${currentGPS.lat.toFixed(4)}, ${currentGPS.lng.toFixed(4)} at ${new Date(currentGPS.time).toLocaleTimeString()}</div>`;
+  }else{
+    document.getElementById('gpsResult').innerHTML='';
+  }
+  
+  renderPresets();
+  renderStatusBar();
+  showView('viewForm');
+}
+
+function renderPresets(){
+  const container=document.getElementById('presets');
+  const currentService=document.getElementById('jobService').value;
+  container.innerHTML=SERVICE_PRESETS.map(preset=>{
+    const isSelected=currentService===preset.name;
+    return`<button type="button" class="preset ${isSelected?'sel':''}" onclick="selectPreset('${preset.name}',${preset.cost})" role="listitem" aria-pressed="${isSelected}">${preset.name}</button>`;
+  }).join('');
+}
+
+function selectPreset(name,cost){
+  document.getElementById('jobService').value=name;
+  if(cost>0)document.getElementById('jobCost').value=cost;
+  renderPresets();
+}
+
+function setStatus(btn){
+  currentStatus=btn.dataset.s;
+  renderStatusBar();
+}
+
+function renderStatusBar(){
+  document.querySelectorAll('.status-bar button').forEach(btn=>{
+    const isActive=btn.dataset.s===currentStatus;
+    btn.classList.toggle('active',isActive);
+    btn.setAttribute('aria-checked',isActive);
+  });
+  document.getElementById('gpsSection').style.display=currentStatus==='done'?'block':'none';
+}
+
+function captureGPS(){
+  if(!navigator.geolocation){
+    showToast('GPS not available on this device','error');
+    return;
+  }
+  
+  navigator.geolocation.getCurrentPosition(
+    position=>{
+      currentGPS={
+        lat:position.coords.latitude,
+        lng:position.coords.longitude,
+        time:Date.now()
+      };
+      document.getElementById('gpsResult').innerHTML=`<div class="gps-badge"><svg viewBox="0 0 24 24" stroke-linecap="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${currentGPS.lat.toFixed(4)}, ${currentGPS.lng.toFixed(4)} at ${new Date().toLocaleTimeString()}</div>`;
+      showToast('Location saved with job record');
+    },
+    error=>{
+      showToast('Could not get location — check GPS permissions','error');
+    },
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+
+async function saveJob(){
+  const name=document.getElementById('jobName').value.trim();
+  if(!name){
+    showToast('Add a customer name first','error');
+    document.getElementById('jobName').focus();
+    return;
+  }
+  
+  currentJob.name=name;
+  currentJob.address=document.getElementById('jobAddress').value.trim();
+  currentJob.phone=document.getElementById('jobPhone').value.trim();
+  currentJob.service=document.getElementById('jobService').value.trim();
+  currentJob.cost=parseFloat(document.getElementById('jobCost').value)||0;
+  currentJob.date=document.getElementById('jobDate').value;
+  currentJob.status=currentStatus;
+  currentJob.notes=document.getElementById('jobNotes').value.trim();
+  currentJob.gps=currentGPS;
+  currentJob.updated=Date.now();
+  
+  if(currentStatus==='done'&&!currentJob.completedAt){
+    currentJob.completedAt=Date.now();
+  }
+  
+  await dbPut(currentJob);
+  showToast('Job saved');
+  loadBoard();
+}
+
+async function shareJob(){
+  if(!document.getElementById('jobName').value.trim()){
+    showToast('Save the job first','error');
+    return;
+  }
+  await saveJob();
+  
+  let shareText=`Job Record — Pocono Well & Pump
+${currentJob.name}
+${currentJob.address||''}
+
+Service: ${currentJob.service||'Not specified'}
+Cost: $${(currentJob.cost||0).toLocaleString()}
+Status: ${currentJob.status==='done'?'Complete':currentJob.status==='progress'?'In Progress':currentJob.status==='enroute'?'En Route':'Scheduled'}
+`;
+  if(currentJob.gps){
+    shareText+=`Location verified: ${currentJob.gps.lat.toFixed(4)}, ${currentJob.gps.lng.toFixed(4)}
+`;
+  }
+  if(currentJob.notes){
+    shareText+=`\nNotes: ${currentJob.notes}\n`;
+  }
+  shareText+=`\nPocono Well & Pump Service\n(570) 243-1679`;
+  
+  if(navigator.share){
+    try{
+      await navigator.share({title:`Job: ${currentJob.name}`,text:shareText});
+      showToast('Shared successfully');
+    }catch(err){
+      if(err.name!=='AbortError')copyToClipboard(shareText);
+    }
+  }else{
+    copyToClipboard(shareText);
+  }
+}
+
+async function copyToClipboard(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard');
+  }catch(err){
+    showToast('Could not copy — try sharing manually','error');
+  }
+}
+
+async function doExport(){
+  const allJobs=await dbGetAll();
+  const data=JSON.stringify({jobs:allJobs,exported:new Date().toISOString()},null,2);
+  const blob=new Blob([data],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;
+  link.download=`pumplog-backup-${formatDateKey(new Date())}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+
+document.getElementById('importFile').addEventListener('change',async function(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(data.jobs){
+      for(const job of data.jobs)await dbPut(job);
+      showToast('Data restored from backup');
+      loadBoard();
+    }
+  }catch(err){
+    showToast('Could not read backup file','error');
+  }
+  e.target.value='';
+});
+
+// Toast notifications
+function showToast(message,type='success'){
+  const wrapper=document.getElementById('toastWrapper');
+  const toast=document.createElement('div');
+  toast.className=`toast ${type}`;
+  const icon=type==='error'
+    ?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/></svg>'
+    :'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>';
+  toast.innerHTML=icon+'<span>'+message+'</span>';
+  wrapper.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.opacity='0';
+    toast.style.transform='translateX(30px)';
+    toast.style.transition='opacity .3s,transform .3s';
+    setTimeout(()=>toast.remove(),300);
+  },2800);
+}
+
+// Demo data
+const today=formatDateKey(new Date());
+const yesterday=formatDateKey(new Date(Date.now()-86400000));
+const tomorrow=formatDateKey(new Date(Date.now()+86400000));
+
+const DEMO_JOBS=[
+  {
+    id:'demo-1',created:Date.now()-14400000,
+    name:'Kowalski Residence',address:'1847 Clearview Ave, Stroudsburg',phone:'(570) 555-0187',
+    service:'Pump Replacement',cost:4200,date:today,status:'done',
+    notes:'Replaced submersible pump at 200ft. New pressure switch. Tested at 45 PSI. Old pump was 14 years old, motor seized.',
+    gps:{lat:41.0051,lng:-75.2284,time:Date.now()-7200000},
+    completedAt:Date.now()-7200000,isDemo:true
+  },
+  {
+    id:'demo-2',created:Date.now()-3600000,
+    name:'Miller Property',address:'2290 Route 209, Saylorsburg',phone:'(570) 555-0244',
+    service:'Pressure Tank',cost:1800,date:today,status:'scheduled',
+    notes:'',gps:null,isDemo:true
+  },
+  {
+    id:'demo-3',created:Date.now()-1800000,
+    name:'Chen Family',address:'78 Pocono Blvd, Mount Pocono',phone:'(570) 555-0312',
+    service:'Water Test',cost:0,date:tomorrow,status:'scheduled',
+    notes:'Follow-up water test after softener install last month. Check hardness and iron levels.',gps:null,isDemo:true
+  }
+];
+
+async function loadDemoData(){
+  const existing=await dbGetAll();
+  if(existing.length>0||localStorage.getItem('pumplog_demo_cleared'))return;
+  for(const job of DEMO_JOBS)await dbPut(job);
+  document.getElementById('demoBanner').style.display='flex';
+  loadBoard();
+}
+
+async function clearDemo(){
+  const allJobs=await dbGetAll();
+  for(const job of allJobs)if(job.isDemo)await dbDelete(job.id);
+  document.getElementById('demoBanner').style.display='none';
+  localStorage.setItem('pumplog_demo_cleared','1');
+  loadBoard();
+  showToast('Demo data cleared');
+}
+
+// Initialize
+async function init(){
+  await openDB();
+  await loadDemoData();
+  const allJobs=await dbGetAll();
+  if(allJobs.some(j=>j.isDemo)){
+    document.getElementById('demoBanner').style.display='flex';
+  }
+  buildDayTabs();
+  await loadBoard();
+}
+
+init();
+</script>
+</body>
+</html>

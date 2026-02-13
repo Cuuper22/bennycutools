@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CableQuote - Cable Busters</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--primary:#1a2744;--primary-light:#243656;--primary-mid:#2d4470;
+--accent:#2196f3;--accent-light:#42a5f5;--accent-dark:#1976d2;
+--cta:#43a047;--cta-hover:#388e3c;
+--bg:#f0f2f5;--surface:#fff;--surface-alt:#f7f8fa;
+--text:#1a1a2e;--text-muted:#5a6577;--text-light:#8e99a9;
+--border:#dfe3ea;--border-focus:#2196f3;
+--success:#2e7d32;--warning:#e65100;--error:#c62828;
+--shadow-sm:0 1px 2px rgba(0,0,0,.06);
+--shadow:0 2px 4px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+--shadow-md:0 4px 8px rgba(0,0,0,.1),0 2px 4px rgba(0,0,0,.06);
+--shadow-lg:0 12px 24px rgba(0,0,0,.12);
+--radius:8px;--radius-lg:12px;
+--font-h:'Barlow',sans-serif;--font-b:'Source Sans 3',sans-serif;
+}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-b);background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:120px!important;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-h);font-weight:700;line-height:1.2}
+*:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.skip-link{position:absolute;top:-100px;left:0;background:var(--accent);color:#fff;padding:8px 16px;z-index:100000;border-radius:0 0 var(--radius) 0;font-weight:500}
+.skip-link:focus{top:0}
+
+#app{display:none;min-height:100vh}
+.app-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-mid) 100%);color:#fff;padding:16px 20px 14px;position:sticky;top:0;z-index:900}
+.app-header h1{font-size:1.25rem;letter-spacing:-.01em}
+.app-header p{font-size:.79rem;opacity:.75;margin-top:2px;font-weight:400}
+
+.demo-banner{background:#e3f2fd;border-bottom:1px solid #bbdefb;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;font-size:.83rem;color:#0d47a1}
+.demo-banner button{background:none;border:1.5px solid #1976d2;color:#0d47a1;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.78rem;font-weight:500;transition:all .12s}
+.demo-banner button:hover{background:#1976d2;color:#fff}
+
+.view{display:none;padding:16px;animation:fadeUp .25s ease-out}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.card{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow);padding:16px;margin-bottom:10px;transition:transform .12s,box-shadow .12s;cursor:pointer;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.card:focus-visible{transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.card.s-quote::before{background:var(--accent)}
+.card.s-scheduled::before{background:var(--warning)}
+.card.s-completed::before{background:var(--success)}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.card-name{font-family:var(--font-h);font-weight:600;font-size:.95rem}
+.card-amount{font-family:var(--font-h);font-weight:700;font-size:1.05rem;color:var(--cta)}
+.card-sub{font-size:.81rem;color:var(--text-muted);margin-bottom:4px}
+.card-meta{display:flex;gap:10px;font-size:.75rem;color:var(--text-light)}
+.badge{display:inline-block;padding:2px 8px;border-radius:16px;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.badge-quote{background:#e3f2fd;color:#1565c0}
+.badge-scheduled{background:#fff3e0;color:#e65100}
+.badge-completed{background:#e8f5e9;color:#2e7d32}
+
+.form-section{margin-bottom:20px}
+.section-title{font-family:var(--font-h);font-weight:600;font-size:.85rem;color:var(--accent-dark);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border)}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.81rem;font-weight:500;color:var(--text-muted);margin-bottom:4px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:1rem;background:var(--surface);color:var(--text);transition:border-color .15s,box-shadow .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(33,150,243,.12)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.service-item{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-alt);border-radius:var(--radius);border:1.5px solid transparent;cursor:pointer;margin-bottom:6px;transition:all .12s}
+.service-item.selected{border-color:var(--accent);background:#e8f0fe}
+.service-item:active{transform:scale(.98)}
+.svc-check{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+.service-item.selected .svc-check{border-color:var(--accent);background:var(--accent)}
+.svc-info{flex:1}
+.svc-info strong{font-size:.89rem;display:block}
+.svc-info span{font-size:.76rem;color:var(--text-muted)}
+.svc-price{font-family:var(--font-h);font-weight:700;color:var(--cta);font-size:.95rem}
+
+/* Channel checklist */
+.channel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.channel-item{display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--surface);border-radius:6px;border:1.5px solid var(--border);cursor:pointer;font-size:.83rem;transition:all .1s}
+.channel-item:hover{border-color:var(--accent-light)}
+.channel-item:focus-visible{border-color:var(--accent);box-shadow:0 0 0 2px rgba(33,150,243,.15)}
+.channel-item.checked{background:#e8f5e9;border-color:#a5d6a7}
+.channel-item .ch-num{font-family:var(--font-h);font-weight:700;min-width:28px;text-align:center;color:var(--accent-dark);font-size:.86rem}
+.channel-counter{text-align:center;padding:14px;background:linear-gradient(135deg,var(--primary),var(--primary-mid));color:#fff;border-radius:var(--radius-lg);margin-bottom:14px}
+.channel-counter .count{font-family:var(--font-h);font-size:2.2rem;font-weight:800}
+.channel-counter p{font-size:.84rem;opacity:.85}
+
+.quote-total{background:linear-gradient(135deg,var(--primary),var(--primary-mid));color:#fff;border-radius:var(--radius-lg);padding:18px;margin-top:16px}
+.quote-total .line{display:flex;justify-content:space-between;padding:4px 0;font-size:.89rem;opacity:.88}
+.quote-total .total-line{display:flex;justify-content:space-between;padding:10px 0 0;margin-top:8px;border-top:1px solid rgba(255,255,255,.25);font-size:1.25rem;font-weight:700;font-family:var(--font-h)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 18px;border:none;border-radius:var(--radius);font-size:.89rem;font-weight:600;cursor:pointer;transition:transform .1s,box-shadow .12s,background .12s;font-family:var(--font-b)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--cta);color:#fff;box-shadow:var(--shadow)}
+.btn-primary:hover{background:var(--cta-hover)}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent-dark)}
+.btn-sm{padding:8px 13px;font-size:.81rem}
+.btn-block{width:100%}
+.btn-danger{background:#ffebee;color:var(--error);border:1.5px solid #ffcdd2}
+.btn-danger:hover{background:#ffcdd2}
+
+.upsell-locked{opacity:.45;pointer-events:none;position:relative}
+.upsell-locked::after{content:'Full Version';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--primary);color:#fff;padding:3px 10px;border-radius:16px;font-size:.72rem;font-weight:600}
+
+.bottom-nav{position:fixed;bottom:40px;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:800;box-shadow:0 -2px 8px rgba(0,0,0,.05)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 0;cursor:pointer;color:var(--text-light);transition:color .12s,background .12s;border:none;background:none;font-size:.68rem;font-weight:500;gap:3px}
+.nav-item:hover{color:var(--text-muted)}
+.nav-item.active{color:var(--accent)}
+.nav-item:focus-visible{color:var(--accent);background:rgba(33,150,243,.08)}
+.nav-item svg{width:22px;height:22px}
+
+.toast-box{position:fixed;top:80px;right:16px;z-index:6000}
+.toast{background:#1a1a2e;color:#fff;padding:11px 15px;border-radius:var(--radius);font-size:.84rem;margin-bottom:6px;animation:slideIn .25s ease-out;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:8px;max-width:300px}
+.toast.ok{border-left:3px solid var(--success)}
+.toast.err{border-left:3px solid var(--error)}
+@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+
+.empty-state{text-align:center;padding:48px 24px}
+.empty-state svg{margin-bottom:16px;color:var(--text-light)}
+.empty-state h3{margin-bottom:8px;font-size:1.1rem}
+.empty-state p{color:var(--text-muted);font-size:.89rem;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto;line-height:1.5}
+
+.setting-box{padding:18px;background:var(--surface);border-radius:var(--radius-lg);margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.setting-box h3{font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--accent-dark)}
+
+/* Full version badge styling */
+.full-version-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:#e8f5e9;border:1.5px solid #a5d6a7;border-radius:16px;font-size:.7rem;font-weight:600;color:#2e7d32;text-transform:uppercase;letter-spacing:.02em}
+
+@media print{.bottom-nav,.app-header,.demo-banner,.toast-box,#bct-demo-disclaimer,.btn{display:none!important}body{background:#fff;padding:0!important}.view{display:block!important;padding:0}}
+@media(min-width:1024px){.bottom-nav{display:none}#app{max-width:480px;margin:0 auto}.d-nav{display:flex;gap:4px;background:var(--surface);padding:4px;border-radius:var(--radius);margin:16px;box-shadow:var(--shadow)}.d-nav button{flex:1;padding:9px;border:none;background:none;border-radius:6px;cursor:pointer;font-weight:500;font-size:.84rem;color:var(--text-muted);transition:all .12s}.d-nav button:hover{background:rgba(33,150,243,.08);color:var(--accent-dark)}.d-nav button.active{background:var(--accent);color:#fff}}
+@media(max-width:1023px){.d-nav{display:none}}
+</style>
+</head>
+<body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<div id="gate" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:var(--font-b);background:#111;color:#fff;text-align:center;padding:20px"><div><h1 style="font-size:2rem;margin-bottom:1rem;font-family:var(--font-h)">Access Required</h1><p style="color:#999;margin-bottom:20px">This tool needs a valid access key.</p><p><a href="mailto:ben@bennycutools.com" style="color:#4da6ff">ben@bennycutools.com</a></p></div></div>
+
+<div id="app" role="application" aria-label="CableQuote field estimation tool">
+<header class="app-header"><h1>CableQuote</h1><p>Field Estimates - Cable Busters</p></header>
+<div class="demo-banner" id="demoBanner" role="status" aria-live="polite"><span>Sample Houston-area jobs loaded. Tap Clear to start fresh.</span><button onclick="clearDemo()" aria-label="Clear demonstration data">Clear</button></div>
+<nav class="d-nav" aria-label="Main navigation"><button class="active" onclick="nav('jobs')" data-v="jobs">Quotes</button><button onclick="nav('newJob')" data-v="newJob">New Quote</button><button onclick="nav('channels')" data-v="channels">Channels</button><button onclick="nav('settings')" data-v="settings">Settings</button></nav>
+<main id="main-content">
+
+<!-- JOBS LIST -->
+<section class="view active" id="jobsView" aria-label="Quote list">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 style="font-size:1.15rem">Your Quotes</h2>
+<button class="btn btn-accent btn-sm" onclick="nav('newJob')" aria-label="Create new quote"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Quote</button>
+</div>
+<div id="jobsList"></div>
+</section>
+
+<!-- NEW/EDIT JOB -->
+<section class="view" id="newJobView" aria-label="Create job quote">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<h2 id="formTitle" style="font-size:1.1rem">New Quote</h2>
+<button class="btn btn-secondary btn-sm" onclick="nav('jobs')">Back to Quotes</button>
+</div>
+<div class="form-section">
+<div class="section-title">Customer Information</div>
+<div class="form-group"><label for="cName">Customer Name</label><input type="text" id="cName" placeholder="John Rodriguez" autocomplete="name" aria-required="true"></div>
+<div class="form-group"><label for="cAddr">Service Address</label><input type="text" id="cAddr" placeholder="1234 Oak Hollow Dr, Katy, TX" autocomplete="street-address"><button class="btn btn-sm btn-secondary" style="margin-top:5px;font-size:.76rem" onclick="getLocation()" aria-label="Use GPS to capture location">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Use GPS
+</button></div>
+<div class="form-row">
+<div class="form-group"><label for="cPhone">Phone Number</label><input type="tel" id="cPhone" placeholder="(281) 555-0100" autocomplete="tel"></div>
+<div class="form-group"><label for="cEmail">Email Address</label><input type="email" id="cEmail" placeholder="john@email.com" autocomplete="email"></div>
+</div>
+</div>
+<div class="form-section">
+<div class="section-title">Job Type</div>
+<div class="form-group"><label for="installType">What are we installing?</label><select id="installType" aria-label="Installation type"><option value="antenna-outdoor">Outdoor Antenna</option><option value="antenna-attic">Attic Antenna</option><option value="starlink">Starlink Dish</option><option value="wall-mount">TV Wall Mount</option><option value="other">Other Service</option></select></div>
+</div>
+<div class="form-section">
+<div class="section-title">Parts and Labor</div>
+<div id="componentList"></div>
+</div>
+<div class="form-section">
+<div class="section-title">Channels Available Here</div>
+<p style="font-size:.81rem;color:var(--text-muted);margin-bottom:10px">Check off what the customer can pick up at this address. Helps show value.</p>
+<div class="channel-counter"><div class="count" id="chCount">0</div><p>channels available</p></div>
+<div class="channel-grid" id="chGrid"></div>
+</div>
+<div class="form-section">
+<div class="form-group"><label for="jobNotes">Job Notes</label><textarea id="jobNotes" rows="3" placeholder="Roof type, cable routing, special requests... anything you'll want to remember"></textarea></div>
+</div>
+<div class="quote-total" id="totalSection" aria-live="polite" aria-atomic="true"><div id="lineItems"></div><div class="total-line"><span>Total</span><span id="grandTotal">$0</span></div></div>
+<div style="display:flex;gap:8px;margin-top:16px">
+<button class="btn btn-primary btn-block" onclick="saveJob()">Save Quote</button>
+</div>
+<div style="display:flex;gap:8px;margin-top:8px">
+<button class="btn btn-secondary btn-block" onclick="shareJob()">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share Quote
+</button>
+<button class="btn btn-secondary btn-block upsell-locked" disabled aria-label="Follow-ups feature available in full version">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> Follow-ups
+</button>
+</div>
+</section>
+
+<!-- JOB DETAIL -->
+<section class="view" id="detailView" aria-label="Job details">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+<button class="btn btn-secondary btn-sm" onclick="nav('jobs')">Back to Quotes</button>
+<div style="display:flex;gap:6px">
+<button class="btn btn-accent btn-sm" onclick="shareJob()" aria-label="Share quote">Share</button>
+<button class="btn btn-sm btn-secondary" onclick="editJob()" aria-label="Edit quote">Edit</button>
+</div>
+</div>
+<div id="jobDetail"></div>
+</section>
+
+<!-- CHANNELS REF -->
+<section class="view" id="channelsView" aria-label="Channel reference">
+<h2 style="margin-bottom:8px;font-size:1.1rem">Houston Area Channels</h2>
+<p style="font-size:.83rem;color:var(--text-muted);margin-bottom:16px;line-height:1.5">Quick reference for the Houston TV market. Use this on-site to show customers exactly what they can get with an antenna.</p>
+<div class="channel-grid" id="chRef"></div>
+</section>
+
+<!-- SETTINGS -->
+<section class="view" id="settingsView" aria-label="Settings">
+<h2 style="margin-bottom:16px;font-size:1.1rem">Settings</h2>
+<div class="setting-box"><h3>Business Information</h3>
+<div class="form-group"><label for="bName">Company Name</label><input type="text" id="bName" value="Cable Busters LLC"></div>
+<div class="form-group"><label for="bPhone">Business Phone</label><input type="tel" id="bPhone" value="(281) 749-1990"></div>
+</div>
+<div class="setting-box"><h3>Data Management</h3>
+<p style="font-size:.83rem;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Back up your quotes or load a previous backup. Everything stays on your device unless you export it.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="btn btn-secondary btn-sm" onclick="exportAll()">Export Backup</button>
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('impFile').click()">Import Backup</button>
+<input type="file" id="impFile" accept=".json" style="display:none" onchange="importAll(event)">
+<button class="btn btn-danger btn-sm" onclick="resetAll()">Clear All Data</button>
+</div>
+</div>
+<div class="setting-box"><h3 style="display:flex;align-items:center;gap:10px">Monthly Reports <span class="full-version-badge">Full Version</span></h3>
+<p style="font-size:.84rem;color:var(--text-muted);line-height:1.5">See your close rate, average ticket size, and busiest weeks. Great for tracking how the business is doing.</p>
+<p style="font-size:.83rem;color:var(--text-muted);margin-top:8px"><strong>Available in the full version for $200.</strong></p>
+</div>
+</section>
+</main>
+
+<nav class="bottom-nav" aria-label="Mobile navigation">
+<button class="nav-item active" onclick="nav('jobs')" data-v="jobs" aria-label="View quotes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Quotes</button>
+<button class="nav-item" onclick="nav('newJob')" data-v="newJob" aria-label="Create new quote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>New</button>
+<button class="nav-item" onclick="nav('channels')" data-v="channels" aria-label="Channel reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="2" y="7" width="20" height="15" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>Channels</button>
+<button class="nav-item" onclick="nav('settings')" data-v="settings" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Settings</button>
+</nav>
+</div>
+
+<div class="toast-box" id="toastBox" aria-live="polite" aria-atomic="true"></div>
+
+<div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:10px 16px;font-size:12px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;text-align:center;">
+<p style="margin:0;max-width:700px;"><strong style="color:#333;">DEMO NOTICE:</strong> This tool was created by BennyCuTools as a free demonstration only. It is not affiliated with, endorsed by, or authorized by Cable Busters LLC. All brand references are used solely for demonstration purposes.</p>
+<a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Cable%20Busters%20LLC&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 12px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Request Permanent Deletion</a>
+</div>
+
+<script>
+function _h(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return h;}
+const _V=1618832023;
+const _k=new URLSearchParams(window.location.search).get('key');
+if(_k&&_h(_k)===_V){localStorage.setItem('cb_auth','1');document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+else if(localStorage.getItem('cb_auth')==='1'){document.getElementById('gate').style.display='none';document.getElementById('app').style.display='block';init();}
+else{document.getElementById('gate').style.display='flex';document.getElementById('app').style.display='none';}
+document.addEventListener('contextmenu',e=>e.preventDefault());
+
+let db;const DB='CableQuoteDB';
+function openDB(){return new Promise((r,j)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('jobs'))d.createObjectStore('jobs',{keyPath:'id'});if(!d.objectStoreNames.contains('components'))d.createObjectStore('components',{keyPath:'id'});};q.onsuccess=e=>{db=e.target.result;r();};q.onerror=e=>j(e);});}
+function put(s,d){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');t.objectStore(s).put(d);t.oncomplete=()=>r();t.onerror=e=>j(e);});}
+function getAll(s){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const q=t.objectStore(s).getAll();q.onsuccess=()=>r(q.result);q.onerror=e=>j(e);});}
+function get(s,k){return new Promise((r,j)=>{const t=db.transaction(s,'readonly');const q=t.objectStore(s).get(k);q.onsuccess=()=>r(q.result);q.onerror=e=>j(e);});}
+function del(s,k){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');t.objectStore(s).delete(k);t.oncomplete=()=>r();t.onerror=e=>j(e);});}
+function clr(s){return new Promise((r,j)=>{const t=db.transaction(s,'readwrite');t.objectStore(s).clear();t.oncomplete=()=>r();t.onerror=e=>j(e);});}
+
+let editId=null;let selComps=new Set();let comps=[];let checkedCh=new Set();
+
+const DEF_COMPS=[
+{id:'ant-basic',name:'Basic Indoor Antenna',desc:'Flat indoor, 35-mile range',price:30,cat:'Antennas'},
+{id:'ant-mid',name:'Mid-Range Outdoor Antenna',desc:'Directional, 60-mile range',price:85,cat:'Antennas'},
+{id:'ant-high',name:'High-Gain Outdoor Antenna',desc:'Multi-directional, 80+ mile range',price:145,cat:'Antennas'},
+{id:'ant-attic',name:'Attic-Mount Antenna',desc:'Compact, attic-optimized',price:70,cat:'Antennas'},
+{id:'boost',name:'Signal Booster/Amplifier',desc:'Pre-amp or distribution amp',price:65,cat:'Equipment'},
+{id:'coax-50',name:'Coax Cable Run (50ft)',desc:'RG6 quad-shield, connectors',price:35,cat:'Equipment'},
+{id:'coax-100',name:'Coax Cable Run (100ft)',desc:'RG6 quad-shield, connectors',price:55,cat:'Equipment'},
+{id:'mount-roof',name:'Roof Mount + Mast',desc:'J-pole or tripod, weatherproof',price:75,cat:'Equipment'},
+{id:'mount-eave',name:'Eave/Fascia Mount',desc:'Side-mount bracket',price:45,cat:'Equipment'},
+{id:'starlink-install',name:'Starlink Dish Install',desc:'Roof/pole mount, cable routing',price:200,cat:'Starlink'},
+{id:'starlink-pole',name:'Starlink Pole Adapter',desc:'Extended pole mount for clear sky view',price:85,cat:'Starlink'},
+{id:'wall-mount',name:'TV Wall Mount + Install',desc:'Bracket, mount, cable concealment',price:150,cat:'Mounts'},
+{id:'labor-standard',name:'Standard Install Labor',desc:'2-3 hour typical installation',price:150,cat:'Labor'},
+{id:'labor-complex',name:'Complex Install Labor',desc:'Multi-story, long cable run, attic work',price:250,cat:'Labor'},
+{id:'labor-removal',name:'Old Equipment Removal',desc:'Remove old dish/antenna, patch holes',price:75,cat:'Labor'},
+];
+
+const HOUSTON_CHANNELS=[
+{ch:'2.1',call:'KPRC',net:'NBC'},{ch:'8.1',call:'KHOU',net:'CBS'},{ch:'11.1',call:'KHOU',net:'FOX (KRIV)'},
+{ch:'13.1',call:'KTRK',net:'ABC'},{ch:'20.1',call:'KTXH',net:'MyNet'},{ch:'26.1',call:'KRIV',net:'FOX'},
+{ch:'39.1',call:'KIAH',net:'CW'},{ch:'45.1',call:'KNWS',net:'Estrella'},{ch:'47.1',call:'KXLN',net:'Univision'},
+{ch:'51.1',call:'KTBU',net:'Ind'},{ch:'55.1',call:'KYAZ',net:'Azteca'},{ch:'57.1',call:'KUBE',net:'Ind'},
+{ch:'2.2',call:'KPRC',net:'Cozi TV'},{ch:'8.2',call:'KHOU',net:'Start TV'},{ch:'11.2',call:'KRIV',net:'Bounce'},
+{ch:'13.2',call:'KTRK',net:'Laff'},{ch:'13.3',call:'KTRK',net:'Court TV'},{ch:'20.2',call:'KTXH',net:'Antenna TV'},
+{ch:'26.2',call:'KRIV',net:'Movies!'},{ch:'39.2',call:'KIAH',net:'Charge!'},{ch:'26.3',call:'KRIV',net:'Buzzr'},
+{ch:'2.3',call:'KPRC',net:'TrueReal'},{ch:'8.3',call:'KHOU',net:'Dabl'},{ch:'39.3',call:'KIAH',net:'Ion'},
+];
+
+const DEMO_JOBS=[
+{id:'d1',cust:{name:'Rodriguez Family',addr:'8421 Oak Hollow Dr, Katy, TX 77494',phone:'(281) 555-0147',email:''},type:'antenna-outdoor',comps:['ant-high','boost','coax-100','mount-roof','labor-standard'],channels:['2.1','8.1','11.1','13.1','20.1','26.1','39.1','45.1','47.1','2.2','8.2','11.2','13.2','13.3','20.2','26.2'],notes:'Single story ranch. Clear line of sight NNW. Roof mount on rear slope. Customer cancelled DirecTV last week.',total:485,status:'completed',date:Date.now()-86400000*5,isDemo:true},
+{id:'d2',cust:{name:'Sarah Chen',addr:'2105 Cypress Point Dr, Spring, TX 77388',phone:'(832) 555-0289',email:'schen@gmail.com'},type:'starlink',comps:['starlink-install','starlink-pole','labor-standard'],channels:[],notes:'Trees blocking south sky. Need extended pole mount on garage peak. Customer works from home -- internet critical.',total:435,status:'quote',date:Date.now()-86400000*2,isDemo:true},
+{id:'d3',cust:{name:'Mike & Linda Tran',addr:'15603 Woodland Oaks, Tomball, TX 77375',phone:'(281) 555-0312',email:''},type:'antenna-attic',comps:['ant-attic','boost','coax-50','labor-standard'],channels:['2.1','8.1','11.1','13.1','20.1','26.1','39.1','2.2','8.2','11.2','13.2','20.2','26.2','26.3','2.3','8.3','39.3'],notes:'HOA restricts outdoor antennas. Attic has good height. Running coax to existing wall plate behind TV.',total:320,status:'scheduled',date:Date.now()-86400000,isDemo:true},
+];
+
+async function init(){
+await openDB();
+comps=await getAll('components');
+if(!comps.length){for(const c of DEF_COMPS)await put('components',c);comps=DEF_COMPS.slice();}
+const jobs=await getAll('jobs');
+if(!localStorage.getItem('cb_visited')&&!jobs.length){
+for(const j of DEMO_JOBS)await put('jobs',j);
+localStorage.setItem('cb_visited','1');
+}
+renderJobs();renderComps();renderChGrid();renderChRef();
+}
+
+function nav(v){
+document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+const el=document.getElementById(v+'View');if(el)el.classList.add('active');
+document.querySelectorAll('.nav-item,.d-nav button').forEach(b=>b.classList.toggle('active',b.getAttribute('data-v')===v));
+if(v==='jobs'){renderJobs();editId=null;}
+if(v==='newJob'&&!editId)resetForm();
+}
+
+async function renderJobs(){
+const jobs=(await getAll('jobs')).sort((a,b)=>b.date-a.date);
+const el=document.getElementById('jobsList');
+document.getElementById('demoBanner').style.display=jobs.some(j=>j.isDemo)?'flex':'none';
+if(!jobs.length){el.innerHTML=`<div class="empty-state"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg><h3>No quotes yet</h3><p>Tap New Quote to create your first estimate. All your quotes are saved right here.</p><button class="btn btn-accent" onclick="nav('newJob')">Create First Quote</button></div>`;return;}
+el.innerHTML=jobs.map(j=>{
+const d=new Date(j.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+const chCt=j.channels?j.channels.length:0;
+return `<div class="card s-${j.status}" onclick="viewJob('${j.id}')" tabindex="0" role="button" aria-label="View quote for ${j.cust.name}, $${j.total}"><div class="card-top"><span class="card-name">${j.cust.name}</span><span class="card-amount">$${j.total}</span></div><div class="card-sub">${j.cust.addr||'No address'}${chCt?' — '+chCt+' channels':''}</div><div class="card-meta"><span>${d}</span><span>${j.type.replace(/-/g,' ')}</span><span class="badge badge-${j.status}">${j.status}</span></div></div>`;
+}).join('');
+}
+
+async function viewJob(id){
+const j=await get('jobs',id);if(!j)return;editId=id;
+const items=(j.comps||[]).map(cid=>comps.find(c=>c.id===cid)).filter(Boolean);
+const chCt=j.channels?j.channels.length:0;
+document.getElementById('jobDetail').innerHTML=`<div style="background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);overflow:hidden"><div style="background:linear-gradient(135deg,var(--primary),var(--primary-mid));color:#fff;padding:20px;text-align:center"><h2 style="font-size:1.2rem">Cable Busters LLC</h2><p style="opacity:.8;font-size:.83rem">Quote for ${j.cust.name}</p></div><div style="padding:18px"><div style="margin-bottom:14px"><strong style="font-size:.8rem;color:var(--text-muted)">Customer</strong><p style="margin-top:2px">${j.cust.name}</p><p style="font-size:.84rem;color:var(--text-muted)">${j.cust.addr||''}</p>${j.cust.phone?`<p style="font-size:.84rem;margin-top:2px">${j.cust.phone}</p>`:''}</div><div style="margin-bottom:14px"><strong style="font-size:.8rem;color:var(--text-muted)">Job Type</strong><p style="font-size:.9rem;margin-top:2px">${j.type.replace(/-/g,' ')}</p></div>${items.map(s=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.89rem"><span>${s.name}</span><span>$${s.price}</span></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:1.2rem;font-weight:700;padding:10px 0;margin-top:6px;border-top:2px solid var(--text);color:var(--cta)"><span>Total</span><span>$${j.total}</span></div>${chCt?`<div style="margin-top:14px;padding:12px;background:#e8f5e9;border-radius:var(--radius);text-align:center"><strong style="color:#2e7d32;font-size:1.15rem">${chCt}</strong><span style="font-size:.84rem;color:#2e7d32"> channels available at this address</span></div>`:''}<p style="font-size:.76rem;color:var(--text-light);margin-top:14px;text-align:center">${new Date(j.date).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}</p></div></div><div style="display:flex;gap:8px;margin-top:12px"><select style="flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:.89rem" onchange="updStatus('${id}',this.value)" aria-label="Update job status"><option value="quote" ${j.status==='quote'?'selected':''}>Quote</option><option value="scheduled" ${j.status==='scheduled'?'selected':''}>Scheduled</option><option value="completed" ${j.status==='completed'?'selected':''}>Completed</option></select><button class="btn btn-danger btn-sm" onclick="delJob('${id}')">Delete</button></div>`;
+nav('detail');
+}
+
+async function updStatus(id,s){const j=await get('jobs',id);if(j){j.status=s;await put('jobs',j);toast('Status updated','ok');}}
+async function delJob(id){if(!confirm('Delete this quote? This cannot be undone.'))return;await del('jobs',id);toast('Quote deleted','ok');nav('jobs');}
+function editJob(){if(!editId)return;get('jobs',editId).then(j=>{if(!j)return;document.getElementById('cName').value=j.cust.name;document.getElementById('cAddr').value=j.cust.addr||'';document.getElementById('cPhone').value=j.cust.phone||'';document.getElementById('cEmail').value=j.cust.email||'';document.getElementById('installType').value=j.type||'antenna-outdoor';document.getElementById('jobNotes').value=j.notes||'';selComps=new Set(j.comps||[]);checkedCh=new Set(j.channels||[]);renderComps();renderChGrid();updateTotal();document.getElementById('formTitle').textContent='Edit Quote';nav('newJob');});}
+
+function renderComps(){
+const el=document.getElementById('componentList');
+const grouped={};comps.forEach(c=>{if(!grouped[c.cat])grouped[c.cat]=[];grouped[c.cat].push(c);});
+let html='';
+for(const cat of Object.keys(grouped)){
+html+=`<div style="font-size:.76rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px">${cat}</div>`;
+grouped[cat].forEach(c=>{
+const sel=selComps.has(c.id)?'selected':'';
+html+=`<div class="service-item ${sel}" onclick="togComp('${c.id}')" role="checkbox" aria-checked="${sel?'true':'false'}" tabindex="0" aria-label="${c.name}, $${c.price}"><div class="svc-check" aria-hidden="true">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>':''}</div><div class="svc-info"><strong>${c.name}</strong><span>${c.desc}</span></div><div class="svc-price">$${c.price}</div></div>`;
+});
+}
+el.innerHTML=html;
+}
+
+function togComp(id){if(selComps.has(id))selComps.delete(id);else selComps.add(id);renderComps();updateTotal();}
+
+function updateTotal(){
+let total=0;const lines=[];
+selComps.forEach(id=>{const c=comps.find(x=>x.id===id);if(c){total+=c.price;lines.push(c);}});
+document.getElementById('lineItems').innerHTML=lines.map(l=>`<div class="line"><span>${l.name}</span><span>$${l.price}</span></div>`).join('');
+document.getElementById('grandTotal').textContent='$'+total;
+}
+
+function renderChGrid(){
+const el=document.getElementById('chGrid');
+el.innerHTML=HOUSTON_CHANNELS.map(c=>{
+const ck=checkedCh.has(c.ch)?'checked':'';
+return `<div class="channel-item ${ck}" onclick="togCh('${c.ch}')" role="checkbox" aria-checked="${ck?'true':'false'}" tabindex="0"><div class="ch-num" aria-hidden="true">${c.ch}</div><div>${c.net}</div></div>`;
+}).join('');
+document.getElementById('chCount').textContent=checkedCh.size;
+}
+
+function renderChRef(){
+document.getElementById('chRef').innerHTML=HOUSTON_CHANNELS.map(c=>`<div class="channel-item" tabindex="0"><div class="ch-num" aria-hidden="true">${c.ch}</div><div><strong style="font-size:.81rem">${c.call}</strong><br><span style="font-size:.76rem;color:var(--text-muted)">${c.net}</span></div></div>`).join('');
+}
+
+function togCh(ch){if(checkedCh.has(ch))checkedCh.delete(ch);else checkedCh.add(ch);renderChGrid();}
+
+async function saveJob(){
+const name=document.getElementById('cName').value.trim();
+if(!name){toast('Enter customer name','err');return;}
+let total=0;selComps.forEach(id=>{const c=comps.find(x=>x.id===id);if(c)total+=c.price;});
+const job={id:editId||'j-'+Date.now(),cust:{name,addr:document.getElementById('cAddr').value.trim(),phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim()},type:document.getElementById('installType').value,comps:Array.from(selComps),channels:Array.from(checkedCh),notes:document.getElementById('jobNotes').value.trim(),total,status:editId?(await get('jobs',editId))?.status||'quote':'quote',date:editId?(await get('jobs',editId))?.date||Date.now():Date.now(),isDemo:false};
+await put('jobs',job);toast(editId?'Quote updated':'Quote saved','ok');editId=null;nav('jobs');
+}
+
+function resetForm(){
+document.getElementById('cName').value='';document.getElementById('cAddr').value='';
+document.getElementById('cPhone').value='';document.getElementById('cEmail').value='';
+document.getElementById('installType').value='antenna-outdoor';document.getElementById('jobNotes').value='';
+selComps.clear();checkedCh.clear();renderComps();renderChGrid();updateTotal();
+document.getElementById('formTitle').textContent='New Quote';
+}
+
+function getLocation(){
+if(!navigator.geolocation){toast('GPS not available on this device','err');return;}
+navigator.geolocation.getCurrentPosition(pos=>{
+const {latitude:lat,longitude:lng}=pos.coords;
+document.getElementById('cAddr').value=`GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+toast('Location captured','ok');
+},()=>toast('Location access denied','err'),{enableHighAccuracy:true,timeout:10000});
+}
+
+async function shareJob(){
+const name=document.getElementById('cName').value.trim()||'(unsaved)';
+let total=0;const lines=[];
+selComps.forEach(id=>{const c=comps.find(x=>x.id===id);if(c){total+=c.price;lines.push(c);}});
+const chCt=checkedCh.size;
+const text=`Cable Busters — Quote for ${name}\n${document.getElementById('cAddr').value||''}\n\n${lines.map(l=>l.name+': $'+l.price).join('\n')}\n\nTotal: $${total}${chCt?'\n\n'+chCt+' channels available at this address':''}\n${document.getElementById('jobNotes').value?'\nNotes: '+document.getElementById('jobNotes').value:''}`;
+if(navigator.share){try{await navigator.share({title:'Cable Busters Quote',text});toast('Shared','ok');}catch(e){}}
+else{try{await navigator.clipboard.writeText(text);toast('Copied to clipboard','ok');}catch(e){toast('Could not copy','err');}}
+}
+
+async function exportAll(){const j=await getAll('jobs');const c=await getAll('components');const b=new Blob([JSON.stringify({jobs:j,components:c},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='cablequote-backup.json';a.click();}
+async function importAll(e){const f=e.target.files[0];if(!f)return;try{const t=await f.text();const d=JSON.parse(t);if(d.jobs)for(const j of d.jobs)await put('jobs',j);if(d.components)for(const c of d.components)await put('components',c);comps=await getAll('components');renderJobs();renderComps();toast('Backup imported','ok');}catch(err){toast('Could not import file','err');}}
+async function clearDemo(){const jobs=await getAll('jobs');for(const j of jobs){if(j.isDemo)await del('jobs',j.id);}document.getElementById('demoBanner').style.display='none';renderJobs();toast('Demo cleared','ok');}
+async function resetAll(){if(!confirm('Delete all quotes and data? This cannot be undone.'))return;await clr('jobs');await clr('components');for(const c of DEF_COMPS)await put('components',c);comps=DEF_COMPS.slice();selComps.clear();checkedCh.clear();renderJobs();renderComps();renderChGrid();updateTotal();toast('All data cleared','ok');}
+
+function toast(msg,type){const el=document.createElement('div');el.className='toast '+type;el.textContent=msg;document.getElementById('toastBox').appendChild(el);setTimeout(()=>el.remove(),2800);}
+</script>
+</body>
+</html>
