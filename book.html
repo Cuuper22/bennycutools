@@ -32,6 +32,7 @@
   .btn{display:block;width:100%;padding:.8rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:600;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:.5rem}
   .btn:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 20px rgba(99,102,241,.3)}
   .btn:active{transform:translateY(0)}
+  .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
   .trust{display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:1.25rem;color:var(--muted);font-size:.8rem}
   .trust svg{width:14px;height:14px;fill:var(--green)}
   .success{display:none;text-align:center;padding:2rem}
@@ -41,82 +42,68 @@
   .success p{color:var(--muted);font-size:.9rem;line-height:1.6}
   .footer{text-align:center;margin-top:2rem;color:var(--muted);font-size:.75rem}
   .footer a{color:var(--accent);text-decoration:none}
+  .error{color:#ef4444;font-size:.8rem;margin-top:.25rem;display:none}
+  .source-tag{display:inline-block;padding:.2rem .5rem;background:var(--accent-glow);color:var(--accent);font-size:.7rem;border-radius:4px;margin-left:.5rem}
   @media(max-width:500px){.row{grid-template-columns:1fr}.card{padding:1.5rem}}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="logo">
-    <h1>🔧 BennyCu Tools</h1>
+    <h1>BennyCu Tools</h1>
     <p>Custom business software, built for you</p>
   </div>
 
   <div class="card" id="formCard">
-    <h2>Book Your Free Demo</h2>
+    <h2>Book Your Free Demo <span id="sourceTag" class="source-tag" style="display:none"></span></h2>
     <p class="sub">I'll walk you through the tool I built specifically for your business. Pick a time that works — I'll confirm within a few hours.</p>
 
-    <form action="https://formsubmit.co/cuuper225@gmail.com" method="POST" id="bookingForm">
-      <!-- FormSubmit config -->
-      <input type="hidden" name="_subject" value="🔥 New Demo Booking — BennyCu Tools">
-      <input type="hidden" name="_captcha" value="false">
-      <input type="hidden" name="_template" value="table">
-      <input type="hidden" name="_next" value="https://bennycutools.com/book.html?success=1">
-      <input type="text" name="_honey" style="display:none">
+    <form id="bookingForm">
+      <input type="hidden" id="sourceField" name="source">
+      <input type="hidden" id="referrerField" name="referrer">
 
       <div class="row">
         <div class="field">
           <label>Your Name</label>
-          <input type="text" name="name" required placeholder="John Smith">
+          <input type="text" name="name" required placeholder="John Smith" id="nameInput">
         </div>
         <div class="field">
           <label>Business Name</label>
-          <input type="text" name="business" required placeholder="Smith's HVAC">
+          <input type="text" name="business" required placeholder="Smith's HVAC" id="businessInput">
         </div>
       </div>
 
       <div class="field">
         <label>Email</label>
-        <input type="email" name="email" required placeholder="john@example.com">
+        <input type="email" name="email" required placeholder="john@example.com" id="emailInput">
       </div>
 
       <div class="row">
         <div class="field">
           <label>Phone (optional)</label>
-          <input type="tel" name="phone" placeholder="(555) 123-4567">
+          <input type="tel" name="phone" placeholder="(555) 123-4567" id="phoneInput">
         </div>
         <div class="field">
-          <label>Preferred Time</label>
-          <select name="preferred_time" required>
-            <option value="" disabled selected>Select a slot</option>
-            <option>Morning (9am–12pm ET)</option>
-            <option>Afternoon (12–3pm ET)</option>
-            <option>Late Afternoon (3–6pm ET)</option>
-            <option>Evening (6–8pm ET)</option>
-            <option>Flexible — anytime</option>
-          </select>
+          <label>Date</label>
+          <input type="date" name="date" required id="dateInput">
         </div>
       </div>
 
-      <div class="field">
-        <label>Preferred Day(s)</label>
-        <select name="preferred_day" required>
-          <option value="" disabled selected>Select day(s)</option>
-          <option>Monday</option>
-          <option>Tuesday</option>
-          <option>Wednesday</option>
-          <option>Thursday</option>
-          <option>Friday</option>
-          <option>Any weekday</option>
-          <option>Weekend (Sat/Sun)</option>
-        </select>
+      <div class="row">
+        <div class="field">
+          <label>Time</label>
+          <select name="time" required id="timeInput">
+            <option value="" disabled selected>Select a slot</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Notes (optional)</label>
+          <input type="text" name="notes" placeholder="Any specific questions..." id="notesInput">
+        </div>
       </div>
 
-      <div class="field">
-        <label>Anything you'd like me to focus on? (optional)</label>
-        <textarea name="notes" placeholder="e.g. I'd love to see how the scheduling feature works for my 3-person team..."></textarea>
-      </div>
-
-      <button type="submit" class="btn">Book My Demo →</button>
+      <div class="error" id="formError"></div>
+      <button type="submit" class="btn" id="submitBtn">Book My Demo</button>
     </form>
 
     <div class="trust">
@@ -135,32 +122,115 @@
   </div>
 
   <div class="footer">
-    <a href="https://bennycutools.com">← Back to BennyCu Tools</a>
+    <a href="https://bennycutools.com">Back to BennyCu Tools</a>
   </div>
 </div>
 
 <script>
-  // Show success state if redirected back after submission
-  if(new URLSearchParams(location.search).get('success')==='1'){
-    document.getElementById('formCard').style.display='none';
-    document.getElementById('successCard').style.display='block';
-  }
+const API_BASE = 'http://35.212.159.12/booking-api'; // Via Caddy proxy
 
-  // Backup notification relay — fires on form submit (before FormSubmit redirect)
-  var _bf = document.getElementById('bookingForm');
-  if (_bf) {
-    _bf.addEventListener('submit', function() {
-      try {
-        var fd = new FormData(_bf);
-        var d = {};
-        fd.forEach(function(v,k){ if(k.charAt(0)!=='_') d[k]=v; });
-        d.source = 'formsubmit-backup';
-        d.ts = new Date().toISOString();
-        navigator.sendBeacon('http://136.118.5.92:9876/notify',
-          new Blob([JSON.stringify(d)], {type:'application/json'}));
-      } catch(_){}
-    });
-  }
+// Get URL parameters
+const urlParams = new URLSearchParams(location.search);
+const source = urlParams.get('source') || 'direct';
+const referrer = document.referrer || '';
+
+// Show source tag
+const sourceTag = document.getElementById('sourceTag');
+if (source && source !== 'direct') {
+    sourceTag.style.display = 'inline-block';
+    sourceTag.textContent = source === 'email' ? 'From Email' : source === 'tool' ? 'From Tool' : source;
+}
+
+// Set hidden fields
+document.getElementById('sourceField').value = source;
+document.getElementById('referrerField').value = referrer;
+
+// Date picker setup
+const dateInput = document.getElementById('dateInput');
+const today = new Date();
+const maxDate = new Date();
+maxDate.setDate(today.getDate() + 60);
+dateInput.min = today.toISOString().split('T')[0];
+dateInput.max = maxDate.toISOString().split('T')[0];
+
+// Load time slots when date changes
+dateInput.addEventListener('change', async function() {
+    const date = this.value;
+    const timeSelect = document.getElementById('timeInput');
+    timeSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/slots?from=${date}&to=${date}`);
+        const data = await res.json();
+        
+        const daySlots = data.slots[date];
+        if (!daySlots || daySlots.blocked || daySlots.times.length === 0) {
+            timeSelect.innerHTML = '<option value="" disabled selected>No slots available</option>';
+            return;
+        }
+        
+        timeSelect.innerHTML = '<option value="" disabled selected>Select a slot</option>';
+        daySlots.times.forEach(slot => {
+            if (slot.available) {
+                const option = document.createElement('option');
+                option.value = slot.start;
+                option.textContent = `${slot.start} - ${slot.end}`;
+                timeSelect.appendChild(option);
+            }
+        });
+    } catch (err) {
+        timeSelect.innerHTML = '<option value="" disabled selected>Error loading slots</option>';
+    }
+});
+
+// Form submission
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('submitBtn');
+    const error = document.getElementById('formError');
+    
+    btn.disabled = true;
+    btn.textContent = 'Booking...';
+    error.style.display = 'none';
+    
+    const formData = {
+        name: document.getElementById('nameInput').value,
+        email: document.getElementById('emailInput').value,
+        business: document.getElementById('businessInput').value,
+        phone: document.getElementById('phoneInput').value || null,
+        date: document.getElementById('dateInput').value,
+        time: document.getElementById('timeInput').value,
+        notes: document.getElementById('notesInput').value || null,
+        source: document.getElementById('sourceField').value,
+        referrer: document.getElementById('referrerField').value
+    };
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/book`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+            document.getElementById('formCard').style.display = 'none';
+            document.getElementById('successCard').style.display = 'block';
+        } else {
+            error.textContent = data.error || 'Booking failed. Please try again.';
+            error.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Book My Demo';
+        }
+    } catch (err) {
+        error.textContent = 'Network error. Please try again.';
+        error.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Book My Demo';
+    }
+});
 </script>
 </body>
 </html>
