@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>SiteSnap - Master Excavation Field Documentation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,31 +10,85 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
-      --master-red: #C10000;
-      --master-red-hover: #a00000;
-      --master-red-pressed: #850000;
-      --excavation-black: #0a0a0a;
-      --steel-gray: #5F616F;
-      --concrete-gray: #E8E8E8;
-      --card-bg: #FAFAFA;
-      --safety-white: #FFFFFF;
-      --alert-orange: #FB8E28;
-      --success-green: #10b981;
-      --error-red: #ef4444;
+      /* oklch() Color System - Perceptually uniform */
+      --master-red: oklch(0.55 0.22 25);
+      --master-red-hover: oklch(0.48 0.2 25);
+      --master-red-pressed: oklch(0.42 0.18 25);
+      --excavation-black: oklch(0.18 0 0);
+      --steel-gray: oklch(0.55 0.02 260);
+      --concrete-gray: oklch(0.92 0 0);
+      --card-bg: oklch(0.98 0 0);
+      --safety-white: oklch(1 0 0);
+      --alert-orange: oklch(0.75 0.18 55);
+      --success-green: oklch(0.65 0.18 145);
+      --error-red: oklch(0.6 0.22 25);
+      
+      /* Glass morphism backdrop colors */
+      --glass-bg: oklch(1 0 0 / 0.85);
+      --glass-border: oklch(1 0 0 / 0.3);
+      --glass-dark: oklch(0.18 0 0 / 0.8);
       
       --font-display: 'Bebas Neue', sans-serif;
       --font-body: 'Inter', system-ui, sans-serif;
       --font-mono: 'Roboto Mono', monospace;
       
-      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
-      --shadow-lg: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05);
-      --shadow-xl: 0 20px 25px rgba(0,0,0,0.1), 0 10px 10px rgba(0,0,0,0.04);
+      /* 4-Layer Shadow System */
+      --shadow-sm: 
+        0 1px 2px oklch(0 0 0 / 0.03),
+        0 1px 3px oklch(0 0 0 / 0.05);
+      --shadow-md: 
+        0 1px 2px oklch(0 0 0 / 0.02),
+        0 4px 6px oklch(0 0 0 / 0.04),
+        0 8px 12px oklch(0 0 0 / 0.06),
+        0 16px 24px oklch(0 0 0 / 0.04);
+      --shadow-lg: 
+        0 2px 4px oklch(0 0 0 / 0.02),
+        0 8px 12px oklch(0 0 0 / 0.04),
+        0 16px 24px oklch(0 0 0 / 0.06),
+        0 32px 48px oklch(0 0 0 / 0.08);
+      --shadow-xl: 
+        0 4px 6px oklch(0 0 0 / 0.02),
+        0 12px 20px oklch(0 0 0 / 0.04),
+        0 24px 40px oklch(0 0 0 / 0.08),
+        0 48px 80px oklch(0 0 0 / 0.12);
       
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 16px;
       --radius-xl: 24px;
+    }
+    
+    /* SVG Noise Texture */
+    .noise-texture {
+      position: relative;
+    }
+    .noise-texture::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .noise-texture > * {
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* Glass Morphism Utilities */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px) saturate(180%);
+      -webkit-backdrop-filter: blur(12px) saturate(180%);
+      border: 1px solid var(--glass-border);
+    }
+    
+    .glass-dark {
+      background: var(--glass-dark);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid oklch(1 0 0 / 0.1);
     }
     
     *, *::before, *::after {
@@ -43,25 +97,14 @@
       padding: 0;
     }
     
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    
-    html {
-      max-width: 100vw;
-      overflow-x: hidden;
-    }
-    
-    body { padding-bottom: 80px;
+    body {
       font-family: var(--font-body);
       background: var(--concrete-gray);
       color: var(--excavation-black);
       min-height: 100vh;
-      padding-bottom: 200px !important;
+      padding-bottom: 140px !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-      width: 100%;
     }
     
     /* Skip Link */
@@ -96,12 +139,21 @@
     #access-gate {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, var(--excavation-black) 0%, #1a1a1a 100%);
+      background: linear-gradient(135deg, var(--excavation-black) 0%, oklch(0.22 0 0) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
       padding: 24px;
+    }
+    
+    #access-gate::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
     }
     
     .gate-card {
@@ -111,7 +163,12 @@
       max-width: 400px;
       width: 100%;
       text-align: center;
-      box-shadow: var(--shadow-xl);
+      box-shadow:
+        0 4px 6px oklch(0 0 0 / 0.02),
+        0 12px 20px oklch(0 0 0 / 0.04),
+        0 24px 40px oklch(0 0 0 / 0.08),
+        0 48px 80px oklch(0 0 0 / 0.12),
+        0 0 0 1px oklch(0 0 0 / 0.05);
       animation: gateSlideUp 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       opacity: 0;
       transform: translateY(30px);
@@ -325,40 +382,31 @@
       height: 20px;
     }
     
-    /* Demo Banner */
+    /* Demo Banner - Compact */
     .demo-banner {
       background: linear-gradient(90deg, var(--alert-orange) 0%, #f97316 100%);
       color: white;
-      padding: 10px 12px;
+      padding: 8px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      font-size: 13px;
+      font-size: 12px;
       animation: bannerSlide 0.4s ease forwards;
-      width: 100%;
-      box-sizing: border-box;
     }
-    
-    .demo-banner-text {
-      flex: 1;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      min-width: 0;
-    }
-    
+
     @keyframes bannerSlide {
       from { transform: translateY(-100%); opacity: 0; }
       to { transform: translateY(0); opacity: 1; }
     }
-    
+
     .demo-banner-text {
       flex: 1;
     }
-    
+
     .demo-banner-close {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       background: rgba(255,255,255,0.2);
       border: none;
       border-radius: 50%;
@@ -370,52 +418,42 @@
       flex-shrink: 0;
       transition: background 0.2s ease;
     }
-    
+
     .demo-banner-close:hover {
       background: rgba(255,255,255,0.3);
     }
-    
+
     .demo-banner-close svg {
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
     }
     
     /* Main Content */
     main {
-      padding: 20px 16px;
+      padding: 20px;
       max-width: 800px;
       margin: 0 auto;
-      width: 100%;
-      box-sizing: border-box;
     }
     
     /* View Tabs */
     .view-tabs {
       display: flex;
-      gap: 4px;
+      gap: 8px;
       margin-bottom: 20px;
       background: var(--safety-white);
       padding: 6px;
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-sm);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-    
-    .view-tabs::-webkit-scrollbar {
-      display: none;
     }
     
     .view-tab {
-      flex: 1 0 auto;
-      min-width: 90px;
-      padding: 12px 10px;
+      flex: 1;
+      padding: 12px 16px;
       background: transparent;
       border: none;
       border-radius: var(--radius-md);
       font-family: var(--font-body);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--steel-gray);
       cursor: pointer;
@@ -423,8 +461,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      white-space: nowrap;
+      gap: 8px;
     }
     
     .view-tab svg {
@@ -477,11 +514,11 @@
     
     /* Capture View */
     .capture-hero {
-      background: linear-gradient(135deg, var(--excavation-black) 0%, #1a1a1a 100%);
+      background: linear-gradient(135deg, var(--excavation-black) 0%, oklch(0.22 0 0) 100%);
       border-radius: var(--radius-xl);
-      padding: 24px 16px;
+      padding: 32px 24px;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       box-shadow: var(--shadow-lg);
       position: relative;
       overflow: hidden;
@@ -494,8 +531,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.035;
       pointer-events: none;
     }
     
@@ -525,24 +562,16 @@
     
     .capture-hero h2 {
       font-family: var(--font-display);
-      font-size: clamp(20px, 5vw, 28px);
+      font-size: 28px;
       color: white;
       letter-spacing: 1px;
       margin-bottom: 8px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      line-height: 1.2;
     }
     
     .capture-hero p {
       color: rgba(255,255,255,0.7);
-      font-size: 14px;
-      margin-bottom: 20px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      line-height: 1.4;
-      max-width: 100%;
-      padding: 0 4px;
+      font-size: 15px;
+      margin-bottom: 24px;
     }
     
     .capture-btn {
@@ -592,8 +621,10 @@
     }
     
     .camera-header {
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(10px);
+      background: oklch(0.18 0 0 / 0.75);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid oklch(1 0 0 / 0.1);
       padding: 16px 20px;
       display: flex;
       align-items: center;
@@ -683,8 +714,10 @@
     }
     
     .camera-controls {
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(10px);
+      background: oklch(0.15 0 0 / 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-top: 1px solid oklch(1 0 0 / 0.08);
       padding: 24px;
       display: flex;
       align-items: center;
@@ -737,8 +770,10 @@
     }
     
     .annotation-header {
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(10px);
+      background: oklch(0.18 0 0 / 0.75);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid oklch(1 0 0 / 0.1);
       padding: 12px 16px;
       display: flex;
       align-items: center;
@@ -815,8 +850,10 @@
     }
     
     .annotation-toolbar {
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(10px);
+      background: oklch(0.15 0 0 / 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-top: 1px solid oklch(1 0 0 / 0.08);
       padding: 16px;
       display: flex;
       align-items: center;
@@ -910,11 +947,6 @@
       box-shadow: var(--shadow-md);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       cursor: pointer;
-      opacity: 1;
-      transform: translateY(0);
-    }
-    
-    .job-card.animate {
       animation: cardSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       opacity: 0;
       transform: translateY(20px);
@@ -1126,8 +1158,9 @@
     .job-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
+      background: oklch(0.18 0 0 / 0.65);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
       z-index: 500;
       display: none;
       align-items: flex-end;
@@ -1198,7 +1231,7 @@
       height: 20px;
     }
     
-    .job-modal-body { padding-bottom: 80px;
+    .job-modal-body {
       padding: 20px;
     }
     
@@ -1305,8 +1338,9 @@
     .new-job-modal {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
+      background: oklch(0.18 0 0 / 0.65);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
       z-index: 500;
       display: none;
       align-items: flex-end;
@@ -1361,7 +1395,7 @@
       height: 20px;
     }
     
-    .new-job-body { padding-bottom: 80px;
+    .new-job-body {
       padding: 20px;
     }
     
@@ -1477,8 +1511,9 @@
     .settings-panel {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.6);
-      backdrop-filter: blur(4px);
+      background: oklch(0.18 0 0 / 0.65);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
       z-index: 500;
       display: none;
       align-items: flex-end;
@@ -1529,7 +1564,7 @@
       height: 20px;
     }
     
-    .settings-body { padding-bottom: 80px;
+    .settings-body {
       padding: 20px;
     }
     
@@ -1700,29 +1735,17 @@
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
       }
     }
     
     /* Print Styles */
     @media print {
-      body { padding-bottom: 80px; padding-bottom: 0 !important; background: white; }
+      body { padding-bottom: 0 !important; }
       #access-gate, .header, .demo-banner, .view-tabs, 
       .capture-hero, #bct-demo-disclaimer, .settings-panel,
-      .new-job-modal, .camera-modal, .annotation-modal, .job-modal,
-      .header-actions, .capture-btn, .empty-state-btn,
-      .toast-container { display: none !important; }
-      #app { display: block !important; }
+      .new-job-modal, .camera-modal, .annotation-modal { display: none !important; }
       main { padding: 0; max-width: 100%; }
-      .job-card { 
-        break-inside: avoid; 
-        box-shadow: none; 
-        border: 1px solid #ddd;
-        page-break-inside: avoid;
-      }
-      .jobs-section { display: block !important; }
-      #jobs-view { display: block !important; }
-      .view { display: block !important; }
+      .job-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
     }
   </style>
 </head>
@@ -1773,7 +1796,7 @@
     </header>
     
     <!-- Demo Banner -->
-    <div id="demo-banner" class="demo-banner" role="status" style="display: flex;">
+    <div id="demo-banner" class="demo-banner" role="status" style="display: none;">
       <span class="demo-banner-text">Sample data for Meridian, ID. Tap to clear and add your own.</span>
       <button type="button" id="clear-demo-btn" class="demo-banner-close" aria-label="Clear demo data">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1824,7 +1847,7 @@
             </svg>
           </div>
           <h2>DOCUMENT YOUR JOB SITE</h2>
-          <p>Take photos. Mark measurements. Send a professional report in under 90 seconds.</p>
+          <p>Snap photos, mark measurements, and share a professional report in under 90 seconds.</p>
           <button type="button" id="start-capture-btn" class="capture-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
@@ -1835,144 +1858,16 @@
         </div>
         
         <div class="jobs-section" id="recent-captures">
-          <h2>RECENT CAPTURES <span class="count" id="capture-count">4</span></h2>
-          <div id="capture-list" class="job-list">
-            <article class="job-card" data-job-id="demo-1" tabindex="0" role="button" aria-label="View job for Robert Chen">
-              <div class="job-card-header">
-                <span class="job-type-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
-                  Water Line
-                </span>
-                <span class="job-status in-progress">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active
-                </span>
-              </div>
-              <div class="job-card-title">Robert Chen</div>
-              <div class="job-card-address">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                3450 E Pine Ave, Meridian, ID 83642
-              </div>
-              <div class="job-photos">
-                <div class="job-photo-thumb">1</div>
-                <div class="job-photo-thumb">2</div>
-                <div class="job-photo-thumb">3</div>
-              </div>
-              <div class="job-card-meta">
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  2h ago
-                </span>
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  3 photos
-                </span>
-              </div>
-            </article>
-            <article class="job-card" data-job-id="demo-2" tabindex="0" role="button" aria-label="View job for Sarah Martinez">
-              <div class="job-card-header">
-                <span class="job-type-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="11" y1="12" x2="13" y2="12"/></svg>
-                  Sewer Line
-                </span>
-                <span class="job-status completed">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done
-                </span>
-              </div>
-              <div class="job-card-title">Sarah Martinez</div>
-              <div class="job-card-address">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                890 N Locust Grove Rd, Meridian, ID 83646
-              </div>
-              <div class="job-photos">
-                <div class="job-photo-thumb">1</div>
-                <div class="job-photo-thumb">2</div>
-                <div class="job-photo-thumb">3</div>
-                <div class="job-photo-thumb">4</div>
-              </div>
-              <div class="job-card-meta">
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  1d ago
-                </span>
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  5 photos
-                </span>
-              </div>
-            </article>
-          </div>
+          <h2>RECENT CAPTURES <span class="count" id="capture-count">0</span></h2>
+          <div id="capture-list" class="job-list"></div>
         </div>
       </section>
       
       <!-- Jobs View -->
       <section id="jobs-view" class="view" role="tabpanel" aria-labelledby="jobs-tab">
         <div class="jobs-section">
-          <h2>ALL JOBS <span class="count" id="jobs-count">4</span></h2>
-          <div id="jobs-list" class="job-list">
-            <article class="job-card" data-job-id="demo-1" tabindex="0" role="button" aria-label="View job for Robert Chen">
-              <div class="job-card-header">
-                <span class="job-type-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>
-                  Water Line
-                </span>
-                <span class="job-status in-progress">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Active
-                </span>
-              </div>
-              <div class="job-card-title">Robert Chen</div>
-              <div class="job-card-address">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                3450 E Pine Ave, Meridian, ID 83642
-              </div>
-              <div class="job-photos">
-                <div class="job-photo-thumb">1</div>
-                <div class="job-photo-thumb">2</div>
-                <div class="job-photo-thumb">3</div>
-              </div>
-              <div class="job-card-meta">
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  2h ago
-                </span>
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  3 photos
-                </span>
-              </div>
-            </article>
-            <article class="job-card" data-job-id="demo-2" tabindex="0" role="button" aria-label="View job for Sarah Martinez">
-              <div class="job-card-header">
-                <span class="job-type-badge">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="11" y1="12" x2="13" y2="12"/></svg>
-                  Sewer Line
-                </span>
-                <span class="job-status completed">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Done
-                </span>
-              </div>
-              <div class="job-card-title">Sarah Martinez</div>
-              <div class="job-card-address">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                890 N Locust Grove Rd, Meridian, ID 83646
-              </div>
-              <div class="job-photos">
-                <div class="job-photo-thumb">1</div>
-                <div class="job-photo-thumb">2</div>
-                <div class="job-photo-thumb">3</div>
-                <div class="job-photo-thumb">4</div>
-              </div>
-              <div class="job-card-meta">
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                  1d ago
-                </span>
-                <span class="job-card-meta-item">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  5 photos
-                </span>
-              </div>
-            </article>
-          </div>
+          <h2>ALL JOBS <span class="count" id="jobs-count">0</span></h2>
+          <div id="jobs-list" class="job-list"></div>
         </div>
       </section>
     </main>
@@ -2251,13 +2146,10 @@
     <div id="toast-container" class="toast-container" role="status" aria-live="polite"></div>
   </div>
   
-  <!-- DEMO DISCLAIMER - Legal Notice -->
-  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:#f8f8f8;border-top:1px solid #ddd;padding:8px 10px;font-size:11px;line-height:1.4;color:#666;z-index:99999;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;text-align:center;box-sizing:border-box;width:100%;max-width:100vw;">
-    <p style="margin:0;width:100%;word-wrap:break-word;overflow-wrap:break-word;hyphens:auto;"><strong style="color:#333;">DEMO:</strong> Built for Master Excavation. Not affiliated with Master Excavation.</p>
-    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Master%20Excavation&body=I%20am%20the%20owner%20and%20I%20request%20permanent%20deletion%20of%20this%20demo." style="display:inline-flex;align-items:center;gap:4px;background:#dc3545;color:#fff;padding:5px 10px;border-radius:4px;text-decoration:none;font-size:11px;font-weight:500;white-space:nowrap;flex-shrink:0;margin-top:4px;">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-      Request Deletion
-    </a>
+  <!-- Compact Demo Notice -->
+  <div id="bct-demo-disclaimer" role="contentinfo" aria-label="Demo notice" style="position:fixed;bottom:0;left:0;right:0;background:var(--excavation-black);border-top:1px solid rgba(255,255,255,0.1);padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.7);z-index:99999;display:flex;align-items:center;justify-content:center;gap:12px;text-align:center;">
+    <span>Demo by BennyCuTools — Not affiliated with Master Excavation</span>
+    <a href="mailto:cuuper225@gmail.com?subject=Remove%20Demo%3A%20Master%20Excavation" style="color:var(--alert-orange);text-decoration:none;font-weight:500;white-space:nowrap;">Remove this demo →</a>
   </div>
   
   <script>
@@ -2475,8 +2367,6 @@
         await saveJob(job);
       }
       localStorage.setItem('sitesnap-has-data', 'true');
-      // Small delay to ensure DB writes complete
-      await new Promise(r => setTimeout(r, 100));
     }
     
     // === Toast ===
@@ -2579,51 +2469,59 @@
     }
     
     async function renderJobsList() {
-      let jobs = await getAllJobs();
+      const jobs = await getAllJobs();
       const captureList = document.getElementById('capture-list');
       const jobsList = document.getElementById('jobs-list');
       const captureCount = document.getElementById('capture-count');
       const jobsCount = document.getElementById('jobs-count');
       
-      // Use demo data if no jobs in database
-      let isDemoMode = false;
-      if (jobs.length === 0) {
-        jobs = DEMO_JOBS;
-        isDemoMode = true;
-      }
-      
       captureCount.textContent = jobs.length;
       jobsCount.textContent = jobs.length;
       
-      const jobsHTML = jobs.map(renderJobCard).join('');
-      captureList.innerHTML = jobsHTML;
-      jobsList.innerHTML = jobsHTML;
-      
-      // Add click handlers to job cards (including static demo cards)
-      document.querySelectorAll('.job-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const jobId = card.dataset.jobId;
-          if (jobId && jobId.startsWith('demo-')) {
-            showDemoJobDetail(jobId);
-          } else {
-            openJobDetail(jobId);
-          }
-        });
-        card.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            const jobId = card.dataset.jobId;
-            if (jobId && jobId.startsWith('demo-')) {
-              showDemoJobDetail(jobId);
-            } else {
-              openJobDetail(jobId);
+      if (jobs.length === 0) {
+        const emptyHTML = `
+          <div class="empty-state">
+            <div class="empty-state-illustration">
+              <svg viewBox="0 0 160 160" fill="none">
+                <circle cx="80" cy="80" r="70" fill="#E8E8E8"/>
+                <rect x="50" y="60" width="60" height="50" rx="4" fill="#5F616F"/>
+                <rect x="55" y="50" width="50" height="10" fill="#5F616F"/>
+                <circle cx="80" cy="85" r="15" fill="#C10000"/>
+                <circle cx="80" cy="85" r="8" fill="white"/>
+                <line x1="40" y1="120" x2="120" y2="120" stroke="#C10000" stroke-width="4"/>
+                <line x1="30" y1="130" x2="130" y2="130" stroke="#C10000" stroke-width="2" stroke-dasharray="5 5"/>
+              </svg>
+            </div>
+            <h3>NO JOBS YET</h3>
+            <p>Start documenting your excavation work. Capture photos, mark measurements, and create professional reports.</p>
+            <button type="button" class="empty-state-btn" onclick="openNewJobModal()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              ADD YOUR FIRST JOB
+            </button>
+          </div>
+        `;
+        captureList.innerHTML = emptyHTML;
+        jobsList.innerHTML = emptyHTML;
+      } else {
+        const jobsHTML = jobs.map(renderJobCard).join('');
+        captureList.innerHTML = jobsHTML;
+        jobsList.innerHTML = jobsHTML;
+        
+        // Add click handlers
+        document.querySelectorAll('.job-card').forEach(card => {
+          card.addEventListener('click', () => openJobDetail(card.dataset.jobId));
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openJobDetail(card.dataset.jobId);
             }
-          }
+          });
         });
-      });
+      }
       
-      // Show demo banner when using demo data
-      document.getElementById('demo-banner').style.display = isDemoMode ? 'flex' : 'none';
+      // Show/hide demo banner
+      const hasDemo = jobs.some(j => j.isDemo);
+      document.getElementById('demo-banner').style.display = hasDemo ? 'flex' : 'none';
     }
     
     // === View Management ===
@@ -2959,52 +2857,6 @@
       setTimeout(() => startCamera(), 300);
     }
     
-    function showDemoJobDetail(jobId) {
-      const demoJob = DEMO_JOBS.find(j => j.id === jobId);
-      if (!demoJob) return;
-      
-      currentJob = demoJob;
-      currentJobId = demoJob.id;
-      
-      const modal = document.getElementById('job-modal');
-      const body = document.getElementById('job-modal-body');
-      document.getElementById('job-modal-title').textContent = demoJob.customer;
-      
-      body.innerHTML = `
-        <div class="job-detail-section">
-          <h4>Job Type</h4>
-          <p class="job-detail-text">${demoJob.typeName}</p>
-        </div>
-        <div class="job-detail-section">
-          <h4>Location</h4>
-          <div class="job-detail-address">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span>${demoJob.address}</span>
-          </div>
-        </div>
-        ${demoJob.notes ? `
-        <div class="job-detail-section">
-          <h4>Notes</h4>
-          <p class="job-detail-text">${demoJob.notes}</p>
-        </div>
-        ` : ''}
-        <div class="job-detail-section">
-          <h4>Photos (${demoJob.photoCount})</h4>
-          <div class="job-detail-photos">
-            ${Array(demoJob.photoCount).fill(0).map((_, i) => `
-              <div class="job-detail-photo" style="background:#e8e8e8;display:flex;align-items:center;justify-content:center;color:#666;font-size:12px;">Photo ${i+1}</div>
-            `).join('')}
-          </div>
-        </div>
-        <div class="job-detail-section">
-          <h4>Captured</h4>
-          <p class="job-detail-text">${new Date(demoJob.createdAt).toLocaleString()}</p>
-        </div>
-      `;
-      
-      modal.classList.add('show');
-    }
-    
     async function openJobDetail(jobId) {
       const job = await getJob(jobId);
       if (!job) return;
@@ -3222,20 +3074,18 @@
     }
     
     // === Authentication ===
-    async function checkAuth() {
+    function checkAuth() {
       // Check URL parameter first
       const urlKey = new URLSearchParams(window.location.search).get('key');
       if (urlKey && hashKey(urlKey) === ACCESS_KEY_HASH) {
         localStorage.setItem('sitesnap-auth', 'true');
         showApp();
-        await initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
         return;
       }
       
       // Check localStorage
       if (localStorage.getItem('sitesnap-auth') === 'true') {
         showApp();
-        await initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
         return;
       }
       
@@ -3258,7 +3108,7 @@
       if (hashKey(key) === ACCESS_KEY_HASH) {
         localStorage.setItem('sitesnap-auth', 'true');
         showApp();
-        initApp().catch(e => {console.error('initApp failed:', e); const t=document.createElement('div');t.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);background:#b91c1c;color:#fff;padding:12px 20px;border-radius:8px;z-index:9999';t.textContent='Error loading data. Please refresh.';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);});
+        initApp();
       } else {
         error.classList.add('show');
         input.value = '';
@@ -3382,47 +3232,26 @@
     async function initApp() {
       await initDB();
       
-      // Check if data exists - load demo if empty
-      const jobs = await getAllJobs();
-      if (jobs.length === 0) {
+      // Check if first visit - load demo data
+      const hasData = localStorage.getItem('sitesnap-has-data');
+      if (!hasData) {
         await loadDemoData();
       }
       
       initAnnotationCanvas();
-      await renderJobsList();
+      renderJobsList();
     }
     
     // === Start ===
-    document.addEventListener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', () => {
       initEventListeners();
-      // Attach listeners to static demo cards immediately
-      document.querySelectorAll('.job-card').forEach(card => {
-        card.addEventListener('click', () => {
-          const jobId = card.dataset.jobId;
-          if (jobId && jobId.startsWith('demo-')) {
-            showDemoJobDetail(jobId);
-          }
-        });
-      });
-      await checkAuth();
-    });
-    // === Security Measures ===
-    // Disable right-click context menu
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    
-    // Block common dev tools shortcuts (but allow normal usage)
-    document.addEventListener('keydown', (e) => {
-      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U
-      if (e.key === 'F12' || 
-          (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
-          (e.ctrlKey && e.key === 'u')) {
-        e.preventDefault();
+      checkAuth();
+      
+      // If already authenticated, init app
+      if (localStorage.getItem('sitesnap-auth') === 'true') {
+        initApp();
       }
     });
   </script>
-  <div id="bct-demo-disclaimer" style="position:fixed;bottom:0;left:0;right:0;background:oklch(0.25 0 0 / 0.95);border-top:1px solid oklch(0.35 0 0);padding:8px 12px;font-size:11px;line-height:1.3;color:oklch(0.7 0 0);z-index:99999;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-    <span>Demo for <strong style="color:oklch(0.9 0 0);">Master Excavation</strong> • Not affiliated</span>
-    <a href="mailto:cuuper225@gmail.com?subject=Delete%20Demo%3A%20Master%20Excavation" style="color:oklch(0.7 0.15 220);text-decoration:none;white-space:nowrap;font-weight:500;">Delete</a>
-  </div>
 </body>
 </html>
